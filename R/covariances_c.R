@@ -1,3 +1,15 @@
+#' The four covariances between 2 time periods for conventional estimation
+#'
+#' @param x1 running variable in period 1
+#' @param x2 running variable in period 2
+#' @param y1 outcome variable in period 1
+#' @param y2 outcome variable in period 2
+#' @param h bandwidth
+#' @param b bias correction bandwidth
+#' @param ids1 id vector in period 1
+#' @param ids2 id vector in period 2
+#'
+#' @return four covariances
 covariances_c = function(x1, x2, y1, y2, h, b, ids1, ids2) {
   mat1 = mat_fun(x1,y1,h,b, ids = ids1)
   mat2 = mat_fun(x2,y2,h,b, ids = ids2)

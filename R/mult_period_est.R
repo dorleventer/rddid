@@ -1,3 +1,16 @@
+#' RDDID Estimation
+#'
+#' This function estimates the ATU or ATT using a RDDID framework, assuming potential outcome discontinuities are constant across time.
+#'
+#' @param df dataframe
+#' @param t_star time period with RD treatment
+#' @param t_vec time period for bias estimation
+#' @param w_vec weights for t_vec time periods
+#' @param h bandwidth
+#' @param b bias correction bandwidth
+#'
+#' @return Conventional (C) and Bias Corrected (BC) treatment effect estimates and standard errors (SE). SEs are provided for sampling under repeated cross section (CS), panel with constant running variable (PC) and varying running variable (PV).
+#' @export
 mult_period_est = function(df, t_star, t_vec, w_vec, h, b) {
 
   # calculate point estimate and CS variance

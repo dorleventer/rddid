@@ -1,3 +1,16 @@
+#' RD estimates for single time period
+#'
+#' @param x running variable
+#' @param y outcome variable
+#' @param h bandwidth
+#' @param b bias correction bandwidth
+#' @param v derivative
+#' @param p polynomial
+#' @param q bias correction polynomial
+#' @param c cutoff
+#' @param kernel type of kernel
+#'
+#' @return Outcome discontinuity estimates and standard errors
 single_period_est = function(x,y,h,b,v=0,p=1,q=2,c=0,kernel="") {
 
   h_l = h_r = h
