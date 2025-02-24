@@ -32,7 +32,12 @@ the to do list
 
 ## Example
 
-For examples see [package site](https://dorleventer.github.io/rddid/).
+For examples see
+
+- Estimation under constant PO discontinuity assumption
+  [notebook](https://dorleventer.github.io/rddid/articles/rddid-constant.html).
+- Estimation under linear in time PO discontinuity assumption
+  [notebook](https://dorleventer.github.io/rddid/articles/rddid-linear-trend.html).
 
 ## References
 
