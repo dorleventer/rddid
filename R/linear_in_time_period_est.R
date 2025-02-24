@@ -6,6 +6,7 @@
 #' @param t_star time period with RD treatment
 #' @param h bandwidth
 #' @param b bias correction bandwidth
+#' @param t_vec vector of time periods to estimate linear trend over
 #' @param tname the name of the time period variable in df
 #' @param xname the name of the running variable in df
 #' @param yname the name of the outcome variable in df

@@ -4,7 +4,17 @@
 \alias{linear_in_time_period_est}
 \title{RDDID Estimation}
 \usage{
-linear_in_time_period_est(df, t_star, h, b)
+linear_in_time_period_est(
+  df,
+  t_star,
+  h,
+  b,
+  t_vec,
+  tname = "time",
+  xname = "R",
+  yname = "Y",
+  idname = "id"
+)
 }
 \arguments{
 \item{df}{dataframe}
@@ -14,6 +24,14 @@ linear_in_time_period_est(df, t_star, h, b)
 \item{h}{bandwidth}
 
 \item{b}{bias correction bandwidth}
+
+\item{tname}{the name of the time period variable in df}
+
+\item{xname}{the name of the running variable in df}
+
+\item{yname}{the name of the outcome variable in df}
+
+\item{idname}{the name of the id variable in df}
 }
 \value{
 Conventional (C) and Bias Corrected (BC) treatment effect estimates and standard errors (SE). SEs are provided for sampling under repeated cross section (CS), panel with constant running variable (PC) and varying running variable (PV).
