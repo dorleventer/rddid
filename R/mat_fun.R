@@ -12,8 +12,6 @@
 #' @param ids id vector
 #'
 #' @return conventional and bias corrected estimators, and related objects
-#'
-#' @examples
 mat_fun = function(x,y,h,b,v=0,p=1,q=2,c=0,kernel="",ids = NULL) {
   h_l = h_r = h
   b_l = b_r = b

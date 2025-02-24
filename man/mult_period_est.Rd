@@ -4,7 +4,18 @@
 \alias{mult_period_est}
 \title{RDDID Estimation}
 \usage{
-mult_period_est(df, t_star, t_vec, w_vec, h, b)
+mult_period_est(
+  df,
+  t_star,
+  t_vec,
+  w_vec,
+  h,
+  b,
+  tname = "time",
+  xname = "R",
+  yname = "Y",
+  idname = "id"
+)
 }
 \arguments{
 \item{df}{dataframe}
@@ -18,6 +29,14 @@ mult_period_est(df, t_star, t_vec, w_vec, h, b)
 \item{h}{bandwidth}
 
 \item{b}{bias correction bandwidth}
+
+\item{tname}{the name of the time period variable in df}
+
+\item{xname}{the name of the running variable in df}
+
+\item{yname}{the name of the outcome variable in df}
+
+\item{idname}{the name of the id variable in df}
 }
 \value{
 Conventional (C) and Bias Corrected (BC) treatment effect estimates and standard errors (SE). SEs are provided for sampling under repeated cross section (CS), panel with constant running variable (PC) and varying running variable (PV).

@@ -8,20 +8,29 @@
 #' @param w_vec weights for t_vec time periods
 #' @param h bandwidth
 #' @param b bias correction bandwidth
+#' @param tname the name of the time period variable in df
+#' @param xname the name of the running variable in df
+#' @param yname the name of the outcome variable in df
+#' @param idname the name of the id variable in df
 #'
 #' @return Conventional (C) and Bias Corrected (BC) treatment effect estimates and standard errors (SE). SEs are provided for sampling under repeated cross section (CS), panel with constant running variable (PC) and varying running variable (PV).
 #' @export
-mult_period_est = function(df, t_star, t_vec, w_vec, h, b) {
-
+mult_period_est = function(df, t_star, t_vec, w_vec, h, b, tname = "time", xname = "R", yname = "Y", idname = "id") {
+  # prep the data
+  time = df[,tname]
+  x = df[,xname]
+  y = df[,yname]
+  ids = df[,idname]
+  df = data.frame(time, R = x, Y = y, id = ids)
   # calculate point estimate and CS variance
-  df_t = df |> filter(year == t_star)
-  mod_t_star = single_period_est(df_t$R, df_t$Y, h, b)
+  df_t = df[df[,tname] == t_star,]
+  mod_t_star = single_period_est(x = df_t$R, y = df_t$Y, h, b)
   tau_c = mod_t_star$est[1]
   tau_bc = mod_t_star$est[2]
   V_c_cs = mod_t_star$se[1]^2
   V_bc_cs = mod_t_star$se[2]^2
   for(i in 1:length(t_vec)) {
-    df_t = df |> filter(year == t_vec[i])
+    df_t = df[df[,tname] == t_vec[i],]
     mod_t= single_period_est(x = df_t$R, y = df_t$Y, h, b)
     tau_c = tau_c - mod_t$est[1] * w_vec[i]
     tau_bc = tau_bc - mod_t$est[2] * w_vec[i]
@@ -38,8 +47,8 @@ mult_period_est = function(df, t_star, t_vec, w_vec, h, b) {
     for(j in 1:length(t_vec)) {
       if(t_vec[i] == t_vec[j]) next
       if(t_vec[i] != t_vec[j]) {
-        df1 = df |> filter(year == t_vec[i])
-        df2 = df |> filter(year == t_vec[j])
+        df1 = df[df[,tname] == t_vec[i],]
+        df2 = df[df[,tname] == t_vec[j],]
 
         x1 = df1$R
         x2 = df2$R
@@ -65,7 +74,7 @@ mult_period_est = function(df, t_star, t_vec, w_vec, h, b) {
     }
   }
 
-  tibble(
+  data.frame(
     method = c("C", "BC"),
     est = c(tau_c, tau_bc),
     se_cs = c(sqrt(V_c_cs), sqrt(V_bc_cs)),

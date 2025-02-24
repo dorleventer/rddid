@@ -12,11 +12,11 @@
 linear_in_time_period_est = function(df, t_star, h, b) {
 
   # calculate single time period models
-  df_1999 = df |> filter(year == 1999)
+  df_1999 = df[df$year == 1999,]
   mod_1999 = single_period_est(x = df_1999$R, y = df_1999$Y, h, b)
-  df_2000 = df |> filter(year == 2000)
+  df_2000 = df[df$year == 2000,]
   mod_2000 = single_period_est(x = df_2000$R, y = df_2000$Y, h, b)
-  df_t_star = df |> filter(year == t_star)
+  df_t_star = df[df$year == t_star,]
   mod_t_star = single_period_est(df_t_star$R, df_t_star$Y, h, b)
 
   # calculate slope and point estimate
@@ -81,7 +81,7 @@ linear_in_time_period_est = function(df, t_star, h, b) {
     (2)*C_bc_pv_t_star_2000*(t_star - 1999) +
     (2)*C_bc_pv_1999_2000*(t_star - 1999)*(t_star - 2000)
 
-  tibble(
+  data.frame(
     method = c("C", "BC"),
     est = c(tau_c, tau_bc),
     se_cs = c(sqrt(V_c_cs), sqrt(V_bc_cs)),

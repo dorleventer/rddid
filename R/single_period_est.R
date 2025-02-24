@@ -112,7 +112,7 @@ single_period_est = function(x,y,h,b,v=0,p=1,q=2,c=0,kernel="") {
   tau = c(tau_cl, tau_bc)
   se  = c(se_tau_cl,se_tau_rb)
 
-  tibble(
+  data.frame(
     type = c("C","BC"),
     est = tau,
     se = se

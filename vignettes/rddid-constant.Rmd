@@ -1,0 +1,47 @@
+---
+title: "rddid-constant"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{rddid-constant}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# Intro
+
+This is an example notebook of how to estimate treatment effects in RDDID designs with a constant potential outcome discontinuities assumption. The identification framework is based on Corollary 1(i) in Leventer and Nevo (2024). The estimation framework is presented in Section 6 in the paper. 
+
+First, lets install the rddid package.
+
+```{r setup}
+library(rddid)
+```
+
+# Setup
+
+To create an easy example that can be replicated, we use the simulated data in the paper. 
+
+For now, lets go with repeated cross section (CS) sampling scheme.
+
+```{r}
+data = rddid::sim_data(n = 1000, dgp_type = "cs", seed = 42)
+head(data)
+```
+
+# Estimate treatment effects
+
+Next, lets estimate the effect in time 2, assuming potential outcome discontinuitites are constant across time. 
+
+```{r}
+rddid::mult_period_est(df = data, t_star = 2, t_vec = 1, w_vec = 1, h = 600, b = 1200)
+```
+
+The output is for conventional (C) and bias-corrected (BC) estimators. The standard errors under all sampling schemes (CS, PC and PV) are outputed--the researcher needs to use the one that fits her application.
+
