@@ -1,0 +1,62 @@
+---
+title: "rddid-linear-trend"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{rddid-linear-trend}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# Intro
+
+This is an example notebook of how to estimate treatment effects in RDDID designs with a assumption that potential outcome discontinuities evolve linearly over time. The identification framework is based on Corollary 1(ii) in Leventer and Nevo (2024). The estimation framework is presented in Supplementary Appendix.
+
+First, lets install the rddid package.
+
+```{r setup}
+library(rddid)
+library(tidyverse)
+```
+
+# Setup
+
+To create an easy example that can be replicated, we use the simulated data in the paper. 
+
+Lets create a dataset with 3 time periods, with a discontinuity of 20 in time 1, 40 in time 2, and 80 in time 3 (assuming time 3 is the RD period of interest). If the discontinuity evolves linearly, then it should be 60 in time 3 without the RD, implying the treatment effect is $80-60=20$.
+
+We'll manipulate the simulated data (provided in the package) a bit to achieve the data. 
+
+```{r}
+data = rddid::sim_data(n = 1000, dgp_type = "cs", seed = 42, jump_t1 = 40, jump_t2 = 80) |> mutate(time = time + 1)
+data = data |> 
+  rbind(rddid::sim_data(n = 1000, dgp_type = "cs", seed = 123, jump_t1 = 20) |> filter(time == 1))
+data |> arrange(id, time) |> head()
+```
+
+
+To confirm the setup, lets estimate an RD in each time period separately. 
+
+```{r}
+rdrobust::rdrobust(x = data$R[data$time == 1], y = data$Y[data$time == 1])$coef
+rdrobust::rdrobust(x = data$R[data$time == 2], y = data$Y[data$time == 2])$coef
+rdrobust::rdrobust(x = data$R[data$time == 3], y = data$Y[data$time == 3])$coef
+```
+
+
+# Estimate treatment effects
+
+Next, lets estimate the effect in time 2, assuming potential outcome discontinuitites are constant across time. 
+
+```{r}
+rddid::mult_period_est(df = data, t_star = 2, t_vec = 1, w_vec = 1, h = 600, b = 1200)
+```
+
+The output is for conventional (C) and bias-corrected (BC) estimators. The standard errors under all sampling schemes (CS, PC and PV) are outputed--the researcher needs to use the one that fits her application.
+

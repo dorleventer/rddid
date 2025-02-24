@@ -12,7 +12,8 @@ RoxygenNote: 7.3.2
 Suggests: 
     knitr,
     rmarkdown,
-    tidyverse
+    tidyverse,
+    rdrobust
 VignetteBuilder: knitr
 Imports: 
     stats,

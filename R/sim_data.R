@@ -56,7 +56,7 @@ simulate_dgp <- function(dgp_type, seed = 1, params = list()) {
       )
     )
 
-  return(df)
+  return(df |> dplyr::select(id, time, R, Y))
 }
 #' A simulated data-frame
 #'

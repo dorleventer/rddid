@@ -8,7 +8,8 @@
 
 The goal of rddid is to estimate treatment effects in RDDID settings,
 implementing the estimation framework proposed in Leventer and Nevo
-(2024).
+(2024). Functions for RD estimation in single time periods are based on
+[rdrobust](https://github.com/rdpackages/rdrobust) code.
 
 ## Installation
 
@@ -18,6 +19,16 @@ You can install the development version of rddid from
 ``` r
 devtools::install_github("dorleventer/rddid")
 ```
+
+## In Progress
+
+This package in currently a work in progess. The following items are on
+the to do list
+
+- [ ] linear_in_time_period_est
+  - [ ] Generalize function inputs
+  - [ ] Generalize to more than two time periods (requires analytical
+    derivation)
 
 ## Example
 
