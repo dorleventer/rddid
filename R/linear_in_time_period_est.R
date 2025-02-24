@@ -56,7 +56,7 @@ linear_in_time_period_est = function(df, t_star, h, b, t_vec, tname = "time", xn
   cov_t_star_2_bc = covariances_bc(df_t_star$R, df_2$R, df_t_star$Y, df_2$Y, h, b, df_t_star$id, df_2$id)
 
   cov_1_2 = covariances_c(df_1$R, df_2$R, df_1$Y, df_2$Y, h, b, df_1$id, df_2$id)
-  cov_1_2 = covariances_bc(df_1$R, df_2$R, df_1$Y, df_2$Y, h, b, df_1$id, df_2$id)
+  cov_1_2_bc = covariances_bc(df_1$R, df_2$R, df_1$Y, df_2$Y, h, b, df_1$id, df_2$id)
 
   C_c_pc_t_star_1 = cov_t_star_1$c_1_2_l_l[1,1] + cov_t_star_1$c_1_2_r_r[1,1]
   C_c_pc_t_star_2 = cov_t_star_2$c_1_2_l_l[1,1] + cov_t_star_2$c_1_2_r_r[1,1]

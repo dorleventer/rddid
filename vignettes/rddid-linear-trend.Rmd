@@ -31,13 +31,13 @@ To create an easy example that can be replicated, we use the simulated data in t
 
 Lets create a dataset with 3 time periods, with a discontinuity of 100 in time 1, 200 in time 2, and 400 in time 3 (assuming time 3 is the RD period of interest). If the discontinuity evolves linearly, then it should be 300 in time 3 without the RD, implying the treatment effect is $400-300=100$.
 
-We'll manipulate the simulated data (provided in the package) a bit to achieve the data. 
+We'll manipulate the simulated data (provided in the package) a bit to achieve a sample in line with the above setup.
 
 ```{r}
 data = rbind(
-  rddid::sim_data(n = 1000, dgp_type = "cs", seed = 1, jump_t2 = 100) |> filter(time == 2) |> mutate(time = 1),
-  rddid::sim_data(n = 1000, dgp_type = "cs", seed = 2, jump_t2 = 200) |> filter(time == 2) |> mutate(time = 2),
-  rddid::sim_data(n = 1000, dgp_type = "cs", seed = 3, jump_t2 = 400) |> filter(time == 2) |> mutate(time = 3)
+  rddid::sim_data(n = 2000, dgp_type = "cs", seed = 1, jump_t2 = 100) |> filter(time == 2) |> mutate(time = 1),
+  rddid::sim_data(n = 2000, dgp_type = "cs", seed = 2, jump_t2 = 200) |> filter(time == 2) |> mutate(time = 2),
+  rddid::sim_data(n = 2000, dgp_type = "cs", seed = 3, jump_t2 = 400) |> filter(time == 2) |> mutate(time = 3)
 )
 data |> arrange(id, time) |> head()
 ```
@@ -52,10 +52,18 @@ cat("RD in period 3: ", round(rdrobust::rdrobust(x = data$R[data$time == 3], y =
 
 # Estimate treatment effects
 
-Next, lets estimate the effect in time 3, assuming potential outcome discontinuities evolve linearly over time. 
+First, 
 
 ```{r}
-rddid::mult_period_est(df = data, t_star = 2, t_vec = 1, w_vec = 1, h = 600, b = 1200)
+rddid::mult_period_est(df = data, t_star = 3, t_vec = c(1,2), w_vec = c(.5, .5), h = 600, b = 1200)
+```
+
+Can see that assuming PO discontinuities are constant over time is wrong. 
+
+Second, 
+
+```{r}
+rddid::linear_in_time_period_est(df = data, t_star = 3, h = 600, b = 1200, t_vec = c(1,2))
 ```
 
 The output is for conventional (C) and bias-corrected (BC) estimators. The standard errors under all sampling schemes (CS, PC and PV) are outputed--the researcher needs to use the one that fits her application.

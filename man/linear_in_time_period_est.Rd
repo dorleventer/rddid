@@ -25,6 +25,8 @@ linear_in_time_period_est(
 
 \item{b}{bias correction bandwidth}
 
+\item{t_vec}{vector of time periods to estimate linear trend over}
+
 \item{tname}{the name of the time period variable in df}
 
 \item{xname}{the name of the running variable in df}
