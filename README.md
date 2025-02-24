@@ -32,7 +32,7 @@ the to do list
 
 ## Example
 
-For example see …
+For examples see [package site](https://dorleventer.github.io/rddid/).
 
 ## References
 

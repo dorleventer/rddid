@@ -38,7 +38,7 @@ This package in currently a work in progess. The following items are on the to d
 
 ## Example
 
-For example see ...
+For examples see [package site](https://dorleventer.github.io/rddid/).
 
 ## References
 
