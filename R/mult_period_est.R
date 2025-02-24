@@ -23,14 +23,14 @@ mult_period_est = function(df, t_star, t_vec, w_vec, h, b, tname = "time", xname
   ids = df[,idname]
   df = data.frame(time, R = x, Y = y, id = ids)
   # calculate point estimate and CS variance
-  df_t = df[df[,tname] == t_star,]
+  df_t = df[df$time == t_star,]
   mod_t_star = single_period_est(x = df_t$R, y = df_t$Y, h, b)
   tau_c = mod_t_star$est[1]
   tau_bc = mod_t_star$est[2]
   V_c_cs = mod_t_star$se[1]^2
   V_bc_cs = mod_t_star$se[2]^2
   for(i in 1:length(t_vec)) {
-    df_t = df[df[,tname] == t_vec[i],]
+    df_t = df[df$time == t_vec[i],]
     mod_t= single_period_est(x = df_t$R, y = df_t$Y, h, b)
     tau_c = tau_c - mod_t$est[1] * w_vec[i]
     tau_bc = tau_bc - mod_t$est[2] * w_vec[i]
@@ -47,8 +47,8 @@ mult_period_est = function(df, t_star, t_vec, w_vec, h, b, tname = "time", xname
     for(j in 1:length(t_vec)) {
       if(t_vec[i] == t_vec[j]) next
       if(t_vec[i] != t_vec[j]) {
-        df1 = df[df[,tname] == t_vec[i],]
-        df2 = df[df[,tname] == t_vec[j],]
+        df1 = df[df$time == t_vec[i],]
+        df2 = df[df$time == t_vec[j],]
 
         x1 = df1$R
         x2 = df2$R

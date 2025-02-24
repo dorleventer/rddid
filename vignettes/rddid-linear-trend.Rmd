@@ -29,30 +29,30 @@ library(tidyverse)
 
 To create an easy example that can be replicated, we use the simulated data in the paper. 
 
-Lets create a dataset with 3 time periods, with a discontinuity of 20 in time 1, 40 in time 2, and 80 in time 3 (assuming time 3 is the RD period of interest). If the discontinuity evolves linearly, then it should be 60 in time 3 without the RD, implying the treatment effect is $80-60=20$.
+Lets create a dataset with 3 time periods, with a discontinuity of 100 in time 1, 200 in time 2, and 400 in time 3 (assuming time 3 is the RD period of interest). If the discontinuity evolves linearly, then it should be 300 in time 3 without the RD, implying the treatment effect is $400-300=100$.
 
 We'll manipulate the simulated data (provided in the package) a bit to achieve the data. 
 
 ```{r}
-data = rddid::sim_data(n = 1000, dgp_type = "cs", seed = 42, jump_t1 = 40, jump_t2 = 80) |> mutate(time = time + 1)
-data = data |> 
-  rbind(rddid::sim_data(n = 1000, dgp_type = "cs", seed = 123, jump_t1 = 20) |> filter(time == 1))
+data = rbind(
+  rddid::sim_data(n = 1000, dgp_type = "cs", seed = 1, jump_t2 = 100) |> filter(time == 2) |> mutate(time = 1),
+  rddid::sim_data(n = 1000, dgp_type = "cs", seed = 2, jump_t2 = 200) |> filter(time == 2) |> mutate(time = 2),
+  rddid::sim_data(n = 1000, dgp_type = "cs", seed = 3, jump_t2 = 400) |> filter(time == 2) |> mutate(time = 3)
+)
 data |> arrange(id, time) |> head()
 ```
-
 
 To confirm the setup, lets estimate an RD in each time period separately. 
 
 ```{r}
-rdrobust::rdrobust(x = data$R[data$time == 1], y = data$Y[data$time == 1])$coef
-rdrobust::rdrobust(x = data$R[data$time == 2], y = data$Y[data$time == 2])$coef
-rdrobust::rdrobust(x = data$R[data$time == 3], y = data$Y[data$time == 3])$coef
+cat("RD in period 1: ", round(rdrobust::rdrobust(x = data$R[data$time == 1], y = data$Y[data$time == 1])$coef[1], 1), "\n")
+cat("RD in period 2: ", round(rdrobust::rdrobust(x = data$R[data$time == 2], y = data$Y[data$time == 2])$coef[1], 1), "\n")
+cat("RD in period 3: ", round(rdrobust::rdrobust(x = data$R[data$time == 3], y = data$Y[data$time == 3])$coef[1], 1), "\n")
 ```
-
 
 # Estimate treatment effects
 
-Next, lets estimate the effect in time 2, assuming potential outcome discontinuitites are constant across time. 
+Next, lets estimate the effect in time 3, assuming potential outcome discontinuities evolve linearly over time. 
 
 ```{r}
 rddid::mult_period_est(df = data, t_star = 2, t_vec = 1, w_vec = 1, h = 600, b = 1200)
