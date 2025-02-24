@@ -1,0 +1,10 @@
+pandoc: 3.1.11
+pkgdown: 2.1.1
+pkgdown_sha: ~
+articles:
+  rddid-constant: rddid-constant.html
+  rddid-linear-trend: rddid-linear-trend.html
+last_built: 2025-02-24T08:48Z
+urls:
+  reference: https://dorleventer.github.io/rddid/reference
+  article: https://dorleventer.github.io/rddid/articles
