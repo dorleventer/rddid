@@ -89,7 +89,11 @@ rd_period <- function(y, x, h, b = h, id = NULL, c = 0, p = 1L, q = 2L,
       beta0_bc = beta_bc[1L],
       id       = ids,
       g        = a_c * as.numeric(res_c),
-      g_bc     = a_bc * as.numeric(res_b)
+      g_bc     = a_bc * as.numeric(res_b),
+      # influence on (conventional - bias-corrected): both are linear in the same
+      # Y, so the difference has per-unit weight (a_c - a_bc); used to estimate
+      # Var(B-hat) for bandwidth regularization.
+      g_diff   = (a_c - a_bc) * as.numeric(res_c)
     )
   }
 

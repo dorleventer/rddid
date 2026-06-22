@@ -79,6 +79,7 @@ rddid <- function(data, y, x, time, id = NULL, t_rd,
                   comparisons = NULL, weights = "constant",
                   bwselect = c("joint", "cct"), h = NULL, b = NULL,
                   scheme = c("auto", "cs", "pc", "pv"),
+                  regularize = TRUE, reg_const = 3,
                   c = 0, p = 1L, q = 2L, kernel = "triangular", level = 0.95) {
   bwselect <- match.arg(bwselect)
   scheme   <- match.arg(scheme)
@@ -114,11 +115,12 @@ rddid <- function(data, y, x, time, id = NULL, t_rd,
     bw_info <- list(method = "cct", bws = bws)
   } else {
     jb <- .bw_joint(plist, coef, as.character(t_rd), scheme = use_scheme,
-                    c = c, p = p, q = q, kernel = kernel)
+                    c = c, p = p, q = q, kernel = kernel,
+                    regularize = regularize, reg_const = reg_const)
     bws <- stats::setNames(rep(list(c(h = jb$h, b = jb$b)), length(periods)),
                            as.character(periods))
     bw_info <- list(method = "joint", h = jb$h, b = jb$b, B = jb$B,
-                    Veff = jb$Veff, pilot = jb$pilot)
+                    Veff = jb$Veff, reg = jb$reg, pilot = jb$pilot)
   }
 
   # ---- per-period fits at chosen bandwidth(s) ----

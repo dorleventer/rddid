@@ -17,6 +17,8 @@ rddid(
   h = NULL,
   b = NULL,
   scheme = c("auto", "cs", "pc", "pv"),
+  regularize = TRUE,
+  reg_const = 3,
   c = 0,
   p = 1L,
   q = 2L,
