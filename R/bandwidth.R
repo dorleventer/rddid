@@ -118,6 +118,7 @@
 #' @noRd
 .bw_joint_iter <- function(plist, coef, t_rd, pilot_bws = NULL,
                            c = 0, p = 1L, q = 2L, kernel = "triangular",
+                           regularize = TRUE, reg_const = 3,
                            hmax = NULL, maxit = 50L, tol = 1e-4) {
   keys <- names(coef)
   if (is.null(pilot_bws))
@@ -139,9 +140,19 @@
   if (is.null(hmax))
     hmax <- max(vapply(plist, function(d) max(abs(d$x - c)), numeric(1)))
 
+  # per-period variance of the bias-constant estimate, Var(b_hat_t) =
+  # (2/h0^2)^2 Var(conv-bc), for regularizing wide bandwidths on noisy curvature.
+  var_b <- vapply(keys, function(k) {
+    s <- fitp[[k]]$sides
+    (2 / pilot_bws[[k]]["h"]^2)^2 * (sum(s[["+"]]$g_diff^2) + sum(s[["-"]]$g_diff^2))
+  }, numeric(1))
+
   amse <- function(hv) {
     Bbar <- 0.5 * sum(cf * hv^2 * bt)
-    Bbar^2 + sum(cf^2 * vt / (nt * hv))
+    # regularization: each period's bias-estimate variance penalises wide h_t,
+    # so a poorly-estimated curvature cannot push its bandwidth to an extreme.
+    pen <- if (regularize) reg_const * sum(cf^2 * (hv^4 / 4) * var_b) else 0
+    Bbar^2 + pen + sum(cf^2 * vt / (nt * hv))
   }
   h <- vapply(keys, function(k) unname(pilot_bws[[k]]["h"]), numeric(1))
   lo <- 0.03 * hmax

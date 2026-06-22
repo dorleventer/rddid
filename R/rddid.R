@@ -115,7 +115,8 @@ rddid <- function(data, y, x, time, id = NULL, t_rd,
     bw_info <- list(method = "cct", bws = bws)
   } else if (bwselect == "iter") {
     ib <- .bw_joint_iter(plist, coef, as.character(t_rd),
-                         c = c, p = p, q = q, kernel = kernel)
+                         c = c, p = p, q = q, kernel = kernel,
+                         regularize = regularize, reg_const = reg_const)
     bws <- ib$bws
     bw_info <- list(method = "iter", bws = bws, niter = ib$niter)
   } else {
