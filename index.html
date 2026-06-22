@@ -62,7 +62,81 @@
 
       </header><div class="row">
   <div class="contents col-md-9">
-Estimation and inference for the regression-discontinuity difference-in-discontinuities (RD-DID) design of Leventer and Nevo, which recovers a causal effect when a confounding policy switches at the same cutoff as the treatment of interest. The discontinuity is estimated period by period with standard local-linear RD and aggregated across periods following the identification result. Variances are provided for three sampling schemes (repeated cross-section, panel with time-constant running variable, panel with time-varying running variable), and the common bandwidth can be chosen either per period (the Imbens-Kalyanaraman / CCT within-period MSE-optimal rule) or jointly to minimise the asymptotic MSE of the aggregate estimator.
+<div class="section level1">
+<div class="page-header"><h1 id="rddid">rddid<a class="anchor" aria-label="anchor" href="#rddid"></a>
+</h1></div>
+<!-- badges: start -->
+<!-- badges: end -->
+<p><strong>Treatment-effect estimation in regression-discontinuity difference-in-discontinuities (RD-DID) designs.</strong></p>
+<p>Standard RD requires the mean potential outcome to be continuous at the cutoff. That fails when a <em>confounding</em> policy switches at the same threshold as the treatment of interest, biasing the discontinuity. <code>rddid</code> implements the RD-DID framework of <strong>Leventer and Nevo</strong>: comparison periods — where the confounding is present at the cutoff but the treatment of interest is uniform — identify and net out the bias, recovering the causal effect</p>
+<!-- math -->
+<blockquote>
+<p>ATT(t_RD) = D_{t_RD} − Σ_t w_t D_t,</p>
+</blockquote>
+<p>where each <code>D_t</code> is a standard local-linear RD discontinuity and <code>{w_t}</code> are trend weights.</p>
+<div class="section level2">
+<h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
+</h2>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># install.packages("devtools")</span></span>
+<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"dorleventer/rddid"</span><span class="op">)</span></span></code></pre></div>
+<blockquote>
+<p><strong>Note.</strong> This is a from-scratch rewrite (v0.1) targeting the current estimation framework. The original work-in-progress package is preserved at the git tag <a href="https://github.com/dorleventer/rddid/releases/tag/archive/v0" class="external-link"><code>archive/v0</code></a>.</p>
+</blockquote>
+</div>
+<div class="section level2">
+<h2 id="quick-start">Quick start<a class="anchor" aria-label="anchor" href="#quick-start"></a>
+</h2>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/dorleventer/rddid" class="external-link">rddid</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># long data: one row per unit-period, with outcome y, running variable x,</span></span>
+<span><span class="co"># period `time`, and unit `id`.</span></span>
+<span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/rddid.html">rddid</a></span><span class="op">(</span><span class="va">data</span>, y <span class="op">=</span> <span class="st">"y"</span>, x <span class="op">=</span> <span class="st">"x"</span>, time <span class="op">=</span> <span class="st">"time"</span>, id <span class="op">=</span> <span class="st">"id"</span>,</span>
+<span>             t_rd <span class="op">=</span> <span class="fl">3</span>,                 <span class="co"># period with the RD treatment</span></span>
+<span>             weights <span class="op">=</span> <span class="st">"constant"</span>,     <span class="co"># or "linear", or a numeric vector</span></span>
+<span>             bwselect <span class="op">=</span> <span class="st">"joint"</span><span class="op">)</span>       <span class="co"># or "cct"</span></span>
+<span><span class="va">fit</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="what-it-does">What it does<a class="anchor" aria-label="anchor" href="#what-it-does"></a>
+</h2>
+<p><strong>Estimation.</strong> The period-<code>t_rd</code> discontinuity is estimated by standard local-linear RD, conventional and robust bias-corrected (Calonico, Cattaneo and Titiunik 2014), and aggregated across periods. The per-period engine is validated against <a href="https://github.com/rdpackages/rdrobust" class="external-link"><code>rdrobust</code></a> to machine precision.</p>
+<p><strong>Weights.</strong> <code>"constant"</code> (equal weights; a constant confounding trend), <code>"linear"</code> (the line through the comparison discontinuities extrapolated to <code>t_rd</code>), or a custom numeric vector.</p>
+<p><strong>Two bandwidth rules.</strong></p>
+<table class="table">
+<colgroup>
+<col width="50%">
+<col width="50%">
+</colgroup>
+<thead><tr>
+<th><code>bwselect</code></th>
+<th>Rule</th>
+</tr></thead>
+<tbody>
+<tr>
+<td><code>"cct"</code></td>
+<td>Within-period MSE-optimal bandwidth (Imbens–Kalyanaraman / CCT) applied to each <code>D_t</code> on its own. Never degenerates; leaves the cross-period bias cancellation unexploited.</td>
+</tr>
+<tr>
+<td><code>"joint"</code></td>
+<td>One common bandwidth <code>h* = (V / B²)^(1/5) n^(-1/5)</code> minimising the asymptotic MSE of the <strong>aggregate</strong> estimator. The bias constant <code>B = b_{t_RD} − Σ w_t b_t</code> is signed, so comparison-period biases can offset the RD-period bias.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Three sampling schemes.</strong> Standard errors are reported under repeated cross-section (<code>CS</code>), panel with a time-constant running variable (<code>PC</code>), and panel with a time-varying running variable (<code>PV</code>). The applicable scheme is auto-detected from the id / side structure; all three are always returned.</p>
+</div>
+<div class="section level2">
+<h2 id="status">Status<a class="anchor" aria-label="anchor" href="#status"></a>
+</h2>
+<p>v0.1 — estimation and inference complete and verified. Simulation study, empirical vignette, and inference with data-driven weights are in progress.</p>
+</div>
+<div class="section level2">
+<h2 id="reference">Reference<a class="anchor" aria-label="anchor" href="#reference"></a>
+</h2>
+<p>Leventer, D. and Nevo, D. <em>Regression discontinuity with a confounded cutoff.</em></p>
+</div>
+</div>
   </div>
 
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
