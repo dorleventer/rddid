@@ -90,3 +90,72 @@
   list(h = h_star, b = h_star * (b0 / h0), B = B, Veff = Veff, reg = reg,
        pilot = pilot)
 }
+
+#' Period-specific joint AMSE bandwidths by coordinate descent
+#'
+#' Minimises the aggregate AMSE of ATT-hat over a SEPARATE bandwidth per period,
+#' rather than a single common h. The simultaneous optimum can corner (Appendix
+#' C), so we cycle one period at a time: holding the others fixed, each
+#' coordinate problem AMSE(h_tau | rest) = Bbar(h_tau)^2 + omega_tau v_tau /
+#' (n h_tau) is coercive (-> Inf as h_tau -> 0 and as h_tau -> Inf, since
+#' Bbar grows like h_tau^2), so it always has an interior minimum -- no
+#' degeneracy. Initialised at per-period CCT.
+#'
+#' AMSE uses the (CS / diagonal) form Bbar = (1/2) sum_tau coef_tau h_tau^2 b_tau,
+#' V = sum_tau coef_tau^2 v_tau / (n_tau h_tau); cross-period covariances are
+#' o(1/(nh)) (time-varying R) or folded into the per-period v at the bandwidth
+#' scale, matching the App C period-specific treatment.
+#'
+#' @param plist named per-period data; `coef` named period coefficients;
+#'   `t_rd` RD-period label.
+#' @param pilot_bws optional named list of per-period `c(h, b)` used both to
+#'   initialise and to estimate the per-period constants; defaults to CCT.
+#' @param hmax cap on each bandwidth (defaults to the running-variable radius).
+#' @param maxit,tol coordinate-descent controls.
+#' @return list with per-period `bws` (named list of `c(h, b)`), the constants
+#'   `b_const`/`v_const`, and iteration count `niter`.
+#' @keywords internal
+#' @noRd
+.bw_joint_iter <- function(plist, coef, t_rd, pilot_bws = NULL,
+                           c = 0, p = 1L, q = 2L, kernel = "triangular",
+                           hmax = NULL, maxit = 50L, tol = 1e-4) {
+  keys <- names(coef)
+  if (is.null(pilot_bws))
+    pilot_bws <- .bw_cct(plist, c = c, p = p, kernel = kernel)
+
+  # per-period asymptotic constants from a pilot fit (b_t = curvature gap,
+  # v_t = variance constant); rd_period already returns these.
+  fitp <- lapply(keys, function(k)
+    rd_period(plist[[k]]$y, plist[[k]]$x, h = pilot_bws[[k]]["h"],
+              b = pilot_bws[[k]]["b"], id = plist[[k]]$id,
+              c = c, p = p, q = q, kernel = kernel))
+  names(fitp) <- keys
+  cf <- vapply(keys, function(k) coef[[k]],        numeric(1))
+  bt <- vapply(keys, function(k) fitp[[k]]$b_const, numeric(1))
+  vt <- vapply(keys, function(k) fitp[[k]]$v_const, numeric(1))
+  nt <- vapply(keys, function(k) fitp[[k]]$n,       numeric(1))
+  ratio <- vapply(keys, function(k)
+    unname(pilot_bws[[k]]["b"] / pilot_bws[[k]]["h"]), numeric(1))
+  if (is.null(hmax))
+    hmax <- max(vapply(plist, function(d) max(abs(d$x - c)), numeric(1)))
+
+  amse <- function(hv) {
+    Bbar <- 0.5 * sum(cf * hv^2 * bt)
+    Bbar^2 + sum(cf^2 * vt / (nt * hv))
+  }
+  h <- vapply(keys, function(k) unname(pilot_bws[[k]]["h"]), numeric(1))
+  lo <- 0.03 * hmax
+  it <- 0L
+  repeat {
+    it <- it + 1L
+    h_old <- h
+    for (j in seq_along(keys)) {
+      obj <- function(hj) { hv <- h; hv[j] <- hj; amse(hv) }
+      h[j] <- stats::optimize(obj, interval = c(lo, hmax))$minimum
+    }
+    if (max(abs(h - h_old)) < tol * hmax || it >= maxit) break
+  }
+  bws <- stats::setNames(lapply(seq_along(keys), function(j)
+    c(h = unname(h[j]), b = unname(h[j] * ratio[j]))), keys)
+  list(bws = bws, b_const = bt, v_const = vt, niter = it)
+}

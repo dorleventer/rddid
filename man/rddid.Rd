@@ -13,7 +13,7 @@ rddid(
   t_rd,
   comparisons = NULL,
   weights = "constant",
-  bwselect = c("joint", "cct"),
+  bwselect = c("joint", "cct", "iter"),
   h = NULL,
   b = NULL,
   scheme = c("auto", "cs", "pc", "pv"),

@@ -77,7 +77,7 @@
 #' @export
 rddid <- function(data, y, x, time, id = NULL, t_rd,
                   comparisons = NULL, weights = "constant",
-                  bwselect = c("joint", "cct"), h = NULL, b = NULL,
+                  bwselect = c("joint", "cct", "iter"), h = NULL, b = NULL,
                   scheme = c("auto", "cs", "pc", "pv"),
                   regularize = TRUE, reg_const = 3,
                   c = 0, p = 1L, q = 2L, kernel = "triangular", level = 0.95) {
@@ -113,6 +113,11 @@ rddid <- function(data, y, x, time, id = NULL, t_rd,
   } else if (bwselect == "cct") {
     bws <- .bw_cct(plist, c = c, p = p, kernel = kernel)
     bw_info <- list(method = "cct", bws = bws)
+  } else if (bwselect == "iter") {
+    ib <- .bw_joint_iter(plist, coef, as.character(t_rd),
+                         c = c, p = p, q = q, kernel = kernel)
+    bws <- ib$bws
+    bw_info <- list(method = "iter", bws = bws, niter = ib$niter)
   } else {
     jb <- .bw_joint(plist, coef, as.character(t_rd), scheme = use_scheme,
                     c = c, p = p, q = q, kernel = kernel,
@@ -165,7 +170,8 @@ print.rddid <- function(x, ...) {
   bwtxt <- switch(bw$method,
     fixed = sprintf("fixed h=%.4g, b=%.4g", bw$h, bw$b),
     joint = sprintf("joint AMSE  h*=%.4g, b=%.4g", bw$h, bw$b),
-    cct   = "per-period CCT/IK")
+    cct   = "per-period CCT/IK",
+    iter  = sprintf("period-specific joint AMSE (coord. descent, %d iters)", bw$niter))
   cat(sprintf("  bandwidth: %s\n", bwtxt))
   cat(sprintf("  sampling scheme: %s%s\n", toupper(x$scheme),
               if (x$scheme_requested == "auto") " (auto-detected)" else ""))
