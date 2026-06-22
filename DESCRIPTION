@@ -1,24 +1,36 @@
 Package: rddid
-Title: Estimate treatment effects in RDDID designs
-Version: 0.0.0.9000
-Authors@R: 
+Title: Treatment-Effect Estimation in Regression-Discontinuity
+    Difference-in-Discontinuities (RD-DID) Designs
+Version: 0.1.0.9000
+Authors@R: c(
     person("Dor", "Leventer", , "leventerdor@gmail.com", role = c("aut", "cre"),
-           comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: The package provides estimates following the framework in Leventer and Nevo (2024).
+           comment = c(ORCID = "0000-0000-0000-0000")),
+    person("Daniel", "Nevo", role = "aut"))
+Description: Estimation and inference for the regression-discontinuity
+    difference-in-discontinuities (RD-DID) design of Leventer and Nevo,
+    which recovers a causal effect when a confounding policy switches at the
+    same cutoff as the treatment of interest. The discontinuity is estimated
+    period by period with standard local-linear RD and aggregated across
+    periods following the identification result. Variances are provided for
+    three sampling schemes (repeated cross-section, panel with time-constant
+    running variable, panel with time-varying running variable), and the
+    common bandwidth can be chosen either per period (the Imbens-Kalyanaraman
+    / CCT within-period MSE-optimal rule) or jointly to minimise the
+    asymptotic MSE of the aggregate estimator.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.2
-Suggests: 
+RoxygenNote: 7.3.3
+Depends:
+    R (>= 3.5)
+Imports:
+    stats
+Suggests:
+    rdrobust,
+    testthat (>= 3.0.0),
     knitr,
-    rmarkdown,
-    tidyverse,
-    rdrobust
+    rmarkdown
+Config/testthat/edition: 3
+URL: https://github.com/dorleventer/rddid, https://dorleventer.github.io/rddid/
+BugReports: https://github.com/dorleventer/rddid/issues
 VignetteBuilder: knitr
-Imports: 
-    stats,
-    dplyr
-Depends: 
-    R (>= 2.10)
-LazyData: true
-URL: https://dorleventer.github.io/rddid/
