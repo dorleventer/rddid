@@ -96,18 +96,26 @@
 #' Minimises the aggregate AMSE of ATT-hat over a SEPARATE bandwidth per period,
 #' rather than a single common h. The simultaneous optimum can corner (Appendix
 #' C), so we cycle one period at a time: holding the others fixed, each
-#' coordinate problem AMSE(h_tau | rest) = Bbar(h_tau)^2 + omega_tau v_tau /
-#' (n h_tau) is coercive (-> Inf as h_tau -> 0 and as h_tau -> Inf, since
-#' Bbar grows like h_tau^2), so it always has an interior minimum -- no
-#' degeneracy. Initialised at per-period CCT.
+#' coordinate problem AMSE(h_tau | rest) is coercive (Appendix C, Lemma
+#' lem:coercive), so it always has an interior minimum -- no degeneracy.
+#' Initialised at per-period CCT.
 #'
-#' AMSE uses the (CS / diagonal) form Bbar = (1/2) sum_tau coef_tau h_tau^2 b_tau,
-#' V = sum_tau coef_tau^2 v_tau / (n_tau h_tau); cross-period covariances are
-#' o(1/(nh)) (time-varying R) or folded into the per-period v at the bandwidth
-#' scale, matching the App C period-specific treatment.
+#' Under `scheme = "pc"` the same-side cross-period covariance term is included
+#' in the AMSE (it is O(1/(nh)), same order as the per-period variance).  Under
+#' `"cs"` and `"pv"` it is omitted (CS covariance is zero; PV covariances are
+#' o(1/(nh)) and dropped for bandwidth selection per Appendix C).
+#'
+#' The PC covariance term is
+#'   `2 * sum_{tau<rho} cf_tau*cf_rho*P_tr*M0_tr / max(hv_tau,hv_rho)`
+#' where `P_tr` is the pilot same-side cross-period covariance (from
+#' `.cross_cov()$pc` at the per-period CCT pilot fits) and `M0_tr` = max of
+#' the two pilot bandwidths.  This is the pilot-scaling form: since
+#' `Cov = c/(n*max(h))` and `c/n = P*max(h0)`, n cancels.
 #'
 #' @param plist named per-period data; `coef` named period coefficients;
 #'   `t_rd` RD-period label.
+#' @param scheme one of `"cs"`, `"pc"`, `"pv"`; determines whether the
+#'   cross-period covariance term enters the AMSE (only for `"pc"`).
 #' @param pilot_bws optional named list of per-period `c(h, b)` used both to
 #'   initialise and to estimate the per-period constants; defaults to CCT.
 #' @param hmax cap on each bandwidth (defaults to the running-variable radius).
@@ -116,7 +124,7 @@
 #'   `b_const`/`v_const`, and iteration count `niter`.
 #' @keywords internal
 #' @noRd
-.bw_joint_iter <- function(plist, coef, t_rd, pilot_bws = NULL,
+.bw_joint_iter <- function(plist, coef, t_rd, scheme = "cs", pilot_bws = NULL,
                            c = 0, p = 1L, q = 2L, kernel = "triangular",
                            regularize = TRUE, reg_const = 3,
                            hmax = NULL, maxit = 50L, tol = 1e-4) {
@@ -147,12 +155,43 @@
     (2 / pilot_bws[[k]]["h"]^2)^2 * (sum(s[["+"]]$g_diff^2) + sum(s[["-"]]$g_diff^2))
   }, numeric(1))
 
+  # PC covariance precomputation ------------------------------------------
+  # P_mat[i,j] = pilot same-side cross-period covariance (from .cross_cov)
+  # M0_mat[i,j] = max of the two pilot bandwidths
+  # Both are only computed (and used) when scheme == "pc".
+  K <- length(keys)
+  P_mat  <- matrix(0, K, K)
+  M0_mat <- matrix(0, K, K)
+  h0v <- vapply(keys, function(k) unname(pilot_bws[[k]]["h"]), numeric(1))
+  if (scheme == "pc" && K >= 2L) {
+    for (i in seq_len(K - 1L)) {
+      for (j in (i + 1L):K) {
+        P_mat[i, j]  <- .cross_cov(fitp[[keys[i]]], fitp[[keys[j]]], bc = FALSE)$pc
+        P_mat[j, i]  <- P_mat[i, j]
+        M0_mat[i, j] <- max(h0v[i], h0v[j])
+        M0_mat[j, i] <- M0_mat[i, j]
+      }
+    }
+  }
+
   amse <- function(hv) {
     Bbar <- 0.5 * sum(cf * hv^2 * bt)
     # regularization: each period's bias-estimate variance penalises wide h_t,
     # so a poorly-estimated curvature cannot push its bandwidth to an extreme.
     pen <- if (regularize) reg_const * sum(cf^2 * (hv^4 / 4) * var_b) else 0
-    Bbar^2 + pen + sum(cf^2 * vt / (nt * hv))
+    var_term <- sum(cf^2 * vt / (nt * hv))
+    # PC same-side cross-period covariance term (Appendix C, eq. amse-ps).
+    # For CS and PV this is zero (zero covariance / lower order respectively).
+    cov_term <- 0
+    if (scheme == "pc" && K >= 2L) {
+      for (i in seq_len(K - 1L)) {
+        for (j in (i + 1L):K) {
+          cov_term <- cov_term +
+            2 * cf[i] * cf[j] * P_mat[i, j] * M0_mat[i, j] / max(hv[i], hv[j])
+        }
+      }
+    }
+    Bbar^2 + pen + var_term + cov_term
   }
   h <- vapply(keys, function(k) unname(pilot_bws[[k]]["h"]), numeric(1))
   lo <- 0.03 * hmax
