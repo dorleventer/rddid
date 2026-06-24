@@ -124,9 +124,10 @@ distinct unit (repeated cross-section).</p></dd>
 
 
 <dt id="arg-bwselect">bwselect<a class="anchor" aria-label="anchor" href="#arg-bwselect"></a></dt>
-<dd><p><code>"joint"</code> (default; common AMSE-optimal bandwidth for the
-aggregate estimator) or <code>"cct"</code> (per-period MSE-optimal bandwidth).
-Ignored if <code>h</code> is supplied.</p></dd>
+<dd><p><code>"joint"</code> (default; a single common AMSE-optimal bandwidth
+for the aggregate estimator), <code>"cct"</code> (per-period MSE-optimal bandwidths
+via <code>rdrobust</code>), or <code>"iter"</code> (period-specific bandwidths chosen jointly by
+coordinate descent on the aggregate AMSE). Ignored if <code>h</code> is supplied.</p></dd>
 
 
 <dt id="arg-h-b">h, b<a class="anchor" aria-label="anchor" href="#arg-h-b"></a></dt>
