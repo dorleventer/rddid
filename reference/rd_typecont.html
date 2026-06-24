@@ -66,7 +66,7 @@ sign pattern of its running variables in the OTHER periods,
 <span>  <span class="va">id</span>,</span>
 <span>  c <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  h <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  q <span class="op">=</span> <span class="fl">75L</span>,</span>
+<span>  q <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  S <span class="op">=</span> <span class="fl">499L</span>,</span>
 <span>  kernel <span class="op">=</span> <span class="st">"triangular"</span>,</span>
 <span>  scheme <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"auto"</span>, <span class="st">"cs"</span>, <span class="st">"pc"</span>, <span class="st">"pv"</span><span class="op">)</span>,</span>
@@ -104,8 +104,13 @@ a data-driven bandwidth (e.g. from <code><a href="rddid.html">rddid()</a></code>
 
 
 <dt id="arg-q">q<a class="anchor" aria-label="anchor" href="#arg-q"></a></dt>
-<dd><p>number of observations nearest the cutoff on each side to use in
-the Canay-Kamat permutation test (default 75).</p></dd>
+<dd><p>number of observations nearest the cutoff on each side for the
+Canay-Kamat permutation test. <code>NULL</code> (default) selects <code>q</code> per period by
+the Canay &amp; Kamat (2018) rule of thumb; this is the
+recommended choice, since a fixed <code>q</code> over-rejects in finite samples when
+the type distribution varies steeply in the running variable at the cutoff.
+Supply an integer to force a fixed <code>q</code> on every period. The per-period <code>q</code>
+actually used is returned in <code>meta$q_used</code>.</p></dd>
 
 
 <dt id="arg-s">S<a class="anchor" aria-label="anchor" href="#arg-s"></a></dt>
