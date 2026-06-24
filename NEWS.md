@@ -1,5 +1,12 @@
 # rddid 0.2.1.9000 (development)
 
+* `R CMD check` is now clean (0 errors / 0 warnings). Fixes: replaced the
+  `\insertCite{}` macros in `rd_compstable()` (Rdpack was not a dependency)
+  with the plain-text citations already in the References; documented the
+  `regularize`/`reg_const` arguments of `rddid()`; and dropped the
+  `VignetteBuilder: knitr` declaration (and the `knitr`/`rmarkdown` Suggests)
+  since the package ships no vignettes.
+
 * Internal: consolidated duplicated logic into shared helpers. A new
   `.cov_scheme()` (the `cs`/`pc`/`pv` scheme-combine of `.cross_cov()`) now
   backs the cross-period covariance in `rd_typecont()`, `rd_compstable()`, and

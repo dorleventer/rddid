@@ -54,8 +54,7 @@
 #' (ii) **Permutation test**: permutes at the unit level.  Each unit
 #'   contributes its observations (possibly >1) as a block; the side label is
 #'   permuted across units, not across individual rows.  This follows
-#'   \insertCite{amro2017permuting}{rddid} and
-#'   \insertCite{derrick2022review}{rddid}.
+#'   Amro and Pauly (2017) and Derrick et al. (2022) (see References).
 #'
 #' @param data A long data frame, one row per unit-period (balanced or
 #'   unbalanced panel).

@@ -73,6 +73,12 @@
 #' @param bwselect `"joint"` (default; common AMSE-optimal bandwidth for the
 #'   aggregate estimator) or `"cct"` (per-period MSE-optimal bandwidth).
 #'   Ignored if `h` is supplied.
+#' @param regularize logical; if `TRUE` (default) the joint AMSE-optimal
+#'   bandwidth adds an `rdrobust`-style regularization term to the squared bias
+#'   so a near-zero estimated curvature cannot blow the bandwidth up. Ignored
+#'   if `h` is supplied.
+#' @param reg_const regularization constant for `regularize` (default 3,
+#'   matching the CCT convention).
 #' @param h,b optional common point / pilot bandwidths; if `h` is given it is
 #'   used for every period (with `b` defaulting to `h`).
 #' @param scheme `"auto"` (detect from the id/side structure) or one of `"cs"`,

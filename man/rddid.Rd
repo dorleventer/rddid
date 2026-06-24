@@ -55,6 +55,14 @@ used for every period (with \code{b} defaulting to \code{h}).}
 \code{"pc"}, \code{"pv"}; selects which sampling-scheme variance is reported as the
 headline standard error. All three are always returned.}
 
+\item{regularize}{logical; if \code{TRUE} (default) the joint AMSE-optimal
+bandwidth adds an \code{rdrobust}-style regularization term to the squared bias
+so a near-zero estimated curvature cannot blow the bandwidth up. Ignored
+if \code{h} is supplied.}
+
+\item{reg_const}{regularization constant for \code{regularize} (default 3,
+matching the CCT convention).}
+
 \item{c}{cutoff (default 0).}
 
 \item{p, q}{point / bias-correction polynomial orders (default 1, 2).}
