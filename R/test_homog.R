@@ -1,6 +1,6 @@
-# Test of Assumption A8: type-homogeneous confounding.
+# Test of Assumption A9: type-homogeneous confounding.
 # Manuscript ref: Leventer and Nevo, "Correcting Invalid RD Designs",
-# paragraph "Type-homogeneous confounding (Assumption A8)".
+# paragraph "Type-homogeneous confounding (Assumption A9)".
 #
 # The test is run in COMPARISON PERIODS ONLY.  In comparison period t0 the
 # outcome RD jump equals the pure confounding:
@@ -13,7 +13,7 @@
 
 # ---------------------------------------------------------------------------
 # Local helpers (not exported; replicated locally rather than depending on the
-# A6 agent's R/test_helpers.R — will reconcile when that file ships).
+# A7 agent's R/test_helpers.R — will reconcile when that file ships).
 # ---------------------------------------------------------------------------
 
 #' Build per-unit type strings for each period
@@ -113,7 +113,7 @@
 # Main exported function
 # ---------------------------------------------------------------------------
 
-#' Test of type-homogeneous confounding (Assumption A8)
+#' Test of type-homogeneous confounding (Assumption A9)
 #'
 #' Tests whether the outcome RD discontinuity is constant across types in
 #' **comparison periods** (periods where the treatment of interest is absent).
@@ -126,7 +126,7 @@
 #' ## Scope and interpretation
 #'
 #' **This test is run in comparison periods only.**  The type-homogeneous
-#' confounding assumption (A8 in Leventer and Nevo) is needed at the *RD
+#' confounding assumption (A9 in Leventer and Nevo) is needed at the *RD
 #' period* \eqn{t_{\mathrm{RD}}}, but there the jump also contains the ATT and
 #' \eqn{\alpha_{t_{\mathrm{RD}},0}(\mathbf{v}_{-t_{\mathrm{RD}}})} is not
 #' separately observable.  Testing homogeneity in comparison periods is
@@ -190,7 +190,7 @@
 #'
 #' @note
 #' **Necessary and sufficient status:** This test is *neither necessary nor
-#' sufficient* for Assumption A8 (type-homogeneous confounding) to hold at the
+#' sufficient* for Assumption A9 (type-homogeneous confounding) to hold at the
 #' RD period.  Homogeneity in comparison periods is only suggestive because the
 #' assumption is needed at \eqn{t_{\mathrm{RD}}}, where the confounding jump is
 #' not separately identified.
@@ -211,7 +211,7 @@
 #' @examples
 #' \dontrun{
 #' # Two-period panel: period 1 is RD, period 2 is comparison.
-#' # Type in period 2 = sign of R_{i,1} (the other period's running variable).
+#' # Type in period 2 = sign of R_{i,1} (the running variable of the other period).
 #' set.seed(1)
 #' n <- 500
 #' r1 <- runif(n, -1, 1)
@@ -457,13 +457,13 @@ rd_homog <- function(data, y, x, time, id,
 
 #' @export
 print.rd_homog <- function(x, ...) {
-  cat("Type-homogeneous confounding test (Assumption A8)\n")
+  cat("Type-homogeneous confounding test (Assumption A9)\n")
   cat(sprintf("  Comparison periods: %s\n",
               paste(x$comparisons, collapse = ", ")))
   cat(sprintf("  Sampling scheme: %s\n", toupper(x$scheme)))
   cat(sprintf("  Wald statistic: %.4f   df: %d   p-value: %.4f\n",
               x$statistic, x$df, x$p_value))
-  cat("\n  NOTE: This test is NEITHER necessary NOR sufficient for Assumption A8\n")
+  cat("\n  NOTE: This test is NEITHER necessary NOR sufficient for Assumption A9\n")
   cat("  at the RD period. It is run in comparison periods only and is only\n")
   cat("  suggestive of homogeneity where the assumption is needed (t_RD).\n")
   if (nrow(x$period_type_jumps) > 0L) {

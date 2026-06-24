@@ -1,6 +1,6 @@
-#' Test composition stability across periods (Assumption A7)
+#' Test composition stability across periods (Assumption A8)
 #'
-#' Tests Assumption A7 ("composition stability") from Leventer and Nevo:
+#' Tests Assumption A8 ("composition stability") from Leventer and Nevo:
 #' \deqn{\pi_{t_{\mathrm{RD}},(+)}(\mathbf{u}, b) =
 #'        \pi_{t_0,(+)}(\mathbf{u}, b)
 #'        \quad \forall\,(\mathbf{u}, b),}
@@ -22,7 +22,7 @@
 #' then \eqn{\pi_{t_0,(+)}(\mathbf{u},b)} and
 #' \eqn{\pi_{t_{\mathrm{RD}},(+)}(\mathbf{u},b)}, so a jump at 0 equals the
 #' composition difference.  The same two tests from the type-continuity
-#' assessment (A6) then apply:
+#' assessment (A7) then apply:
 #'
 #' \enumerate{
 #'   \item **LL-Wald** (necessary AND sufficient): local-linear RD of each
@@ -34,7 +34,7 @@
 #'     cutoff, permuted at the **unit** level (see "Unit-level wrinkle" below).
 #' }
 #'
-#' Both tests are **necessary AND sufficient** for Assumption A7.
+#' Both tests are **necessary AND sufficient** for Assumption A8.
 #'
 #' ## Unit-level wrinkle
 #'
@@ -115,7 +115,7 @@
 #'
 #' @note
 #' **Necessary and sufficient status:** Both the LL-Wald and the Canay-Kamat
-#' permutation test are necessary AND sufficient for Assumption A7 (composition
+#' permutation test are necessary AND sufficient for Assumption A8 (composition
 #' stability).  See Leventer and Nevo for the proof.
 #'
 #' @references
@@ -570,7 +570,7 @@ rd_compstable <- function(data, x, time, id, t_rd,
 
 #' @export
 print.rd_compstable <- function(x, ...) {
-  cat("Composition-stability test (Assumption A7)\n")
+  cat("Composition-stability test (Assumption A8)\n")
   cat(sprintf("  RD period: %s   Comparison periods: %s\n",
               x$meta$t_rd,
               paste(x$meta$comparisons, collapse = ", ")))
@@ -594,6 +594,6 @@ print.rd_compstable <- function(x, ...) {
     cat(sprintf("  CK perm (Fisher):  p = %.4f\n", x$joint$ck_perm$p))
   }
 
-  cat("\nNOTE: Both tests are necessary AND sufficient for Assumption A7.\n")
+  cat("\nNOTE: Both tests are necessary AND sufficient for Assumption A8.\n")
   invisible(x)
 }

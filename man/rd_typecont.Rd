@@ -2,7 +2,7 @@
 % Please edit documentation in R/test_typecont.R
 \name{rd_typecont}
 \alias{rd_typecont}
-\title{Test the continuity of the type distribution (Assumption A6)}
+\title{Test the continuity of the type distribution (Assumption A7)}
 \usage{
 rd_typecont(
   data,
@@ -58,7 +58,7 @@ McCrary p-value on pooled sample).}
 \item{meta}{list with \code{periods}, \code{type_values}, \code{h}, \code{q}, \code{S}, \code{scheme}.}
 }
 \description{
-Runs the four tests for Assumption A6 ("continuity of the type distribution")
+Runs the four tests for Assumption A7 ("continuity of the type distribution")
 from Leventer and Nevo.  The "type" of unit \eqn{i} in period \eqn{t} is the
 sign pattern of its running variables in the OTHER periods,
 \eqn{\mathbf{V}_{i,-t} = (1\{R_{i,s} \ge c\})_{s \ne t}}.

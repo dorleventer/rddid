@@ -2,7 +2,7 @@
 % Please edit documentation in R/test_homog.R
 \name{rd_homog}
 \alias{rd_homog}
-\title{Test of type-homogeneous confounding (Assumption A8)}
+\title{Test of type-homogeneous confounding (Assumption A9)}
 \usage{
 rd_homog(
   data,
@@ -87,7 +87,7 @@ jumps are equal across types and comparison periods.
 \subsection{Scope and interpretation}{
 
 \strong{This test is run in comparison periods only.}  The type-homogeneous
-confounding assumption (A8 in Leventer and Nevo) is needed at the \emph{RD
+confounding assumption (A9 in Leventer and Nevo) is needed at the \emph{RD
 period} \eqn{t_{\mathrm{RD}}}, but there the jump also contains the ATT and
 \eqn{\alpha_{t_{\mathrm{RD}},0}(\mathbf{v}_{-t_{\mathrm{RD}}})} is not
 separately observable.  Testing homogeneity in comparison periods is
@@ -111,10 +111,30 @@ sampling scheme (see \code{scheme}).
 }
 \note{
 \strong{Necessary and sufficient status:} This test is \emph{neither necessary nor
-sufficient} for Assumption A8 (type-homogeneous confounding) to hold at the
+sufficient} for Assumption A9 (type-homogeneous confounding) to hold at the
 RD period.  Homogeneity in comparison periods is only suggestive because the
 assumption is needed at \eqn{t_{\mathrm{RD}}}, where the confounding jump is
 not separately identified.
+}
+\examples{
+\dontrun{
+# Two-period panel: period 1 is RD, period 2 is comparison.
+# Type in period 2 = sign of R_{i,1} (the running variable of the other period).
+set.seed(1)
+n <- 500
+r1 <- runif(n, -1, 1)
+r2 <- runif(n, -1, 1)
+# homogeneous confounding in comparison period (period 2)
+y2 <- 0.3 * r2 + 0.4 * (r2 >= 0) + rnorm(n, 0, 0.3)
+dat <- data.frame(
+  id   = rep(seq_len(n), 2),
+  time = rep(1:2, each = n),
+  x    = c(r1, r2),
+  y    = c(rnorm(n), y2)
+)
+rd_homog(dat, y = "y", x = "x", time = "time", id = "id",
+         comparisons = 2, t_rd = 1, h = 0.3)
+}
 }
 \references{
 Leventer, D. and Nevo, D. "Correcting Invalid Regression Discontinuity

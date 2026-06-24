@@ -2,7 +2,7 @@
 % Please edit documentation in R/test_compstable.R
 \name{rd_compstable}
 \alias{rd_compstable}
-\title{Test composition stability across periods (Assumption A7)}
+\title{Test composition stability across periods (Assumption A8)}
 \usage{
 rd_compstable(
   data,
@@ -91,7 +91,7 @@ pairs, assuming independence across pairs).}
 }
 }
 \description{
-Tests Assumption A7 ("composition stability") from Leventer and Nevo:
+Tests Assumption A8 ("composition stability") from Leventer and Nevo:
 \deqn{\pi_{t_{\mathrm{RD}},(+)}(\mathbf{u}, b) =
        \pi_{t_0,(+)}(\mathbf{u}, b)
        \quad \forall\,(\mathbf{u}, b),}
@@ -114,7 +114,7 @@ cutoff the left/right limits of the \eqn{(\mathbf{u},b)} type share are
 then \eqn{\pi_{t_0,(+)}(\mathbf{u},b)} and
 \eqn{\pi_{t_{\mathrm{RD}},(+)}(\mathbf{u},b)}, so a jump at 0 equals the
 composition difference.  The same two tests from the type-continuity
-assessment (A6) then apply:
+assessment (A7) then apply:
 
 \enumerate{
 \item \strong{LL-Wald} (necessary AND sufficient): local-linear RD of each
@@ -126,7 +126,7 @@ sign randomisation test comparing the two sides of the artificial
 cutoff, permuted at the \strong{unit} level (see "Unit-level wrinkle" below).
 }
 
-Both tests are \strong{necessary AND sufficient} for Assumption A7.
+Both tests are \strong{necessary AND sufficient} for Assumption A8.
 }
 
 \subsection{Unit-level wrinkle}{
@@ -153,7 +153,7 @@ permuted across units, not across individual rows.  This follows
 }
 \note{
 \strong{Necessary and sufficient status:} Both the LL-Wald and the Canay-Kamat
-permutation test are necessary AND sufficient for Assumption A7 (composition
+permutation test are necessary AND sufficient for Assumption A8 (composition
 stability).  See Leventer and Nevo for the proof.
 }
 \examples{

@@ -1,4 +1,4 @@
-# Internal helpers shared by rd_typecont() (A6) and rd_compstable() (A7).
+# Internal helpers shared by rd_typecont() (A7) and rd_compstable() (A8).
 # All functions are prefixed `.` and are not exported.
 #
 # Design contract:

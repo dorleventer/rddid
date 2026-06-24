@@ -1,6 +1,6 @@
-#' Test the continuity of the type distribution (Assumption A6)
+#' Test the continuity of the type distribution (Assumption A7)
 #'
-#' Runs the four tests for Assumption A6 ("continuity of the type distribution")
+#' Runs the four tests for Assumption A7 ("continuity of the type distribution")
 #' from Leventer and Nevo.  The "type" of unit \eqn{i} in period \eqn{t} is the
 #' sign pattern of its running variables in the OTHER periods,
 #' \eqn{\mathbf{V}_{i,-t} = (1\{R_{i,s} \ge c\})_{s \ne t}}.
@@ -379,7 +379,7 @@ rd_typecont <- function(data, x, time, id,
 
 #' @export
 print.rd_typecont <- function(x, ...) {
-  cat("Type-continuity tests (Assumption A6)\n")
+  cat("Type-continuity tests (Assumption A7)\n")
   cat(sprintf("  Periods: %s   Types: %s   h=%.4g   scheme=%s\n\n",
               paste(x$meta$periods, collapse = ", "),
               paste(x$meta$type_values, collapse = ", "),

@@ -1,3 +1,14 @@
+# rddid 0.2.0.9000 (development)
+
+* Documentation: corrected the assumption numbering in the Section 3.4 test
+  functions to match the manuscript's `\begin{assumption}` ordering —
+  `rd_typecont()` is Assumption A7 (was mislabelled A6), `rd_compstable()` is
+  A8 (was A7), and `rd_homog()` is A9 (was A8). Affects titles, `print` output,
+  and cross-references only; no behaviour change.
+* Documentation: fixed an unmatched apostrophe in the `rd_homog()` `@examples`
+  comment that was silently dropping the entire example from the rendered help
+  page.
+
 # rddid 0.2.0
 
 * Added tests for the Section 3.4 identifying assumptions of the
