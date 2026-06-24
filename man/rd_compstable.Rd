@@ -13,7 +13,7 @@ rd_compstable(
   comparisons = NULL,
   c = 0,
   h = NULL,
-  q = 75L,
+  q = NULL,
   S = 499L,
   kernel = "triangular",
   scheme = c("auto", "cs", "pc", "pv"),
@@ -42,7 +42,12 @@ unbalanced panel).}
 explicit bandwidth for reproducible results.}
 
 \item{q}{Number of observations nearest the artificial cutoff on each side
-to use in the Canay-Kamat permutation test (default 75).}
+for the Canay-Kamat permutation test. \code{NULL} (default) selects \code{q} per
+\eqn{(t_{\mathrm{RD}}, t_0)} pair by the Canay & Kamat (2018) rule of thumb
+(see \code{\link[=rd_typecont]{rd_typecont()}}); this is the recommended choice, since a fixed \code{q}
+over-rejects in finite samples when the type distribution varies steeply in
+the running variable at the cutoff. Supply an integer to force a fixed \code{q}
+on every pair. The per-pair \code{q} actually used is returned in \code{meta$q_used}.}
 
 \item{S}{Number of permutation replications (default 499).}
 
@@ -74,6 +79,7 @@ and \code{p}.}
 \item{\code{type_values}}{Character vector of \eqn{(\mathbf{u},b)} type
 labels present in this pair.}
 \item{\code{scheme}}{Scheme actually used.}
+\item{\code{q}}{Number of nearest observations per side actually used.}
 \item{\code{n_trd}}{Number of above-cutoff units from \eqn{t_RD}.}
 \item{\code{n_t0}}{Number of above-cutoff units from \eqn{t_0}.}
 \item{\code{n_both}}{Number of units above the cutoff in both periods.}
@@ -87,7 +93,8 @@ pairs, assuming independence across pairs).}
 \item{\code{ck_perm}}{list with \code{stat} (sum of per-pair stats) and \code{p}.}
 }
 }
-\item{\code{meta}}{list with \code{t_rd}, \code{comparisons}, \code{h}, \code{q}, \code{S}, \code{c}.}
+\item{\code{meta}}{list with \code{t_rd}, \code{comparisons}, \code{h}, \code{q} (\code{"rot"} when the
+rule of thumb is used), \code{q_used} (per-pair \code{q}), \code{S}, \code{c}.}
 }
 }
 \description{

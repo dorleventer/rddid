@@ -123,7 +123,7 @@ test_that("rd_compstable returns expected structure", {
   pr <- out$pairs[["2::1"]]
   expect_false(is.null(pr))
   expect_named(pr, c("ll_wald", "ck_perm", "type_values",
-                     "scheme", "n_trd", "n_t0", "n_both"))
+                     "scheme", "q", "n_trd", "n_t0", "n_both"))
 
   # ll_wald
   expect_named(pr$ll_wald, c("stat", "df", "p"))
@@ -154,6 +154,28 @@ test_that("rd_compstable n_both > 0 when eta drives both periods", {
   expect_gt(pr$n_both, 0L)
   # And scheme should be "pv" (auto-detected).
   expect_equal(pr$scheme, "pv")
+})
+
+test_that("rd_compstable default q follows the Canay-Kamat rule of thumb", {
+  dat <- make_panel_null(n = 3000, seed = 42L)
+
+  out <- rd_compstable(dat, x = "R", time = "time", id = "id",
+                       t_rd = 2L, comparisons = 1L,
+                       c = 0, h = 0.5, S = 99L)
+
+  # Default q = NULL -> per-pair rule of thumb, flagged in meta.
+  expect_identical(out$meta$q, "rot")
+  ub <- ceiling(3000^0.9 / log(3000))
+  q_used <- unlist(out$meta$q_used)
+  expect_true(all(q_used >= 10L & q_used <= ub))
+  # Per-pair q is echoed into the pair output and matches meta$q_used.
+  expect_equal(out$pairs[["2::1"]]$q, out$meta$q_used[["2::1"]])
+
+  # A supplied q overrides the rule of thumb on every pair.
+  out_fix <- rd_compstable(dat, x = "R", time = "time", id = "id",
+                           t_rd = 2L, comparisons = 1L,
+                           c = 0, h = 0.5, q = 30L, S = 99L)
+  expect_true(all(unlist(out_fix$meta$q_used) == 30L))
 })
 
 test_that("rd_compstable multiple comparison periods works", {

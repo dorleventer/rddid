@@ -8,6 +8,12 @@
   Pass an integer `q` to force a fixed value; the per-period `q` used is
   returned in `meta$q_used`.
 
+* `rd_compstable()`: same change — its Canay-Kamat permutation shares the
+  identical fixed-`q` exposure, so `q` now defaults to the rule of thumb
+  (`q = NULL`), chosen per `(t_RD, t_0)` pair on the pooled reflected sample.
+  The per-pair `q` used is returned in `meta$q_used` (and echoed in each
+  `pairs[[...]]$q`). Pass an integer `q` to force a fixed value.
+
 * Bug fix (numerical robustness): the joint Wald pseudo-inverse (`.joint_wald()`,
   used by `rd_typecont()` and `rd_compstable()`) now uses the `MASS::ginv`
   relative tolerance `sqrt(eps)*max(sv)`. The previous, tighter tolerance could

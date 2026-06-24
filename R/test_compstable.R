@@ -69,7 +69,12 @@
 #'   \mathrm{IQR}(x)} across the full sample as a simple default; supply an
 #'   explicit bandwidth for reproducible results.
 #' @param q Number of observations nearest the artificial cutoff on each side
-#'   to use in the Canay-Kamat permutation test (default 75).
+#'   for the Canay-Kamat permutation test. `NULL` (default) selects `q` per
+#'   \eqn{(t_{\mathrm{RD}}, t_0)} pair by the Canay & Kamat (2018) rule of thumb
+#'   (see [rd_typecont()]); this is the recommended choice, since a fixed `q`
+#'   over-rejects in finite samples when the type distribution varies steeply in
+#'   the running variable at the cutoff. Supply an integer to force a fixed `q`
+#'   on every pair. The per-pair `q` actually used is returned in `meta$q_used`.
 #' @param S Number of permutation replications (default 499).
 #' @param kernel Kernel for the local-linear RD: `"triangular"` (default),
 #'   `"epanechnikov"`, or `"uniform"`.
@@ -96,6 +101,7 @@
 #'         \item{`type_values`}{Character vector of \eqn{(\mathbf{u},b)} type
 #'           labels present in this pair.}
 #'         \item{`scheme`}{Scheme actually used.}
+#'         \item{`q`}{Number of nearest observations per side actually used.}
 #'         \item{`n_trd`}{Number of above-cutoff units from \eqn{t_RD}.}
 #'         \item{`n_t0`}{Number of above-cutoff units from \eqn{t_0}.}
 #'         \item{`n_both`}{Number of units above the cutoff in both periods.}
@@ -109,7 +115,8 @@
 #'         \item{`ck_perm`}{list with `stat` (sum of per-pair stats) and `p`.}
 #'       }
 #'     }
-#'     \item{`meta`}{list with `t_rd`, `comparisons`, `h`, `q`, `S`, `c`.}
+#'     \item{`meta`}{list with `t_rd`, `comparisons`, `h`, `q` (`"rot"` when the
+#'       rule of thumb is used), `q_used` (per-pair `q`), `S`, `c`.}
 #'   }
 #'
 #' @note
@@ -154,7 +161,7 @@ rd_compstable <- function(data, x, time, id, t_rd,
                           comparisons = NULL,
                           c = 0,
                           h = NULL,
-                          q = 75L,
+                          q = NULL,
                           S  = 499L,
                           kernel = "triangular",
                           scheme = c("auto", "cs", "pc", "pv"),
@@ -202,6 +209,7 @@ rd_compstable <- function(data, x, time, id, t_rd,
 
   # ---- per-pair analysis -------------------------------------------------------
   pairs_out <- list()
+  q_used    <- list()   # per-pair q actually used (rule of thumb or fixed)
 
   for (t0 in comparisons) {
     pair_key <- paste0(as.character(t_rd), "::", as.character(t0))
@@ -379,8 +387,15 @@ rd_compstable <- function(data, x, time, id, t_rd,
     ord_trd <- order(xref_trd)
     ord_t0  <- order(-xref_t0)     # most negative (closest to 0) first
 
-    q_trd <- min(q, n_trd_obs)
-    q_t0  <- min(q, n_t0_obs)
+    # Number of nearest observations per side: the Canay-Kamat rule of thumb
+    # on the pooled reflected sample (x_all is the signed artificial-cutoff
+    # distance, type_all the partner (u,b) type) when q is NULL, otherwise the
+    # user-supplied fixed q. Same fixed-q over-rejection exposure as rd_typecont.
+    q_pair <- if (is.null(q)) .q_rot(x_all, type_all, 0) else as.integer(q)
+    q_used[[pair_key]] <- q_pair
+
+    q_trd <- min(q_pair, n_trd_obs)
+    q_t0  <- min(q_pair, n_t0_obs)
 
     sel_trd  <- ord_trd[seq_len(q_trd)]
     sel_t0   <- ord_t0[seq_len(q_t0)]
@@ -487,6 +502,7 @@ rd_compstable <- function(data, x, time, id, t_rd,
       ck_perm    = list(stat = ck_obs, p = ck_p),
       type_values = all_type_vals,
       scheme     = use_scheme,
+      q          = q_pair,
       n_trd      = n_trd_obs,
       n_t0       = n_t0_obs,
       n_both     = n_both
@@ -539,7 +555,8 @@ rd_compstable <- function(data, x, time, id, t_rd,
         t_rd        = t_rd,
         comparisons = comparisons,
         h           = h,
-        q           = q,
+        q           = if (is.null(q)) "rot" else as.integer(q),
+        q_used      = q_used,
         S           = S,
         c           = c
       )
@@ -555,13 +572,14 @@ print.rd_compstable <- function(x, ...) {
   cat(sprintf("  RD period: %s   Comparison periods: %s\n",
               x$meta$t_rd,
               paste(x$meta$comparisons, collapse = ", ")))
-  cat(sprintf("  h=%.4g   q=%d   S=%d\n\n",
-              x$meta$h, x$meta$q, x$meta$S))
+  q_lbl <- if (identical(x$meta$q, "rot")) "rule-of-thumb" else x$meta$q
+  cat(sprintf("  h=%.4g   q=%s   S=%d\n\n",
+              x$meta$h, q_lbl, x$meta$S))
 
   for (pk in names(x$pairs)) {
     pr <- x$pairs[[pk]]
-    cat(sprintf("Pair %s  [scheme=%s  n_trd=%d  n_t0=%d  n_both=%d]\n",
-                pk, toupper(pr$scheme), pr$n_trd, pr$n_t0, pr$n_both))
+    cat(sprintf("Pair %s  [scheme=%s  q=%d  n_trd=%d  n_t0=%d  n_both=%d]\n",
+                pk, toupper(pr$scheme), pr$q, pr$n_trd, pr$n_t0, pr$n_both))
     cat(sprintf("  (1) LL-Wald [nec & suff]:  chi2(%.0f) = %.4f   p = %.4f\n",
                 pr$ll_wald$df, pr$ll_wald$stat, pr$ll_wald$p))
     cat(sprintf("  (2) CK permutation [nec & suff]:  stat = %.4f   p = %.4f\n\n",
