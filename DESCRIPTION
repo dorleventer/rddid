@@ -1,7 +1,7 @@
 Package: rddid
 Title: Treatment-Effect Estimation in Regression-Discontinuity
     Difference-in-Discontinuities (RD-DID) Designs
-Version: 0.1.0.9000
+Version: 0.2.0
 Authors@R: c(
     person("Dor", "Leventer", , "leventerdor@gmail.com", role = c("aut", "cre"),
            comment = c(ORCID = "0000-0000-0000-0000")),
