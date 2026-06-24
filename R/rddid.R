@@ -26,8 +26,11 @@
 #' @keywords internal
 #' @noRd
 .detect_scheme <- function(plist, c = 0) {
+  # side is 1 if x >= c (treated at the cutoff), 0 otherwise — no third "side"
+  # at exactly x == c, so a unit sitting on the cutoff does not read as a switch.
   long <- do.call(rbind, lapply(names(plist), function(k)
-    data.frame(period = k, id = plist[[k]]$id, side = sign(plist[[k]]$x - c))))
+    data.frame(period = k, id = plist[[k]]$id,
+               side = as.integer(plist[[k]]$x >= c))))
   rep_ids <- names(which(table(unique(long[, c("period", "id")])$id) >= 2L))
   if (length(rep_ids) == 0L) return("cs")
   sub <- long[long$id %in% rep_ids, ]

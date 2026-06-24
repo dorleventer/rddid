@@ -12,56 +12,10 @@
 # the RD period; see documentation for rd_homog().
 
 # ---------------------------------------------------------------------------
-# Local helpers (not exported; replicated locally rather than depending on the
-# A7 agent's R/test_helpers.R — will reconcile when that file ships).
+# Local helpers (not exported).  Types come from the shared .build_types() in
+# R/test_helpers.R; only the cross-period covariance helpers below are local to
+# this test (they take the rd_period fit objects directly).
 # ---------------------------------------------------------------------------
-
-#' Build per-unit type strings for each period
-#'
-#' Pivots the long panel to wide on id x time, then for period `t` the "type"
-#' of unit i is the sign pattern of the OTHER periods' running variables
-#' relative to cutoff c: "+" if x > c, "-" if x < c (units exactly at c are
-#' dropped from both sides by rd_period anyway).
-#'
-#' @param data long data frame.
-#' @param x,time,id column names.
-#' @param c cutoff.
-#' @return A list, one element per period, each a data frame with columns
-#'   `id` and `type` (character).
-#' @keywords internal
-#' @noRd
-.build_types <- function(data, x, time, id, c = 0) {
-  ids   <- data[[id]]
-  times <- data[[time]]
-  xs    <- data[[x]]
-  all_periods <- sort(unique(times))
-
-  # wide matrix: rows = unique units, cols = periods; NA if not observed
-  uid <- sort(unique(ids))
-  side_mat <- matrix(NA_character_, nrow = length(uid), ncol = length(all_periods),
-                     dimnames = list(as.character(uid), as.character(all_periods)))
-  for (k in seq_along(ids)) {
-    ri <- as.character(uid)[match(ids[k], uid)]
-    ci <- as.character(all_periods)[match(times[k], all_periods)]
-    side_mat[ri, ci] <- if (xs[k] > c) "+" else if (xs[k] < c) "-" else NA_character_
-  }
-
-  lapply(as.character(all_periods), function(tp) {
-    other_cols <- setdiff(as.character(all_periods), tp)
-    if (length(other_cols) == 0L) {
-      # single-period panel: all units are the same "type"
-      df <- data.frame(id = uid, type = "all", stringsAsFactors = FALSE)
-    } else {
-      types <- apply(side_mat[, other_cols, drop = FALSE], 1, function(r) {
-        if (any(is.na(r))) NA_character_
-        else paste(r, collapse = "")
-      })
-      df <- data.frame(id = uid, type = types, stringsAsFactors = FALSE)
-      df <- df[!is.na(df$type), ]
-    }
-    df
-  }) |> stats::setNames(as.character(all_periods))
-}
 
 #' Cross-type, cross-period covariance entry using g vectors
 #'
@@ -253,8 +207,9 @@ rd_homog <- function(data, y, x, time, id,
     stop("need at least one comparison period.")
 
   # ---- build types ----
-  # types list: for each period, a data frame (id, type)
-  type_list <- .build_types(data, x = x, time = time, id = id, c = c)
+  # shared canonical builder; types are "+"/"-" sign-pattern strings, units at
+  # the cutoff treated as above it, partially-observed units dropped per period.
+  type_list <- .build_types(data, x = x, time = time, id = id, c = c)$period_types
 
   # ---- per-comparison-period, per-type fits ----
   # For each comparison period t0, for each type v:

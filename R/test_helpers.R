@@ -2,9 +2,8 @@
 # All functions are prefixed `.` and are not exported.
 #
 # Design contract:
-#   .build_types(data, x, time, id, c)   → list with $wide, $types per period
-#   .joint_wald(thetas, Sigma, df)        → list(stat, df, p)
-#   .ck_perm(x, g, q, S)                 → scalar p-value
+#   .build_types(data, x, time, id, c)   → list($wide, $period_types, $periods)
+#   .joint_wald(thetas, Sigma)            → list(stat, df, p)
 #   .mccrary(x, h)                       → scalar p-value
 
 # ---------------------------------------------------------------------------
@@ -13,20 +12,23 @@
 #' Build the per-period type vectors from a long panel
 #'
 #' For each period t the "type" of unit i is the sign pattern of the OTHER
-#' periods' running variables: V_{i,-t} = (1{R_{i,s} >= c})_{s != t}.
-#' With P periods this produces 2^(P-1) possible types per period, encoded
-#' as an integer (binary, with the first other-period as the least significant
-#' bit).
+#' periods' running variables: V_{i,-t} = (1{R_{i,s} >= c})_{s != t}, recorded
+#' as a "+"/"-" string (e.g. "+-").  Units exactly at the cutoff are treated as
+#' above it (V_i = 1{R_i >= c}).  Units not observed in every period are
+#' dropped from each period's type frame (their sign pattern is undefined).
+#'
+#' This is the single canonical implementation, shared by [rd_typecont()] (A7)
+#' and [rd_homog()] (A9).
 #'
 #' @param data long data frame with one row per unit × period.
 #' @param x,time,id column name strings for running variable, period, period id.
 #' @param c cutoff.
 #' @return A list:
 #'   \item{wide}{data frame with columns id, one `R_<period>` per period, one
-#'     `side_<period>` (0/1) per period.}
+#'     `side_<period>` ("+"/"-"/NA) per period.}
 #'   \item{period_types}{named list (one element per period t): a data frame
-#'     with columns `id`, `R` (running variable in period t), `type` (integer
-#'     encoding V_{i,-t}), and `type_str` (e.g. "01").}
+#'     with columns `id`, `R` (running variable in period t), and `type`
+#'     (sign-pattern string of the other periods, e.g. "+-").}
 #'   \item{periods}{character vector of period labels.}
 #' @keywords internal
 #' @noRd
@@ -35,31 +37,36 @@
   plab    <- as.character(periods)
   n_per   <- length(periods)
 
-  # Pivot to wide: one row per unit, one column per period for R and for side
+  # Pivot to wide: one row per unit, R and side per period.  Side is "+" if
+  # R >= c (treated at the cutoff), "-" if R < c, NA if the unit is unobserved.
   wide <- data.frame(id = unique(data[[id]]))
   for (k in seq_along(periods)) {
     sub <- data[data[[time]] == periods[k], , drop = FALSE]
-    m   <- match(wide$id, sub[[id]])
-    wide[[paste0("R_",    plab[k])]] <- sub[[x]][m]
-    wide[[paste0("side_", plab[k])]] <- as.integer(sub[[x]][m] >= c)
+    Rk  <- sub[[x]][match(wide$id, sub[[id]])]
+    wide[[paste0("R_",    plab[k])]] <- Rk
+    wide[[paste0("side_", plab[k])]] <-
+      ifelse(is.na(Rk), NA_character_, ifelse(Rk >= c, "+", "-"))
   }
 
-  # For each period t, build the type = binary encoding of the OTHER periods' sides
+  # For each period t, type = sign pattern of the OTHER periods' sides.  Units
+  # with any unobserved other period (NA side) are dropped from that period.
   period_types <- stats::setNames(vector("list", n_per), plab)
   for (k in seq_along(periods)) {
     other_idx <- setdiff(seq_along(periods), k)
-    # encode: sum side_{other[j]} * 2^(j-1)
-    side_mat <- as.matrix(wide[, paste0("side_", plab[other_idx]), drop = FALSE])
-    type_int <- as.integer(side_mat %*% (2L ^ (seq_along(other_idx) - 1L)))
-
-    # type_str for labeling
-    type_str <- apply(side_mat, 1L, paste, collapse = "")
-
+    Rk        <- wide[[paste0("R_", plab[k])]]
+    if (length(other_idx) == 0L) {
+      type <- rep("all", nrow(wide))
+    } else {
+      side_mat <- as.matrix(wide[, paste0("side_", plab[other_idx]), drop = FALSE])
+      type <- apply(side_mat, 1L, function(r)
+        if (anyNA(r)) NA_character_ else paste(r, collapse = ""))
+    }
+    keep <- !is.na(type) & !is.na(Rk)
     period_types[[k]] <- data.frame(
-      id       = wide$id,
-      R        = wide[[paste0("R_", plab[k])]],
-      type     = type_int,
-      type_str = type_str
+      id   = wide$id[keep],
+      R    = Rk[keep],
+      type = type[keep],
+      stringsAsFactors = FALSE
     )
   }
 
@@ -98,49 +105,12 @@
 
 
 # ---------------------------------------------------------------------------
-# .ck_perm
-# ---------------------------------------------------------------------------
-#' Canay-Kamat (2018) approximate sign randomisation test
-#'
-#' Takes the q observations nearest the cutoff on each side, and tests the
-#' null that the covariate distribution is the same on both sides by permuting
-#' the side label. The test statistic is the absolute difference in covariate
-#' means across sides. Works on a binary covariate (the type indicator for a
-#' single type value).
-#'
-#' For the joint test over multiple (period, type) pairs, call once with the
-#' concatenated covariate and x vectors (or call per-cell and combine — the
-#' caller decides).
-#'
-#' @param x numeric running variable, centred at the cutoff (cutoff = 0).
-#' @param g numeric covariate (e.g. type indicator).
-#' @param q number of observations to use from each side.
-#' @param S number of permutation replications.
-#' @return scalar p-value.
-#' @keywords internal
-#' @noRd
-.ck_perm <- function(x, g, q, S = 499L) {
-  # Nearest q on each side
-  pos  <- x >= 0
-  neg  <- x <  0
-  rt   <- order(x[pos])[seq_len(min(q, sum(pos)))]
-  lt   <- order(-x[neg])[seq_len(min(q, sum(neg)))]
-  gr   <- g[pos][rt]
-  gl   <- g[neg][lt]
-  pool <- c(gr, gl)
-  nr   <- length(gr)
-  if (nr < 1L || (length(pool) - nr) < 1L) return(NA_real_)
-  obs  <- abs(mean(gr) - mean(gl))
-  perm <- replicate(S, {
-    idx <- sample.int(length(pool), nr)
-    abs(mean(pool[idx]) - mean(pool[-idx]))
-  })
-  (1 + sum(perm >= obs)) / (S + 1)
-}
-
-
-# ---------------------------------------------------------------------------
 # .mccrary
+#
+# Note: there is no shared single-cell Canay-Kamat helper.  rd_typecont() and
+# rd_compstable() each run a *joint* Canay-Kamat permutation that draws one
+# shared per-period unit-level shuffle across all type columns, so the test is
+# inlined in those functions rather than factored out here.
 # ---------------------------------------------------------------------------
 #' McCrary (2008) density-discontinuity test
 #'

@@ -69,22 +69,6 @@ ll_cov_p_ref <- function(x, g, h) {
   2 * pnorm(-abs(tau / se))
 }
 
-ck_perm_p_ref <- function(x, g, q, S = 499L, seed = 42L) {
-  set.seed(seed)
-  rt   <- order(x[x >= 0])[seq_len(min(q, sum(x >= 0)))]
-  lt   <- order(-x[x < 0])[seq_len(min(q, sum(x < 0)))]
-  gr   <- g[x >= 0][rt]
-  gl   <- g[x < 0][lt]
-  pool <- c(gr, gl)
-  nr   <- length(gr)
-  obs  <- abs(mean(gr) - mean(gl))
-  perm <- replicate(S, {
-    idx <- sample.int(length(pool), nr)
-    abs(mean(pool[idx]) - mean(pool[-idx]))
-  })
-  (1 + sum(perm >= obs)) / (S + 1)
-}
-
 mccrary_p_ref <- function(x, h) {
   n <- length(x)
   if (n < 30L) return(NA_real_)
@@ -127,21 +111,6 @@ test_that(".mccrary matches mccrary_p_ref on same inputs", {
   h <- 0.5
 
   expect_equal(.mccrary(x, h), mccrary_p_ref(x, h), tolerance = 1e-12)
-})
-
-test_that(".ck_perm matches ck_perm_p_ref on same inputs", {
-  set.seed(99)
-  n <- 2000
-  x <- rnorm(n, 0, 0.8)
-  g <- as.integer(rnorm(n) > 0)   # random binary covariate
-  q <- 75L; S <- 199L
-  # Both use the same seed
-  ref_p <- ck_perm_p_ref(x, g, q, S, seed = 123L)
-
-  set.seed(123L)
-  pkg_p <- .ck_perm(x, g, q, S)
-
-  expect_equal(pkg_p, ref_p, tolerance = 1e-12)
 })
 
 test_that("rd_typecont LL jump matches ll_cov_p_ref on the same data (HC0 vs HC1 noted)", {

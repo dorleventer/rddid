@@ -93,32 +93,10 @@ rd_typecont <- function(data, x, time, id,
   }
 
   # ----- build types --------------------------------------------------------
-  # .build_types may be the version from test_helpers.R (returns list with
-  # $period_types, $wide, $periods) OR the version from test_homog.R (returns
-  # a named list of data frames directly, with only id+type columns).
-  # Normalise to a named list of per-period data frames that include column R.
-  bt_raw  <- .build_types(data, x, time, id, c = c)
-
-  # Detect which version was loaded
-  if (!is.null(bt_raw$period_types)) {
-    # test_helpers.R version: wraps everything in a list
-    pt <- bt_raw$period_types
-  } else {
-    # test_homog.R version: returns the list of per-period frames directly
-    pt <- bt_raw
-  }
-
-  # Ensure each per-period frame has an R (running variable) column.
-  # If absent (test_homog.R version only returns id+type), join from data.
-  for (k in plab) {
-    df_k <- pt[[k]]
-    if (!is.null(df_k) && is.null(df_k$R)) {
-      sub_k <- data[data[[time]] == periods[match(k, plab)], , drop = FALSE]
-      m     <- match(df_k[[id]], sub_k[[id]])
-      df_k$R <- sub_k[[x]][m]
-      pt[[k]] <- df_k
-    }
-  }
+  # Per-period frames (id, R, type) from the shared canonical builder in
+  # R/test_helpers.R.  `type` is the "+"/"-" sign-pattern string of the other
+  # periods; units at the cutoff are treated as above it.
+  pt <- .build_types(data, x, time, id, c = c)$period_types
 
   # All type values that appear anywhere across all periods
   all_type_values <- sort(unique(unlist(lapply(pt, `[[`, "type"))))
@@ -134,7 +112,7 @@ rd_typecont <- function(data, x, time, id,
         inwin <- abs(df_k$R - c) <= h
         data.frame(period = k,
                    id     = df_k$id[inwin],
-                   side   = sign(df_k$R[inwin] - c))
+                   side   = as.integer(df_k$R[inwin] >= c))
       })
       long <- do.call(rbind, long_rows)
       rep_ids <- names(which(table(unique(long[, c("period", "id")])$id) >= 2L))

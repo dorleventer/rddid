@@ -1,5 +1,17 @@
 # rddid 0.2.0.9000 (development)
 
+* Internal: removed a duplicate `.build_types()` (a second copy lived in
+  `test_homog.R` and shadowed the canonical one in `test_helpers.R` at load
+  time). There is now a single shared implementation used by `rd_typecont()`
+  and `rd_homog()`.
+* Convention: units exactly at the cutoff are now treated as above it
+  (`V_i = 1{R_i >= c}`) everywhere, including sampling-scheme detection. A unit
+  sitting on the cutoff no longer registers as a separate "side" and so cannot
+  be misread as a side-switch.
+* Internal: dropped the unused single-cell `.ck_perm()` helper (and its test).
+  `rd_typecont()`/`rd_compstable()` use an inlined *joint* Canay–Kamat
+  permutation with one shared per-period shuffle; the standalone helper was a
+  dead parallel path.
 * Documentation: corrected the assumption numbering in the Section 3.4 test
   functions to match the manuscript's `\begin{assumption}` ordering —
   `rd_typecont()` is Assumption A7 (was mislabelled A6), `rd_compstable()` is
