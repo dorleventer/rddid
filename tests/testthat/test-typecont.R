@@ -191,6 +191,26 @@ test_that("rd_typecont LL-Wald is correctly sized under the null", {
   expect_lte(sum(ll < 0.05), 4L)
 })
 
+test_that("rd_typecont default q follows the Canay-Kamat rule of thumb", {
+  steep <- xsec_to_panel(dgp_s3_local(3000, "null", sigma_R = 0.3, seed = 1))
+  mild  <- xsec_to_panel(dgp_s3_local(3000, "null", sigma_R = 1.5, seed = 1))
+  o_s <- rd_typecont(steep, x = "R", time = "time", id = "id", c = 0, h = 0.5, S = 99L)
+  o_m <- rd_typecont(mild,  x = "R", time = "time", id = "id", c = 0, h = 0.5, S = 99L)
+
+  # Default q = NULL -> per-period rule of thumb, flagged in meta.
+  expect_identical(o_s$meta$q, "rot")
+  ub <- ceiling(3000^0.9 / log(3000))
+  expect_true(all(o_s$meta$q_used >= 10L & o_s$meta$q_used <= ub))
+
+  # A steeper type-vs-running-variable slope (smaller sigma_R) must shrink q.
+  expect_lt(mean(o_s$meta$q_used), mean(o_m$meta$q_used))
+
+  # A supplied q overrides the rule of thumb on every period.
+  o_fix <- rd_typecont(steep, x = "R", time = "time", id = "id",
+                       c = 0, h = 0.5, q = 30L, S = 99L)
+  expect_true(all(o_fix$meta$q_used == 30L))
+})
+
 # ============================================================================
 # (c) Under a sorting scenario the LL-Wald rejects
 # ============================================================================

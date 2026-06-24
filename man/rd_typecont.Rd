@@ -11,7 +11,7 @@ rd_typecont(
   id,
   c = 0,
   h = NULL,
-  q = 75L,
+  q = NULL,
   S = 499L,
   kernel = "triangular",
   scheme = c("auto", "cs", "pc", "pv"),
@@ -32,8 +32,13 @@ rd_typecont(
 \item{h}{bandwidth.  If \code{NULL}, uses \code{0.5 * IQR(x)} as a simple default;
 a data-driven bandwidth (e.g. from \code{\link[=rddid]{rddid()}}) is recommended in practice.}
 
-\item{q}{number of observations nearest the cutoff on each side to use in
-the Canay-Kamat permutation test (default 75).}
+\item{q}{number of observations nearest the cutoff on each side for the
+Canay-Kamat permutation test. \code{NULL} (default) selects \code{q} per period by
+the Canay & Kamat (2018) rule of thumb; this is the
+recommended choice, since a fixed \code{q} over-rejects in finite samples when
+the type distribution varies steeply in the running variable at the cutoff.
+Supply an integer to force a fixed \code{q} on every period. The per-period \code{q}
+actually used is returned in \code{meta$q_used}.}
 
 \item{S}{number of permutation replications for the Canay-Kamat test
 (default 499).}

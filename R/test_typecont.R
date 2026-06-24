@@ -44,8 +44,13 @@
 #' @param c cutoff (default 0).
 #' @param h bandwidth.  If `NULL`, uses `0.5 * IQR(x)` as a simple default;
 #'   a data-driven bandwidth (e.g. from [rddid()]) is recommended in practice.
-#' @param q number of observations nearest the cutoff on each side to use in
-#'   the Canay-Kamat permutation test (default 75).
+#' @param q number of observations nearest the cutoff on each side for the
+#'   Canay-Kamat permutation test. `NULL` (default) selects `q` per period by
+#'   the Canay & Kamat (2018) rule of thumb; this is the
+#'   recommended choice, since a fixed `q` over-rejects in finite samples when
+#'   the type distribution varies steeply in the running variable at the cutoff.
+#'   Supply an integer to force a fixed `q` on every period. The per-period `q`
+#'   actually used is returned in `meta$q_used`.
 #' @param S number of permutation replications for the Canay-Kamat test
 #'   (default 499).
 #' @param kernel kernel for the local-linear RD: `"triangular"` (default),
@@ -67,7 +72,7 @@
 rd_typecont <- function(data, x, time, id,
                         c = 0,
                         h = NULL,
-                        q = 75L,
+                        q = NULL,
                         S = 499L,
                         kernel = "triangular",
                         scheme = c("auto", "cs", "pc", "pv"),
@@ -209,14 +214,19 @@ rd_typecont <- function(data, x, time, id,
   # the number of right-side units (nr), so the permutation loop can draw ONE
   # unit-level index per period and apply it identically to every type column.
   ck_period_parts <- vector("list", length(plab))
+  q_used <- stats::setNames(integer(length(plab)), plab)  # per-period q actually used
 
   for (ki in seq_along(plab)) {
     df_k <- pt[[plab[ki]]]
-    # Work with the q nearest on each side (pool all types, then split)
+    # Number of nearest observations per side: the Canay-Kamat rule of thumb
+    # (per period) when q is NULL, otherwise the user-supplied fixed q.
+    q_k <- if (is.null(q)) .q_rot(df_k$R, df_k$type, c) else as.integer(q)
+    q_used[ki] <- q_k
+    # Work with the q_k nearest on each side (pool all types, then split)
     pos <- df_k$R >= c
     neg <- df_k$R <  c
-    rt  <- order(df_k$R[pos])[seq_len(min(q, sum(pos)))]
-    lt  <- order(-(df_k$R[neg]))[seq_len(min(q, sum(neg)))]
+    rt  <- order(df_k$R[pos])[seq_len(min(q_k, sum(pos)))]
+    lt  <- order(-(df_k$R[neg]))[seq_len(min(q_k, sum(neg)))]
 
     R_near  <- c(df_k$R[pos][rt],  df_k$R[neg][lt])
     id_near <- c(df_k$id[pos][rt], df_k$id[neg][lt])
@@ -329,7 +339,8 @@ rd_typecont <- function(data, x, time, id,
         periods      = plab,
         type_values  = all_type_values,
         h            = h,
-        q            = q,
+        q            = if (is.null(q)) "rot" else as.integer(q),
+        q_used       = q_used,
         S            = S,
         scheme       = use_scheme
       )

@@ -1,5 +1,13 @@
 # rddid 0.2.1.9000 (development)
 
+* `rd_typecont()`: the Canay-Kamat permutation test now chooses the number of
+  nearest observations per side, `q`, by the Canay & Kamat (2018) rule of thumb
+  **by default** (`q = NULL`), per period. A fixed `q` over-rejects in finite
+  samples when the type distribution varies steeply in the running variable at
+  the cutoff; the rule of thumb shrinks `q` as that association strengthens.
+  Pass an integer `q` to force a fixed value; the per-period `q` used is
+  returned in `meta$q_used`.
+
 * Bug fix (numerical robustness): the joint Wald pseudo-inverse (`.joint_wald()`,
   used by `rd_typecont()` and `rd_compstable()`) now uses the `MASS::ginv`
   relative tolerance `sqrt(eps)*max(sv)`. The previous, tighter tolerance could

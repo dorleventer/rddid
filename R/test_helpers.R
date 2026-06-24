@@ -4,7 +4,51 @@
 # Design contract:
 #   .build_types(data, x, time, id, c)   → list($wide, $period_types, $periods)
 #   .joint_wald(thetas, Sigma)            → list(stat, df, p)
+#   .q_rot(z, type, c)                   → integer q (Canay-Kamat rule of thumb)
 #   .mccrary(x, h)                       → scalar p-value
+
+# ---------------------------------------------------------------------------
+# .q_rot
+# ---------------------------------------------------------------------------
+#' Canay-Kamat (2018) rule-of-thumb number of nearest observations per side
+#'
+#' The approximate permutation test uses the `q` observations nearest the cutoff
+#' on each side and is valid with `q` FIXED as `n` grows.  With a fixed `q` it
+#' over-rejects in finite samples when the covariate's conditional distribution
+#' varies steeply in the running variable at the cutoff (Canay & Kamat 2018,
+#' Model 7).  Their feasible rule of thumb (eq. 15 and Appendix D.1) adapts `q`:
+#' \deqn{q = \lceil \hat f(0)\, \hat\sigma_z \sqrt{1-\hat\rho^2}\; n^{0.9}/\log n
+#'        \rceil,} bounded to \eqn{[10,\, n^{0.9}/\log n]}.  \eqn{\hat f(0)} is a
+#' Gaussian-kernel density of the running variable at the cutoff and
+#' \eqn{\hat\rho} measures the running-variable / covariate association — a
+#' steeper relationship (large \eqn{\rho}) shrinks `q`.  Here the covariate is
+#' the categorical type, so we use the correlation ratio
+#' \eqn{\eta=\sqrt{SS_{\text{between}}/SS_{\text{total}}}} of the running
+#' variable grouped by type (the generalisation of \eqn{|\rho|} to a categorical
+#' covariate; it equals \eqn{|\rho|} when the type is binary).
+#'
+#' @param z numeric running variable.
+#' @param type covariate (the per-unit type label) the same length as `z`.
+#' @param c cutoff.
+#' @return integer `q`.
+#' @keywords internal
+#' @noRd
+.q_rot <- function(z, type, c = 0) {
+  n  <- length(z)
+  ub <- n^0.9 / log(n)
+  sd_z <- stats::sd(z)
+  if (n < 20L || !is.finite(sd_z) || sd_z == 0) return(max(10L, 1L))
+  dens <- stats::density(z)
+  f0   <- stats::approx(dens$x, dens$y, xout = c, rule = 2)$y
+  # correlation ratio eta of z by type (categorical generalisation of |rho|)
+  grand  <- mean(z)
+  ss_tot <- sum((z - grand)^2)
+  ss_bet <- sum(vapply(split(z, type), function(g)
+    length(g) * (mean(g) - grand)^2, numeric(1)))
+  rho2 <- if (ss_tot > 0) min(1, ss_bet / ss_tot) else 0
+  qhat <- f0 * sd_z * sqrt(max(0, 1 - rho2)) * ub
+  as.integer(max(10, min(ceiling(qhat), floor(ub))))
+}
 
 # ---------------------------------------------------------------------------
 # .build_types
