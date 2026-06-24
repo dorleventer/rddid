@@ -176,11 +176,25 @@ rd_typecont <- function(data, x, time, id,
     }
   }
 
-  # Drop rows/cols where theta is NA
-  ok_idx <- which(!is.na(theta))
-  theta_ok  <- theta[ok_idx]
-  Sigma_ok  <- Sigma[ok_idx, ok_idx, drop = FALSE]
-  ll_result <- .joint_wald(theta_ok, Sigma_ok)
+  # The n_types type-indicator jumps sum to zero within each period (the
+  # indicators sum to 1), so the full P*n_types covariance is rank-deficient by
+  # construction. Testing all of them through a pseudo-inverse is numerically
+  # fragile — a structural-zero singular value is kept on some LAPACK builds and
+  # its 1/sv inflates the statistic (platform-dependent p-values). Instead drop
+  # one (reference) type per period: with k present types we keep k-1, an
+  # equivalent full-rank test (the dropped jump is minus the sum of the rest).
+  keep <- logical(length(theta))
+  for (ki in seq_along(plab)) {
+    rows_k  <- (ki - 1L) * n_types + seq_len(n_types)
+    present <- rows_k[!is.na(theta[rows_k])]
+    if (length(present) >= 2L) keep[present[-length(present)]] <- TRUE
+  }
+  ok_idx <- which(keep)
+  if (length(ok_idx) == 0L) {
+    ll_result <- list(stat = 0, df = 0L, p = 1)
+  } else {
+    ll_result <- .joint_wald(theta[ok_idx], Sigma[ok_idx, ok_idx, drop = FALSE])
+  }
 
   # ----- (2) Canay-Kamat permutation ----------------------------------------
   # Joint test over all (period, type) pairs: observed statistic = sum of
