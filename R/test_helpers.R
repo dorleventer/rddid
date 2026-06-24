@@ -90,9 +90,14 @@
 #' @keywords internal
 #' @noRd
 .joint_wald <- function(theta, Sigma) {
-  # Moore-Penrose pseudo-inverse via SVD, truncating near-zero singular values
+  # Moore-Penrose pseudo-inverse via SVD, truncating near-zero singular values.
+  # Sigma is structurally rank-deficient here (the per-period type indicators
+  # sum to 1, so each period contributes one exact-zero direction).  Use the
+  # MASS::ginv relative tolerance sqrt(eps)*max(sv): a tighter tolerance leaves
+  # a structural-zero singular value just above the cut on some LAPACK builds,
+  # and its 1/sv blows the Wald statistic up (platform-dependent false rejects).
   sv <- svd(Sigma)
-  tol <- max(dim(Sigma)) * .Machine$double.eps * max(sv$d)
+  tol <- sqrt(.Machine$double.eps) * max(sv$d)
   keep <- sv$d > tol
   df <- sum(keep)
   if (df == 0L) return(list(stat = 0, df = 0L, p = 1))

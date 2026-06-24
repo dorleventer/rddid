@@ -1,5 +1,12 @@
 # rddid 0.2.1.9000 (development)
 
+* Bug fix (numerical robustness): the joint Wald pseudo-inverse (`.joint_wald()`,
+  used by `rd_typecont()` and `rd_compstable()`) now uses the `MASS::ginv`
+  relative tolerance `sqrt(eps)*max(sv)`. The previous, tighter tolerance could
+  leave the structural-zero singular value (the per-period type indicators sum
+  to 1) just above the cut on some LAPACK builds, inflating the statistic into a
+  platform-dependent false rejection. Caught by the new CI on Ubuntu.
+
 * Continuous integration: added an `R-CMD-check` GitHub Action (standard
   multi-OS matrix) and R-CMD-check / MIT-license badges to the README. Removed
   a placeholder ORCID from `DESCRIPTION`.
