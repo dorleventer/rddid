@@ -70,9 +70,10 @@
 #' @param weights `"constant"` (equal weights; constant confounding trend),
 #'   `"linear"` (line through the comparison discontinuities extrapolated to
 #'   `t_rd`), or a numeric vector over `comparisons`.
-#' @param bwselect `"joint"` (default; common AMSE-optimal bandwidth for the
-#'   aggregate estimator) or `"cct"` (per-period MSE-optimal bandwidth).
-#'   Ignored if `h` is supplied.
+#' @param bwselect `"joint"` (default; a single common AMSE-optimal bandwidth
+#'   for the aggregate estimator), `"cct"` (per-period MSE-optimal bandwidths
+#'   via `rdrobust`), or `"iter"` (period-specific bandwidths chosen jointly by
+#'   coordinate descent on the aggregate AMSE). Ignored if `h` is supplied.
 #' @param regularize logical; if `TRUE` (default) the joint AMSE-optimal
 #'   bandwidth adds an `rdrobust`-style regularization term to the squared bias
 #'   so a near-zero estimated curvature cannot blow the bandwidth up. Ignored

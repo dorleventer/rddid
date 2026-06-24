@@ -44,9 +44,10 @@ distinct unit (repeated cross-section).}
 \code{"linear"} (line through the comparison discontinuities extrapolated to
 \code{t_rd}), or a numeric vector over \code{comparisons}.}
 
-\item{bwselect}{\code{"joint"} (default; common AMSE-optimal bandwidth for the
-aggregate estimator) or \code{"cct"} (per-period MSE-optimal bandwidth).
-Ignored if \code{h} is supplied.}
+\item{bwselect}{\code{"joint"} (default; a single common AMSE-optimal bandwidth
+for the aggregate estimator), \code{"cct"} (per-period MSE-optimal bandwidths
+via \code{rdrobust}), or \code{"iter"} (period-specific bandwidths chosen jointly by
+coordinate descent on the aggregate AMSE). Ignored if \code{h} is supplied.}
 
 \item{h, b}{optional common point / pilot bandwidths; if \code{h} is given it is
 used for every period (with \code{b} defaulting to \code{h}).}
