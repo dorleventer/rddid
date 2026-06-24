@@ -357,29 +357,11 @@ rd_compstable <- function(data, x, time, id, t_rd,
           next
         }
 
-        # Cross-type: on same side, types partition units → cov = 0
-        # Cross-type cross-side: only non-zero when a unit lands in type a on
-        # one side and type b on the other (can happen when b-partner differs).
-        # General formula matching the PV scheme:
-        #   Cov(D_a, D_b) = cov_{a+,b+} + cov_{a-,b-} - cov_{a+,b-} - cov_{a-,b+}
-        # For cs scheme: 0
-        if (use_scheme == "cs") {
-          Sigma[a, b_idx] <- 0
-        } else {
-          pp <- .match_sum(fit_a$sides$`+`$id, fit_a$sides$`+`$g,
-                           fit_b$sides$`+`$id, fit_b$sides$`+`$g)
-          mm <- .match_sum(fit_a$sides$`-`$id, fit_a$sides$`-`$g,
-                           fit_b$sides$`-`$id, fit_b$sides$`-`$g)
-          pm <- .match_sum(fit_a$sides$`+`$id, fit_a$sides$`+`$g,
-                           fit_b$sides$`-`$id, fit_b$sides$`-`$g)
-          mp <- .match_sum(fit_a$sides$`-`$id, fit_a$sides$`-`$g,
-                           fit_b$sides$`+`$id, fit_b$sides$`+`$g)
-          if (use_scheme == "pc") {
-            Sigma[a, b_idx] <- pp + mm
-          } else {   # pv
-            Sigma[a, b_idx] <- pp + mm - pm - mp
-          }
-        }
+        # Cross-type off-diagonal: on the same side types partition units, so a
+        # nonzero entry needs a unit landing in type a on one side and type b on
+        # the other.  This is the scheme-combined cross covariance of the two
+        # reflected fits (cs → 0, pc → same-side, pv → same-side − opposite).
+        Sigma[a, b_idx] <- .cov_scheme(fit_a, fit_b, use_scheme)
       }
     }
 

@@ -12,56 +12,10 @@
 # the RD period; see documentation for rd_homog().
 
 # ---------------------------------------------------------------------------
-# Local helpers (not exported).  Types come from the shared .build_types() in
-# R/test_helpers.R; only the cross-period covariance helpers below are local to
-# this test (they take the rd_period fit objects directly).
+# This test has no local helpers: types come from the shared .build_types()
+# (R/test_helpers.R) and cross-period covariances from .cov_scheme()/.cross_cov()
+# (R/aggregate.R).
 # ---------------------------------------------------------------------------
-
-#' Cross-type, cross-period covariance entry using g vectors
-#'
-#' Within a period the types partition the sample (disjoint unit sets on each
-#' side), so within-period cross-type covariance is 0.  Across periods,
-#' id-matched covariance applies for the same sampling scheme as in .cross_cov.
-#'
-#' @param gA,idA g vector and ids from one type-period fit (one side).
-#' @param gB,idB g vector and ids from another type-period fit (one side).
-#' @keywords internal
-#' @noRd
-.match_sum_homog <- function(idA, gA, idB, gB) {
-  if (length(idA) == 0 || length(idB) == 0) return(0)
-  m <- match(idA, idB)
-  ok <- !is.na(m)
-  if (!any(ok)) return(0)
-  sum(gA[ok] * gB[m[ok]])
-}
-
-#' Cross-period covariance of two type-period jump estimates
-#'
-#' D_{t0,v}  = beta0_{t0,v,(+)}  - beta0_{t0,v,(-)}
-#' D_{t0',v'} = beta0_{t0',v',(+)} - beta0_{t0',v',(-)}
-#'
-#' Cov under scheme:
-#'   cs  : 0 (independent cross-sections)
-#'   pc  : same-side only
-#'   pv  : same-side minus opposite-side
-#'
-#' Within the same period (t0 = t0') the types partition units, so cross-type
-#' covariance is always 0 regardless of scheme.
-#'
-#' @keywords internal
-#' @noRd
-.cross_cov_homog <- function(fitA, fitB, same_period, scheme) {
-  if (same_period || scheme == "cs") return(0)
-  gAp <- fitA$sides$`+`$g; iAp <- fitA$sides$`+`$id
-  gAm <- fitA$sides$`-`$g; iAm <- fitA$sides$`-`$id
-  gBp <- fitB$sides$`+`$g; iBp <- fitB$sides$`+`$id
-  gBm <- fitB$sides$`-`$g; iBm <- fitB$sides$`-`$id
-  pc <- .match_sum_homog(iAp, gAp, iBp, gBp) + .match_sum_homog(iAm, gAm, iBm, gBm)
-  if (scheme == "pc") return(pc)
-  # pv: Cov(D_A, D_B) = C^PC - C^PV
-  pv <- .match_sum_homog(iAp, gAp, iBm, gBm) + .match_sum_homog(iAm, gAm, iBp, gBp)
-  pc - pv
-}
 
 # ---------------------------------------------------------------------------
 # Main exported function
@@ -336,7 +290,7 @@ rd_homog <- function(data, y, x, time, id,
   #   + 2 Cov(D_A, D_B) - 2 Cov(D_A, D_refB) - 2 Cov(D_refA, D_B) + 2 Cov(D_refA, D_refB)
   # but within a period cross-type covariance = 0, so:
   #   If A and refA are in the same period: Cov(D_A, D_refA) = 0
-  #   If A and B are in different periods: Cov(D_A, D_B) = .cross_cov_homog(...)
+  #   If A and B are in different periods: Cov(D_A, D_B) = .cov_scheme(...)
   #
   # Implementation: Sigma[i,j] = Cov(Delta_i, Delta_j)
   # Delta_i = D_{A_i} - D_{ref_i}
@@ -351,7 +305,7 @@ rd_homog <- function(data, y, x, time, id,
     if (keyA == keyB) return(fitA$V_D)
     # same period, different type = 0 (disjoint samples)
     if (same_period) return(0)
-    .cross_cov_homog(fitA, fitB, same_period = FALSE, scheme = use_scheme)
+    .cov_scheme(fitA, fitB, use_scheme)
   }
 
   Sigma <- matrix(NA_real_, nrow = K, ncol = K)
@@ -366,7 +320,11 @@ rd_homog <- function(data, y, x, time, id,
   rownames(Sigma) <- colnames(Sigma) <- all_contrast_entries
 
   # ---- Wald statistic ----
-  # Use Moore-Penrose pseudoinverse (MASS not in Imports; use eigen decomposition)
+  # Deliberately NOT .joint_wald(): this contrast covariance is a difference of
+  # estimated covariances and can come back numerically indefinite.  We use an
+  # eigen pseudo-inverse with a looser eps^0.5 tolerance that DROPS non-positive
+  # eigen-directions (rather than inverting their signed magnitude as the SVD in
+  # .joint_wald would), which is the more conservative choice here.
   ev   <- eigen(Sigma, symmetric = TRUE)
   tol  <- max(abs(ev$values)) * K * .Machine$double.eps^0.5
   pos  <- ev$values > tol

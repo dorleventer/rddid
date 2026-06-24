@@ -36,6 +36,24 @@
   )
 }
 
+#' Scheme-combined cross-period covariance Cov(D_t, D_s) of two D-hats
+#'
+#' Collapses `.cross_cov()` to a single number under a sampling scheme:
+#' `cs` → 0 (independent), `pc` → same-side only, `pv` → same-side minus
+#' opposite-side (`C^PC - C^PV`). Used wherever a pair of `rd_period` fits in
+#' different periods needs its scalar covariance.
+#'
+#' @param ft,fs `rd_period` fits for two distinct periods.
+#' @param scheme one of `"cs"`, `"pc"`, `"pv"`.
+#' @param bc use bias-corrected `g` vectors.
+#' @keywords internal
+#' @noRd
+.cov_scheme <- function(ft, fs, scheme, bc = FALSE) {
+  if (scheme == "cs") return(0)
+  cc <- .cross_cov(ft, fs, bc = bc)
+  if (scheme == "pc") cc$pc else cc$pc - cc$pv
+}
+
 #' Aggregate per-period fits into the RD-DID estimator and its variances
 #'
 #' Forms ATT-hat = sum_tau coef_tau * D-hat_tau and the variance under the three

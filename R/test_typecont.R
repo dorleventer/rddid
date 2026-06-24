@@ -102,28 +102,18 @@ rd_typecont <- function(data, x, time, id,
   all_type_values <- sort(unique(unlist(lapply(pt, `[[`, "type"))))
   n_types <- length(all_type_values)
 
-  # ----- detect scheme (mirroring .detect_scheme in rddid.R) ---------------
+  # ----- detect scheme -----------------------------------------------------
+  # Classify from the in-window units of each period via the shared primitive
+  # (side = 1{R >= c}, treated at the cutoff).
   if (scheme == "auto") {
-    # Build a "plist" analogue for scheme detection: for each period, collect
-    # ids and x values of units in the bandwidth window
-    use_scheme <- local({
-      long_rows <- lapply(plab, function(k) {
-        df_k <- pt[[k]]
-        inwin <- abs(df_k$R - c) <= h
-        data.frame(period = k,
-                   id     = df_k$id[inwin],
-                   side   = as.integer(df_k$R[inwin] >= c))
-      })
-      long <- do.call(rbind, long_rows)
-      rep_ids <- names(which(table(unique(long[, c("period", "id")])$id) >= 2L))
-      if (length(rep_ids) == 0L) {
-        "cs"
-      } else {
-        sub     <- long[long$id %in% rep_ids, ]
-        switches <- tapply(sub$side, sub$id, function(s) length(unique(s)) > 1L)
-        if (any(switches)) "pv" else "pc"
-      }
-    })
+    long <- do.call(rbind, lapply(plab, function(k) {
+      df_k  <- pt[[k]]
+      inwin <- abs(df_k$R - c) <= h
+      data.frame(period = k,
+                 id     = df_k$id[inwin],
+                 side   = as.integer(df_k$R[inwin] >= c))
+    }))
+    use_scheme <- .scheme_from_long(long)
   } else {
     use_scheme <- scheme
   }
@@ -173,33 +163,13 @@ rd_typecont <- function(data, x, time, id,
           if (is.null(fit_b)) next
 
           if (a_t == b_t) {
-            # Within-period covariance: units share the same running variable.
-            # Both sides: same unit i on side +/- of period t contributes to
-            # both type-a and type-b indicator RDs.
-            cov_ab <- .match_sum(fit_a$sides$`+`$id, fit_a$sides$`+`$g,
-                                  fit_b$sides$`+`$id, fit_b$sides$`+`$g) +
-                      .match_sum(fit_a$sides$`-`$id, fit_a$sides$`-`$g,
-                                  fit_b$sides$`-`$id, fit_b$sides$`-`$g)
-            Sigma[row_a, row_b] <- cov_ab
+            # Within-period covariance: units share the same running variable,
+            # so the same unit contributes to both type-indicator RDs on the
+            # same side — the same-side ("pc") component, scheme-independent.
+            Sigma[row_a, row_b] <- .cross_cov(fit_a, fit_b)$pc
           } else {
-            # Cross-period covariance: depends on scheme
-            if (use_scheme == "cs") {
-              Sigma[row_a, row_b] <- 0
-            } else {
-              cc_pp <- .match_sum(fit_a$sides$`+`$id, fit_a$sides$`+`$g,
-                                   fit_b$sides$`+`$id, fit_b$sides$`+`$g)
-              cc_mm <- .match_sum(fit_a$sides$`-`$id, fit_a$sides$`-`$g,
-                                   fit_b$sides$`-`$id, fit_b$sides$`-`$g)
-              cc_pm <- .match_sum(fit_a$sides$`+`$id, fit_a$sides$`+`$g,
-                                   fit_b$sides$`-`$id, fit_b$sides$`-`$g)
-              cc_mp <- .match_sum(fit_a$sides$`-`$id, fit_a$sides$`-`$g,
-                                   fit_b$sides$`+`$id, fit_b$sides$`+`$g)
-              if (use_scheme == "pc") {
-                Sigma[row_a, row_b] <- cc_pp + cc_mm
-              } else {  # pv
-                Sigma[row_a, row_b] <- cc_pp + cc_mm - cc_pm - cc_mp
-              }
-            }
+            # Cross-period covariance: scheme-dependent.
+            Sigma[row_a, row_b] <- .cov_scheme(fit_a, fit_b, use_scheme)
           }
         }
       }

@@ -1,5 +1,13 @@
 # rddid 0.2.1.9000 (development)
 
+* Internal: consolidated duplicated logic into shared helpers. A new
+  `.cov_scheme()` (the `cs`/`pc`/`pv` scheme-combine of `.cross_cov()`) now
+  backs the cross-period covariance in `rd_typecont()`, `rd_compstable()`, and
+  `rd_homog()`, replacing three near-identical inline copies (including the
+  former `.cross_cov_homog()`/`.match_sum_homog()`). A new `.scheme_from_long()`
+  primitive backs both `.detect_scheme()` and `rd_typecont()`'s scheme
+  detection. No change in results (verified to machine precision).
+
 # rddid 0.2.1
 
 * Internal: removed a duplicate `.build_types()` (a second copy lived in

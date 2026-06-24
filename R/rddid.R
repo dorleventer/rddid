@@ -22,6 +22,20 @@
   stats::setNames(w, as.character(comps))
 }
 
+#' Classify the sampling scheme from a long (period, id, side) table
+#'
+#' No repeated unit across periods → `"cs"`; repeated units that switch side at
+#' least once → `"pv"`; repeated units that never switch → `"pc"`.
+#' @keywords internal
+#' @noRd
+.scheme_from_long <- function(long) {
+  rep_ids <- names(which(table(unique(long[, c("period", "id")])$id) >= 2L))
+  if (length(rep_ids) == 0L) return("cs")
+  sub <- long[long$id %in% rep_ids, , drop = FALSE]
+  switches <- tapply(sub$side, sub$id, function(s) length(unique(s)) > 1L)
+  if (any(switches)) "pv" else "pc"
+}
+
 #' Detect the sampling scheme from the id / side structure
 #' @keywords internal
 #' @noRd
@@ -31,11 +45,7 @@
   long <- do.call(rbind, lapply(names(plist), function(k)
     data.frame(period = k, id = plist[[k]]$id,
                side = as.integer(plist[[k]]$x >= c))))
-  rep_ids <- names(which(table(unique(long[, c("period", "id")])$id) >= 2L))
-  if (length(rep_ids) == 0L) return("cs")
-  sub <- long[long$id %in% rep_ids, ]
-  switches <- tapply(sub$side, sub$id, function(s) length(unique(s)) > 1L)
-  if (any(switches)) "pv" else "pc"
+  .scheme_from_long(long)
 }
 
 #' RD-DID estimation and inference
