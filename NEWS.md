@@ -1,5 +1,12 @@
 # rddid 0.2.1.9000 (development)
 
+* Bug fix (reproducibility): `rd_typecont()` called `set.seed(NULL)` immediately
+  before its Canay-Kamat permutation, which **re-initialised** the RNG from
+  system entropy and discarded any seed the caller had set — so the CK p-value
+  changed on every call. Removed; the permutation now inherits the caller's RNG
+  state, so `set.seed()` before the call makes the CK p reproducible.
+  (`rd_compstable()` never had this and was already reproducible.)
+
 * `rd_typecont()`: the Canay-Kamat permutation test now chooses the number of
   nearest observations per side, `q`, by the Canay & Kamat (2018) rule of thumb
   **by default** (`q = NULL`), per period. A fixed `q` over-rejects in finite

@@ -264,7 +264,10 @@ rd_typecont <- function(data, x, time, id,
   # permutation per period (over the 2q nearest units) and apply it identically
   # to all type columns for that period.  This is the canonical CK construction:
   # within each period the type cells share the SAME permuted side assignment.
-  set.seed(NULL)  # allow externally seeded reproducibility
+  # NB: do NOT reseed here. The permutation must inherit whatever RNG state the
+  # caller set (e.g. set.seed() before the call) so the CK p-value is
+  # reproducible; an internal set.seed(NULL) would re-init from entropy and make
+  # every call irreproducible.
   ck_perm_dist <- replicate(S, {
     total_perm <- 0
     for (part in ck_period_parts) {
