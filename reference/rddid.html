@@ -140,6 +140,18 @@ used for every period (with <code>b</code> defaulting to <code>h</code>).</p></d
 headline standard error. All three are always returned.</p></dd>
 
 
+<dt id="arg-regularize">regularize<a class="anchor" aria-label="anchor" href="#arg-regularize"></a></dt>
+<dd><p>logical; if <code>TRUE</code> (default) the joint AMSE-optimal
+bandwidth adds an <code>rdrobust</code>-style regularization term to the squared bias
+so a near-zero estimated curvature cannot blow the bandwidth up. Ignored
+if <code>h</code> is supplied.</p></dd>
+
+
+<dt id="arg-reg-const">reg_const<a class="anchor" aria-label="anchor" href="#arg-reg-const"></a></dt>
+<dd><p>regularization constant for <code>regularize</code> (default 3,
+matching the CCT convention).</p></dd>
+
+
 <dt id="arg-c">c<a class="anchor" aria-label="anchor" href="#arg-c"></a></dt>
 <dd><p>cutoff (default 0).</p></dd>
 
