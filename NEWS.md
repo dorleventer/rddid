@@ -1,5 +1,8 @@
 # rddid 0.2.1.9000 (development)
 
+* Continuous integration: added an `R-CMD-check` GitHub Action (standard
+  multi-OS matrix) and R-CMD-check / MIT-license badges to the README. Removed
+  a placeholder ORCID from `DESCRIPTION`.
 * `R CMD check` is now clean (0 errors / 0 warnings). Fixes: replaced the
   `\insertCite{}` macros in `rd_compstable()` (Rdpack was not a dependency)
   with the plain-text citations already in the References; documented the

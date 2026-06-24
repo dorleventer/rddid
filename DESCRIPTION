@@ -3,8 +3,7 @@ Title: Treatment-Effect Estimation in Regression-Discontinuity
     Difference-in-Discontinuities (RD-DID) Designs
 Version: 0.2.1.9000
 Authors@R: c(
-    person("Dor", "Leventer", , "leventerdor@gmail.com", role = c("aut", "cre"),
-           comment = c(ORCID = "0000-0000-0000-0000")),
+    person("Dor", "Leventer", , "leventerdor@gmail.com", role = c("aut", "cre")),
     person("Daniel", "Nevo", role = "aut"))
 Description: Estimation and inference for the regression-discontinuity
     difference-in-discontinuities (RD-DID) design of Leventer and Nevo,
