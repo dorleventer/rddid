@@ -78,7 +78,7 @@ mix must be the same at the RD period and at each comparison period.</p>
 <span>  comparisons <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  c <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  h <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  q <span class="op">=</span> <span class="fl">75L</span>,</span>
+<span>  q <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  S <span class="op">=</span> <span class="fl">499L</span>,</span>
 <span>  kernel <span class="op">=</span> <span class="st">"triangular"</span>,</span>
 <span>  scheme <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"auto"</span>, <span class="st">"cs"</span>, <span class="st">"pc"</span>, <span class="st">"pv"</span><span class="op">)</span>,</span>
@@ -128,7 +128,12 @@ explicit bandwidth for reproducible results.</p></dd>
 
 <dt id="arg-q">q<a class="anchor" aria-label="anchor" href="#arg-q"></a></dt>
 <dd><p>Number of observations nearest the artificial cutoff on each side
-to use in the Canay-Kamat permutation test (default 75).</p></dd>
+for the Canay-Kamat permutation test. <code>NULL</code> (default) selects <code>q</code> per
+\((t_{\mathrm{RD}}, t_0)\) pair by the Canay &amp; Kamat (2018) rule of thumb
+(see <code><a href="rd_typecont.html">rd_typecont()</a></code>); this is the recommended choice, since a fixed <code>q</code>
+over-rejects in finite samples when the type distribution varies steeply in
+the running variable at the cutoff. Supply an integer to force a fixed <code>q</code>
+on every pair. The per-pair <code>q</code> actually used is returned in <code>meta$q_used</code>.</p></dd>
 
 
 <dt id="arg-s">S<a class="anchor" aria-label="anchor" href="#arg-s"></a></dt>
@@ -182,6 +187,9 @@ labels present in this pair.</p></dd>
 <dt><code>scheme</code></dt>
 <dd><p>Scheme actually used.</p></dd>
 
+<dt><code>q</code></dt>
+<dd><p>Number of nearest observations per side actually used.</p></dd>
+
 <dt><code>n_trd</code></dt>
 <dd><p>Number of above-cutoff units from \(t_RD\).</p></dd>
 
@@ -207,7 +215,8 @@ pairs, assuming independence across pairs).</p></dd>
 </dl></dd>
 
 <dt><code>meta</code></dt>
-<dd><p>list with <code>t_rd</code>, <code>comparisons</code>, <code>h</code>, <code>q</code>, <code>S</code>, <code>c</code>.</p></dd>
+<dd><p>list with <code>t_rd</code>, <code>comparisons</code>, <code>h</code>, <code>q</code> (<code>"rot"</code> when the
+rule of thumb is used), <code>q_used</code> (per-pair <code>q</code>), <code>S</code>, <code>c</code>.</p></dd>
 
 
 </dl></div>
