@@ -79,6 +79,7 @@ with each \(\widehat D_t\) a standard local-linear RD.</p>
 <span>  bwselect <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"joint"</span>, <span class="st">"cct"</span>, <span class="st">"iter"</span><span class="op">)</span>,</span>
 <span>  h <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  b <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  start <span class="op">=</span> <span class="st">"hstar"</span>,</span>
 <span>  scheme <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"auto"</span>, <span class="st">"cs"</span>, <span class="st">"pc"</span>, <span class="st">"pv"</span><span class="op">)</span>,</span>
 <span>  regularize <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  reg_const <span class="op">=</span> <span class="fl">3</span>,</span>
@@ -133,6 +134,14 @@ coordinate descent on the aggregate AMSE). Ignored if <code>h</code> is supplied
 <dt id="arg-h-b">h, b<a class="anchor" aria-label="anchor" href="#arg-h-b"></a></dt>
 <dd><p>optional common point / pilot bandwidths; if <code>h</code> is given it is
 used for every period (with <code>b</code> defaulting to <code>h</code>).</p></dd>
+
+
+<dt id="arg-start">start<a class="anchor" aria-label="anchor" href="#arg-start"></a></dt>
+<dd><p>seed for the iterative (<code>bwselect = "iter"</code>) coordinate descent.
+<code>"hstar"</code> (default) starts all periods at the common joint-optimal h*;
+<code>"cct"</code> starts each period at its own CCT/IK pilot h; or supply a named
+numeric vector/list with one entry per period. Ignored unless
+<code>bwselect = "iter"</code>.</p></dd>
 
 
 <dt id="arg-scheme">scheme<a class="anchor" aria-label="anchor" href="#arg-scheme"></a></dt>
