@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rddid</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.2.1.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.2.2.9000</span>
       </span>
     </div>
 
@@ -48,7 +48,7 @@
     </div>
 
     <div class="section level2">
-<h2 class="page-header" data-toc-text="0.2.1.9000" id="rddid-0219000-development">rddid 0.2.1.9000 (development)<a class="anchor" aria-label="anchor" href="#rddid-0219000-development"></a></h2>
+<h2 class="page-header" data-toc-text="0.2.2.9000" id="rddid-0229000-development">rddid 0.2.2.9000 (development)<a class="anchor" aria-label="anchor" href="#rddid-0229000-development"></a></h2>
 <ul><li><p><code>rddid(..., bwselect = "iter")</code> gains a <code>start</code> argument controlling the coordinate-descent seed: <code>"hstar"</code> (default) seeds all periods at the common joint-optimal bandwidth h<em>; <code>"cct"</code> seeds each period at its own CCT/IK pilot h; or supply a named numeric/list of per-period bandwidths for a manual seed. Each run weakly improves the joint AMSE over its own start; seeding from h</em> therefore weakly dominates the common-h rule. (Seed from <code>"cct"</code> when the per-period biases nearly cancel, where h* is inflated.)</p></li>
 <li><p>Bug fix (reproducibility): <code><a href="../reference/rd_typecont.html">rd_typecont()</a></code> called <code>set.seed(NULL)</code> immediately before its Canay-Kamat permutation, which <strong>re-initialised</strong> the RNG from system entropy and discarded any seed the caller had set — so the CK p-value changed on every call. Removed; the permutation now inherits the caller’s RNG state, so <code><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed()</a></code> before the call makes the CK p reproducible. (<code><a href="../reference/rd_compstable.html">rd_compstable()</a></code> never had this and was already reproducible.)</p></li>
 <li><p><code><a href="../reference/rd_typecont.html">rd_typecont()</a></code>: the Canay-Kamat permutation test now chooses the number of nearest observations per side, <code>q</code>, by the Canay &amp; Kamat (2018) rule of thumb <strong>by default</strong> (<code>q = NULL</code>), per period. A fixed <code>q</code> over-rejects in finite samples when the type distribution varies steeply in the running variable at the cutoff; the rule of thumb shrinks <code>q</code> as that association strengthens. Pass an integer <code>q</code> to force a fixed value; the per-period <code>q</code> used is returned in <code>meta$q_used</code>.</p></li>
