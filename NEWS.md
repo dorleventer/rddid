@@ -1,5 +1,13 @@
 # rddid 0.2.1.9000 (development)
 
+* `rddid(..., bwselect = "iter")` gains a `start` argument controlling the
+  coordinate-descent seed: `"hstar"` (default) seeds all periods at the common
+  joint-optimal bandwidth h*; `"cct"` seeds each period at its own CCT/IK pilot
+  h; or supply a named numeric/list of per-period bandwidths for a manual seed.
+  Each run weakly improves the joint AMSE over its own start; seeding from h*
+  therefore weakly dominates the common-h rule. (Seed from `"cct"` when the
+  per-period biases nearly cancel, where h* is inflated.)
+
 * Bug fix (reproducibility): `rd_typecont()` called `set.seed(NULL)` immediately
   before its Canay-Kamat permutation, which **re-initialised** the RNG from
   system entropy and discarded any seed the caller had set — so the CK p-value

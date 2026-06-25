@@ -16,6 +16,7 @@ rddid(
   bwselect = c("joint", "cct", "iter"),
   h = NULL,
   b = NULL,
+  start = "hstar",
   scheme = c("auto", "cs", "pc", "pv"),
   regularize = TRUE,
   reg_const = 3,
@@ -51,6 +52,12 @@ coordinate descent on the aggregate AMSE). Ignored if \code{h} is supplied.}
 
 \item{h, b}{optional common point / pilot bandwidths; if \code{h} is given it is
 used for every period (with \code{b} defaulting to \code{h}).}
+
+\item{start}{seed for the iterative (\code{bwselect = "iter"}) coordinate descent.
+\code{"hstar"} (default) starts all periods at the common joint-optimal h*;
+\code{"cct"} starts each period at its own CCT/IK pilot h; or supply a named
+numeric vector/list with one entry per period. Ignored unless
+\code{bwselect = "iter"}.}
 
 \item{scheme}{\code{"auto"} (detect from the id/side structure) or one of \code{"cs"},
 \code{"pc"}, \code{"pv"}; selects which sampling-scheme variance is reported as the

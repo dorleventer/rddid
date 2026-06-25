@@ -98,7 +98,8 @@
 #' C), so we cycle one period at a time: holding the others fixed, each
 #' coordinate problem AMSE(h_tau | rest) is coercive (Appendix C, Lemma
 #' lem:coercive), so it always has an interior minimum -- no degeneracy.
-#' Initialised at per-period CCT.
+#' The starting point of the descent is controlled by `start` (default: the
+#' common joint-optimal h*).
 #'
 #' Under `scheme = "pc"` the same-side cross-period covariance term is included
 #' in the AMSE (it is O(1/(nh)), same order as the per-period variance).  Under
@@ -116,8 +117,21 @@
 #'   `t_rd` RD-period label.
 #' @param scheme one of `"cs"`, `"pc"`, `"pv"`; determines whether the
 #'   cross-period covariance term enters the AMSE (only for `"pc"`).
-#' @param pilot_bws optional named list of per-period `c(h, b)` used both to
-#'   initialise and to estimate the per-period constants; defaults to CCT.
+#' @param pilot_bws optional named list of per-period `c(h, b)` used to
+#'   estimate the per-period constants and the regularization penalty; defaults
+#'   to CCT.  The role of `pilot_bws` is to supply the asymptotic constants
+#'   (curvature, variance, regularization, PC covariance) — it does NOT control
+#'   the descent starting point; that is controlled by `start`.
+#' @param start seed for the coordinate descent.  Three modes:
+#'   \describe{
+#'     \item{`"hstar"` (default)}{Start all periods at the common joint-optimal
+#'       h* (the same scalar h* for every period).  This is the original behaviour.}
+#'     \item{`"cct"`}{Start each period at its own CCT/IK pilot h (i.e.
+#'       `pilot_bws[[k]]["h"]` for period `k`).  Reproduces the pre-h* seed.}
+#'     \item{numeric / named list}{Supply a manual per-period seed.  Must cover
+#'       every period in `names(coef)`.  A numeric vector is matched positionally
+#'       to `names(coef)`; a named vector/list is matched by name.}
+#'   }
 #' @param hmax cap on each bandwidth (defaults to the running-variable radius).
 #' @param maxit,tol coordinate-descent controls.
 #' @return list with per-period `bws` (named list of `c(h, b)`), the constants
@@ -125,6 +139,7 @@
 #' @keywords internal
 #' @noRd
 .bw_joint_iter <- function(plist, coef, t_rd, scheme = "cs", pilot_bws = NULL,
+                           start = "hstar",
                            c = 0, p = 1L, q = 2L, kernel = "triangular",
                            regularize = TRUE, reg_const = 3,
                            hmax = NULL, maxit = 50L, tol = 1e-4) {
@@ -193,8 +208,42 @@
     }
     Bbar^2 + pen + var_term + cov_term
   }
-  h <- vapply(keys, function(k) unname(pilot_bws[[k]]["h"]), numeric(1))
+  # Seed coordinate descent -- mode controlled by `start`.
   lo <- 0.03 * hmax
+  if (is.character(start) && length(start) == 1L) {
+    start <- match.arg(start, c("hstar", "cct"))
+    if (start == "hstar") {
+      # Default: start all periods at the common joint-optimal h*.
+      jb <- .bw_joint(plist, coef, t_rd, scheme = scheme,
+                      pilot = pilot_bws[[t_rd]], c = c, p = p, q = q,
+                      kernel = kernel, regularize = regularize,
+                      reg_const = reg_const)
+      h0 <- rep(jb$h, length(keys))
+    } else {
+      # "cct": start each period at its own CCT pilot h.
+      h0 <- vapply(keys, function(k) unname(pilot_bws[[k]]["h"]), numeric(1))
+    }
+  } else {
+    # Manual: numeric vector or named list supplied by the user.
+    if (is.list(start)) start <- unlist(start)
+    if (!is.numeric(start))
+      stop("`start` must be \"hstar\", \"cct\", or a numeric vector/list of per-period bandwidths.")
+    if (!is.null(names(start))) {
+      missing_k <- setdiff(keys, names(start))
+      if (length(missing_k) > 0L)
+        stop("`start` is missing entries for period(s): ",
+             paste(missing_k, collapse = ", "), ".")
+      h0 <- unname(start[keys])
+    } else {
+      if (length(start) != length(keys))
+        stop("`start` has length ", length(start), " but there are ", length(keys),
+             " periods; supply a named vector/list or one value per period in order.")
+      h0 <- unname(start)
+    }
+    if (any(!is.finite(h0) | h0 <= 0))
+      stop("all values in `start` must be finite and positive.")
+  }
+  h <- pmin(pmax(h0, lo), hmax)
   it <- 0L
   repeat {
     it <- it + 1L

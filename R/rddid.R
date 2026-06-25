@@ -74,6 +74,11 @@
 #'   for the aggregate estimator), `"cct"` (per-period MSE-optimal bandwidths
 #'   via `rdrobust`), or `"iter"` (period-specific bandwidths chosen jointly by
 #'   coordinate descent on the aggregate AMSE). Ignored if `h` is supplied.
+#' @param start seed for the iterative (`bwselect = "iter"`) coordinate descent.
+#'   `"hstar"` (default) starts all periods at the common joint-optimal h*;
+#'   `"cct"` starts each period at its own CCT/IK pilot h; or supply a named
+#'   numeric vector/list with one entry per period. Ignored unless
+#'   `bwselect = "iter"`.
 #' @param regularize logical; if `TRUE` (default) the joint AMSE-optimal
 #'   bandwidth adds an `rdrobust`-style regularization term to the squared bias
 #'   so a near-zero estimated curvature cannot blow the bandwidth up. Ignored
@@ -98,6 +103,7 @@
 rddid <- function(data, y, x, time, id = NULL, t_rd,
                   comparisons = NULL, weights = "constant",
                   bwselect = c("joint", "cct", "iter"), h = NULL, b = NULL,
+                  start = "hstar",
                   scheme = c("auto", "cs", "pc", "pv"),
                   regularize = TRUE, reg_const = 3,
                   c = 0, p = 1L, q = 2L, kernel = "triangular", level = 0.95) {
@@ -135,6 +141,7 @@ rddid <- function(data, y, x, time, id = NULL, t_rd,
     bw_info <- list(method = "cct", bws = bws)
   } else if (bwselect == "iter") {
     ib <- .bw_joint_iter(plist, coef, as.character(t_rd), scheme = use_scheme,
+                         start = start,
                          c = c, p = p, q = q, kernel = kernel,
                          regularize = regularize, reg_const = reg_const)
     bws <- ib$bws
