@@ -1,4 +1,4 @@
-# rddid 0.2.2.9000 (development)
+# rddid 0.3.0.9000 (development)
 
 * `rddid(..., bwselect = "iter")` gains a `start` argument controlling the
   coordinate-descent seed: `"hstar"` (default) seeds all periods at the common
