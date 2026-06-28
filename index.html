@@ -79,6 +79,12 @@
 <code class="sourceCode R"><span><span class="co"># install.packages("devtools")</span></span>
 <span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"dorleventer/rddid"</span><span class="op">)</span></span></code></pre></div>
 </div>
+<div class="section level2">
+<h2 id="development">Development<a class="anchor" aria-label="anchor" href="#development"></a>
+</h2>
+<p>After cloning, enable the doc-sync pre-commit hook (regenerates <code>man/*.Rd</code> from roxygen and blocks commits where the generated docs are stale — the mismatch that otherwise fails <code>R CMD check</code>):</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="fu">git</span> config core.hooksPath .githooks</span></code></pre></div>
+</div>
 </div>
   </div>
 
