@@ -18,3 +18,13 @@ Paper: <https://arxiv.org/abs/2408.05847>
 # install.packages("devtools")
 devtools::install_github("dorleventer/rddid")
 ```
+
+## Development
+
+After cloning, enable the doc-sync pre-commit hook (regenerates `man/*.Rd`
+from roxygen and blocks commits where the generated docs are stale — the
+mismatch that otherwise fails `R CMD check`):
+
+``` sh
+git config core.hooksPath .githooks
+```

@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+# Pre-commit hook: keep generated docs (man/*.Rd, NAMESPACE) in sync with roxygen
+# source. The codoc-mismatch CI failure (R CMD check runs error_on="warning")
+# happens when a signature changes in R/ but devtools::document() wasn't re-run.
+# This catches it locally before the push.
+#
+# Install once per clone:  git config core.hooksPath .githooks
+set -euo pipefail
+
+# Only run when roxygen inputs are staged — keeps unrelated commits fast.
+if ! git diff --cached --name-only | grep -qE '^(R/|man/|NAMESPACE|DESCRIPTION)'; then
+  exit 0
+fi
+
+if ! command -v Rscript >/dev/null 2>&1; then
+  echo "pre-commit: Rscript not found; skipping doc-sync check." >&2
+  exit 0
+fi
+
+if ! Rscript -e 'quit(status = !requireNamespace("roxygen2", quietly = TRUE))'; then
+  echo "pre-commit: roxygen2 not installed; skipping doc-sync check." >&2
+  exit 0
+fi
+
+echo "pre-commit: regenerating roxygen docs..."
+Rscript -e 'suppressMessages(roxygen2::roxygenise())' >/dev/null
+
+# If regeneration changed any tracked doc that isn't staged, block the commit.
+changed=$(git diff --name-only -- man NAMESPACE)
+if [ -n "$changed" ]; then
+  echo "" >&2
+  echo "pre-commit: generated docs are out of sync with R/ sources." >&2
+  echo "The following were regenerated and are not staged:" >&2
+  echo "$changed" | sed 's/^/  /' >&2
+  echo "" >&2
+  echo "Review, then 'git add' them and re-commit." >&2
+  exit 1
+fi
+
+exit 0

@@ -7,5 +7,6 @@
 ^pkgdown$
 ^data-raw$
 ^\.github$
+^\.githooks$
 ^doc$
 ^Meta$
