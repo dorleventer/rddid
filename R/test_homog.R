@@ -208,8 +208,18 @@ rd_homog <- function(data, y, x, time, id,
 
   dots <- list(...)
 
-  # determine scheme for cross-period covariance
-  detect_sch <- "cs"  # default; may be updated below
+  # Determine the sampling scheme for the cross-period covariance from the
+  # id/side structure ACROSS the comparison periods, using the package-canonical
+  # detector (shared with rddid() and rd_typecont()): units recurring across
+  # periods with a constant side -> "pc", switching side -> "pv", none -> "cs".
+  # (The earlier within-period heuristic could never observe cross-period
+  # recurrence and silently collapsed to "cs", zeroing the joint test's
+  # cross-period covariance.)
+  comp_plist <- stats::setNames(lapply(as.character(comparisons), function(tp) {
+    d_cp <- data[data[[time]] == tp, , drop = FALSE]
+    list(id = d_cp[[id]], x = d_cp[[x]])
+  }), as.character(comparisons))
+  detected_scheme <- .detect_scheme(comp_plist, c = c)
 
   all_fits    <- list()   # key = "t0::type", value = rd_period object
   all_meta    <- list()   # key = "t0::type", value = (period, type, D, V_D, n)
@@ -231,19 +241,6 @@ rd_homog <- function(data, y, x, time, id,
       # only one type (or no types): skip this period
       message("rd_homog: period ", tp, " has fewer than 2 types; skipping.")
       next
-    }
-
-    # auto-detect scheme from the first comparison period we actually use
-    if (detect_sch == "cs" && scheme == "auto") {
-      # We use a simplified detection: if any id recurs across sides
-      # (i.e., same unit appears on both sides), that means time-varying RV.
-      x_tp  <- d_tp[[x]]
-      sides <- ifelse(x_tp >= c, "+", "-")
-      if (any(table(id_tp) > 1)) {
-        # has repeated units: check if they switch sides
-        side_by_id <- tapply(sides, id_tp, function(s) length(unique(s)) > 1L)
-        detect_sch <- if (any(side_by_id)) "pv" else "pc"
-      }
     }
 
     # reference type = first alphabetically
@@ -294,7 +291,7 @@ rd_homog <- function(data, y, x, time, id,
     )
   }
 
-  use_scheme <- if (scheme == "auto") detect_sch else scheme
+  use_scheme <- if (scheme == "auto") detected_scheme else scheme
 
   # ---- build contrast vector and covariance matrix ----
   # stack non-ref types across periods:

@@ -170,3 +170,56 @@ test_that("rd_homog stacks contrasts across multiple comparison periods", {
   expect_gte(length(res$contrasts), 1L)
   expect_equal(length(res$contrasts), nrow(res$cov_matrix))
 })
+
+# ---------------------------------------------------------------------------
+# 9. Regression test: scheme="auto" resolves to "pc" when units recur across
+#    comparison periods on the SAME side (constant running variable).
+#
+# Before the fix, the within-period heuristic always returned "cs" because
+# each unit appears exactly once per period (table(id_tp) > 1 is always FALSE
+# for a properly structured panel).  The canonical .detect_scheme() inspects
+# the id/side structure ACROSS periods and correctly returns "pc".
+# ---------------------------------------------------------------------------
+test_that("scheme='auto' resolves to 'pc' for a panel with constant running variable across comparison periods", {
+  # 3-period panel: period 3 is the RD period (running variable varies),
+  # periods 1 and 2 are the comparison periods.
+  # Each unit has the SAME running variable in periods 1 and 2 (constant side
+  # across comparison periods) => recurrent units, constant side => "pc".
+  set.seed(77)
+  N <- 300
+  x_comp <- stats::runif(N, -1, 1)    # same RV in both comparison periods
+  x_rd   <- stats::runif(N, -1, 1)    # independent RV in the RD period
+
+  # Comparison-period outcomes: a common jump at 0 plus noise
+  y1 <- 0.3 * x_comp + 0.5 * (x_comp >= 0) + stats::rnorm(N, 0, 0.3)
+  y2 <- 0.3 * x_comp + 0.5 * (x_comp >= 0) + stats::rnorm(N, 0, 0.3)
+  y3 <- 0.3 * x_rd   + 0.8 * (x_rd   >= 0) + stats::rnorm(N, 0, 0.3)
+
+  dat_pc <- data.frame(
+    id   = rep(seq_len(N), times = 3L),
+    time = rep(c(1L, 2L, 3L), each = N),
+    x    = c(x_comp, x_comp, x_rd),
+    y    = c(y1, y2, y3),
+    stringsAsFactors = FALSE
+  )
+
+  # auto detection should resolve to "pc"
+  res_auto <- rd_homog(dat_pc, y = "y", x = "x", time = "time", id = "id",
+                       comparisons = c(1L, 2L), t_rd = 3L,
+                       type_by = "rd_side", scheme = "auto", h = 0.4)
+  expect_equal(res_auto$scheme, "pc")
+
+  # Explicit "pc" should give the same statistic as "auto"
+  res_pc <- rd_homog(dat_pc, y = "y", x = "x", time = "time", id = "id",
+                     comparisons = c(1L, 2L), t_rd = 3L,
+                     type_by = "rd_side", scheme = "pc", h = 0.4)
+  expect_equal(res_auto$statistic, res_pc$statistic, tolerance = 1e-10)
+
+  # Explicit "cs" should give a DIFFERENT statistic (cross-period covariance
+  # is non-zero under "pc" and zeroed under "cs"), confirming the fix matters.
+  res_cs <- rd_homog(dat_pc, y = "y", x = "x", time = "time", id = "id",
+                     comparisons = c(1L, 2L), t_rd = 3L,
+                     type_by = "rd_side", scheme = "cs", h = 0.4)
+  expect_false(isTRUE(all.equal(res_auto$statistic, res_cs$statistic,
+                                tolerance = 1e-6)))
+})
