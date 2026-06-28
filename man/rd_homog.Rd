@@ -17,6 +17,8 @@ rd_homog(
   kernel = "triangular",
   scheme = c("auto", "cs", "pc", "pv"),
   min_n = 10L,
+  bc = TRUE,
+  type_by = c("pattern", "rd_side"),
   ...
 )
 }
@@ -54,6 +56,19 @@ running variable), or \code{"pv"} (panel, time-varying running variable).}
 \item{min_n}{Minimum number of observations per type-side before that type
 is included.  Types with fewer than \code{min_n} obs on either side in a given
 period are silently dropped (default 10).}
+
+\item{bc}{Use robust bias-corrected per-type jumps and variances
+(Calonico, Cattaneo and Titiunik 2014). \code{TRUE} (default) aligns the test
+with the bias-corrected \code{\link[=rddid]{rddid()}} estimator; \code{FALSE} uses the conventional
+local-linear jumps and variances.}
+
+\item{type_by}{How a unit's type is defined. \code{"pattern"} (default) uses the
+full multi-period sign pattern of the other periods (the general case).
+\code{"rd_side"} uses only the unit's side of the cutoff in the RD period \code{t_rd},
+a binary partition; this is the relevant partition for a single joint test
+across comparison periods that share a running variable, where it yields one
+contrast per period (a \eqn{\chi^2(P)} test for \code{P} comparison periods).
+Requires \code{t_rd}.}
 
 \item{...}{Further arguments passed to \code{\link[=rd_period]{rd_period()}} (e.g. \code{p}, \code{q}, \code{b}).}
 }

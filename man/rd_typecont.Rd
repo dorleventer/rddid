@@ -15,6 +15,7 @@ rd_typecont(
   S = 499L,
   kernel = "triangular",
   scheme = c("auto", "cs", "pc", "pv"),
+  bc = TRUE,
   ...
 )
 }
@@ -48,6 +49,12 @@ actually used is returned in \code{meta$q_used}.}
 
 \item{scheme}{covariance scheme for the joint Wald: \code{"auto"} detects from
 the data (same logic as \code{\link[=rddid]{rddid()}}), or one of \code{"cs"}, \code{"pc"}, \code{"pv"}.}
+
+\item{bc}{use robust bias-corrected jumps and variances in the LL-Wald
+(Calonico, Cattaneo and Titiunik 2014). \code{TRUE} (default) aligns the test
+with the bias-corrected \code{\link[=rddid]{rddid()}} estimator; \code{FALSE} uses the conventional
+local-linear jumps and variances. Does not affect the Canay-Kamat
+permutation test (which operates on raw near-cutoff indicator means).}
 
 \item{...}{currently unused.}
 }

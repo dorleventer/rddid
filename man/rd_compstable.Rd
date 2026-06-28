@@ -17,6 +17,7 @@ rd_compstable(
   S = 499L,
   kernel = "triangular",
   scheme = c("auto", "cs", "pc", "pv"),
+  bc = TRUE,
   ...
 )
 }
@@ -64,6 +65,12 @@ If yes, uses \code{"pv"} (time-varying panel); otherwise \code{"cs"}.}
 \item{\code{"pv"}}{Full panel with time-varying running variable: includes
 same-side minus opposite-side cross-period covariance.}
 }}
+
+\item{bc}{Use robust bias-corrected jumps and variances in the LL-Wald
+(Calonico, Cattaneo and Titiunik 2014). \code{TRUE} (default) aligns the test
+with the bias-corrected \code{\link[=rddid]{rddid()}} estimator; \code{FALSE} uses the conventional
+local-linear jumps and variances. Does not affect the Canay-Kamat
+permutation test.}
 
 \item{...}{Currently unused.}
 }
