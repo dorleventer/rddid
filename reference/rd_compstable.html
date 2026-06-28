@@ -82,6 +82,7 @@ mix must be the same at the RD period and at each comparison period.</p>
 <span>  S <span class="op">=</span> <span class="fl">499L</span>,</span>
 <span>  kernel <span class="op">=</span> <span class="st">"triangular"</span>,</span>
 <span>  scheme <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"auto"</span>, <span class="st">"cs"</span>, <span class="st">"pc"</span>, <span class="st">"pv"</span><span class="op">)</span>,</span>
+<span>  bc <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -163,6 +164,14 @@ same-side minus opposite-side cross-period covariance.</p></dd>
 
 
 </dl></dd>
+
+
+<dt id="arg-bc">bc<a class="anchor" aria-label="anchor" href="#arg-bc"></a></dt>
+<dd><p>Use robust bias-corrected jumps and variances in the LL-Wald
+(Calonico, Cattaneo and Titiunik 2014). <code>TRUE</code> (default) aligns the test
+with the bias-corrected <code><a href="rddid.html">rddid()</a></code> estimator; <code>FALSE</code> uses the conventional
+local-linear jumps and variances. Does not affect the Canay-Kamat
+permutation test.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>

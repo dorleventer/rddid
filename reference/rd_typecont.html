@@ -70,6 +70,7 @@ sign pattern of its running variables in the OTHER periods,
 <span>  S <span class="op">=</span> <span class="fl">499L</span>,</span>
 <span>  kernel <span class="op">=</span> <span class="st">"triangular"</span>,</span>
 <span>  scheme <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"auto"</span>, <span class="st">"cs"</span>, <span class="st">"pc"</span>, <span class="st">"pv"</span><span class="op">)</span>,</span>
+<span>  bc <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -126,6 +127,14 @@ actually used is returned in <code>meta$q_used</code>.</p></dd>
 <dt id="arg-scheme">scheme<a class="anchor" aria-label="anchor" href="#arg-scheme"></a></dt>
 <dd><p>covariance scheme for the joint Wald: <code>"auto"</code> detects from
 the data (same logic as <code><a href="rddid.html">rddid()</a></code>), or one of <code>"cs"</code>, <code>"pc"</code>, <code>"pv"</code>.</p></dd>
+
+
+<dt id="arg-bc">bc<a class="anchor" aria-label="anchor" href="#arg-bc"></a></dt>
+<dd><p>use robust bias-corrected jumps and variances in the LL-Wald
+(Calonico, Cattaneo and Titiunik 2014). <code>TRUE</code> (default) aligns the test
+with the bias-corrected <code><a href="rddid.html">rddid()</a></code> estimator; <code>FALSE</code> uses the conventional
+local-linear jumps and variances. Does not affect the Canay-Kamat
+permutation test (which operates on raw near-cutoff indicator means).</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
