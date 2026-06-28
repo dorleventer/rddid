@@ -88,6 +88,11 @@
 #'     \item{`"pv"`}{Full panel with time-varying running variable: includes
 #'       same-side minus opposite-side cross-period covariance.}
 #'   }
+#' @param bc Use robust bias-corrected jumps and variances in the LL-Wald
+#'   (Calonico, Cattaneo and Titiunik 2014). `TRUE` (default) aligns the test
+#'   with the bias-corrected [rddid()] estimator; `FALSE` uses the conventional
+#'   local-linear jumps and variances. Does not affect the Canay-Kamat
+#'   permutation test.
 #' @param ... Currently unused.
 #'
 #' @return An object of class `"rd_compstable"`, a named list with:
@@ -165,6 +170,7 @@ rd_compstable <- function(data, x, time, id, t_rd,
                           S  = 499L,
                           kernel = "triangular",
                           scheme = c("auto", "cs", "pc", "pv"),
+                          bc = TRUE,
                           ...) {
   scheme <- match.arg(scheme)
 
@@ -318,7 +324,7 @@ rd_compstable <- function(data, x, time, id, t_rd,
         error = function(e) NULL
       )
       fits[[vi]] <- fit
-      theta[vi]  <- if (is.null(fit)) NA_real_ else fit$D
+      theta[vi]  <- if (is.null(fit)) NA_real_ else if (bc) fit$D_bc else fit$D
     }
 
     # Build covariance matrix
@@ -354,12 +360,15 @@ rd_compstable <- function(data, x, time, id, t_rd,
         # diagonal must subtract the id-matched cross-side term — the same
         # "same-side minus opposite-side" logic used for the off-diagonal.
         if (a == b_idx) {
+          gp <- if (bc) fit_a$sides$`+`$g_bc else fit_a$sides$`+`$g
+          gm <- if (bc) fit_a$sides$`-`$g_bc else fit_a$sides$`-`$g
+          V_aa <- if (bc) fit_a$V_D_bc else fit_a$V_D
           if (use_scheme == "pv") {
-            cross <- .match_sum(fit_a$sides$`+`$id, fit_a$sides$`+`$g,
-                                fit_a$sides$`-`$id, fit_a$sides$`-`$g)
-            Sigma[a, a] <- fit_a$V_D - 2 * cross
+            cross <- .match_sum(fit_a$sides$`+`$id, gp,
+                                fit_a$sides$`-`$id, gm)
+            Sigma[a, a] <- V_aa - 2 * cross
           } else {
-            Sigma[a, a] <- fit_a$V_D
+            Sigma[a, a] <- V_aa
           }
           next
         }
@@ -368,7 +377,7 @@ rd_compstable <- function(data, x, time, id, t_rd,
         # nonzero entry needs a unit landing in type a on one side and type b on
         # the other.  This is the scheme-combined cross covariance of the two
         # reflected fits (cs → 0, pc → same-side, pv → same-side − opposite).
-        Sigma[a, b_idx] <- .cov_scheme(fit_a, fit_b, use_scheme)
+        Sigma[a, b_idx] <- .cov_scheme(fit_a, fit_b, use_scheme, bc = bc)
       }
     }
 
@@ -558,7 +567,8 @@ rd_compstable <- function(data, x, time, id, t_rd,
         q           = if (is.null(q)) "rot" else as.integer(q),
         q_used      = q_used,
         S           = S,
-        c           = c
+        c           = c,
+        bc          = bc
       )
     ),
     class = "rd_compstable"

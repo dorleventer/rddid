@@ -78,6 +78,17 @@
 #' @param min_n Minimum number of observations per type-side before that type
 #'   is included.  Types with fewer than `min_n` obs on either side in a given
 #'   period are silently dropped (default 10).
+#' @param bc Use robust bias-corrected per-type jumps and variances
+#'   (Calonico, Cattaneo and Titiunik 2014). `TRUE` (default) aligns the test
+#'   with the bias-corrected [rddid()] estimator; `FALSE` uses the conventional
+#'   local-linear jumps and variances.
+#' @param type_by How a unit's type is defined. `"pattern"` (default) uses the
+#'   full multi-period sign pattern of the other periods (the general case).
+#'   `"rd_side"` uses only the unit's side of the cutoff in the RD period `t_rd`,
+#'   a binary partition; this is the relevant partition for a single joint test
+#'   across comparison periods that share a running variable, where it yields one
+#'   contrast per period (a \eqn{\chi^2(P)} test for `P` comparison periods).
+#'   Requires `t_rd`.
 #' @param ... Further arguments passed to [rd_period()] (e.g. `p`, `q`, `b`).
 #'
 #' @return An object of class `"rd_homog"`, a list with:
@@ -142,9 +153,12 @@ rd_homog <- function(data, y, x, time, id,
                      kernel = "triangular",
                      scheme = c("auto", "cs", "pc", "pv"),
                      min_n = 10L,
+                     bc = TRUE,
+                     type_by = c("pattern", "rd_side"),
                      ...) {
-  cl     <- match.call()
-  scheme <- match.arg(scheme)
+  cl      <- match.call()
+  scheme  <- match.arg(scheme)
+  type_by <- match.arg(type_by)
 
   # ---- validate columns ----
   for (nm in base::c(y, x, time, id))
@@ -163,7 +177,29 @@ rd_homog <- function(data, y, x, time, id,
   # ---- build types ----
   # shared canonical builder; types are "+"/"-" sign-pattern strings, units at
   # the cutoff treated as above it, partially-observed units dropped per period.
-  type_list <- .build_types(data, x = x, time = time, id = id, c = c)$period_types
+  bt        <- .build_types(data, x = x, time = time, id = id, c = c)
+  type_list <- bt$period_types
+
+  # type_by = "rd_side": override each comparison period's type with the unit's
+  # side of the cutoff in the RD period t_rd (a binary partition), instead of the
+  # full multi-period sign pattern. This is the relevant partition for a joint
+  # homogeneity test across comparison periods when the comparison periods share
+  # a running variable (so the other comparison period's side is collinear with
+  # the running variable and carries no extra type information). Reduces each
+  # period to one contrast, so P comparison periods give a chi^2(P) joint test.
+  if (type_by == "rd_side") {
+    if (is.null(t_rd))
+      stop("type_by = \"rd_side\" requires `t_rd` (the RD period whose side defines the type).")
+    sidecol <- paste0("side_", t_rd)
+    if (!sidecol %in% names(bt$wide))
+      stop("RD period '", t_rd, "' has no side column; cannot define rd_side types.")
+    side_map <- stats::setNames(bt$wide[[sidecol]], as.character(bt$wide$id))
+    for (tp in names(type_list)) {
+      df0      <- type_list[[tp]]
+      df0$type <- unname(side_map[as.character(df0$id)])
+      type_list[[tp]] <- df0[!is.na(df0$type), , drop = FALSE]
+    }
+  }
 
   # ---- per-comparison-period, per-type fits ----
   # For each comparison period t0, for each type v:
@@ -239,7 +275,8 @@ rd_homog <- function(data, y, x, time, id,
       key <- paste0(tp, "::", vt)
       all_fits[[key]] <- fit
       all_meta[[key]] <- list(period = tp, type = vt, ref = (vt == ref_type),
-                               D = fit$D, V_D = fit$V_D, n = fit$n)
+                               D = if (bc) fit$D_bc else fit$D,
+                               V_D = if (bc) fit$V_D_bc else fit$V_D, n = fit$n)
     }
 
     # record contrast keys for this period (non-ref types that actually fitted)
@@ -279,8 +316,9 @@ rd_homog <- function(data, y, x, time, id,
   K <- length(all_contrast_entries)
 
   # contrast vector Delta
+  # all_meta$D already holds the bc-selected jump (D_bc when bc = TRUE).
   Delta <- vapply(all_contrast_entries, function(k) {
-    all_fits[[k]]$D - all_fits[[ref_map[k]]]$D
+    all_meta[[k]]$D - all_meta[[ref_map[k]]]$D
   }, numeric(1))
 
   # covariance of Delta:
@@ -302,10 +340,10 @@ rd_homog <- function(data, y, x, time, id,
     fitA <- all_fits[[keyA]]; fitB <- all_fits[[keyB]]
     same_period <- (all_meta[[keyA]]$period == all_meta[[keyB]]$period)
     # same key = variance
-    if (keyA == keyB) return(fitA$V_D)
+    if (keyA == keyB) return(if (bc) fitA$V_D_bc else fitA$V_D)
     # same period, different type = 0 (disjoint samples)
     if (same_period) return(0)
-    .cov_scheme(fitA, fitB, use_scheme)
+    .cov_scheme(fitA, fitB, use_scheme, bc = bc)
   }
 
   Sigma <- matrix(NA_real_, nrow = K, ncol = K)
@@ -361,6 +399,7 @@ rd_homog <- function(data, y, x, time, id,
       contrasts         = Delta,
       cov_matrix        = Sigma,
       scheme            = use_scheme,
+      bc                = bc,
       comparisons       = names(contrast_keys),
       call              = cl
     ),

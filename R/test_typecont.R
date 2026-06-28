@@ -57,6 +57,11 @@
 #'   `"epanechnikov"`, or `"uniform"`.
 #' @param scheme covariance scheme for the joint Wald: `"auto"` detects from
 #'   the data (same logic as [rddid()]), or one of `"cs"`, `"pc"`, `"pv"`.
+#' @param bc use robust bias-corrected jumps and variances in the LL-Wald
+#'   (Calonico, Cattaneo and Titiunik 2014). `TRUE` (default) aligns the test
+#'   with the bias-corrected [rddid()] estimator; `FALSE` uses the conventional
+#'   local-linear jumps and variances. Does not affect the Canay-Kamat
+#'   permutation test (which operates on raw near-cutoff indicator means).
 #' @param ... currently unused.
 #'
 #' @return An object of class `"rd_typecont"`, a named list with:
@@ -76,6 +81,7 @@ rd_typecont <- function(data, x, time, id,
                         S = 499L,
                         kernel = "triangular",
                         scheme = c("auto", "cs", "pc", "pv"),
+                        bc = TRUE,
                         ...) {
   scheme <- match.arg(scheme)
 
@@ -147,7 +153,7 @@ rd_typecont <- function(data, x, time, id,
         error = function(e) NULL
       )
       fits_by_pt[vi, ki] <- list(fit)  # use [ to allow NULL without error
-      theta[idx] <- if (is.null(fit)) NA_real_ else fit$D
+      theta[idx] <- if (is.null(fit)) NA_real_ else if (bc) fit$D_bc else fit$D
     }
   }
 
@@ -171,10 +177,10 @@ rd_typecont <- function(data, x, time, id,
             # Within-period covariance: units share the same running variable,
             # so the same unit contributes to both type-indicator RDs on the
             # same side — the same-side ("pc") component, scheme-independent.
-            Sigma[row_a, row_b] <- .cross_cov(fit_a, fit_b)$pc
+            Sigma[row_a, row_b] <- .cross_cov(fit_a, fit_b, bc = bc)$pc
           } else {
             # Cross-period covariance: scheme-dependent.
-            Sigma[row_a, row_b] <- .cov_scheme(fit_a, fit_b, use_scheme)
+            Sigma[row_a, row_b] <- .cov_scheme(fit_a, fit_b, use_scheme, bc = bc)
           }
         }
       }
@@ -345,7 +351,8 @@ rd_typecont <- function(data, x, time, id,
         q            = if (is.null(q)) "rot" else as.integer(q),
         q_used       = q_used,
         S            = S,
-        scheme       = use_scheme
+        scheme       = use_scheme,
+        bc           = bc
       )
     ),
     class = "rd_typecont"
