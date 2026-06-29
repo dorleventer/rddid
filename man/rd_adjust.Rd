@@ -19,7 +19,9 @@ rd_adjust(
   kernel = "triangular",
   min_n = 10L,
   p = 1L,
-  q = 2L
+  q = 2L,
+  se = c("bootstrap", "none"),
+  B = 500L
 )
 }
 \arguments{
@@ -33,10 +35,10 @@ rd_adjust(
 
 \item{c}{cutoff (default 0).}
 
-\item{h}{common bandwidth applied to every block (jumps and shares); \code{b} is
-the pilot for bias correction (defaults to \code{h}).}
+\item{h}{common bandwidth for every block (jumps and shares); cells are thin,
+so a bandwidth wider than the aggregate is appropriate.}
 
-\item{b}{pilot bandwidth (defaults to \code{h}).}
+\item{b}{pilot bandwidth for bias correction (defaults to \code{h}).}
 
 \item{weights}{\code{"constant"}, \code{"linear"}, or a numeric vector over
 \code{comparisons} (the trend \code{g0}, as in \code{\link[=rddid]{rddid()}}).}
@@ -46,6 +48,10 @@ the pilot for bias correction (defaults to \code{h}).}
 \item{min_n}{minimum observations per side of any block (default 10).}
 
 \item{p, q}{point / bias-correction polynomial orders (default 1, 2).}
+
+\item{se}{\code{"bootstrap"} (default) or \code{"none"}.}
+
+\item{B}{bootstrap replications (default 500).}
 }
 \value{
 object of class \code{"rd_adjust"}.
@@ -56,9 +62,6 @@ the route of Section 4.4 / Theorem \code{thm:adjust} to take when composition
 stability (A8, \code{\link[=rd_compstable]{rd_compstable()}}) is rejected but the within-type confounding
 trend (A10, \code{\link[=rd_trendcell]{rd_trendcell()}}) is credible. Reports the per-type RD-DID effects
 \verb{ATT(t_rd | v_comp = a)}, the RD-period composition shares, and their
-share-weighted aggregate, alongside the unadjusted estimator.
-}
-\details{
-Standard errors are not computed here; a unit-level cluster bootstrap wrapper
-is added separately (\code{se = "bootstrap"}).
+share-weighted aggregate, alongside the unadjusted estimator. Standard errors
+are a unit-level cluster bootstrap.
 }
