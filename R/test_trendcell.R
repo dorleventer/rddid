@@ -84,10 +84,14 @@
 #'   perspective; if `NULL`, the pattern is taken from the first comparison
 #'   period's perspective.
 #' @param c Cutoff value for the running variable (default 0).
-#' @param h Main bandwidth.  If `NULL` (default), a simple rule-of-thumb
-#'   \eqn{h = 0.2 \times \mathrm{range}(x)} is applied within each
-#'   comparison-period/cell combination.  For reproducible results, supply
-#'   `h` explicitly.
+#' @param h Main bandwidth.  If `NULL` (default), bandwidth is chosen
+#'   according to `bwselect`.  An explicit numeric value overrides `bwselect`
+#'   and is used directly for every (cell, period) combination.
+#' @param bwselect Bandwidth selection when `h = NULL`:
+#'   `"cct"` (default) computes a per-(cell, period) CCT MSE-optimal bandwidth
+#'   via [rd_bw_cct()] on that cell's outcome and running variable;
+#'   `"rot"` uses the 0.2 × range rule of thumb (the original behavior).
+#'   Ignored when `h` is supplied.
 #' @param kernel Kernel for the local-linear RD: `"triangular"` (default),
 #'   `"epanechnikov"`, or `"uniform"`.
 #' @param scheme Sampling scheme for the cross-period covariance:
@@ -187,6 +191,7 @@
 rd_trendcell <- function(data, y, x, time, id,
                          comparisons = NULL, t_rd = NULL,
                          c = 0, h = NULL,
+                         bwselect = c("cct", "rot"),
                          kernel = "triangular",
                          scheme = c("auto", "cs", "pc", "pv"),
                          min_n = 10L,
@@ -194,10 +199,11 @@ rd_trendcell <- function(data, y, x, time, id,
                          type_by = c("rd_side", "pattern"),
                          trend   = c("constant", "linear"),
                          ...) {
-  cl      <- match.call()
-  scheme  <- match.arg(scheme)
-  type_by <- match.arg(type_by)
-  trend   <- match.arg(trend)
+  cl       <- match.call()
+  scheme   <- match.arg(scheme)
+  type_by  <- match.arg(type_by)
+  trend    <- match.arg(trend)
+  bwselect <- match.arg(bwselect)
 
   # ---- validate columns ----
   for (nm in base::c(y, x, time, id))
@@ -264,21 +270,22 @@ rd_trendcell <- function(data, y, x, time, id,
       x_ck  <- d_tp[[x]][keep]
       id_ck <- d_tp[[id]][keep]
 
-      bw_h <- if (!is.null(h)) h else {
-        rng <- diff(range(x_ck[is.finite(x_ck)], na.rm = TRUE))
-        0.2 * rng
-      }
+      # per-cell bandwidth (0.2*range per cell for rot; CCT per cell for cct)
+      bw   <- .cell_bandwidth(y_ck, x_ck, c, kernel, h, bwselect)
+      bw_h <- bw[["h"]]
+      bw_b <- bw[["b"]]
 
       n_pos <- sum(x_ck >= c, na.rm = TRUE)
       n_neg <- sum(x_ck <  c, na.rm = TRUE)
       if (n_pos < min_n || n_neg < min_n) next
 
-      fit <- tryCatch(
-        do.call(rd_period, base::c(
-          list(y = y_ck, x = x_ck, h = bw_h, id = id_ck, c = c, kernel = kernel),
-          dots)),
-        error = function(e) NULL
-      )
+      fit <- tryCatch({
+        call_args <- base::c(
+          list(y = y_ck, x = x_ck, h = bw_h, b = bw_b, id = id_ck, c = c,
+               kernel = kernel),
+          dots)
+        do.call(rd_period, call_args)
+      }, error = function(e) NULL)
       if (is.null(fit)) next
 
       key            <- paste0(ck, "::", tp)
@@ -445,24 +452,15 @@ rd_trendcell <- function(data, y, x, time, id,
 
   # ---- Wald statistic via eigen pseudo-inverse ----
   # The contrast covariance is a linear combination of estimated covariances
-  # (C_k %*% Sigma_k %*% C_k') and can be numerically indefinite.  We use the
-  # same conservative eigen pseudo-inverse as rd_homog(): drop non-positive
-  # eigenvalue directions (rather than inverting their signed magnitude).
-  K   <- length(Delta_all)
-  ev  <- eigen(Sigma_all, symmetric = TRUE)
-  tol <- max(abs(ev$values)) * K * .Machine$double.eps^0.5
-  pos <- ev$values > tol
-  df  <- sum(pos)
-
-  if (df == 0L)
+  # (C_k %*% Sigma_k %*% C_k') and can be numerically indefinite.  Use the
+  # conservative eigen pseudo-inverse that drops non-positive directions
+  # (see .wald_eigen() in R/test_helpers.R for the implementation).
+  ew <- .wald_eigen(Delta_all, Sigma_all)
+  if (ew$df == 0L)
     stop("rd_trendcell: estimated covariance matrix is numerically zero.")
-
-  Sigma_inv <- ev$vectors[, pos, drop = FALSE] %*%
-               diag(1 / ev$values[pos], nrow = sum(pos)) %*%
-               t(ev$vectors[, pos, drop = FALSE])
-
-  W  <- as.numeric(t(Delta_all) %*% Sigma_inv %*% Delta_all)
-  pv <- stats::pchisq(W, df = df, lower.tail = FALSE)
+  W  <- ew$stat
+  df <- ew$df
+  pv <- ew$p
 
   # ---- output ----
   structure(

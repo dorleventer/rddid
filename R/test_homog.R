@@ -66,9 +66,14 @@
 #'   comparison periods when `comparisons = NULL`; the RD period is **not**
 #'   used in the test itself.
 #' @param c Cutoff value for the running variable (default 0).
-#' @param h Main bandwidth.  If `NULL` (default), a simple rule-of-thumb
-#'   \eqn{h = 0.2 \times \mathrm{range}(x)} is applied within each
-#'   comparison period.  For reproducible results, supply `h` explicitly.
+#' @param h Main bandwidth.  If `NULL` (default), bandwidth is chosen
+#'   according to `bwselect`.  An explicit numeric value overrides `bwselect`
+#'   and is used directly for every cell.
+#' @param bwselect Bandwidth selection when `h = NULL`:
+#'   `"cct"` (default) computes a per-cell CCT MSE-optimal bandwidth via
+#'   [rd_bw_cct()] on that cell's outcome and running variable;
+#'   `"rot"` uses the 0.2 × range rule of thumb (the original behavior).
+#'   Ignored when `h` is supplied.
 #' @param kernel Kernel for the local-linear RD: `"triangular"` (default),
 #'   `"epanechnikov"`, or `"uniform"`.
 #' @param scheme Sampling scheme for the cross-period covariance:
@@ -150,15 +155,17 @@
 rd_homog <- function(data, y, x, time, id,
                      comparisons = NULL, t_rd = NULL,
                      c = 0, h = NULL,
+                     bwselect = c("cct", "rot"),
                      kernel = "triangular",
                      scheme = c("auto", "cs", "pc", "pv"),
                      min_n = 10L,
                      bc = TRUE,
                      type_by = c("pattern", "rd_side"),
                      ...) {
-  cl      <- match.call()
-  scheme  <- match.arg(scheme)
-  type_by <- match.arg(type_by)
+  cl       <- match.call()
+  scheme   <- match.arg(scheme)
+  type_by  <- match.arg(type_by)
+  bwselect <- match.arg(bwselect)
 
   # ---- validate columns ----
   for (nm in base::c(y, x, time, id))
@@ -251,22 +258,21 @@ rd_homog <- function(data, y, x, time, id,
       x_vt   <- d_tp[[x]][keep]
       id_vt  <- d_tp[[id]][keep]
 
-      # default bandwidth
-      bw_h   <- if (!is.null(h)) h else {
-        rng <- diff(range(x_vt[is.finite(x_vt)], na.rm = TRUE))
-        0.2 * rng
-      }
+      # per-cell bandwidth (0.2*range per cell for rot; CCT per cell for cct)
+      bw   <- .cell_bandwidth(y_vt, x_vt, c, kernel, h, bwselect)
+      bw_h <- bw[["h"]]
+      bw_b <- bw[["b"]]
 
       # skip if too few obs on either side
       n_pos <- sum(x_vt >= c, na.rm = TRUE)
       n_neg <- sum(x_vt <  c, na.rm = TRUE)
       if (n_pos < min_n || n_neg < min_n) next
 
-      fit <- tryCatch(
-        do.call(rd_period, base::c(list(y = y_vt, x = x_vt, h = bw_h,
-                                        id = id_vt, c = c, kernel = kernel), dots)),
-        error = function(e) NULL
-      )
+      fit <- tryCatch({
+        call_args <- base::c(list(y = y_vt, x = x_vt, h = bw_h, b = bw_b,
+                                   id = id_vt, c = c, kernel = kernel), dots)
+        do.call(rd_period, call_args)
+      }, error = function(e) NULL)
       if (is.null(fit)) next
 
       key <- paste0(tp, "::", vt)
@@ -356,22 +362,14 @@ rd_homog <- function(data, y, x, time, id,
 
   # ---- Wald statistic ----
   # Deliberately NOT .joint_wald(): this contrast covariance is a difference of
-  # estimated covariances and can come back numerically indefinite.  We use an
-  # eigen pseudo-inverse with a looser eps^0.5 tolerance that DROPS non-positive
-  # eigen-directions (rather than inverting their signed magnitude as the SVD in
-  # .joint_wald would), which is the more conservative choice here.
-  ev   <- eigen(Sigma, symmetric = TRUE)
-  tol  <- max(abs(ev$values)) * K * .Machine$double.eps^0.5
-  pos  <- ev$values > tol
-  df   <- sum(pos)
-  if (df == 0L) stop("rd_homog: estimated covariance matrix is numerically zero.")
-
-  Sigma_inv <- ev$vectors[, pos, drop = FALSE] %*%
-               diag(1 / ev$values[pos], nrow = sum(pos)) %*%
-               t(ev$vectors[, pos, drop = FALSE])
-
-  W  <- as.numeric(t(Delta) %*% Sigma_inv %*% Delta)
-  pv <- stats::pchisq(W, df = df, lower.tail = FALSE)
+  # estimated covariances and can come back numerically indefinite.  Use the
+  # conservative eigen pseudo-inverse that drops non-positive directions
+  # (see .wald_eigen() in R/test_helpers.R for the implementation).
+  ew <- .wald_eigen(Delta, Sigma)
+  if (ew$df == 0L) stop("rd_homog: estimated covariance matrix is numerically zero.")
+  W  <- ew$stat
+  df <- ew$df
+  pv <- ew$p
 
   # ---- period-type jump table ----
   jump_df <- do.call(rbind, lapply(names(all_meta), function(k) {

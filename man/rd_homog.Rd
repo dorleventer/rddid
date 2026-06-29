@@ -14,6 +14,7 @@ rd_homog(
   t_rd = NULL,
   c = 0,
   h = NULL,
+  bwselect = c("cct", "rot"),
   kernel = "triangular",
   scheme = c("auto", "cs", "pc", "pv"),
   min_n = 10L,
@@ -41,9 +42,15 @@ used in the test itself.}
 
 \item{c}{Cutoff value for the running variable (default 0).}
 
-\item{h}{Main bandwidth.  If \code{NULL} (default), a simple rule-of-thumb
-\eqn{h = 0.2 \times \mathrm{range}(x)} is applied within each
-comparison period.  For reproducible results, supply \code{h} explicitly.}
+\item{h}{Main bandwidth.  If \code{NULL} (default), bandwidth is chosen
+according to \code{bwselect}.  An explicit numeric value overrides \code{bwselect}
+and is used directly for every cell.}
+
+\item{bwselect}{Bandwidth selection when \code{h = NULL}:
+\code{"cct"} (default) computes a per-cell CCT MSE-optimal bandwidth via
+\code{\link[=rd_bw_cct]{rd_bw_cct()}} on that cell's outcome and running variable;
+\code{"rot"} uses the 0.2 × range rule of thumb (the original behavior).
+Ignored when \code{h} is supplied.}
 
 \item{kernel}{Kernel for the local-linear RD: \code{"triangular"} (default),
 \code{"epanechnikov"}, or \code{"uniform"}.}

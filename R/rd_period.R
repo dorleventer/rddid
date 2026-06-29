@@ -34,8 +34,11 @@
 #'   bias-corrected discontinuity (`D`, `D_bc`) and their variances (`V_D`,
 #'   `V_D_bc`), the per-period asymptotic bias and variance constants
 #'   (`b_const`, `v_const`) used for joint bandwidth selection, the effective
-#'   sample size `n`, the bandwidths, and a per-side list `sides` holding the
-#'   active units' `id` and their conventional / bias-corrected `g` vectors.
+#'   sample size `n`, the bandwidths, and a per-side list `sides` holding, for
+#'   each side `"+"` and `"-"`, the active units' `id`, their conventional /
+#'   bias-corrected `g` vectors, the conventional intercept at the cutoff
+#'   (`beta0`), and the conventional local-linear `slope`.  The fitted line on
+#'   a side is `beta0 + slope * (x - c)`.
 #' @export
 rd_period <- function(y, x, h, b = h, id = NULL, c = 0, p = 1L, q = 2L,
                       kernel = "triangular") {
@@ -87,6 +90,7 @@ rd_period <- function(y, x, h, b = h, id = NULL, c = 0, p = 1L, q = 2L,
     list(
       beta0    = beta_p[1L],
       beta0_bc = beta_bc[1L],
+      slope    = as.numeric(beta_p[2L]),
       id       = ids,
       g        = a_c * as.numeric(res_c),
       g_bc     = a_bc * as.numeric(res_b),

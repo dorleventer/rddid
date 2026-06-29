@@ -224,3 +224,17 @@ test_that("rd_trendcell cov_matrix is block-diagonal by cell (3 comparison perio
                         drop = FALSE]
   expect_equal(max(abs(cross_block)), 0, tolerance = 1e-10)
 })
+
+# ---------------------------------------------------------------------------
+# 11. CCT bandwidth path: default bwselect = "cct" runs end-to-end
+# ---------------------------------------------------------------------------
+test_that("rd_trendcell with bwselect='cct' returns finite statistic with df >= 1", {
+  skip_if_not_installed("rdrobust")
+  dat <- make_trendcell_panel(n = 600, T_comp = 2,
+                               jump_fn = function(k, t) if (k == "+") 0.5 else 0.3)
+  res <- rd_trendcell(dat, y = "y", x = "x", time = "time", id = "id",
+                      comparisons = 1:2, t_rd = 3L)
+  expect_s3_class(res, "rd_trendcell")
+  expect_true(is.finite(res$statistic))
+  expect_gte(res$df, 1L)
+})

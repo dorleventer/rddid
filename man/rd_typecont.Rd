@@ -11,6 +11,7 @@ rd_typecont(
   id,
   c = 0,
   h = NULL,
+  bwselect = c("cct", "rot"),
   q = NULL,
   S = 499L,
   kernel = "triangular",
@@ -30,8 +31,14 @@ rd_typecont(
 
 \item{c}{cutoff (default 0).}
 
-\item{h}{bandwidth.  If \code{NULL}, uses \code{0.5 * IQR(x)} as a simple default;
-a data-driven bandwidth (e.g. from \code{\link[=rddid]{rddid()}}) is recommended in practice.}
+\item{h}{bandwidth.  If \code{NULL}, the bandwidth is determined by \code{bwselect};
+an explicit numeric value overrides \code{bwselect} and is used directly.}
+
+\item{bwselect}{bandwidth selection rule when \code{h = NULL}: \code{"cct"} (default)
+computes a per-cell CCT MSE-optimal bandwidth via \code{\link[=rd_bw_cct]{rd_bw_cct()}} for each
+(period, type) RD; \code{"rot"} uses the \code{0.5 * IQR(x)} rule of thumb applied
+to the full sample (the previous default behaviour).  Ignored when \code{h} is
+supplied explicitly.}
 
 \item{q}{number of observations nearest the cutoff on each side for the
 Canay-Kamat permutation test. \code{NULL} (default) selects \code{q} per period by
@@ -67,7 +74,10 @@ An object of class \code{"rd_typecont"}, a named list with:
 p-value for the period, minimum × number of types).}
 \item{mccrary_pooled}{data frame with columns \code{period}, \code{p} (per-period
 McCrary p-value on pooled sample).}
-\item{meta}{list with \code{periods}, \code{type_values}, \code{h}, \code{q}, \code{S}, \code{scheme}.}
+\item{meta}{list with \code{periods}, \code{type_values}, \code{h} (NA when
+\code{bwselect = "cct"}), \code{bwselect}, \code{q} (\code{"rot"} when the Canay-Kamat
+rule of thumb is used, otherwise the integer supplied), \code{q_used}
+(per-period integer \code{q} actually used), \code{S}, \code{scheme}, \code{bc}.}
 }
 \description{
 Runs the four tests for Assumption A7 ("continuity of the type distribution")

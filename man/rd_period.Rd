@@ -42,8 +42,11 @@ An object of class \code{"rd_period"}: a list with the conventional and
 bias-corrected discontinuity (\code{D}, \code{D_bc}) and their variances (\code{V_D},
 \code{V_D_bc}), the per-period asymptotic bias and variance constants
 (\code{b_const}, \code{v_const}) used for joint bandwidth selection, the effective
-sample size \code{n}, the bandwidths, and a per-side list \code{sides} holding the
-active units' \code{id} and their conventional / bias-corrected \code{g} vectors.
+sample size \code{n}, the bandwidths, and a per-side list \code{sides} holding, for
+each side \code{"+"} and \code{"-"}, the active units' \code{id}, their conventional /
+bias-corrected \code{g} vectors, the conventional intercept at the cutoff
+(\code{beta0}), and the conventional local-linear \code{slope}.  The fitted line on
+a side is \code{beta0 + slope * (x - c)}.
 }
 \description{
 Estimates the period-\eqn{t} outcome discontinuity

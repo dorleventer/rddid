@@ -343,6 +343,18 @@ test_that("CK permutation (P=3) rejects under sorting DGP", {
   expect_lt(out$ck_perm$p, 0.05)
 })
 
+test_that("rd_typecont bwselect = 'cct' runs end-to-end and returns finite stat", {
+  skip_if_not_installed("rdrobust")
+  set.seed(42L)
+  d     <- dgp_s3_local(1500, "null", seed = 42L)
+  panel <- xsec_to_panel(d)
+  out   <- rd_typecont(panel, x = "R", time = "time", id = "id",
+                       c = 0, bwselect = "cct", q = 50L, S = 49L,
+                       kernel = "triangular")
+  expect_true(is.finite(out$ll_wald$stat))
+  expect_gte(out$ll_wald$df, 1L)
+})
+
 test_that("CK permutation (P=3): observed stat is deterministic and p in [0,1]", {
   # The observed statistic is computed from the data (no randomness); it must
   # be identical across two calls.  p-value must be a valid probability.

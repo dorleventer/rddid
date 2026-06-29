@@ -13,6 +13,7 @@ rd_compstable(
   comparisons = NULL,
   c = 0,
   h = NULL,
+  bwselect = c("cct", "rot"),
   q = NULL,
   S = 499L,
   kernel = "triangular",
@@ -38,9 +39,15 @@ unbalanced panel).}
 
 \item{c}{Cutoff for the running variable (default 0).}
 
-\item{h}{Bandwidth.  If \code{NULL} (default), uses \eqn{0.5 \times
-  \mathrm{IQR}(x)} across the full sample as a simple default; supply an
-explicit bandwidth for reproducible results.}
+\item{h}{Bandwidth.  If \code{NULL} (default), the bandwidth is determined by
+\code{bwselect}; an explicit numeric value overrides \code{bwselect} and is used
+directly.}
+
+\item{bwselect}{Bandwidth selection rule when \code{h = NULL}: \code{"cct"} (default)
+computes a per-cell CCT MSE-optimal bandwidth via \code{\link[=rd_bw_cct]{rd_bw_cct()}} for each
+type indicator RD in the reflected space; \code{"rot"} uses \eqn{0.5 \times
+  \mathrm{IQR}(x)} as a rule-of-thumb applied to the full sample.  Ignored
+when \code{h} is supplied explicitly.}
 
 \item{q}{Number of observations nearest the artificial cutoff on each side
 for the Canay-Kamat permutation test. \code{NULL} (default) selects \code{q} per
@@ -100,8 +107,10 @@ pairs, assuming independence across pairs).}
 \item{\code{ck_perm}}{list with \code{stat} (sum of per-pair stats) and \code{p}.}
 }
 }
-\item{\code{meta}}{list with \code{t_rd}, \code{comparisons}, \code{h}, \code{q} (\code{"rot"} when the
-rule of thumb is used), \code{q_used} (per-pair \code{q}), \code{S}, \code{c}.}
+\item{\code{meta}}{list with \code{t_rd}, \code{comparisons}, \code{h} (NA when
+\code{bwselect = "cct"}), \code{bwselect}, \code{q} (\code{"rot"} when the rule of
+thumb is used, otherwise the integer supplied), \code{q_used} (per-pair
+\code{q} actually used), \code{S}, \code{c}, \code{bc}.}
 }
 }
 \description{

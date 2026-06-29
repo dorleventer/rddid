@@ -65,9 +65,14 @@
 #' @param comparisons Values of `time` to use as comparison periods.  If
 #'   `NULL` (default), all periods except `t_rd` are used.
 #' @param c Cutoff for the running variable (default 0).
-#' @param h Bandwidth.  If `NULL` (default), uses \eqn{0.5 \times
-#'   \mathrm{IQR}(x)} across the full sample as a simple default; supply an
-#'   explicit bandwidth for reproducible results.
+#' @param h Bandwidth.  If `NULL` (default), the bandwidth is determined by
+#'   `bwselect`; an explicit numeric value overrides `bwselect` and is used
+#'   directly.
+#' @param bwselect Bandwidth selection rule when `h = NULL`: `"cct"` (default)
+#'   computes a per-cell CCT MSE-optimal bandwidth via [rd_bw_cct()] for each
+#'   type indicator RD in the reflected space; `"rot"` uses \eqn{0.5 \times
+#'   \mathrm{IQR}(x)} as a rule-of-thumb applied to the full sample.  Ignored
+#'   when `h` is supplied explicitly.
 #' @param q Number of observations nearest the artificial cutoff on each side
 #'   for the Canay-Kamat permutation test. `NULL` (default) selects `q` per
 #'   \eqn{(t_{\mathrm{RD}}, t_0)} pair by the Canay & Kamat (2018) rule of thumb
@@ -120,8 +125,10 @@
 #'         \item{`ck_perm`}{list with `stat` (sum of per-pair stats) and `p`.}
 #'       }
 #'     }
-#'     \item{`meta`}{list with `t_rd`, `comparisons`, `h`, `q` (`"rot"` when the
-#'       rule of thumb is used), `q_used` (per-pair `q`), `S`, `c`.}
+#'     \item{`meta`}{list with `t_rd`, `comparisons`, `h` (NA when
+#'       `bwselect = "cct"`), `bwselect`, `q` (`"rot"` when the rule of
+#'       thumb is used, otherwise the integer supplied), `q_used` (per-pair
+#'       `q` actually used), `S`, `c`, `bc`.}
 #'   }
 #'
 #' @note
@@ -166,13 +173,15 @@ rd_compstable <- function(data, x, time, id, t_rd,
                           comparisons = NULL,
                           c = 0,
                           h = NULL,
+                          bwselect = c("cct", "rot"),
                           q = NULL,
                           S  = 499L,
                           kernel = "triangular",
                           scheme = c("auto", "cs", "pc", "pv"),
                           bc = TRUE,
                           ...) {
-  scheme <- match.arg(scheme)
+  scheme   <- match.arg(scheme)
+  bwselect <- match.arg(bwselect)
 
   # ---- input validation -------------------------------------------------------
   for (nm in base::c(x, time, id)) {
@@ -196,7 +205,10 @@ rd_compstable <- function(data, x, time, id, t_rd,
          paste(missing_comp, collapse = ", "))
 
   # ---- default bandwidth -------------------------------------------------------
-  if (is.null(h)) {
+  # When bwselect = "rot" and h = NULL, use 0.5*IQR (current behaviour).
+  # When bwselect = "cct" and h = NULL, h stays NULL; per-cell CCT is computed
+  # inside the per-pair type loop below in the reflected space (c = 0).
+  if (is.null(h) && bwselect == "rot") {
     all_x <- data[[x]]
     h     <- 0.5 * stats::IQR(all_x)
     if (h <= 0) h <- stats::sd(all_x)
@@ -318,8 +330,14 @@ rd_compstable <- function(data, x, time, id, t_rd,
     for (vi in seq_along(all_type_vals)) {
       v   <- all_type_vals[vi]
       y_v <- as.numeric(type_all == v)
+      # Per-cell bandwidth in the reflected space (c = 0): CCT when h = NULL
+      # and bwselect = "cct"; otherwise h is non-NULL (explicit or pre-set
+      # from 0.5*IQR for bwselect = "rot").
+      bw     <- .cell_bandwidth(y_v, x_all, 0, kernel, h, bwselect)
+      h_cell <- bw[["h"]]
+      b_cell <- bw[["b"]]
       fit <- tryCatch(
-        rd_period(y = y_v, x = x_all, h = h, b = h, id = id_all,
+        rd_period(y = y_v, x = x_all, h = h_cell, b = b_cell, id = id_all,
                   c = 0, p = 1L, q = 2L, kernel = kernel),
         error = function(e) NULL
       )
@@ -563,7 +581,8 @@ rd_compstable <- function(data, x, time, id, t_rd,
       meta = list(
         t_rd        = t_rd,
         comparisons = comparisons,
-        h           = h,
+        h           = if (!is.null(h)) h else NA_real_,
+        bwselect    = bwselect,
         q           = if (is.null(q)) "rot" else as.integer(q),
         q_used      = q_used,
         S           = S,
@@ -583,8 +602,9 @@ print.rd_compstable <- function(x, ...) {
               x$meta$t_rd,
               paste(x$meta$comparisons, collapse = ", ")))
   q_lbl <- if (identical(x$meta$q, "rot")) "rule-of-thumb" else x$meta$q
-  cat(sprintf("  h=%.4g   q=%s   S=%d\n\n",
-              x$meta$h, q_lbl, x$meta$S))
+  h_str <- if (is.na(x$meta$h)) paste0("per-cell ", toupper(x$meta$bwselect)) else sprintf("%.4g", x$meta$h)
+  cat(sprintf("  h=%s   bwselect=%s   q=%s   S=%d\n\n",
+              h_str, x$meta$bwselect, q_lbl, x$meta$S))
 
   for (pk in names(x$pairs)) {
     pr <- x$pairs[[pk]]

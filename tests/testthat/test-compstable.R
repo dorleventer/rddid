@@ -1,4 +1,4 @@
-# Tests for rd_compstable() — Assumption A7 composition-stability reflection test.
+# Tests for rd_compstable() — Assumption A8 composition-stability reflection test.
 #
 # Three objectives:
 #  (a) Under the null (composition stable across periods), p-values are not
@@ -292,6 +292,17 @@ test_that("rd_compstable high-dual-sided: size controlled under the null", {
   # Size control: neither test should systematically reject under the null.
   expect_gt(pr$ll_wald$p, 0.001)
   expect_gt(pr$ck_perm$p, 0.001)
+})
+
+test_that("rd_compstable bwselect = 'cct' runs end-to-end and returns finite stat", {
+  skip_if_not_installed("rdrobust")
+  dat <- make_panel_null(n = 1500, seed = 42L)
+  out <- rd_compstable(dat, x = "R", time = "time", id = "id",
+                       t_rd = 2L, comparisons = 1L,
+                       c = 0, bwselect = "cct", q = 50L, S = 49L,
+                       kernel = "triangular")
+  expect_true(is.finite(out$joint$ll_wald$stat))
+  expect_gte(out$joint$ll_wald$df, 1L)
 })
 
 test_that("rd_compstable high-dual-sided: rejects under composition shift", {

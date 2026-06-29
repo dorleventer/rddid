@@ -42,8 +42,13 @@
 #' @param time column name (string) for the period.
 #' @param id column name (string) for the unit identifier.
 #' @param c cutoff (default 0).
-#' @param h bandwidth.  If `NULL`, uses `0.5 * IQR(x)` as a simple default;
-#'   a data-driven bandwidth (e.g. from [rddid()]) is recommended in practice.
+#' @param h bandwidth.  If `NULL`, the bandwidth is determined by `bwselect`;
+#'   an explicit numeric value overrides `bwselect` and is used directly.
+#' @param bwselect bandwidth selection rule when `h = NULL`: `"cct"` (default)
+#'   computes a per-cell CCT MSE-optimal bandwidth via [rd_bw_cct()] for each
+#'   (period, type) RD; `"rot"` uses the `0.5 * IQR(x)` rule of thumb applied
+#'   to the full sample (the previous default behaviour).  Ignored when `h` is
+#'   supplied explicitly.
 #' @param q number of observations nearest the cutoff on each side for the
 #'   Canay-Kamat permutation test. `NULL` (default) selects `q` per period by
 #'   the Canay & Kamat (2018) rule of thumb; this is the
@@ -72,18 +77,23 @@
 #'     p-value for the period, minimum × number of types).}
 #'   \item{mccrary_pooled}{data frame with columns `period`, `p` (per-period
 #'     McCrary p-value on pooled sample).}
-#'   \item{meta}{list with `periods`, `type_values`, `h`, `q`, `S`, `scheme`.}
+#'   \item{meta}{list with `periods`, `type_values`, `h` (NA when
+#'     `bwselect = "cct"`), `bwselect`, `q` (`"rot"` when the Canay-Kamat
+#'     rule of thumb is used, otherwise the integer supplied), `q_used`
+#'     (per-period integer `q` actually used), `S`, `scheme`, `bc`.}
 #' @export
 rd_typecont <- function(data, x, time, id,
                         c = 0,
                         h = NULL,
+                        bwselect = c("cct", "rot"),
                         q = NULL,
                         S = 499L,
                         kernel = "triangular",
                         scheme = c("auto", "cs", "pc", "pv"),
                         bc = TRUE,
                         ...) {
-  scheme <- match.arg(scheme)
+  scheme   <- match.arg(scheme)
+  bwselect <- match.arg(bwselect)
 
   # ----- input checks -------------------------------------------------------
   for (nm in c(x, time, id)) {
@@ -97,11 +107,21 @@ rd_typecont <- function(data, x, time, id,
   if (P < 2L) stop("need at least 2 periods to define a type.")
 
   # ----- default bandwidth --------------------------------------------------
+  # h_rot: IQR-based pilot, computed whenever h is NULL (regardless of bwselect)
+  # so that scheme detection and McCrary always have a finite window.
+  # h_aux: the bandwidth actually used for scheme detection + McCrary tests:
+  #   equals h when h is explicit; equals h_rot otherwise.
+  # When bwselect = "rot" and h = NULL, h is set to h_rot (current behaviour).
+  # When bwselect = "cct" and h = NULL, h stays NULL; per-cell CCT is computed
+  # inside the LL-Wald loop below.
+  h_rot <- NULL
   if (is.null(h)) {
     all_x <- data[[x]]
-    h     <- 0.5 * stats::IQR(all_x)
-    if (h <= 0) h <- stats::sd(all_x)
+    h_rot <- 0.5 * stats::IQR(all_x)
+    if (h_rot <= 0) h_rot <- stats::sd(all_x)
+    if (bwselect == "rot") h <- h_rot
   }
+  h_aux <- if (!is.null(h)) h else h_rot
 
   # ----- build types --------------------------------------------------------
   # Per-period frames (id, R, type) from the shared canonical builder in
@@ -119,7 +139,7 @@ rd_typecont <- function(data, x, time, id,
   if (scheme == "auto") {
     long <- do.call(rbind, lapply(plab, function(k) {
       df_k  <- pt[[k]]
-      inwin <- abs(df_k$R - c) <= h
+      inwin <- abs(df_k$R - c) <= h_aux
       data.frame(period = k,
                  id     = df_k$id[inwin],
                  side   = as.integer(df_k$R[inwin] >= c))
@@ -147,8 +167,13 @@ rd_typecont <- function(data, x, time, id,
       idx <- idx + 1L
       v   <- all_type_values[vi]
       y_v <- as.numeric(df_k$type == v)
+      # Per-cell bandwidth: CCT when h = NULL and bwselect = "cct"; otherwise
+      # h is non-NULL (explicit or pre-set from h_rot for bwselect = "rot").
+      bw     <- .cell_bandwidth(y_v, df_k$R, c, kernel, h, bwselect)
+      h_cell <- bw[["h"]]
+      b_cell <- bw[["b"]]
       fit <- tryCatch(
-        rd_period(y = y_v, x = df_k$R, h = h, b = h, id = df_k$id,
+        rd_period(y = y_v, x = df_k$R, h = h_cell, b = b_cell, id = df_k$id,
                   c = c, p = 1L, q = 2L, kernel = kernel),
         error = function(e) NULL
       )
@@ -298,11 +323,8 @@ rd_typecont <- function(data, x, time, id,
       v    <- all_type_values[vi]
       x_v  <- df_k$R[df_k$type == v]
       # Centre x_v at cutoff (already: cutoff = c, so subtract c)
-      p_vec[vi] <- .mccrary(x_v - c, h)
+      p_vec[vi] <- .mccrary(x_v - c, h_aux)
     }
-    # Bonferroni within this period: min(p) * n_types (capped at 1)
-    p_min  <- if (all(is.na(p_vec))) NA_real_ else min(p_vec, na.rm = TRUE)
-    p_bonf <- if (is.na(p_min)) NA_real_ else pmin(1, p_min * n_types)
     for (vi in seq_along(all_type_values)) {
       mcc_within_rows[[length(mcc_within_rows) + 1L]] <- data.frame(
         period = plab[ki],
@@ -332,7 +354,7 @@ rd_typecont <- function(data, x, time, id,
     period = plab,
     p      = vapply(seq_along(plab), function(ki) {
       df_k <- pt[[plab[ki]]]
-      .mccrary(df_k$R - c, h)
+      .mccrary(df_k$R - c, h_aux)
     }, numeric(1L)),
     stringsAsFactors = FALSE
   )
@@ -347,7 +369,8 @@ rd_typecont <- function(data, x, time, id,
       meta = list(
         periods      = plab,
         type_values  = all_type_values,
-        h            = h,
+        h            = if (!is.null(h)) h else NA_real_,
+        bwselect     = bwselect,
         q            = if (is.null(q)) "rot" else as.integer(q),
         q_used       = q_used,
         S            = S,
@@ -363,10 +386,11 @@ rd_typecont <- function(data, x, time, id,
 #' @export
 print.rd_typecont <- function(x, ...) {
   cat("Type-continuity tests (Assumption A7)\n")
-  cat(sprintf("  Periods: %s   Types: %s   h=%.4g   scheme=%s\n\n",
+  h_str <- if (is.na(x$meta$h)) paste0("per-cell ", toupper(x$meta$bwselect)) else sprintf("%.4g", x$meta$h)
+  cat(sprintf("  Periods: %s   Types: %s   h=%s   bwselect=%s   scheme=%s\n\n",
               paste(x$meta$periods, collapse = ", "),
               paste(x$meta$type_values, collapse = ", "),
-              x$meta$h, toupper(x$meta$scheme)))
+              h_str, x$meta$bwselect, toupper(x$meta$scheme)))
 
   cat("(1) LL-Wald [nec & suff]:\n")
   cat(sprintf("    chi2(%.0f) = %.4f   p = %.4f\n\n",

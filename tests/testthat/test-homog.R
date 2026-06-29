@@ -1,4 +1,4 @@
-# Tests for rd_homog() — Assumption A8 type-homogeneous confounding test.
+# Tests for rd_homog() — Assumption A9 type-homogeneous confounding test.
 #
 # Two-period DGP:  period 1 = RD period (not used in test),
 #                  period 2 = comparison period.
@@ -222,4 +222,17 @@ test_that("scheme='auto' resolves to 'pc' for a panel with constant running vari
                      type_by = "rd_side", scheme = "cs", h = 0.4)
   expect_false(isTRUE(all.equal(res_auto$statistic, res_cs$statistic,
                                 tolerance = 1e-6)))
+})
+
+# ---------------------------------------------------------------------------
+# 10. CCT bandwidth path: default bwselect = "cct" runs end-to-end
+# ---------------------------------------------------------------------------
+test_that("rd_homog with bwselect='cct' returns finite statistic with df >= 1", {
+  skip_if_not_installed("rdrobust")
+  dat <- make_panel(n = 600, jump_pos = 0.5, jump_neg = 0.5)
+  res <- rd_homog(dat, y = "y", x = "x", time = "time", id = "id",
+                  comparisons = 2L, t_rd = 1L)
+  expect_s3_class(res, "rd_homog")
+  expect_true(is.finite(res$statistic))
+  expect_gte(res$df, 1L)
 })

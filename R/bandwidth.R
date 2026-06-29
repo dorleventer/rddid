@@ -258,3 +258,46 @@
     c(h = unname(h[j]), b = unname(h[j] * ratio[j]))), keys)
   list(bws = bws, b_const = bt, v_const = vt, niter = it)
 }
+
+#' CCT (MSE-optimal) bandwidth for a single local-linear RD
+#'
+#' Returns the Calonico–Cattaneo–Titiunik MSE-optimal bandwidths `h` and `b`
+#' for a single local-linear RD using \pkg{rdrobust}. Falls back gracefully when
+#' \pkg{rdrobust} is unavailable, the call fails, or the returned bandwidth is
+#' non-positive/non-finite.
+#'
+#' @param y Outcome vector.
+#' @param x Running variable vector.
+#' @param c Cutoff (default 0).
+#' @param p Polynomial order (default 1L, local linear).
+#' @param kernel Kernel type: `"triangular"` (default), `"epanechnikov"`, or
+#'   `"uniform"`.
+#'
+#' @return A named numeric vector `c(h = ..., b = ...)` with the main and pilot
+#'   bandwidths.  When the CCT computation is unavailable, both equal
+#'   `0.5 * IQR(x)` (or `sd(x)` if IQR is zero), and a message is emitted
+#'   naming the reason.
+#' @export
+rd_bw_cct <- function(y, x, c = 0, p = 1L, kernel = "triangular") {
+  fallback <- function(reason) {
+    h0 <- 0.5 * stats::IQR(x)
+    if (!is.finite(h0) || h0 <= 0) h0 <- stats::sd(x)
+    message("rd_bw_cct: CCT unavailable (", reason,
+            "); falling back to 0.5*IQR h=", round(h0, 4))
+    c(h = h0, b = h0)
+  }
+  if (!requireNamespace("rdrobust", quietly = TRUE))
+    return(fallback("rdrobust not installed"))
+  bw <- tryCatch(
+    rdrobust::rdbwselect(y = y, x = x, c = c, p = p, kernel = kernel,
+                         bwselect = "mserd"),
+    error = function(e) e
+  )
+  if (inherits(bw, "error"))
+    return(fallback(conditionMessage(bw)))
+  h_val <- as.numeric(bw$bws[1, 1])
+  b_val <- as.numeric(bw$bws[1, 3])
+  if (!is.finite(h_val) || h_val <= 0)
+    return(fallback(paste0("rdbwselect returned h=", h_val)))
+  c(h = h_val, b = b_val)
+}
