@@ -78,6 +78,7 @@ mix must be the same at the RD period and at each comparison period.</p>
 <span>  comparisons <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  c <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  h <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  bwselect <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cct"</span>, <span class="st">"rot"</span><span class="op">)</span>,</span>
 <span>  q <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  S <span class="op">=</span> <span class="fl">499L</span>,</span>
 <span>  kernel <span class="op">=</span> <span class="st">"triangular"</span>,</span>
@@ -122,9 +123,17 @@ unbalanced panel).</p></dd>
 
 
 <dt id="arg-h">h<a class="anchor" aria-label="anchor" href="#arg-h"></a></dt>
-<dd><p>Bandwidth.  If <code>NULL</code> (default), uses \(0.5 \times
-  \mathrm{IQR}(x)\) across the full sample as a simple default; supply an
-explicit bandwidth for reproducible results.</p></dd>
+<dd><p>Bandwidth.  If <code>NULL</code> (default), the bandwidth is determined by
+<code>bwselect</code>; an explicit numeric value overrides <code>bwselect</code> and is used
+directly.</p></dd>
+
+
+<dt id="arg-bwselect">bwselect<a class="anchor" aria-label="anchor" href="#arg-bwselect"></a></dt>
+<dd><p>Bandwidth selection rule when <code>h = NULL</code>: <code>"cct"</code> (default)
+computes a per-cell CCT MSE-optimal bandwidth via <code><a href="rd_bw_cct.html">rd_bw_cct()</a></code> for each
+type indicator RD in the reflected space; <code>"rot"</code> uses \(0.5 \times
+  \mathrm{IQR}(x)\) as a rule-of-thumb applied to the full sample.  Ignored
+when <code>h</code> is supplied explicitly.</p></dd>
 
 
 <dt id="arg-q">q<a class="anchor" aria-label="anchor" href="#arg-q"></a></dt>
@@ -224,8 +233,10 @@ pairs, assuming independence across pairs).</p></dd>
 </dl></dd>
 
 <dt><code>meta</code></dt>
-<dd><p>list with <code>t_rd</code>, <code>comparisons</code>, <code>h</code>, <code>q</code> (<code>"rot"</code> when the
-rule of thumb is used), <code>q_used</code> (per-pair <code>q</code>), <code>S</code>, <code>c</code>.</p></dd>
+<dd><p>list with <code>t_rd</code>, <code>comparisons</code>, <code>h</code> (NA when
+<code>bwselect = "cct"</code>), <code>bwselect</code>, <code>q</code> (<code>"rot"</code> when the rule of
+thumb is used, otherwise the integer supplied), <code>q_used</code> (per-pair
+<code>q</code> actually used), <code>S</code>, <code>c</code>, <code>bc</code>.</p></dd>
 
 
 </dl></div>

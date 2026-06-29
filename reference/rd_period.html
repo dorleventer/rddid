@@ -124,8 +124,11 @@ assigned and no cross-period matching is possible.</p></dd>
 bias-corrected discontinuity (<code>D</code>, <code>D_bc</code>) and their variances (<code>V_D</code>,
 <code>V_D_bc</code>), the per-period asymptotic bias and variance constants
 (<code>b_const</code>, <code>v_const</code>) used for joint bandwidth selection, the effective
-sample size <code>n</code>, the bandwidths, and a per-side list <code>sides</code> holding the
-active units' <code>id</code> and their conventional / bias-corrected <code>g</code> vectors.</p>
+sample size <code>n</code>, the bandwidths, and a per-side list <code>sides</code> holding, for
+each side <code>"+"</code> and <code>"-"</code>, the active units' <code>id</code>, their conventional /
+bias-corrected <code>g</code> vectors, the conventional intercept at the cutoff
+(<code>beta0</code>), and the conventional local-linear <code>slope</code>.  The fitted line on
+a side is <code>beta0 + slope * (x - c)</code>.</p>
     </div>
     <div id="details">
     <h2>Details</h2>

@@ -75,6 +75,7 @@ jumps are equal across types and comparison periods.</p>
 <span>  t_rd <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  c <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  h <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  bwselect <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cct"</span>, <span class="st">"rot"</span><span class="op">)</span>,</span>
 <span>  kernel <span class="op">=</span> <span class="st">"triangular"</span>,</span>
 <span>  scheme <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"auto"</span>, <span class="st">"cs"</span>, <span class="st">"pc"</span>, <span class="st">"pv"</span><span class="op">)</span>,</span>
 <span>  min_n <span class="op">=</span> <span class="fl">10L</span>,</span>
@@ -119,9 +120,17 @@ used in the test itself.</p></dd>
 
 
 <dt id="arg-h">h<a class="anchor" aria-label="anchor" href="#arg-h"></a></dt>
-<dd><p>Main bandwidth.  If <code>NULL</code> (default), a simple rule-of-thumb
-\(h = 0.2 \times \mathrm{range}(x)\) is applied within each
-comparison period.  For reproducible results, supply <code>h</code> explicitly.</p></dd>
+<dd><p>Main bandwidth.  If <code>NULL</code> (default), bandwidth is chosen
+according to <code>bwselect</code>.  An explicit numeric value overrides <code>bwselect</code>
+and is used directly for every cell.</p></dd>
+
+
+<dt id="arg-bwselect">bwselect<a class="anchor" aria-label="anchor" href="#arg-bwselect"></a></dt>
+<dd><p>Bandwidth selection when <code>h = NULL</code>:
+<code>"cct"</code> (default) computes a per-cell CCT MSE-optimal bandwidth via
+<code><a href="rd_bw_cct.html">rd_bw_cct()</a></code> on that cell's outcome and running variable;
+<code>"rot"</code> uses the 0.2 × range rule of thumb (the original behavior).
+Ignored when <code>h</code> is supplied.</p></dd>
 
 
 <dt id="arg-kernel">kernel<a class="anchor" aria-label="anchor" href="#arg-kernel"></a></dt>

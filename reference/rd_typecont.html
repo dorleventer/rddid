@@ -66,6 +66,7 @@ sign pattern of its running variables in the OTHER periods,
 <span>  <span class="va">id</span>,</span>
 <span>  c <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  h <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  bwselect <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cct"</span>, <span class="st">"rot"</span><span class="op">)</span>,</span>
 <span>  q <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  S <span class="op">=</span> <span class="fl">499L</span>,</span>
 <span>  kernel <span class="op">=</span> <span class="st">"triangular"</span>,</span>
@@ -100,8 +101,16 @@ sign pattern of its running variables in the OTHER periods,
 
 
 <dt id="arg-h">h<a class="anchor" aria-label="anchor" href="#arg-h"></a></dt>
-<dd><p>bandwidth.  If <code>NULL</code>, uses <code>0.5 * IQR(x)</code> as a simple default;
-a data-driven bandwidth (e.g. from <code><a href="rddid.html">rddid()</a></code>) is recommended in practice.</p></dd>
+<dd><p>bandwidth.  If <code>NULL</code>, the bandwidth is determined by <code>bwselect</code>;
+an explicit numeric value overrides <code>bwselect</code> and is used directly.</p></dd>
+
+
+<dt id="arg-bwselect">bwselect<a class="anchor" aria-label="anchor" href="#arg-bwselect"></a></dt>
+<dd><p>bandwidth selection rule when <code>h = NULL</code>: <code>"cct"</code> (default)
+computes a per-cell CCT MSE-optimal bandwidth via <code><a href="rd_bw_cct.html">rd_bw_cct()</a></code> for each
+(period, type) RD; <code>"rot"</code> uses the <code>0.5 * IQR(x)</code> rule of thumb applied
+to the full sample (the previous default behaviour).  Ignored when <code>h</code> is
+supplied explicitly.</p></dd>
 
 
 <dt id="arg-q">q<a class="anchor" aria-label="anchor" href="#arg-q"></a></dt>
@@ -160,7 +169,10 @@ p-value for the period, minimum × number of types).</p></dd>
 McCrary p-value on pooled sample).</p></dd>
 
 <dt>meta</dt>
-<dd><p>list with <code>periods</code>, <code>type_values</code>, <code>h</code>, <code>q</code>, <code>S</code>, <code>scheme</code>.</p></dd>
+<dd><p>list with <code>periods</code>, <code>type_values</code>, <code>h</code> (NA when
+<code>bwselect = "cct"</code>), <code>bwselect</code>, <code>q</code> (<code>"rot"</code> when the Canay-Kamat
+rule of thumb is used, otherwise the integer supplied), <code>q_used</code>
+(per-period integer <code>q</code> actually used), <code>S</code>, <code>scheme</code>, <code>bc</code>.</p></dd>
 
 </dl></div>
     <div id="details">
