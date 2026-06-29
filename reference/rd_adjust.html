@@ -4,7 +4,8 @@ the route of Section 4.4 / Theorem thm:adjust to take when composition
 stability (A8, rd_compstable()) is rejected but the within-type confounding
 trend (A10, rd_trendcell()) is credible. Reports the per-type RD-DID effects
 ATT(t_rd | v_comp = a), the RD-period composition shares, and their
-share-weighted aggregate, alongside the unadjusted estimator."><!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
+share-weighted aggregate, alongside the unadjusted estimator. Standard errors
+are a unit-level cluster bootstrap."><!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
 <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
 <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
 <![endif]--></head><body data-spy="scroll" data-target="#toc">
@@ -59,7 +60,8 @@ the route of Section 4.4 / Theorem <code>thm:adjust</code> to take when composit
 stability (A8, <code><a href="rd_compstable.html">rd_compstable()</a></code>) is rejected but the within-type confounding
 trend (A10, <code><a href="rd_trendcell.html">rd_trendcell()</a></code>) is credible. Reports the per-type RD-DID effects
 <code>ATT(t_rd | v_comp = a)</code>, the RD-period composition shares, and their
-share-weighted aggregate, alongside the unadjusted estimator.</p>
+share-weighted aggregate, alongside the unadjusted estimator. Standard errors
+are a unit-level cluster bootstrap.</p>
     </div>
 
     <div id="ref-usage">
@@ -78,7 +80,9 @@ share-weighted aggregate, alongside the unadjusted estimator.</p>
 <span>  kernel <span class="op">=</span> <span class="st">"triangular"</span>,</span>
 <span>  min_n <span class="op">=</span> <span class="fl">10L</span>,</span>
 <span>  p <span class="op">=</span> <span class="fl">1L</span>,</span>
-<span>  q <span class="op">=</span> <span class="fl">2L</span></span>
+<span>  q <span class="op">=</span> <span class="fl">2L</span>,</span>
+<span>  se <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"bootstrap"</span>, <span class="st">"none"</span><span class="op">)</span>,</span>
+<span>  B <span class="op">=</span> <span class="fl">500L</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -107,12 +111,12 @@ share-weighted aggregate, alongside the unadjusted estimator.</p>
 
 
 <dt id="arg-h">h<a class="anchor" aria-label="anchor" href="#arg-h"></a></dt>
-<dd><p>common bandwidth applied to every block (jumps and shares); <code>b</code> is
-the pilot for bias correction (defaults to <code>h</code>).</p></dd>
+<dd><p>common bandwidth for every block (jumps and shares); cells are thin,
+so a bandwidth wider than the aggregate is appropriate.</p></dd>
 
 
 <dt id="arg-b">b<a class="anchor" aria-label="anchor" href="#arg-b"></a></dt>
-<dd><p>pilot bandwidth (defaults to <code>h</code>).</p></dd>
+<dd><p>pilot bandwidth for bias correction (defaults to <code>h</code>).</p></dd>
 
 
 <dt id="arg-weights">weights<a class="anchor" aria-label="anchor" href="#arg-weights"></a></dt>
@@ -131,15 +135,18 @@ the pilot for bias correction (defaults to <code>h</code>).</p></dd>
 <dt id="arg-p-q">p, q<a class="anchor" aria-label="anchor" href="#arg-p-q"></a></dt>
 <dd><p>point / bias-correction polynomial orders (default 1, 2).</p></dd>
 
+
+<dt id="arg-se">se<a class="anchor" aria-label="anchor" href="#arg-se"></a></dt>
+<dd><p><code>"bootstrap"</code> (default) or <code>"none"</code>.</p></dd>
+
+
+<dt id="arg-b">B<a class="anchor" aria-label="anchor" href="#arg-b"></a></dt>
+<dd><p>bootstrap replications (default 500).</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
     <p>object of class <code>"rd_adjust"</code>.</p>
-    </div>
-    <div id="details">
-    <h2>Details</h2>
-    <p>Standard errors are not computed here; a unit-level cluster bootstrap wrapper
-is added separately (<code>se = "bootstrap"</code>).</p>
     </div>
 
   </div>
