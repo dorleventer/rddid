@@ -428,7 +428,7 @@ rd_trendcell <- function(data, y, x, time, id,
   # ---- handle no-contrast case ----
   if (length(Delta_all) == 0L) {
     if (trend == "linear") {
-      message("rd_trendcell: linear trend is not testable — no cell has ",
+      message("rd_trendcell: linear trend is not testable -- no cell has ",
               "3 or more comparison periods (degrees of freedom = 0). ",
               "Returning an object with df = 0, statistic = NA, p_value = NA.")
       return(structure(
