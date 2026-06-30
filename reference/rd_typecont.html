@@ -20,7 +20,7 @@ sign pattern of its running variables in the OTHER periods,
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rddid</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.3.0.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.3.1.9000</span>
       </span>
     </div>
 
@@ -155,6 +155,13 @@ permutation test (which operates on raw near-cutoff indicator means).</p></dd>
     <p>An object of class <code>"rd_typecont"</code>, a named list with:</p>
 <dl><dt>ll_wald</dt>
 <dd><p>list with <code>stat</code> (chi-square), <code>df</code>, <code>p</code>.</p></dd>
+
+<dt>per_period</dt>
+<dd><p>named list (by period) of the per-period components the
+joint test aggregates; each entry has <code>ll_wald</code> (that period's own
+LL-Wald <code>stat</code>/<code>df</code>/<code>p</code>, restricted to its kept contrasts) and <code>ck_p</code>
+(per-period Canay-Kamat p-value, read off the same permutation draws as
+the joint statistic, or <code>NA</code> for a period with no active type cell).</p></dd>
 
 <dt>ck_perm</dt>
 <dd><p>list with <code>stat</code> (observed sum of |mean diffs|), <code>p</code>.</p></dd>
