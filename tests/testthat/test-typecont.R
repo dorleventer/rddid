@@ -243,9 +243,17 @@ test_that("rd_typecont returns an rd_typecont object with expected fields", {
                      c = 0, h = 0.5, S = 49L)
 
   expect_s3_class(out, "rd_typecont")
-  expect_named(out, c("ll_wald", "ck_perm", "mccrary_within", "mccrary_pooled", "meta"))
+  expect_named(out, c("ll_wald", "per_period", "ck_perm", "mccrary_within", "mccrary_pooled", "meta"))
   expect_named(out$ll_wald, c("stat", "df", "p"))
   expect_named(out$ck_perm, c("stat", "p"))
+  # per_period: one entry per period, each with its own LL-Wald and CK p
+  expect_named(out$per_period, out$meta$periods)
+  for (pp in out$per_period) {
+    expect_named(pp, c("ll_wald", "ck_p"))
+    expect_named(pp$ll_wald, c("stat", "df", "p"))
+    expect_true(pp$ll_wald$p >= 0 && pp$ll_wald$p <= 1)
+    expect_true(is.na(pp$ck_p) || (pp$ck_p >= 0 && pp$ck_p <= 1))
+  }
   expect_true(is.data.frame(out$mccrary_within))
   expect_true(is.data.frame(out$mccrary_pooled))
   # p-values in [0,1]

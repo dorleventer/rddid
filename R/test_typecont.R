@@ -71,6 +71,11 @@
 #'
 #' @return An object of class `"rd_typecont"`, a named list with:
 #'   \item{ll_wald}{list with `stat` (chi-square), `df`, `p`.}
+#'   \item{per_period}{named list (by period) of the per-period components the
+#'     joint test aggregates; each entry has `ll_wald` (that period's own
+#'     LL-Wald `stat`/`df`/`p`, restricted to its kept contrasts) and `ck_p`
+#'     (per-period Canay-Kamat p-value, read off the same permutation draws as
+#'     the joint statistic, or `NA` for a period with no active type cell).}
 #'   \item{ck_perm}{list with `stat` (observed sum of |mean diffs|), `p`.}
 #'   \item{mccrary_within}{data frame with columns `period`, `type`,
 #'     `p_raw` (per-type McCrary p-value); plus `p_bonf` (Bonferroni-adjusted
@@ -232,6 +237,20 @@ rd_typecont <- function(data, x, time, id,
     ll_result <- .joint_wald(theta[ok_idx], Sigma[ok_idx, ok_idx, drop = FALSE])
   }
 
+  # Per-period LL-Wald: restrict the kept (full-rank) contrasts to each period's
+  # own rows. With binary types this is the single type-share jump in that period
+  # => chi^2(1); these are the components the joint test aggregates (the joint is
+  # not their sum, since it also carries the cross-period covariance).
+  per_period_wald <- stats::setNames(vector("list", length(plab)), plab)
+  for (ki in seq_along(plab)) {
+    rows_k <- (ki - 1L) * n_types + seq_len(n_types)
+    keep_k <- rows_k[keep[rows_k]]
+    per_period_wald[[ki]] <- if (length(keep_k) == 0L)
+      list(stat = 0, df = 0L, p = 1)
+    else
+      .joint_wald(theta[keep_k], Sigma[keep_k, keep_k, drop = FALSE])
+  }
+
   # ----- (2) Canay-Kamat permutation ----------------------------------------
   # Joint test over all (period, type) pairs: observed statistic = sum of
   # absolute mean differences across all cells.
@@ -245,6 +264,7 @@ rd_typecont <- function(data, x, time, id,
   # the number of right-side units (nr), so the permutation loop can draw ONE
   # unit-level index per period and apply it identically to every type column.
   ck_period_parts <- vector("list", length(plab))
+  ck_obs_by_period <- stats::setNames(rep(NA_real_, length(plab)), plab)  # per-period observed CK stat
   q_used <- stats::setNames(integer(length(plab)), plab)  # per-period q actually used
 
   for (ki in seq_along(plab)) {
@@ -270,6 +290,7 @@ rd_typecont <- function(data, x, time, id,
     # Build indicator matrix: one column per active type value
     g_mat_list <- list()
     obs_vec    <- numeric(0)
+    obs_period <- 0
     for (vi in seq_along(all_type_values)) {
       v      <- all_type_values[vi]
       g_near <- as.numeric(type_near == v)
@@ -278,6 +299,7 @@ rd_typecont <- function(data, x, time, id,
       if (length(gr) == 0L || length(gl) == 0L) next
       obs_cell <- abs(mean(gr) - mean(gl))
       ck_obs_total <- ck_obs_total + obs_cell
+      obs_period   <- obs_period + obs_cell
       g_mat_list[[length(g_mat_list) + 1L]] <- g_near
       obs_vec <- c(obs_vec, obs_cell)
     }
@@ -285,7 +307,8 @@ rd_typecont <- function(data, x, time, id,
     if (length(g_mat_list) > 0L) {
       # Matrix: npool rows × n_active_types columns
       g_mat <- matrix(unlist(g_mat_list), nrow = npool, ncol = length(g_mat_list))
-      ck_period_parts[[ki]] <- list(g_mat = g_mat, nr = nr, npool = npool)
+      ck_period_parts[[ki]] <- list(g_mat = g_mat, nr = nr, npool = npool, period = plab[ki])
+      ck_obs_by_period[ki]  <- obs_period
     }
   }
   # Drop NULL entries (periods with no active type cells)
@@ -299,20 +322,34 @@ rd_typecont <- function(data, x, time, id,
   # caller set (e.g. set.seed() before the call) so the CK p-value is
   # reproducible; an internal set.seed(NULL) would re-init from entropy and make
   # every call irreproducible.
-  ck_perm_dist <- replicate(S, {
-    total_perm <- 0
-    for (part in ck_period_parts) {
-      g_mat <- part$g_mat; nr <- part$nr; npool <- part$npool
-      # One shared draw for all type columns in this period
-      idx <- sample.int(npool, nr)
-      # Contribution = sum over columns of |mean(pool[idx,]) - mean(pool[-idx,])|
-      perm_right <- colMeans(g_mat[idx,    , drop = FALSE])
-      perm_left  <- colMeans(g_mat[-idx,   , drop = FALSE])
-      total_perm <- total_perm + sum(abs(perm_right - perm_left))
+  # Draw per-period contributions in the SAME order as before; the joint null is
+  # their colSums, so the joint CK p-value is byte-identical to the original
+  # single-vector loop, while per-period nulls are read off the same draws.
+  ck_p_by_period <- stats::setNames(rep(NA_real_, length(plab)), plab)
+  if (length(ck_period_parts) == 0L) {
+    ck_perm_dist <- rep(0, S)
+    ck_p <- 1
+  } else {
+    ck_perm_mat <- replicate(S, {
+      vapply(ck_period_parts, function(part) {
+        g_mat <- part$g_mat; nr <- part$nr; npool <- part$npool
+        # One shared draw for all type columns in this period
+        idx <- sample.int(npool, nr)
+        # Contribution = sum over columns of |mean(pool[idx,]) - mean(pool[-idx,])|
+        perm_right <- colMeans(g_mat[idx,  , drop = FALSE])
+        perm_left  <- colMeans(g_mat[-idx, , drop = FALSE])
+        sum(abs(perm_right - perm_left))
+      }, numeric(1))
+    })
+    if (is.null(dim(ck_perm_mat)))
+      ck_perm_mat <- matrix(ck_perm_mat, nrow = length(ck_period_parts))
+    ck_perm_dist <- colSums(ck_perm_mat)                    # joint null distribution
+    ck_p <- (1 + sum(ck_perm_dist >= ck_obs_total)) / (S + 1)
+    for (j in seq_along(ck_period_parts)) {
+      pj <- ck_period_parts[[j]]$period
+      ck_p_by_period[pj] <- (1 + sum(ck_perm_mat[j, ] >= ck_obs_by_period[pj])) / (S + 1)
     }
-    total_perm
-  })
-  ck_p <- (1 + sum(ck_perm_dist >= ck_obs_total)) / (S + 1)
+  }
 
   # ----- (3) McCrary within-type -------------------------------------------
   mcc_within_rows <- list()
@@ -359,10 +396,17 @@ rd_typecont <- function(data, x, time, id,
     stringsAsFactors = FALSE
   )
 
+  # Per-period components (the building blocks behind the joint tests): each
+  # period's own LL-Wald (chi^2 with its kept contrasts) and Canay-Kamat p.
+  per_period <- stats::setNames(lapply(seq_along(plab), function(ki) {
+    list(ll_wald = per_period_wald[[ki]], ck_p = unname(ck_p_by_period[plab[ki]]))
+  }), plab)
+
   # ----- assemble output ---------------------------------------------------
   structure(
     list(
       ll_wald        = ll_result,
+      per_period     = per_period,
       ck_perm        = list(stat = ck_obs_total, p = ck_p),
       mccrary_within = mcc_within,
       mccrary_pooled = mcc_pooled,

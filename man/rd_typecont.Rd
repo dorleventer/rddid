@@ -68,6 +68,11 @@ permutation test (which operates on raw near-cutoff indicator means).}
 \value{
 An object of class \code{"rd_typecont"}, a named list with:
 \item{ll_wald}{list with \code{stat} (chi-square), \code{df}, \code{p}.}
+\item{per_period}{named list (by period) of the per-period components the
+joint test aggregates; each entry has \code{ll_wald} (that period's own
+LL-Wald \code{stat}/\code{df}/\code{p}, restricted to its kept contrasts) and \code{ck_p}
+(per-period Canay-Kamat p-value, read off the same permutation draws as
+the joint statistic, or \code{NA} for a period with no active type cell).}
 \item{ck_perm}{list with \code{stat} (observed sum of |mean diffs|), \code{p}.}
 \item{mccrary_within}{data frame with columns \code{period}, \code{type},
 \code{p_raw} (per-type McCrary p-value); plus \code{p_bonf} (Bonferroni-adjusted
