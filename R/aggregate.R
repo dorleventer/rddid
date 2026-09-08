@@ -2,8 +2,9 @@
 # All variances flow from the per-unit influence-times-residual vectors `g`
 # returned by rd_period(): the discontinuity variance is sum(g^2) per side, and
 # a cross-period covariance is the sum of g_t * g_s over units shared between
-# the two periods' windows. Same-side matches build C^PC, opposite-side matches
-# build C^PV, and the sampling scheme selects which enter the aggregate variance.
+# the two periods' windows. Same-side matches build C^same, opposite-side matches
+# build C^opp (eq:cross-decomp), and the sampling scheme selects which enter the
+# aggregate variance (eq:var-cs, eq:var-pc, eq:var-pv). Map: dev/appB_map.md §2.3.
 
 #' Sum of g_t * g_s over units present in both windows, matched on id
 #' @keywords internal
@@ -19,8 +20,11 @@
 #'
 #' @param ft,fs `rd_period` fits for two distinct periods.
 #' @param bc use bias-corrected `g` vectors.
-#' @return list with `pc` = Cov(b+_t,b+_s)+Cov(b-_t,b-_s) (same-side) and
-#'   `pv` = Cov(b+_t,b-_s)+Cov(b-_t,b+_s) (opposite-side).
+#' @return list with `pc` = Cov(b+_t,b+_s)+Cov(b-_t,b-_s) (same-side, the
+#'   paper's C^same), `pv` = Cov(b+_t,b-_s)+Cov(b-_t,b+_s) (opposite-side,
+#'   C^opp), and the two same-side parts `pc_p` = Cov(b+_t,b+_s) and
+#'   `pc_m` = Cov(b-_t,b-_s), which the period-specific bandwidth rule scales
+#'   separately by side (lem:cov-pc).
 #' @keywords internal
 #' @noRd
 .cross_cov <- function(ft, fs, bc = FALSE) {
@@ -30,9 +34,12 @@
   gs_m <- if (bc) fs$sides$`-`$g_bc else fs$sides$`-`$g
   it_p <- ft$sides$`+`$id; it_m <- ft$sides$`-`$id
   is_p <- fs$sides$`+`$id; is_m <- fs$sides$`-`$id
+  pc_p <- .match_sum(it_p, gt_p, is_p, gs_p)      # Cov(b+_t, b+_s)
+  pc_m <- .match_sum(it_m, gt_m, is_m, gs_m)      # Cov(b-_t, b-_s)
   list(
-    pc = .match_sum(it_p, gt_p, is_p, gs_p) + .match_sum(it_m, gt_m, is_m, gs_m),
-    pv = .match_sum(it_p, gt_p, is_m, gs_m) + .match_sum(it_m, gt_m, is_p, gs_p)
+    pc = pc_p + pc_m,                                                            # C^same
+    pv = .match_sum(it_p, gt_p, is_m, gs_m) + .match_sum(it_m, gt_m, is_p, gs_p), # C^opp
+    pc_p = pc_p, pc_m = pc_m
   )
 }
 
@@ -40,8 +47,8 @@
 #'
 #' Collapses `.cross_cov()` to a single number under a sampling scheme:
 #' `cs` → 0 (independent), `pc` → same-side only, `pv` → same-side minus
-#' opposite-side (`C^PC - C^PV`). Used wherever a pair of `rd_period` fits in
-#' different periods needs its scalar covariance.
+#' opposite-side (`C^same - C^opp`, eq:cross-decomp). Used wherever a pair of
+#' `rd_period` fits in different periods needs its scalar covariance.
 #'
 #' @param ft,fs `rd_period` fits for two distinct periods.
 #' @param scheme one of `"cs"`, `"pc"`, `"pv"`.
@@ -57,9 +64,10 @@
 #' Aggregate per-period fits into the RD-DID estimator and its variances
 #'
 #' Forms ATT-hat = sum_tau coef_tau * D-hat_tau and the variance under the three
-#' sampling schemes. With Cov(D_t,D_s) = C^PC - C^PV, the general quadratic form
-#' specialises to: CS drops all cross terms, PC keeps same-side (C^PC) only, PV
-#' keeps both (C^PC - C^PV).
+#' sampling schemes (eq:var-cs, eq:var-pc, eq:var-pv). With
+#' Cov(D_t,D_s) = C^same - C^opp (eq:cross-decomp), the general quadratic form
+#' specialises to: CS drops all cross terms, PC keeps same-side (C^same) only, PV
+#' keeps both (C^same - C^opp).
 #'
 #' @param fits named list of `rd_period` objects (names = period labels).
 #' @param coef named numeric vector of period coefficients (same names as fits).

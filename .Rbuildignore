@@ -10,3 +10,4 @@
 ^\.githooks$
 ^doc$
 ^Meta$
+^dev$

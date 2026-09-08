@@ -129,6 +129,9 @@ rddid <- function(data, y, x, time, id = NULL, t_rd,
 
   detected <- .detect_scheme(plist, c = c)
   use_scheme <- if (scheme == "auto") detected else scheme
+  if (scheme %in% c("pc", "pv") && detected == "cs")
+    warning("scheme = \"", scheme, "\" requested but no unit id repeats across periods; ",
+            "all cross-period covariances are zero, so the reported SE equals the CS one.")
 
   # ---- bandwidth ----
   if (!is.null(h)) {

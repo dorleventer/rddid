@@ -40,8 +40,10 @@ assigned and no cross-period matching is possible.}
 \value{
 An object of class \code{"rd_period"}: a list with the conventional and
 bias-corrected discontinuity (\code{D}, \code{D_bc}) and their variances (\code{V_D},
-\code{V_D_bc}), the per-period asymptotic bias and variance constants
-(\code{b_const}, \code{v_const}) used for joint bandwidth selection, the effective
+\code{V_D_bc}), the per-period plug-in bias and variance constants used for
+joint bandwidth selection (\verb{b_const = (p+1)! (D - D_bc) / h^\{p+1\}} and
+\verb{v_const = n h V_D}, the plug-ins for the constants \code{B_t} and \code{V_t} of
+\code{eq:per-period-orders} in Appendix B.3), the effective
 sample size \code{n}, the bandwidths, and a per-side list \code{sides} holding, for
 each side \code{"+"} and \code{"-"}, the active units' \code{id}, their conventional /
 bias-corrected \code{g} vectors, the conventional intercept at the cutoff
@@ -53,8 +55,10 @@ Estimates the period-\eqn{t} outcome discontinuity
 \eqn{D_t = \beta^{(0)}_{(+)} - \beta^{(0)}_{(-)}} by a standard local-linear
 regression discontinuity, conventional and robust-bias-corrected
 (Calonico, Cattaneo and Titiunik 2014). This is the per-period engine that
-\code{\link[=rddid]{rddid()}} aggregates across periods; it implements the matrix form in the
-estimation appendix of Leventer and Nevo.
+\code{\link[=rddid]{rddid()}} aggregates across periods; it implements the matrix form of
+Appendix B (\code{app:est-bias}, \code{app:est-var}) of Leventer and Nevo. The
+object-by-object map between this code and the paper's equations is
+\code{dev/appB_map.md}.
 }
 \details{
 The function returns, for each side of the cutoff, the per-unit influence
@@ -67,4 +71,10 @@ shared unit \code{id} (see the internal covariance helpers);
 \item the bandwidth constants are read off \code{V_D} and the conventional /
 bias-corrected gap.
 }
+Variances use the HC1 finite-sample convention of \pkg{rdrobust}
+(\code{vce = "hc1"}): residuals are scaled by \code{sqrt(n_s / (n_s - k))} with \code{n_s}
+the side's active sample and \code{k} the number of fitted coefficients; the BC
+variance uses the residuals of the order-\code{q} pilot fit at \code{b}, as in
+\pkg{rdrobust}. The paper's Appendix B states neither convention (see
+\code{dev/appB_map.md}, section 0).
 }

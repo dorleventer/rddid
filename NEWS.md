@@ -1,3 +1,42 @@
+# rddid 0.3.5.9000 (development)
+
+* **Synced with Appendix B of the paper (rewritten 2026-09-08).** A code <-> equation map now
+  lives in `dev/appB_map.md`: one row per object the package computes, with the paper's exact
+  expression, the implementing symbol, conventions, audit status, and the test that pins it.
+  `dev/check_appB_labels.R` verifies that every cited paper label still exists in `main.tex`;
+  `dev/snapshot_rddid.R` is a numerical regression snapshot.
+
+* Bandwidth selectors follow App. B.4 at general polynomial order `p` (previously the
+  exponents and constants were hard-coded for `p = 1`): `rd_period()$b_const` is
+  `(p+1)! (D - D_bc) / h^{p+1}`; the common `h*` (`eq:common_h_opt`) uses the constant
+  `((p+1)!)^2 / (2(p+1))` and exponent `1/(2p+3)`; the period-specific objective and its
+  regularization use `h^{p+1}/(p+1)!`. Numerically identical at `p = 1`.
+
+* `bwselect = "iter"` under `scheme = "pc"`: the same-side cross-period covariance term of the
+  aggregate AMSE now scales as `omega(h_t/h_s)/h_s` per side, with `omega(rho)` the kernel
+  constant of Lemma `cov-pc` (new internal module `R/kernel_constants.R`, ported from the paper's
+  simulation-verification code), instead of the previous `1/max(h_t, h_s)` approximation (exact
+  only for the uniform kernel at `p = 0`). `.bw_joint_iter()` additionally returns the objective
+  value and the objective function for diagnostics.
+
+* `rd_period()`: the active set is the union of the pilot and main windows (was the pilot window
+  alone, which silently truncated the main fit when `b < h`). Identical whenever `b >= h`.
+
+* New tests: `test-appB-conformance.R` (from-the-equations reference implementation of the
+  estimator, bias correction and the three sampling-scheme variances, 1e-10),
+  `test-appB-bandwidth.R` (B.4 objectives and selectors), `test-kernel-constants.R`.
+
+* Guards: `bwselect = "cct"` and the joint pilot go through the guarded `rd_bw_cct()`
+  (fallback + finiteness checks) instead of calling `rdrobust::rdbwselect()` directly;
+  `.bw_joint()` warns when `h*` exceeds the running-variable radius; the coordinate descent
+  warns when a bandwidth ends on the search boundary; `rddid(scheme = "pc"/"pv")` warns when
+  no unit id repeats across periods (all cross-period covariances are then zero); the search
+  cap is NA-safe.
+
+* Stale references in code comments to the removed "Appendix C", `lem:coercive` and
+  `eq:amse-ps` replaced by the current labels (`app:est-bw`, `eq:amse-att`, `eq:update`,
+  `alg:coorddesc`).
+
 # rddid 0.3.0.9000 (development)
 
 * `rddid(..., bwselect = "iter")` gains a `start` argument controlling the
