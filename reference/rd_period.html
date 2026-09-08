@@ -3,8 +3,10 @@
 \(D_t = \beta^{(0)}_{(+)} - \beta^{(0)}_{(-)}\) by a standard local-linear
 regression discontinuity, conventional and robust-bias-corrected
 (Calonico, Cattaneo and Titiunik 2014). This is the per-period engine that
-rddid() aggregates across periods; it implements the matrix form in the
-estimation appendix of Leventer and Nevo."><!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
+rddid() aggregates across periods; it implements the matrix form of
+Appendix B (app:est-bias, app:est-var) of Leventer and Nevo. The
+object-by-object map between this code and the paper's equations is
+dev/appB_map.md."><!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
 <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
 <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
 <![endif]--></head><body data-spy="scroll" data-target="#toc">
@@ -22,7 +24,7 @@ estimation appendix of Leventer and Nevo."><!-- mathjax --><script src="https://
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rddid</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.3.4.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.3.5.9000</span>
       </span>
     </div>
 
@@ -58,8 +60,10 @@ estimation appendix of Leventer and Nevo."><!-- mathjax --><script src="https://
 \(D_t = \beta^{(0)}_{(+)} - \beta^{(0)}_{(-)}\) by a standard local-linear
 regression discontinuity, conventional and robust-bias-corrected
 (Calonico, Cattaneo and Titiunik 2014). This is the per-period engine that
-<code><a href="rddid.html">rddid()</a></code> aggregates across periods; it implements the matrix form in the
-estimation appendix of Leventer and Nevo.</p>
+<code><a href="rddid.html">rddid()</a></code> aggregates across periods; it implements the matrix form of
+Appendix B (<code>app:est-bias</code>, <code>app:est-var</code>) of Leventer and Nevo. The
+object-by-object map between this code and the paper's equations is
+<code>dev/appB_map.md</code>.</p>
     </div>
 
     <div id="ref-usage">
@@ -122,8 +126,10 @@ assigned and no cross-period matching is possible.</p></dd>
     <h2>Value</h2>
     <p>An object of class <code>"rd_period"</code>: a list with the conventional and
 bias-corrected discontinuity (<code>D</code>, <code>D_bc</code>) and their variances (<code>V_D</code>,
-<code>V_D_bc</code>), the per-period asymptotic bias and variance constants
-(<code>b_const</code>, <code>v_const</code>) used for joint bandwidth selection, the effective
+<code>V_D_bc</code>), the per-period plug-in bias and variance constants used for
+joint bandwidth selection (<code>b_const = (p+1)! (D - D_bc) / h^{p+1}</code> and
+<code>v_const = n h V_D</code>, the plug-ins for the constants <code>B_t</code> and <code>V_t</code> of
+<code>eq:per-period-orders</code> in Appendix B.3), the effective
 sample size <code>n</code>, the bandwidths, and a per-side list <code>sides</code> holding, for
 each side <code>"+"</code> and <code>"-"</code>, the active units' <code>id</code>, their conventional /
 bias-corrected <code>g</code> vectors, the conventional intercept at the cutoff
@@ -139,7 +145,13 @@ vectors are the single primitive the rest of the package reuses:</p><ul><li><p>t
 shared unit <code>id</code> (see the internal covariance helpers);</p></li>
 <li><p>the bandwidth constants are read off <code>V_D</code> and the conventional /
 bias-corrected gap.</p></li>
-</ul></div>
+</ul><p>Variances use the HC1 finite-sample convention of <span class="pkg">rdrobust</span>
+(<code>vce = "hc1"</code>): residuals are scaled by <code>sqrt(n_s / (n_s - k))</code> with <code>n_s</code>
+the side's active sample and <code>k</code> the number of fitted coefficients; the BC
+variance uses the residuals of the order-<code>q</code> pilot fit at <code>b</code>, as in
+<span class="pkg">rdrobust</span>. The paper's Appendix B states neither convention (see
+<code>dev/appB_map.md</code>, section 0).</p>
+    </div>
 
   </div>
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
@@ -153,7 +165,7 @@ bias-corrected gap.</p></li>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
       </footer></div>

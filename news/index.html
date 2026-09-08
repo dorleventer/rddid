@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rddid</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.3.4.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.3.5.9000</span>
       </span>
     </div>
 
@@ -47,6 +47,16 @@
       <small>Source: <a href="https://github.com/dorleventer/rddid/blob/master/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="page-header" data-toc-text="0.3.5.9000" id="rddid-0359000-development">rddid 0.3.5.9000 (development)<a class="anchor" aria-label="anchor" href="#rddid-0359000-development"></a></h2>
+<ul><li><p><strong>Synced with Appendix B of the paper (rewritten 2026-09-08).</strong> A code &lt;-&gt; equation map now lives in <code>dev/appB_map.md</code>: one row per object the package computes, with the paper’s exact expression, the implementing symbol, conventions, audit status, and the test that pins it. <code>dev/check_appB_labels.R</code> verifies that every cited paper label still exists in <code>main.tex</code>; <code>dev/snapshot_rddid.R</code> is a numerical regression snapshot.</p></li>
+<li><p>Bandwidth selectors follow App. B.4 at general polynomial order <code>p</code> (previously the exponents and constants were hard-coded for <code>p = 1</code>): <code>rd_period()$b_const</code> is <code>(p+1)! (D - D_bc) / h^{p+1}</code>; the common <code>h*</code> (<code>eq:common_h_opt</code>) uses the constant <code>((p+1)!)^2 / (2(p+1))</code> and exponent <code>1/(2p+3)</code>; the period-specific objective and its regularization use <code>h^{p+1}/(p+1)!</code>. Numerically identical at <code>p = 1</code>.</p></li>
+<li><p><code>bwselect = "iter"</code> under <code>scheme = "pc"</code>: the same-side cross-period covariance term of the aggregate AMSE now scales as <code>omega(h_t/h_s)/h_s</code> per side, with <code>omega(rho)</code> the kernel constant of Lemma <code>cov-pc</code> (new internal module <code>R/kernel_constants.R</code>, ported from the paper’s simulation-verification code), instead of the previous <code>1/max(h_t, h_s)</code> approximation (exact only for the uniform kernel at <code>p = 0</code>). <code>.bw_joint_iter()</code> additionally returns the objective value and the objective function for diagnostics.</p></li>
+<li><p><code><a href="../reference/rd_period.html">rd_period()</a></code>: the active set is the union of the pilot and main windows (was the pilot window alone, which silently truncated the main fit when <code>b &lt; h</code>). Identical whenever <code>b &gt;= h</code>.</p></li>
+<li><p>New tests: <code>test-appB-conformance.R</code> (from-the-equations reference implementation of the estimator, bias correction and the three sampling-scheme variances, 1e-10), <code>test-appB-bandwidth.R</code> (B.4 objectives and selectors), <code>test-kernel-constants.R</code>.</p></li>
+<li><p>Guards: <code>bwselect = "cct"</code> and the joint pilot go through the guarded <code><a href="../reference/rd_bw_cct.html">rd_bw_cct()</a></code> (fallback + finiteness checks) instead of calling <code><a href="https://rdrr.io/pkg/rdrobust/man/rdbwselect.html" class="external-link">rdrobust::rdbwselect()</a></code> directly; <code>.bw_joint()</code> warns when <code>h*</code> exceeds the running-variable radius; the coordinate descent warns when a bandwidth ends on the search boundary; <code>rddid(scheme = "pc"/"pv")</code> warns when no unit id repeats across periods (all cross-period covariances are then zero); the search cap is NA-safe.</p></li>
+<li><p>Stale references in code comments to the removed “Appendix C”, <code>lem:coercive</code> and <code>eq:amse-ps</code> replaced by the current labels (<code>app:est-bw</code>, <code>eq:amse-att</code>, <code>eq:update</code>, <code>alg:coorddesc</code>).</p></li>
+</ul></div>
     <div class="section level2">
 <h2 class="page-header" data-toc-text="0.3.0.9000" id="rddid-0309000-development">rddid 0.3.0.9000 (development)<a class="anchor" aria-label="anchor" href="#rddid-0309000-development"></a></h2>
 <ul><li><p><code>rddid(..., bwselect = "iter")</code> gains a <code>start</code> argument controlling the coordinate-descent seed: <code>"hstar"</code> (default) seeds all periods at the common joint-optimal bandwidth h<em>; <code>"cct"</code> seeds each period at its own CCT/IK pilot h; or supply a named numeric/list of per-period bandwidths for a manual seed. Each run weakly improves the joint AMSE over its own start; seeding from h</em> therefore weakly dominates the common-h rule. (Seed from <code>"cct"</code> when the per-period biases nearly cancel, where h* is inflated.)</p></li>
@@ -95,7 +105,7 @@
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
       </footer></div>
