@@ -108,8 +108,11 @@ test_that("eq:bc_intercept == eq:bc_Q -- two forms agree; package BC intercepts 
                          p = pq[1], q = pq[2], kernel = k)
     lab <- sprintf("c=%g p=%d q=%d kernel=%s", cut, pq[1], pq[2], k)
     for (sd in c("+", "-")) {
-      # eq:bc_intercept and eq:bc_Q are the same estimator
-      appB_eq(rf$sides[[sd]]$beta0_bc, rf$sides[[sd]]$beta0_bc_Q, lab)
+      # eq:bc_intercept and eq:bc_Q are the same estimator (a reference-internal
+      # identity: two floating-point paths through an ill-conditioned inverse,
+      # so 1e-8 rather than the 1e-10 used for package-vs-reference checks)
+      appB_eq(rf$sides[[sd]]$beta0_bc, rf$sides[[sd]]$beta0_bc_Q, lab,
+              tolerance = 1e-8)
       appB_eq(pk$sides[[sd]]$beta0_bc, rf$sides[[sd]]$beta0_bc, lab)
     }
     appB_eq(pk$D_bc, rf$D_bc, lab)

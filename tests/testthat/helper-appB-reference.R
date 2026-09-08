@@ -57,6 +57,19 @@
 # ---------------------------------------------------------------------------
 
 
+## --- linear algebra --------------------------------------------------------
+
+# Inverse of a symmetric positive-definite Gram matrix after symmetric diagonal
+# equilibration: G = D G* D with D = diag(sqrt(diag G)), so G^{-1} = D^{-1}
+# G*^{-1} D^{-1}. Exact algebra; it brings the condition number of the
+# unscaled polynomial Gram matrix (~1e6 at order 3) down to a few hundred, so
+# the reference's numbers do not depend on the BLAS at the 1e-10 level.
+ref_solve_equil <- function(G) {
+  s <- sqrt(diag(G))
+  Gi <- solve(G / outer(s, s))
+  Gi / outer(s, s)
+}
+
 ## --- kernels ---------------------------------------------------------------
 
 # K(u): shape only, zero outside [-1, 1].
@@ -123,8 +136,8 @@ ref_period_fit <- function(y, r, h, b = h, c = 0, p = 1L, q = 2L,
     # Gamma_{t,(sd),p}(h_t) = (1/n) X_p' A(h) X_p ; same at order q, band b
     G_p <- (1 / n) * (t(X_p) %*% (a_h * X_p))
     G_q <- (1 / n) * (t(X_q) %*% (a_b * X_q))
-    Gpi <- solve(G_p)
-    Gqi <- solve(G_q)
+    Gpi <- ref_solve_equil(G_p)
+    Gqi <- ref_solve_equil(G_q)
 
     # eq:wls_rd : beta-hat = (1/n) Gamma^{-1} X' A Y
     beta_p <- (1 / n) * as.vector(Gpi %*% (t(X_p) %*% (a_h * y)))
@@ -164,11 +177,16 @@ ref_period_fit <- function(y, r, h, b = h, c = 0, p = 1L, q = 2L,
 
   sides <- list("+" = fit_side("+"), "-" = fit_side("-"))
 
-  # eq:bc_intercept and eq:bc_Q are algebraically the same estimator.
+  # eq:bc_intercept and eq:bc_Q are algebraically the same estimator. The two
+  # forms take different floating-point paths through Gamma_q(b)^{-1}, whose
+  # unscaled condition number is ~1e6 at q = 3 (columns (r-c)^k with |r-c| <=
+  # b), so the agreement to demand is that of an identity computed on an
+  # ill-conditioned matrix (~1e-10 on some BLAS, run-to-run on threaded
+  # OpenBLAS), not machine precision. A formula error would be O(1).
   stopifnot(isTRUE(all.equal(sides[["+"]]$beta0_bc, sides[["+"]]$beta0_bc_Q,
-                             tolerance = 1e-12)),
+                             tolerance = 1e-8)),
             isTRUE(all.equal(sides[["-"]]$beta0_bc, sides[["-"]]$beta0_bc_Q,
-                             tolerance = 1e-12)))
+                             tolerance = 1e-8)))
 
   # residuals (A6): own-side fit, evaluated for every i in N_t
   own_fit <- function(X, bp, bm) {
