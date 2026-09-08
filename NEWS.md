@@ -26,6 +26,12 @@
   estimator, bias correction and the three sampling-scheme variances, 1e-10),
   `test-appB-bandwidth.R` (B.4 objectives and selectors), `test-kernel-constants.R`.
 
+* Regularization of the bandwidth selectors: the curvature-variance estimate `Var(B-hat_t)`
+  now pairs the pilot-window influence weights with the residuals of the order-`q` pilot fit at
+  `b` (the same convention as the bias-corrected variance) instead of the order-`p` residuals at
+  `h`. Moves `bwselect = "joint"`/`"iter"` bandwidths by a fraction of a percent at the CCT pilot
+  ratio; at wide pilots (`b/h >= 3`) the old estimate over-stated the variance.
+
 * Guards: `bwselect = "cct"` and the joint pilot go through the guarded `rd_bw_cct()`
   (fallback + finiteness checks) instead of calling `rdrobust::rdbwselect()` directly;
   `.bw_joint()` warns when `h*` exceeds the running-variable radius; the coordinate descent

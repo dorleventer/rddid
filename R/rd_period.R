@@ -106,9 +106,11 @@ rd_period <- function(y, x, h, b = h, id = NULL, c = 0, p = 1L, q = 2L,
       g        = a_c * as.numeric(res_c),
       g_bc     = a_bc * as.numeric(res_b),
       # influence on (conventional - bias-corrected): both are linear in the same
-      # Y, so the difference has per-unit weight (a_c - a_bc); used to estimate
-      # Var(B-hat) for bandwidth regularization.
-      g_diff   = (a_c - a_bc) * as.numeric(res_c)
+      # Y, so the difference has per-unit weight (a_c - a_bc), supported on the
+      # pilot window like the BC weights; paired with the pilot-fit residuals
+      # res_b (same convention as g_bc). Used to estimate Var(B-hat) for the
+      # bandwidth regularization (App. B.4). Decision D4, dev/appB_map.md.
+      g_diff   = (a_c - a_bc) * as.numeric(res_b)
     )
   }
 
