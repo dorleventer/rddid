@@ -6,7 +6,7 @@ Each row gives the paper's exact expression, the package symbol that implements 
 scaling/convention difference (if any), the audit status, and the test that pins it.
 The paper is the source of truth; the package follows.
 
-**Last synced.** Paper: `rd-did` commit `6eae87d` (2026-09-08; App. B.3–B.4 rewrite `795ca4a`..`e187613`, then the App. B review fixes `b3ae549`, pilot-bandwidth rates `bdd08e8`, §5.3 sync `6eae87d`). Symbols: the paper's kernel constants are $\nu_{(\blacktriangle),p}$ (bias), $\omega_{(\blacktriangle),p}$ (variance), $\omega_{(\blacktriangle),p}(\rho)$ (cross-period, $\omega(1)=\omega$); the package's mnemonics are `.kc_b`, `.kc_v`, `.kc_c`.
+**Last synced.** Paper: `rd-did` commit `4ce8526` (2026-09-08; App. B.3–B.4 rewrite `795ca4a`..`e187613`, then the App. B review fixes `b3ae549`, pilot-bandwidth rates `bdd08e8`, §5.3 sync `6eae87d`). Symbols: the paper's kernel constants are $\nu_{(\blacktriangle),p}$ (bias), $\omega_{(\blacktriangle),p}$ (variance), $\omega_{(\blacktriangle),p}(\rho)$ (cross-period, $\omega(1)=\omega$); the package's mnemonics are `.kc_b`, `.kc_v`, `.kc_c`.
 Package: this file's commit. Update both stamps whenever either side changes a mapped object.
 
 **How to keep it honest.**
@@ -34,8 +34,8 @@ Appendix B, not audited here.
 | Kernel shapes | generic $K$ (Assumption `ass:reg`(b)) | triangular $(1-\lvert u\rvert)_+$, Epanechnikov $0.75(1-u^2)_+$, uniform $0.5\cdot\mathbf 1\{\lvert u\rvert\le1\}$ | matches `rdrobust`; the kernel constants of §2.4 are computed for the same shapes |
 | Sample | $i=1,\dots,n$ units, $\mathcal N_t$, $n_t$, $\mathcal N_{t,s}$ | one `rd_period` fit per period on that period's rows; cross-period objects matched on `id` | $n_t$ = `fit$n`; $\mathcal N_{t,s}$ = shared `id`s; CS = distinct ids |
 | Active set within a period | all $i\in\mathcal N_t$ (zero weight outside the window) | units with $K((R-c)/b_t)>0$ **or** $K((R-c)/h_t)>0$ (union of pilot and main windows; before this pass the pilot window alone, which silently truncated the main fit when $b_t<h_t$) | identical when $b_t\ge h_t$ (the case for every selector in the package) |
-| Residual for $\widehat{\boldsymbol\Sigma}$ | $\widehat\varepsilon_{i,t}$ = own-side $p$-fit at $h_t$ (preamble) for the conventional variance; own-side $q$-fit at $b_t$ for the BC variance and the curvature-variance (B.2 "Estimation"; sentence to be added per D1/D4, settled 2026-09-08) | conventional: own-side $p$-fit at $h_t$; BC and `g_diff`: own-side $q$-fit at $b_t$ (`rdrobust` convention) | D1/D4 settled (Dor, 2026-09-08) |
-| Finite-sample factor | none yet (HC1 clause to be added to B.2 "Estimation" per D2, settled 2026-09-08) | HC1: residual $\times\sqrt{n_{\blacktriangle}/(n_{\blacktriangle}-(p+1))}$ (conv) or $\sqrt{n_{\blacktriangle}/(n_{\blacktriangle}-(q+1))}$ (BC), $n_{\blacktriangle}$ = side-$\blacktriangle$ units in the pilot window (`rdrobust` `vce="hc1"`, matched to 1e-10 in `test-rd_period.R`) | variances $\approx+0.5$–$0.7\%$ (Study 5c of the App. B simulation verification); D2 settled (Dor, 2026-09-08) |
+| Residual for $\widehat{\boldsymbol\Sigma}$ | $\widehat\varepsilon_{i,t}$ = own-side $p$-fit at $h_t$ (preamble) for the conventional variance; own-side $q$-fit at $b_t$ for the BC variance and the curvature-variance (B.2 "Estimation", stated since rd-did `4ce8526`, 2026-09-08) | conventional: own-side $p$-fit at $h_t$; BC and `g_diff`: own-side $q$-fit at $b_t$ (`rdrobust` convention) | D1/D4 settled (Dor, 2026-09-08) |
+| Finite-sample factor | HC1 factor stated in B.2 "Estimation" (rd-did `4ce8526`) | HC1: residual $\times\sqrt{n_{\blacktriangle}/(n_{\blacktriangle}-(p+1))}$ (conv) or $\sqrt{n_{\blacktriangle}/(n_{\blacktriangle}-(q+1))}$ (BC), $n_{\blacktriangle}$ = side-$\blacktriangle$ units in the pilot window (`rdrobust` `vce="hc1"`, matched to 1e-10 in `test-rd_period.R`) | variances $\approx+0.5$–$0.7\%$ (Study 5c of the App. B simulation verification); D2 settled (Dor, 2026-09-08) |
 | Sides | $\blacktriangle\in\{+,-\}$, $(+)$: $R\ge c$ | `sides[["+"]]`, `sides[["-"]]`; `x >= c` is $(+)$ | same |
 | Signed weights | $\tilde w_{t_{\mathrm{RD}}}=1$, $\tilde w_{t_0}=-w_{t_0}$ | `coef` (named vector; RD period $+1$, comparisons $-w$) | same object |
 
@@ -125,7 +125,7 @@ Labels that were removed from the paper on 2026-09-08 and must not be cited: `le
 | $\mathrm{AMSE}^{\mathrm S}(\{h_t\})$ (`eq:amse-att`) | $\bar{\mathtt B}^2+\bar V^{\mathrm S}$, $\bar V^{\mathrm S}$ = `lem:agg-var` without remainder | `amse(hv) = Bbar^2 + pen + var_term + cov_term` | `pen` = regularization (below) | MATCH (after fix) | `B.4 objective` |
 | $\mathcal B(t_{\mathrm{RD}})$, $\mathcal V^{\mathrm S}(t_{\mathrm{RD}})$ (P3) | $\sum_\tau\tilde w_\tau\mathcal B_\tau$; $\sum_\tau\tilde w_\tau^2\mathcal V_\tau/\pi_\tau+\mathbf 1\{\mathrm S=\mathrm{PC}\}\sum_\tau\sum_{s\ne\tau}\tilde w_\tau\tilde w_s\mathcal C_{\tau,s}$ | `.bw_joint()`: `B <- factorial(p+1) * (att_conv - att_bc) / h0^(p+1)` $=\sum_\tau$`coef`$_\tau\widehat{\mathcal B}_\tau$ at the common pilot $h_0$; `Veff <- h0 * V^S(h0)` $\approx\mathcal V^{\mathrm S}/n$ with `V^S` = `V_cs` (CS, PV) or `V_pc` (PC) at the common pilot ($\rho=1$, so $\mathcal C_{\tau,s}$ enters through the plug-in covariance) | **`B` was hard-coded to $p=1$** | MISMATCH → fixed | `B.4 common h` |
 | $h^{\star,\mathrm S}$ (`eq:common_h_opt`) | $\bigl(\tfrac{((p+1)!)^2}{2(p+1)}\tfrac{\mathcal V^{\mathrm S}(t_{\mathrm{RD}})}{\mathcal B(t_{\mathrm{RD}})^2}\bigr)^{1/(2p+3)}n^{-1/(2p+3)}$ | `h_star <- (factorial(p+1)^2 / (2*(p+1)) * Veff / (B^2 + reg))^(1/(2*p+3))`; **was `(Veff/denom)^(1/5)`** | $n$ is inside `Veff`; `reg` = regularization below | MISMATCH → fixed (identical at $p=1$) | `B.4 common h` |
-| Pilot bandwidth $b_t$ for the aggregate | not stated | `.bw_joint`: $b^\star=h^\star\cdot b_0/h_0$ (pilot ratio of the RD period's CCT pair); `.bw_joint_iter`: $b_t=h_t\cdot b^{\mathrm{CCT}}_t/h^{\mathrm{CCT}}_t$ per period | — | PAPER-GAP (G1) | — |
+| Pilot bandwidth $b_t$ for the aggregate | B.4 after `eq:common_h_opt` (since `4ce8526`): $b^\star=h^{\star,\mathrm S}b^{\mathrm{CCT}}_{t_{\mathrm{RD}}}/h^{\mathrm{CCT}}_{t_{\mathrm{RD}}}$; $b_t=h_t\,b^{\mathrm{CCT}}_t/h^{\mathrm{CCT}}_t$ | `.bw_joint`: $b^\star=h^\star\cdot b_0/h_0$ (pilot ratio of the RD period's CCT pair); `.bw_joint_iter`: $b_t=h_t\cdot b^{\mathrm{CCT}}_t/h^{\mathrm{CCT}}_t$ per period | — | MATCH | — |
 | Update step (`eq:update`, `alg:coorddesc`, P4) | $h_\tau\leftarrow\arg\min_{h_\tau}\mathrm{AMSE}^{\mathrm S}(h_\tau\mid\{h_t\}_{t\ne\tau})$, cycled until no bandwidth moves more than a tolerance or 50 sweeps | `.bw_joint_iter()`: `optimize(obj, c(lo, hmax))` per period, sweeps until `max|Δh| < tol*hmax` or `maxit = 50`; `lo = 0.03*hmax`, `hmax` = running-variable radius; a boundary solution now raises a warning | the paper's argmin is unconstrained; the search box is the package's (with `regularize = TRUE` no boundary hit was found in any design tried) | MATCH* | `B.4 objective` |
 | Start of the descent (P4, `sec:est-bw`) | common $h^{\star,\mathrm S}$ or per-period $h^{\mathrm{CCT}}_t$ | `start = "hstar"` (default) / `"cct"` / numeric | — | MATCH | `test-rddid.R` |
 | PC cross term in the update (P4) | $\mathbf 1\{\mathrm S=\mathrm{PC}\}\,2\sum_{s\ne\tau}\tilde w_\tau\tilde w_s\mathcal C_{\tau,s}/(nh_s)$ with $\mathcal C_{\tau,s}=\mathcal C_{\tau,s}(\rho_{\tau,s})$, $\rho_{\tau,s}=h_\tau/h_s$ | `cov_term = 2 Σ_{i<j} cf_i cf_j Σ_side κ̂_side_ij · .kc_c(p, side, hv_i/hv_j) / hv_j` (see §2.4) | symmetric in $(i,j)$ by $\omega(1/\rho)=\rho\omega(\rho)$; **was `P_ij * max(h0_i,h0_j) / max(hv_i,hv_j)`** | MISMATCH → fixed | `B.4 PC cross term` |
@@ -172,11 +172,10 @@ Function-level map only. B.5 has not changed in substance since the 2026-06-30 c
    boundary solution; `scheme = "pc"/"pv"` with no repeated ids warns (the cross-period terms are then identically 0).
 
 **Decisions for the paper (not changed here):**
-- **D1 (T1474) — SETTLED (Dor, 2026-09-08): paper adopts the `rdrobust` convention.** B.2 "Estimation" is to
-  state that the BC variance uses the residuals of the order-$q$ pilot fit at $b_t$ (sentence handed to Dor; the tex
-  was being edited by another session at the time). Both variants are consistent
+- **D1 (T1474) — SETTLED (Dor, 2026-09-08): paper adopts the `rdrobust` convention.** B.2 "Estimation" states
+  that the BC variance uses the residuals of the order-$q$ pilot fit at $b_t$ (rd-did `4ce8526`). Both variants are consistent
   (Study 5 of the App. B verification: `BC/p_h` and `BC/q_b` ratios → 1; gap 0.1–0.9% in the conformance tests).
-- **D2 — SETTLED (Dor, 2026-09-08): HC1 clause to be added to B.2 "Estimation" (handed to Dor).** The package applies `rdrobust`'s
+- **D2 — SETTLED (Dor, 2026-09-08): HC1 factor stated in B.2 "Estimation" (rd-did `4ce8526`).** The package applies `rdrobust`'s
   HC1 factor with the pilot-window side count.
 - **D3 (T1475) — RESOLVED on the paper side (rd-did `6eae87d`, 2026-09-08).** Body `eq:joint_amse` now carries
   the scheme superscript, the $\mathbf 1\{\mathrm S=\mathrm{PC}\}$ indicator and the $\mathcal C_{t,s}/(nh_s)$
@@ -192,10 +191,10 @@ Function-level map only. B.5 has not changed in substance since the 2026-06-30 c
 - **Plug-in choice disclosed (not a paper mismatch).** `.bw_joint` estimates every period's $\widehat{\mathcal B}_\tau$ at the
   RD period's CCT pilot $(h_0,b_0)$ rather than at period-specific pilots $b_\tau$; sensible for a common-$h$ target, but the
   Regularization paragraph writes $b_\tau$.
-- **G1 (paper gap; partly closed).** Assumption `ass:reg`(f) now imposes $b_t\to0$, $n_tb_t^{2p+3}\to\infty$ and
-  $h_t/b_t\to\bar\rho_t\in[0,\infty)$ (rd-did `bdd08e8`), which licenses the package's fixed pilot ratio. The paper
-  still does not say *which* $b_t$ the aggregate selectors use in practice (package: the CCT ratio, $b^\star=h^\star b_0/h_0$
-  in `joint`, $b_t=h_t\,b^{\mathrm{CCT}}_t/h^{\mathrm{CCT}}_t$ in `iter`). One sentence in §5.3 or B.4 would close it.
+- **G1 — CLOSED (rd-did `4ce8526`, 2026-09-08).** Assumption `ass:reg`(f) imposes $b_t\to0$, $n_tb_t^{2p+3}\to\infty$ and
+  $h_t/b_t\to\bar\rho_t\in[0,\infty)$ (`bdd08e8`), and B.4 now states the package's choice after `eq:common_h_opt`:
+  the pilot keeps the CCT ratio, $b^\star=h^{\star,\mathrm S}b^{\mathrm{CCT}}_{t_{\mathrm{RD}}}/h^{\mathrm{CCT}}_{t_{\mathrm{RD}}}$ (`joint`) and
+  $b_t=h_t\,b^{\mathrm{CCT}}_t/h^{\mathrm{CCT}}_t$ (`iter`).
 
 ---
 
