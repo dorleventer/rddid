@@ -29,16 +29,17 @@ cite_in <- function(files) {
   if (length(out)) as.data.frame(out, stringsAsFactors = FALSE) else
     data.frame(file = character(0), label = character(0))
 }
-cited <- cite_in(c("dev/appB_map.md", list.files("R", full.names = TRUE, pattern = "\\.R$")))
+cited <- cite_in(c(list.files("dev", full.names = TRUE, pattern = "\\.md$"),
+                   list.files("R", full.names = TRUE, pattern = "\\.R$")))
 cited <- unique(cited)
 
 # Labels the map lists as deliberately removed are exempt when cited only in the map's
 # "must not be cited" sentence; flag them anywhere else.
 removed <- c("lem:coercive", "eq:amse-ps")
 missing <- cited[!cited$label %in% defined, , drop = FALSE]
-missing <- missing[!(missing$label %in% removed & missing$file == "appB_map.md"), , drop = FALSE]
+missing <- missing[!(missing$label %in% removed & grepl("_map\\.md$", missing$file)), , drop = FALSE]
 
-cat(sprintf("main.tex: %d labels defined; %d distinct labels cited in dev/appB_map.md + R/\n",
+cat(sprintf("main.tex: %d labels defined; %d distinct labels cited in dev/*.md + R/\n",
             length(defined), length(unique(cited$label))))
 if (nrow(missing)) {
   cat("MISSING (cited but not defined in main.tex):\n")

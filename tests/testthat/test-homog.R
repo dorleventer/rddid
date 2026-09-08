@@ -1,4 +1,4 @@
-# Tests for rd_homog() — Assumption A9 type-homogeneous confounding test.
+# Tests for rd_homog() — ass:homog: homogeneous confounding test.
 #
 # Two-period DGP:  period 1 = RD period (not used in test),
 #                  period 2 = comparison period.
@@ -143,7 +143,7 @@ test_that("print.rd_homog does not error", {
   dat <- make_panel(n = 600, jump_pos = 0.5, jump_neg = 0.5)
   res <- rd_homog(dat, y = "y", x = "x", time = "time", id = "id",
                   comparisons = 2L, t_rd = 1L, h = 0.4)
-  expect_output(print(res), "Type-homogeneous confounding")
+  expect_output(print(res), "Homogeneous confounding test \\(ass:homog\\)")
   expect_output(print(res), "neither necessary nor sufficient", ignore.case = TRUE)
 })
 

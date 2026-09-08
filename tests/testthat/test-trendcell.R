@@ -1,10 +1,10 @@
-# Tests for rd_trendcell() — Assumption A10: within-cell confounding trend.
+# Tests for rd_trendcell() — ass:trend-cell: constant within-type confounding (pre-trend test).
 #
 # DGP key:
 #   Periods 1, 2, (optionally 3) are comparison periods; period `t_rd` is RD.
 #   Cell = sign of R_{i,t_rd} (type_by = "rd_side", the default).
 #
-#   Under A10 (null): within each cell, D_{t0}(cell) is constant across t0.
+#   Under ass:trend-cell (null): within each cell, D_{t0}(cell) is constant across t0.
 #   Violation (alternative): within at least one cell, D_{t0}(cell) differs
 #   across comparison periods.
 
@@ -204,7 +204,7 @@ test_that("print.rd_trendcell does not error", {
                                jump_fn = function(k, t) 0.4)
   res <- rd_trendcell(dat, y = "y", x = "x", time = "time", id = "id",
                       comparisons = 1:2, t_rd = 3L, h = 0.4)
-  expect_output(print(res), "Within-cell confounding trend")
+  expect_output(print(res), "Within-type confounding pre-trend test \\(ass:trend-cell\\)")
   expect_output(print(res), "neither necessary nor sufficient", ignore.case = TRUE)
 })
 

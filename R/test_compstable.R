@@ -1,6 +1,7 @@
-#' Test composition stability across periods (Assumption A8)
+#' Test composition stability across periods (assumption `ass:comp-stable`)
 #'
-#' Tests Assumption A8 ("composition stability") from Leventer and Nevo:
+#' Tests the composition-stability assumption (`ass:comp-stable`, Section 4.4
+#' of Leventer and Nevo):
 #' \deqn{\pi_{t_{\mathrm{RD}},(+)}(\mathbf{u}, b) =
 #'        \pi_{t_0,(+)}(\mathbf{u}, b)
 #'        \quad \forall\,(\mathbf{u}, b),}
@@ -22,19 +23,24 @@
 #' then \eqn{\pi_{t_0,(+)}(\mathbf{u},b)} and
 #' \eqn{\pi_{t_{\mathrm{RD}},(+)}(\mathbf{u},b)}, so a jump at 0 equals the
 #' composition difference.  The same two tests from the type-continuity
-#' assessment (A7) then apply:
+#' assessment (`ass:type-cont`, [rd_typecont()]) then apply:
 #'
 #' \enumerate{
 #'   \item **LL-Wald** (necessary AND sufficient): local-linear RD of each
 #'     \eqn{(\mathbf{u},b)} indicator on the reflected running variable; joint
-#'     Wald that all jumps are zero, with a Moore-Penrose pseudo-inverse
-#'     handling the singularity (type shares sum to 1).
+#'     Wald that all jumps are zero, dropping one reference type (the type
+#'     shares sum to 1, so the full set of jumps is rank-deficient). With
+#'     binary types this is the single share-jump test of the paper's
+#'     Section 4.4. This is the paper's test.
 #'   \item **Canay-Kamat permutation** (necessary AND sufficient): approximate
 #'     sign randomisation test comparing the two sides of the artificial
 #'     cutoff, permuted at the **unit** level (see "Unit-level wrinkle" below).
 #' }
 #'
-#' Both tests are **necessary AND sufficient** for Assumption A8.
+#' Both tests are **necessary AND sufficient** for `ass:comp-stable`. Section 4.4
+#' of the paper states the LL-Wald; the permutation test is reported in the
+#' paper's Section 6 validation table (Canay and Kamat 2018, rule-of-thumb `q`).
+#' See `dev/tests_map.md`.
 #'
 #' ## Unit-level wrinkle
 #'
@@ -120,8 +126,10 @@
 #'     \item{`joint`}{Joint result over all pairs (stacked Wald + minimum-p
 #'       permutation envelope):
 #'       \describe{
-#'         \item{`ll_wald`}{list with `stat`, `df`, `p` (stacked across all
-#'           pairs, assuming independence across pairs).}
+#'         \item{`ll_wald`}{list with `stat`, `df`, `p` (sum of the per-pair
+#'           statistics and df, which assumes independent pairs; the pairs
+#'           share the RD-period above-cutoff group, so treat the joint as
+#'           approximate — the paper's test is per pair).}
 #'         \item{`ck_perm`}{list with `stat` (sum of per-pair stats) and `p`.}
 #'       }
 #'     }
@@ -133,8 +141,8 @@
 #'
 #' @note
 #' **Necessary and sufficient status:** Both the LL-Wald and the Canay-Kamat
-#' permutation test are necessary AND sufficient for Assumption A8 (composition
-#' stability).  See Leventer and Nevo for the proof.
+#' permutation test are necessary AND sufficient for `ass:comp-stable`
+#' (composition stability).  See Leventer and Nevo for the proof.
 #'
 #' @references
 #' Leventer, D. and Nevo, D. "Correcting Invalid Regression Discontinuity
@@ -256,10 +264,11 @@ rd_compstable <- function(data, x, time, id, t_rd,
 
     # Build u-string (sides of shared other periods)
     if (length(u_periods) > 0L) {
-      u_trd <- apply(above_trd[, paste0("side_", u_periods), drop = FALSE],
-                     1, paste, collapse = "")
-      u_t0  <- apply(above_t0[,  paste0("side_", u_periods), drop = FALSE],
-                     1, paste, collapse = "")
+      # a unit unobserved in a shared period has no type (as in .build_types)
+      u_trd <- apply(above_trd[, paste0("side_", u_periods), drop = FALSE], 1,
+                     function(r) if (anyNA(r)) NA_character_ else paste(r, collapse = ""))
+      u_t0  <- apply(above_t0[,  paste0("side_", u_periods), drop = FALSE], 1,
+                     function(r) if (anyNA(r)) NA_character_ else paste(r, collapse = ""))
     } else {
       # P = 2: no shared other periods; u is empty
       u_trd <- rep("", nrow(above_trd))
@@ -271,14 +280,18 @@ rd_compstable <- function(data, x, time, id, t_rd,
     b_t0[is.na(b_t0)]   <- NA_integer_
 
     # type string = paste(u, b)
-    type_trd <- ifelse(is.na(b_trd), NA_character_,
+    type_trd <- ifelse(is.na(b_trd) | is.na(u_trd), NA_character_,
                        paste0(u_trd, as.character(b_trd)))
-    type_t0  <- ifelse(is.na(b_t0),  NA_character_,
+    type_t0  <- ifelse(is.na(b_t0) | is.na(u_t0),  NA_character_,
                        paste0(u_t0,  as.character(b_t0)))
 
     # Reflected running variable
-    xref_trd <- above_trd[[paste0("R_", t_rd_str)]] - c   # > 0
-    xref_t0  <-  -(above_t0[[paste0("R_", t0_str)]] - c)  # < 0
+    xref_trd <- above_trd[[paste0("R_", t_rd_str)]] - c   # >= 0
+    xref_t0  <-  -(above_t0[[paste0("R_", t0_str)]] - c)  # <= 0
+    # A t0-above unit exactly at the cutoff reflects to 0 and would be assigned
+    # to the right (t_rd) group by rd_period's `x >= c` split; keep it on the
+    # reflected (left) side with a negative value that carries full kernel weight.
+    xref_t0[xref_t0 == 0] <- -.Machine$double.xmin
 
     id_trd <- above_trd$id
     id_t0  <- above_t0$id
@@ -303,7 +316,7 @@ rd_compstable <- function(data, x, time, id, t_rd,
     }
 
     # All type values present in this pair
-    all_type_vals <- sort(unique(base::c(type_trd, type_t0)))
+    all_type_vals <- sort(unique(base::c(type_trd, type_t0)), method = "radix")  # locale-independent
     n_types <- length(all_type_vals)
 
     # ---- auto-detect scheme ----------------------------------------------------
@@ -349,18 +362,15 @@ rd_compstable <- function(data, x, time, id, t_rd,
     # The "+" side of the artificial cutoff = t_rd-above units
     # The "-" side = t_0-above units
     # Units in both appear in fits[[v]]$sides$`+`$id AND fits[[v]]$sides$`-`$id
-    # Cross-type covariance on the same side = 0 (types partition units on each side)
-    # Diagonal = within-type Var(D_v) = sum(g_+^2) + sum(g_-^2)
-    # Off-diagonal (different types, same pair): 0 within side; cross-side =
-    #   .match_sum on id (for pv scheme: cov_{+,+} + cov_{-,-} - cov_{+,-} - cov_{-,+})
-    # But since types partition units: cross-type, same-side cov = 0.
-    # So Sigma[vi, vj] for vi != vj is purely from cross-side terms when
-    # a unit switches type between periods (only if type definitions differ).
-    # In practice this CAN be non-zero because the partner side b differs:
-    # a unit above in both periods has b_trd = its t0-side and b_t0 = its t_rd-side.
-    # These are generally equal (both encode the same pair) so the types MATCH,
-    # meaning a unit lands in the SAME type on both sides.
-    # We still code the general formula.
+    # Diagonal = Var(D_v) = sum(g_+^2) + sum(g_-^2), minus 2 x the shared-unit
+    #   cross-side term under "pv" (a unit above in both periods sits on both
+    #   sides of the artificial cutoff).
+    # Off-diagonal (types v != v'): both indicator fits run on the SAME reflected
+    #   sample, so every unit enters both with different 0/1 outcomes and the
+    #   same-side term sum(g_v g_v') is nonzero (as in rd_typecont's within-period
+    #   block); under "pv" the opposite-side term is subtracted as well. With
+    #   binary types only one jump is kept (below), so the off-diagonal matters
+    #   for P >= 3 only.
 
     N     <- n_types
     Sigma <- matrix(0, N, N)
@@ -391,19 +401,27 @@ rd_compstable <- function(data, x, time, id, t_rd,
           next
         }
 
-        # Cross-type off-diagonal: on the same side types partition units, so a
-        # nonzero entry needs a unit landing in type a on one side and type b on
-        # the other.  This is the scheme-combined cross covariance of the two
-        # reflected fits (cs → 0, pc → same-side, pv → same-side − opposite).
-        Sigma[a, b_idx] <- .cov_scheme(fit_a, fit_b, use_scheme, bc = bc)
+        # Cross-type off-diagonal: same-side term always (same sample, different
+        # indicator outcomes); opposite-side term only when the two artificial
+        # sides share units ("pv").
+        cc <- .cross_cov(fit_a, fit_b, bc = bc)
+        Sigma[a, b_idx] <- cc$pc - (if (use_scheme == "pv") cc$pv else 0)
       }
     }
 
-    # Drop NA rows/cols
-    ok_idx    <- which(!is.na(theta))
-    theta_ok  <- theta[ok_idx]
-    Sigma_ok  <- Sigma[ok_idx, ok_idx, drop = FALSE]
-    ll_result <- .joint_wald(theta_ok, Sigma_ok)
+    # The type indicators sum to 1 on each side of the artificial cutoff, so when
+    # every type is fitted at a common bandwidth the n_types jumps sum to zero
+    # and their covariance is rank-deficient by construction. Drop one reference
+    # type (the first in radix order: partner side 0 / the all-below pattern) and
+    # test the rest: with binary types the kept jump is the paper's
+    # pi_{tRD,(+)}(1) - pi_{t0,(+)}(1), chi-square with 1 df. With per-type CCT
+    # bandwidths the jumps do not sum exactly to zero, so this is then a
+    # different (still valid) full-rank test rather than an equivalent one. If a
+    # fit failed there is no exact redundancy among the survivors: keep them all.
+    present   <- which(!is.na(theta))
+    ok_idx    <- if (length(present) == n_types && n_types >= 2L) present[-1L] else present
+    ll_result <- if (length(ok_idx) == 0L) list(stat = 0, df = 0L, p = 1) else
+      .joint_wald(theta[ok_idx], Sigma[ok_idx, ok_idx, drop = FALSE])
 
     # ---- (2) Canay-Kamat permutation at the unit level -------------------------
     # Construct the 2q nearest observations at the unit level.
@@ -537,8 +555,10 @@ rd_compstable <- function(data, x, time, id, t_rd,
   }
 
   # ---- joint result across all pairs ------------------------------------------
-  # Stack the theta/Sigma across pairs (assuming independence across pairs,
-  # which holds exactly when each pair uses a distinct t0).
+  # Sum the per-pair statistics and df. This assumes independent pairs, which
+  # is only approximate: every pair's "+" group is the same t_rd-above set (and
+  # a unit above the cutoff in two comparison periods enters two "-" groups).
+  # The paper's test is per pair; the joint is a convenience summary.
   # For the Wald: sum chi-sq statistics with summed df.
   joint_ll_stat <- 0
   joint_ll_df   <- 0L
@@ -597,7 +617,7 @@ rd_compstable <- function(data, x, time, id, t_rd,
 
 #' @export
 print.rd_compstable <- function(x, ...) {
-  cat("Composition-stability test (Assumption A8)\n")
+  cat("Composition-stability test (ass:comp-stable)\n")
   cat(sprintf("  RD period: %s   Comparison periods: %s\n",
               x$meta$t_rd,
               paste(x$meta$comparisons, collapse = ", ")))
@@ -623,6 +643,6 @@ print.rd_compstable <- function(x, ...) {
     cat(sprintf("  CK perm (Fisher):  p = %.4f\n", x$joint$ck_perm$p))
   }
 
-  cat("\nNOTE: Both tests are necessary AND sufficient for Assumption A8.\n")
+  cat("\nNOTE: Both tests are necessary AND sufficient for ass:comp-stable.\n")
   invisible(x)
 }

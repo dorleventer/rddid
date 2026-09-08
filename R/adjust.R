@@ -1,10 +1,10 @@
 # Composition-adjusted RD-DID estimator (Section 4.4 / Theorem 3, "thm:adjust").
 #
-# When composition stability (A8) is rejected but the within-type confounding
-# trend (A10, ass:trend-cell) is credible, the composition effect is estimated
+# When composition stability (ass:comp-stable) is rejected but the within-type
+# confounding trend (ass:trend-cell) is credible, the composition effect is estimated
 # and removed instead of assumed away. We use the WITHIN-TYPE (reweighting) form,
 # which is the more interpretable read and is equivalent to the correction form
-# under A7:
+# under ass:type-cont:
 #
 #   ATT_adj(t_rd) = sum_a pi_{t_rd,(+)}(v_comp = a) * ATT(t_rd | v_comp = a),
 #   ATT(t_rd | v_comp = a) = D_{t_rd}(v_comp = a) - g0({ D_{t0}(v_rd = a) : t0 }).
@@ -108,8 +108,8 @@
 #'
 #' Estimates the composition-adjusted ATT for a time-varying running variable,
 #' the route of Section 4.4 / Theorem `thm:adjust` to take when composition
-#' stability (A8, [rd_compstable()]) is rejected but the within-type confounding
-#' trend (A10, [rd_trendcell()]) is credible. Reports the per-type RD-DID effects
+#' stability (`ass:comp-stable`, [rd_compstable()]) is rejected but the within-type
+#' confounding trend (`ass:trend-cell`, [rd_trendcell()]) is credible. Reports the per-type RD-DID effects
 #' `ATT(t_rd | v_comp = a)`, the RD-period composition shares, and their
 #' share-weighted aggregate, alongside the unadjusted estimator. Standard errors
 #' are a unit-level cluster bootstrap.

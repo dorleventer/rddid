@@ -1,7 +1,10 @@
-#' Test the continuity of the type distribution (Assumption A7)
+#' Test the continuity of the type distribution (assumption `ass:type-cont`)
 #'
-#' Runs the four tests for Assumption A7 ("continuity of the type distribution")
-#' from Leventer and Nevo.  The "type" of unit \eqn{i} in period \eqn{t} is the
+#' Runs four tests for the continuous-type-distribution assumption
+#' (`ass:type-cont`, Section 4.4 of Leventer and Nevo). Section 4.4 states the
+#' LL-Wald; the McCrary variants are run in the paper's simulation appendix and
+#' the permutation test in its Section 6 validation table (see
+#' `dev/tests_map.md`). The "type" of unit \eqn{i} in period \eqn{t} is the
 #' sign pattern of its running variables in the OTHER periods,
 #' \eqn{\mathbf{V}_{i,-t} = (1\{R_{i,s} \ge c\})_{s \ne t}}.
 #'
@@ -12,9 +15,9 @@
 #'     indicator \eqn{1\{\mathbf{V}_{i,-t} = v\}} on the running variable
 #'     \eqn{R_{i,t}}.  The jump \eqn{\hat\pi_{t,(+)}(v) - \hat\pi_{t,(-)}(v)}
 #'     is the output of [rd_period()] with a binary outcome.  The joint Wald
-#'     statistic across all (period, type) pairs uses a Moore-Penrose
-#'     pseudo-inverse because within each period the type indicators sum to 1
-#'     (the block is singular); df = rank of the covariance matrix.  The
+#'     statistic across all (period, type) pairs drops one reference type per
+#'     period, because within each period the type indicators sum to 1 (the
+#'     full block is singular); df = number of kept contrasts.  The
 #'     covariance is built from the per-unit influence vectors returned by
 #'     [rd_period()], using the same within-period and cross-period id-matching
 #'     as the main estimator, scheme-aware.
@@ -135,19 +138,21 @@ rd_typecont <- function(data, x, time, id,
   pt <- .build_types(data, x, time, id, c = c)$period_types
 
   # All type values that appear anywhere across all periods
-  all_type_values <- sort(unique(unlist(lapply(pt, `[[`, "type"))))
+  all_type_values <- sort(unique(unlist(lapply(pt, `[[`, "type"))), method = "radix")  # locale-independent
   n_types <- length(all_type_values)
 
   # ----- detect scheme -----------------------------------------------------
-  # Classify from the in-window units of each period via the shared primitive
-  # (side = 1{R >= c}, treated at the cutoff).
+  # Classify from every unit with a defined type in each period via the shared
+  # primitive (side = 1{R >= c}, treated at the cutoff). The scheme is a
+  # property of the design (repeated ids, side switching), not of a window;
+  # restricting to a rule-of-thumb window under-detected switching whenever the
+  # per-cell CCT bandwidths reached beyond it.
   if (scheme == "auto") {
     long <- do.call(rbind, lapply(plab, function(k) {
       df_k  <- pt[[k]]
-      inwin <- abs(df_k$R - c) <= h_aux
       data.frame(period = k,
-                 id     = df_k$id[inwin],
-                 side   = as.integer(df_k$R[inwin] >= c))
+                 id     = df_k$id,
+                 side   = as.integer(df_k$R >= c))
     }))
     use_scheme <- .scheme_from_long(long)
   } else {
@@ -223,7 +228,11 @@ rd_typecont <- function(data, x, time, id,
   # fragile — a structural-zero singular value is kept on some LAPACK builds and
   # its 1/sv inflates the statistic (platform-dependent p-values). Instead drop
   # one (reference) type per period: with k present types we keep k-1, an
-  # equivalent full-rank test (the dropped jump is minus the sum of the rest).
+  # equivalent full-rank test at a common bandwidth (the dropped jump is minus
+  # the sum of the rest; with per-cell CCT bandwidths the jumps do not sum
+  # exactly to zero, so it is then a different, still valid, test). Types are
+  # in radix order, so the dropped type is the all-below pattern and the kept
+  # contrast at P = 2 is the paper's jump for the indicator 1{V_is = 1}.
   keep <- logical(length(theta))
   for (ki in seq_along(plab)) {
     rows_k  <- (ki - 1L) * n_types + seq_len(n_types)
@@ -429,7 +438,7 @@ rd_typecont <- function(data, x, time, id,
 
 #' @export
 print.rd_typecont <- function(x, ...) {
-  cat("Type-continuity tests (Assumption A7)\n")
+  cat("Type-continuity tests (ass:type-cont)\n")
   h_str <- if (is.na(x$meta$h)) paste0("per-cell ", toupper(x$meta$bwselect)) else sprintf("%.4g", x$meta$h)
   cat(sprintf("  Periods: %s   Types: %s   h=%s   bwselect=%s   scheme=%s\n\n",
               paste(x$meta$periods, collapse = ", "),

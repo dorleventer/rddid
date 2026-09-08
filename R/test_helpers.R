@@ -1,4 +1,4 @@
-# Internal helpers shared by rd_typecont() (A7) and rd_compstable() (A8).
+# Internal helpers shared by rd_typecont() (ass:type-cont) and rd_compstable() (ass:comp-stable).
 # All functions are prefixed `.` and are not exported.
 #
 # Design contract:
@@ -63,8 +63,8 @@
 #' above it (V_i = 1{R_i >= c}).  Units not observed in every period are
 #' dropped from each period's type frame (their sign pattern is undefined).
 #'
-#' This is the single canonical implementation, shared by [rd_typecont()] (A7)
-#' and [rd_homog()] (A9).
+#' This is the single canonical implementation, shared by [rd_typecont()]
+#' (ass:type-cont) and [rd_homog()] (ass:homog).
 #'
 #' @param data long data frame with one row per unit × period.
 #' @param x,time,id column name strings for running variable, period, period id.

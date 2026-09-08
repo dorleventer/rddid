@@ -2,7 +2,7 @@
 % Please edit documentation in R/test_compstable.R
 \name{rd_compstable}
 \alias{rd_compstable}
-\title{Test composition stability across periods (Assumption A8)}
+\title{Test composition stability across periods (assumption \code{ass:comp-stable})}
 \usage{
 rd_compstable(
   data,
@@ -102,8 +102,10 @@ labels present in this pair.}
 \item{\code{joint}}{Joint result over all pairs (stacked Wald + minimum-p
 permutation envelope):
 \describe{
-\item{\code{ll_wald}}{list with \code{stat}, \code{df}, \code{p} (stacked across all
-pairs, assuming independence across pairs).}
+\item{\code{ll_wald}}{list with \code{stat}, \code{df}, \code{p} (sum of the per-pair
+statistics and df, which assumes independent pairs; the pairs
+share the RD-period above-cutoff group, so treat the joint as
+approximate — the paper's test is per pair).}
 \item{\code{ck_perm}}{list with \code{stat} (sum of per-pair stats) and \code{p}.}
 }
 }
@@ -114,7 +116,8 @@ thumb is used, otherwise the integer supplied), \code{q_used} (per-pair
 }
 }
 \description{
-Tests Assumption A8 ("composition stability") from Leventer and Nevo:
+Tests the composition-stability assumption (\code{ass:comp-stable}, Section 4.4
+of Leventer and Nevo):
 \deqn{\pi_{t_{\mathrm{RD}},(+)}(\mathbf{u}, b) =
        \pi_{t_0,(+)}(\mathbf{u}, b)
        \quad \forall\,(\mathbf{u}, b),}
@@ -137,19 +140,24 @@ cutoff the left/right limits of the \eqn{(\mathbf{u},b)} type share are
 then \eqn{\pi_{t_0,(+)}(\mathbf{u},b)} and
 \eqn{\pi_{t_{\mathrm{RD}},(+)}(\mathbf{u},b)}, so a jump at 0 equals the
 composition difference.  The same two tests from the type-continuity
-assessment (A7) then apply:
+assessment (\code{ass:type-cont}, \code{\link[=rd_typecont]{rd_typecont()}}) then apply:
 
 \enumerate{
 \item \strong{LL-Wald} (necessary AND sufficient): local-linear RD of each
 \eqn{(\mathbf{u},b)} indicator on the reflected running variable; joint
-Wald that all jumps are zero, with a Moore-Penrose pseudo-inverse
-handling the singularity (type shares sum to 1).
+Wald that all jumps are zero, dropping one reference type (the type
+shares sum to 1, so the full set of jumps is rank-deficient). With
+binary types this is the single share-jump test of the paper's
+Section 4.4. This is the paper's test.
 \item \strong{Canay-Kamat permutation} (necessary AND sufficient): approximate
 sign randomisation test comparing the two sides of the artificial
 cutoff, permuted at the \strong{unit} level (see "Unit-level wrinkle" below).
 }
 
-Both tests are \strong{necessary AND sufficient} for Assumption A8.
+Both tests are \strong{necessary AND sufficient} for \code{ass:comp-stable}. Section 4.4
+of the paper states the LL-Wald; the permutation test is reported in the
+paper's Section 6 validation table (Canay and Kamat 2018, rule-of-thumb \code{q}).
+See \code{dev/tests_map.md}.
 }
 
 \subsection{Unit-level wrinkle}{
@@ -175,8 +183,8 @@ Amro and Pauly (2017) and Derrick et al. (2022) (see References).
 }
 \note{
 \strong{Necessary and sufficient status:} Both the LL-Wald and the Canay-Kamat
-permutation test are necessary AND sufficient for Assumption A8 (composition
-stability).  See Leventer and Nevo for the proof.
+permutation test are necessary AND sufficient for \code{ass:comp-stable}
+(composition stability).  See Leventer and Nevo for the proof.
 }
 \examples{
 \dontrun{

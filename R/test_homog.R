@@ -1,6 +1,6 @@
-# Test of Assumption A9: type-homogeneous confounding.
+# Test of the homogeneous-confounding assumption (ass:homog).
 # Manuscript ref: Leventer and Nevo, "Correcting Invalid RD Designs",
-# paragraph "Type-homogeneous confounding (Assumption A9)".
+# paragraph "Homogeneous confounding" of Section 4.4.
 #
 # The test is run in COMPARISON PERIODS ONLY.  In comparison period t0 the
 # outcome RD jump equals the pure confounding:
@@ -21,7 +21,7 @@
 # Main exported function
 # ---------------------------------------------------------------------------
 
-#' Test of type-homogeneous confounding (Assumption A9)
+#' Test of homogeneous confounding (assumption `ass:homog`)
 #'
 #' Tests whether the outcome RD discontinuity is constant across types in
 #' **comparison periods** (periods where the treatment of interest is absent).
@@ -34,7 +34,7 @@
 #' ## Scope and interpretation
 #'
 #' **This test is run in comparison periods only.**  The type-homogeneous
-#' confounding assumption (A9 in Leventer and Nevo) is needed at the *RD
+#' confounding assumption (`ass:homog` in Leventer and Nevo) is needed at the *RD
 #' period* \eqn{t_{\mathrm{RD}}}, but there the jump also contains the ATT and
 #' \eqn{\alpha_{t_{\mathrm{RD}},0}(\mathbf{v}_{-t_{\mathrm{RD}}})} is not
 #' separately observable.  Testing homogeneity in comparison periods is
@@ -114,7 +114,7 @@
 #'
 #' @note
 #' **Necessary and sufficient status:** This test is *neither necessary nor
-#' sufficient* for Assumption A9 (type-homogeneous confounding) to hold at the
+#' sufficient* for `ass:homog` (homogeneous confounding) to hold at the
 #' RD period.  Homogeneity in comparison periods is only suggestive because the
 #' assumption is needed at \eqn{t_{\mathrm{RD}}}, where the confounding jump is
 #' not separately identified.
@@ -243,14 +243,17 @@ rd_homog <- function(data, y, x, time, id,
     m_idx <- match(id_tp, tdf$id)
     tvec  <- tdf$type[m_idx]   # type label per row
 
-    valid_types <- sort(unique(tvec[!is.na(tvec)]))
+    # locale-independent order, all-below pattern ("-", "--", ...) first
+    valid_types <- sort(unique(tvec[!is.na(tvec)]), method = "radix", decreasing = TRUE)
     if (length(valid_types) < 2L) {
       # only one type (or no types): skip this period
       message("rd_homog: period ", tp, " has fewer than 2 types; skipping.")
       next
     }
 
-    # reference type = first alphabetically
+    # reference type = the all-below pattern (V = 0 in every other period, or
+    # V_{t_rd} = 0 under type_by = "rd_side"); contrasts are (type) - (reference),
+    # so with binary types contrasts = D(1) - D(0)
     ref_type <- valid_types[1L]
     for (vt in valid_types) {
       keep   <- !is.na(tvec) & tvec == vt
@@ -404,13 +407,13 @@ rd_homog <- function(data, y, x, time, id,
 
 #' @export
 print.rd_homog <- function(x, ...) {
-  cat("Type-homogeneous confounding test (Assumption A9)\n")
+  cat("Homogeneous confounding test (ass:homog)\n")
   cat(sprintf("  Comparison periods: %s\n",
               paste(x$comparisons, collapse = ", ")))
   cat(sprintf("  Sampling scheme: %s\n", toupper(x$scheme)))
   cat(sprintf("  Wald statistic: %.4f   df: %d   p-value: %.4f\n",
               x$statistic, x$df, x$p_value))
-  cat("\n  NOTE: This test is NEITHER necessary NOR sufficient for Assumption A9\n")
+  cat("\n  NOTE: This test is NEITHER necessary NOR sufficient for ass:homog\n")
   cat("  at the RD period. It is run in comparison periods only and is only\n")
   cat("  suggestive of homogeneity where the assumption is needed (t_RD).\n")
   if (nrow(x$period_type_jumps) > 0L) {

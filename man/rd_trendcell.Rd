@@ -2,7 +2,7 @@
 % Please edit documentation in R/test_trendcell.R
 \name{rd_trendcell}
 \alias{rd_trendcell}
-\title{Test of within-cell confounding trend (Assumption A10)}
+\title{Test of a constant within-type confounding discontinuity (assumption \code{ass:trend-cell})}
 \usage{
 rd_trendcell(
   data,
@@ -123,7 +123,7 @@ jumps conform to the hypothesised trend \eqn{g_0} across comparison periods.
 \details{
 \subsection{Scope and interpretation}{
 
-\strong{This test is run in comparison periods only.}  Assumption A10
+\strong{This test is run in comparison periods only.}  Assumption \code{ass:trend-cell}
 (within-cell confounding trend, \eqn{\text{ass:trend-cell}} in Leventer
 and Nevo) is needed at the \emph{RD period} \eqn{t_{\mathrm{RD}}}, but there
 the jump also contains the ATT and the confounding is not separately
@@ -155,7 +155,7 @@ function returns an object with \code{df = 0}, \code{statistic = NA}, and a mess
 }
 \note{
 \strong{Necessary and sufficient status:} This test is \emph{neither necessary nor
-sufficient} for Assumption A10 (within-cell confounding trend) to hold at
+sufficient} for \code{ass:trend-cell} (constant within-type confounding) to hold at
 the RD period.  Conformity to the trend in comparison periods is only
 suggestive because the assumption is needed at \eqn{t_{\mathrm{RD}}},
 where the confounding jump is not separately identified.  It is a pre-trend

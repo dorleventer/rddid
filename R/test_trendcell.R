@@ -1,6 +1,6 @@
-# Test of Assumption A10: within-type confounding trend (ass:trend-cell).
+# Test of the constant-within-type-confounding assumption (ass:trend-cell).
 # Manuscript ref: Leventer and Nevo, "Correcting Invalid RD Designs",
-# paragraph "Within-cell confounding trend (Assumption A10)".
+# paragraph "Constant confounding discontinuity within types" of Section 4.4.
 #
 # The test is run in COMPARISON PERIODS ONLY.  In comparison period t0 the
 # outcome RD jump equals the pure confounding:
@@ -14,8 +14,8 @@
 # assumption to hold at the RD period; see documentation for rd_trendcell().
 
 # ---------------------------------------------------------------------------
-# Cell assignment for A10 must be FIXED across comparison periods.
-# This differs from A9 (rd_homog) where the type is period-specific.
+# Cell assignment for ass:trend-cell must be FIXED across comparison periods.
+# This differs from ass:homog (rd_homog) where the type is period-specific.
 # We build a single cell_map once:
 #   type_by = "rd_side"  → sign of the unit's running variable in t_rd.
 #   type_by = "pattern"  → type from the t_rd perspective (sign pattern of all
@@ -29,7 +29,7 @@
 # Main exported function
 # ---------------------------------------------------------------------------
 
-#' Test of within-cell confounding trend (Assumption A10)
+#' Test of a constant within-type confounding discontinuity (assumption `ass:trend-cell`)
 #'
 #' Tests whether the per-cell outcome RD discontinuity is constant (or linear)
 #' **across comparison periods** within each cell.
@@ -42,7 +42,7 @@
 #'
 #' ## Scope and interpretation
 #'
-#' **This test is run in comparison periods only.**  Assumption A10
+#' **This test is run in comparison periods only.**  Assumption `ass:trend-cell`
 #' (within-cell confounding trend, \eqn{\text{ass:trend-cell}} in Leventer
 #' and Nevo) is needed at the *RD period* \eqn{t_{\mathrm{RD}}}, but there
 #' the jump also contains the ATT and the confounding is not separately
@@ -142,7 +142,7 @@
 #'
 #' @note
 #' **Necessary and sufficient status:** This test is *neither necessary nor
-#' sufficient* for Assumption A10 (within-cell confounding trend) to hold at
+#' sufficient* for `ass:trend-cell` (constant within-type confounding) to hold at
 #' the RD period.  Conformity to the trend in comparison periods is only
 #' suggestive because the assumption is needed at \eqn{t_{\mathrm{RD}}},
 #' where the confounding jump is not separately identified.  It is a pre-trend
@@ -221,7 +221,7 @@ rd_trendcell <- function(data, y, x, time, id,
     stop("need at least one comparison period.")
 
   # ---- build fixed cell assignment ----
-  # A10 requires the cell to be FIXED across all comparison periods so that
+  # ass:trend-cell requires the cell to be FIXED across all comparison periods so that
   # cross-cell covariance is zero regardless of which periods we compare.
   bt <- .build_types(data, x = x, time = time, id = id, c = c)
 
@@ -264,7 +264,7 @@ rd_trendcell <- function(data, y, x, time, id,
     id_tp <- d_tp[[id]]
     cvec  <- unname(cell_map[as.character(id_tp)])
 
-    for (ck in sort(unique(cvec[!is.na(cvec)]))) {
+    for (ck in sort(unique(cvec[!is.na(cvec)]), method = "radix")) {
       keep  <- !is.na(cvec) & cvec == ck
       y_ck  <- d_tp[[y]][keep]
       x_ck  <- d_tp[[x]][keep]
@@ -323,7 +323,7 @@ rd_trendcell <- function(data, y, x, time, id,
   }
 
   valid_cells <- sort(unique(vapply(names(all_meta), function(k)
-    all_meta[[k]]$cell, character(1))))
+    all_meta[[k]]$cell, character(1))), method = "radix")
 
   Delta_all    <- numeric(0)
   Sigma_all    <- matrix(numeric(0), nrow = 0, ncol = 0)
@@ -481,7 +481,7 @@ rd_trendcell <- function(data, y, x, time, id,
 
 #' @export
 print.rd_trendcell <- function(x, ...) {
-  cat("Within-cell confounding trend test (Assumption A10)\n")
+  cat("Within-type confounding pre-trend test (ass:trend-cell)\n")
   cat(sprintf("  Trend form: %s\n", x$trend))
   cat(sprintf("  Comparison periods: %s\n",
               paste(x$comparisons, collapse = ", ")))
@@ -494,7 +494,7 @@ print.rd_trendcell <- function(x, ...) {
     cat(sprintf("  Wald statistic: %.4f   df: %d   p-value: %.4f\n",
                 x$statistic, x$df, x$p_value))
   }
-  cat("\n  NOTE: This test is NEITHER necessary NOR sufficient for Assumption A10\n")
+  cat("\n  NOTE: This test is NEITHER necessary NOR sufficient for ass:trend-cell\n")
   cat("  at the RD period. It is a pre-trend check run in comparison periods\n")
   cat("  only and is only suggestive of trend conformity where the assumption\n")
   cat("  is needed (t_RD).\n")

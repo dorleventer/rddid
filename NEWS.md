@@ -32,6 +32,14 @@
   `h`. Moves `bwselect = "joint"`/`"iter"` bandwidths by a fraction of a percent at the CCT pilot
   ratio; at wide pilots (`b/h >= 3`) the old estimate over-stated the variance.
 
+* Validation tests synced with Section 4.4 of the paper (`dev/tests_map.md`): documentation
+  cites the assumptions by label (`ass:type-cont`, `ass:comp-stable`, `ass:homog`,
+  `ass:trend-cell`) instead of numbers that changed in the paper; `rd_compstable()` drops one
+  reference type instead of pseudo-inverting the structurally singular covariance (same
+  statistic for binary types, exact df); a comparison-period unit exactly at the cutoff now
+  stays on the reflected side; the joint-over-pairs result is documented as approximate. New
+  from-the-text conformance tests `test-s44-conformance.R`.
+
 * Guards: `bwselect = "cct"` and the joint pilot go through the guarded `rd_bw_cct()`
   (fallback + finiteness checks) instead of calling `rdrobust::rdbwselect()` directly;
   `.bw_joint()` warns when `h*` exceeds the running-variable radius; the coordinate descent

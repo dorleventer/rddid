@@ -2,7 +2,7 @@
 % Please edit documentation in R/test_typecont.R
 \name{rd_typecont}
 \alias{rd_typecont}
-\title{Test the continuity of the type distribution (Assumption A7)}
+\title{Test the continuity of the type distribution (assumption \code{ass:type-cont})}
 \usage{
 rd_typecont(
   data,
@@ -85,8 +85,11 @@ rule of thumb is used, otherwise the integer supplied), \code{q_used}
 (per-period integer \code{q} actually used), \code{S}, \code{scheme}, \code{bc}.}
 }
 \description{
-Runs the four tests for Assumption A7 ("continuity of the type distribution")
-from Leventer and Nevo.  The "type" of unit \eqn{i} in period \eqn{t} is the
+Runs four tests for the continuous-type-distribution assumption
+(\code{ass:type-cont}, Section 4.4 of Leventer and Nevo). Section 4.4 states the
+LL-Wald; the McCrary variants are run in the paper's simulation appendix and
+the permutation test in its Section 6 validation table (see
+\code{dev/tests_map.md}). The "type" of unit \eqn{i} in period \eqn{t} is the
 sign pattern of its running variables in the OTHER periods,
 \eqn{\mathbf{V}_{i,-t} = (1\{R_{i,s} \ge c\})_{s \ne t}}.
 }
@@ -98,9 +101,9 @@ each type value \eqn{v}, estimate the local-linear RD jump of the type
 indicator \eqn{1\{\mathbf{V}_{i,-t} = v\}} on the running variable
 \eqn{R_{i,t}}.  The jump \eqn{\hat\pi_{t,(+)}(v) - \hat\pi_{t,(-)}(v)}
 is the output of \code{\link[=rd_period]{rd_period()}} with a binary outcome.  The joint Wald
-statistic across all (period, type) pairs uses a Moore-Penrose
-pseudo-inverse because within each period the type indicators sum to 1
-(the block is singular); df = rank of the covariance matrix.  The
+statistic across all (period, type) pairs drops one reference type per
+period, because within each period the type indicators sum to 1 (the
+full block is singular); df = number of kept contrasts.  The
 covariance is built from the per-unit influence vectors returned by
 \code{\link[=rd_period]{rd_period()}}, using the same within-period and cross-period id-matching
 as the main estimator, scheme-aware.

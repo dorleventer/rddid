@@ -17,6 +17,8 @@ Package: this file's commit. Update both stamps whenever either side changes a m
 - When a formula changes in the paper, change the package function in the same sitting, then
   re-run `tests/testthat/test-appB-conformance.R` and update the row here.
 
+**Paper restructure in progress (2026-09-08, 18:06–18:13, uncommitted while this was written).** Session 02 deleted Appendix C (simulation evidence) and the general-$P$ Appendix A, and moved the body proofs to a new Appendix A "Proofs". Once that lands: the McCrary rows below revert to NOT-IN-PAPER (the simulation appendix that ran them is gone), the general-$P$ sign-pattern types and $(\mathbf u,b)$ types are no longer licensed by a paper statement (`ass:type-cont-gen`, `ass:comp-stable-gen` deleted), and the labels `app:sim-val`, `app:sim-val-typecont`, `app:est-adjust` cited in the two maps must be re-pointed. Re-run `dev/check_appB_labels.R` against the new HEAD and update the sync stamps then; this file is pinned to `c1a9fbf`.
+
 **Status legend.** `MATCH` = same object, verified by test to 1e-10 (up to the stated
 convention). `MATCH*` = same object up to a documented finite-sample convention. `MISMATCH` =
 package computed something else (fixed in this pass unless marked OPEN). `PAPER-GAP` = the
@@ -150,7 +152,7 @@ Function-level map only. B.5 has not changed in substance since the 2026-06-30 c
 | Package | Paper | Note |
 |---|---|---|
 | `.rddid_weights()` (`constant` = equal $1/m$; `linear` = OLS line through the comparison periods extrapolated to $t_{\mathrm{RD}}$) | Corollary `cor:trend`, Section 3 | admissibility ($\sum w=1$ for constant, line weights for linear) |
-| `rd_typecont`, `rd_compstable`, `rd_homog`, `rd_trendcell` | Section 4.4 (`sec:tvrv-assess`); simulations `app:sim-val` | OUT-OF-SCOPE; separate map (`docs/s34-assumption-tests.md`, untracked) |
+| `rd_typecont`, `rd_compstable`, `rd_homog`, `rd_trendcell` | Section 4.4 (`sec:tvrv-assess`); simulations `app:sim-val` | mapped in `dev/tests_map.md` (this repo) |
 | `.detect_scheme()` | Section 5.2 prose | data-driven; the paper defines schemes by design |
 
 ---

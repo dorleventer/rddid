@@ -59,8 +59,8 @@ object of class \code{"rd_adjust"}.
 \description{
 Estimates the composition-adjusted ATT for a time-varying running variable,
 the route of Section 4.4 / Theorem \code{thm:adjust} to take when composition
-stability (A8, \code{\link[=rd_compstable]{rd_compstable()}}) is rejected but the within-type confounding
-trend (A10, \code{\link[=rd_trendcell]{rd_trendcell()}}) is credible. Reports the per-type RD-DID effects
+stability (\code{ass:comp-stable}, \code{\link[=rd_compstable]{rd_compstable()}}) is rejected but the within-type
+confounding trend (\code{ass:trend-cell}, \code{\link[=rd_trendcell]{rd_trendcell()}}) is credible. Reports the per-type RD-DID effects
 \verb{ATT(t_rd | v_comp = a)}, the RD-period composition shares, and their
 share-weighted aggregate, alongside the unadjusted estimator. Standard errors
 are a unit-level cluster bootstrap.

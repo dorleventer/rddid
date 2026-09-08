@@ -2,7 +2,7 @@
 % Please edit documentation in R/test_homog.R
 \name{rd_homog}
 \alias{rd_homog}
-\title{Test of type-homogeneous confounding (Assumption A9)}
+\title{Test of homogeneous confounding (assumption \code{ass:homog})}
 \usage{
 rd_homog(
   data,
@@ -109,7 +109,7 @@ jumps are equal across types and comparison periods.
 \subsection{Scope and interpretation}{
 
 \strong{This test is run in comparison periods only.}  The type-homogeneous
-confounding assumption (A9 in Leventer and Nevo) is needed at the \emph{RD
+confounding assumption (\code{ass:homog} in Leventer and Nevo) is needed at the \emph{RD
 period} \eqn{t_{\mathrm{RD}}}, but there the jump also contains the ATT and
 \eqn{\alpha_{t_{\mathrm{RD}},0}(\mathbf{v}_{-t_{\mathrm{RD}}})} is not
 separately observable.  Testing homogeneity in comparison periods is
@@ -133,7 +133,7 @@ sampling scheme (see \code{scheme}).
 }
 \note{
 \strong{Necessary and sufficient status:} This test is \emph{neither necessary nor
-sufficient} for Assumption A9 (type-homogeneous confounding) to hold at the
+sufficient} for \code{ass:homog} (homogeneous confounding) to hold at the
 RD period.  Homogeneity in comparison periods is only suggestive because the
 assumption is needed at \eqn{t_{\mathrm{RD}}}, where the confounding jump is
 not separately identified.

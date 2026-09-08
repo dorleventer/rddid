@@ -8,7 +8,7 @@
 # PARTNER period, the type shares sum to one, so
 #   S_t = dpi_above * ( mu_above^(-) - mu_below^(-) ),
 # where dpi_above is the cutoff JUMP in the above-type share (a single RD on the
-# type indicator; the Assumption-A7 quantity) and mu_a^(-) is the BELOW-cutoff
+# type indicator; the ass:type-cont quantity) and mu_a^(-) is the BELOW-cutoff
 # (control-side) outcome limit among type-a units.
 #
 # KEY PROPERTY: mu_a^(-) uses the control (below-cutoff) side, observed in EVERY
