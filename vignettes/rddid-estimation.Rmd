@@ -203,10 +203,6 @@ res_custom <- rddid(dat, y = "Y", x = "R", time = "t", id = "id", t_rd = 3,
 res_custom$estimates[, c("est", "se")]
 ```
 
-With only two comparison periods, the linear trend is just-identified: the
-line through $\hat D_1, \hat D_2$ passes through both points exactly, so the
-data cannot distinguish a constant from a linear confounding trend.
-
 ```{r checks, include = FALSE}
 stopifnot(
   abs(res$estimates["Conventional", "est"] - tau_true) < 4 * res$estimates["Conventional", "se"],
