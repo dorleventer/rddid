@@ -76,7 +76,7 @@ with each \(\widehat D_t\) a standard local-linear RD.</p>
 <span>  <span class="va">t_rd</span>,</span>
 <span>  comparisons <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  weights <span class="op">=</span> <span class="st">"constant"</span>,</span>
-<span>  bwselect <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"joint"</span>, <span class="st">"cct"</span>, <span class="st">"iter"</span><span class="op">)</span>,</span>
+<span>  bwselect <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"iter"</span>, <span class="st">"joint"</span>, <span class="st">"cct"</span><span class="op">)</span>,</span>
 <span>  h <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  b <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  start <span class="op">=</span> <span class="st">"hstar"</span>,</span>
@@ -125,10 +125,12 @@ distinct unit (repeated cross-section).</p></dd>
 
 
 <dt id="arg-bwselect">bwselect<a class="anchor" aria-label="anchor" href="#arg-bwselect"></a></dt>
-<dd><p><code>"joint"</code> (default; a single common AMSE-optimal bandwidth
-for the aggregate estimator), <code>"cct"</code> (per-period MSE-optimal bandwidths
-via <code>rdrobust</code>), or <code>"iter"</code> (period-specific bandwidths chosen jointly by
-coordinate descent on the aggregate AMSE). Ignored if <code>h</code> is supplied.</p></dd>
+<dd><p><code>"iter"</code> (default; period-specific bandwidths chosen jointly
+by coordinate descent on the aggregate AMSE, started at the common
+joint-optimal bandwidth — the rule the paper's Section 5.3 states as
+preferred), <code>"joint"</code> (a single common AMSE-optimal bandwidth for the
+aggregate estimator), or <code>"cct"</code> (per-period MSE-optimal bandwidths via
+<code>rdrobust</code>). Ignored if <code>h</code> is supplied.</p></dd>
 
 
 <dt id="arg-h-b">h, b<a class="anchor" aria-label="anchor" href="#arg-h-b"></a></dt>

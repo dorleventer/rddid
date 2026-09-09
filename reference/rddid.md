@@ -21,7 +21,7 @@ rddid(
   t_rd,
   comparisons = NULL,
   weights = "constant",
-  bwselect = c("joint", "cct", "iter"),
+  bwselect = c("iter", "joint", "cct"),
   h = NULL,
   b = NULL,
   start = "hstar",
@@ -68,10 +68,12 @@ rddid(
 
 - bwselect:
 
-  `"joint"` (default; a single common AMSE-optimal bandwidth for the
-  aggregate estimator), `"cct"` (per-period MSE-optimal bandwidths via
-  `rdrobust`), or `"iter"` (period-specific bandwidths chosen jointly by
-  coordinate descent on the aggregate AMSE). Ignored if `h` is supplied.
+  `"iter"` (default; period-specific bandwidths chosen jointly by
+  coordinate descent on the aggregate AMSE, started at the common
+  joint-optimal bandwidth — the rule the paper's Section 5.3 states as
+  preferred), `"joint"` (a single common AMSE-optimal bandwidth for the
+  aggregate estimator), or `"cct"` (per-period MSE-optimal bandwidths
+  via `rdrobust`). Ignored if `h` is supplied.
 
 - h, b:
 

@@ -177,6 +177,18 @@ res
   Other bandwidth rules and the sampling schemes are covered in the
   “Bandwidth rules and sampling schemes” vignette.
 
+The sampling scheme can be set instead of detected; the printed SE and
+CI then correspond to it:
+
+``` r
+
+res_pc <- rddid(dat, y = "Y", x = "R", time = "t", id = "id", t_rd = 3,
+                comparisons = c(1, 2), weights = "constant", bwselect = "cct", scheme = "pc")
+res_pc$estimates["Conventional", c("est", "se", "ci_l", "ci_u")]
+#>                  est         se      ci_l     ci_u
+#> Conventional 1.07877 0.08880653 0.9047129 1.252828
+```
+
 ## Linear confounding trend
 
 ``` r
