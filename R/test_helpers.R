@@ -1,4 +1,4 @@
-# Internal helpers shared by rd_typecont() (ass:type-cont) and rd_compstable() (ass:comp-stable).
+# Internal helpers shared by rd_typecont() and rd_compstable().
 # All functions are prefixed `.` and are not exported.
 #
 # Design contract:
@@ -6,51 +6,6 @@
 #   .joint_wald(thetas, Sigma)               → list(stat, df, p)
 #   .wald_eigen(Delta, Sigma)               → list(stat, df, p)
 #   .cell_bandwidth(y, x, c, kernel, ...)   → c(h, b)
-#   .q_rot(z, type, c)                       → integer q (Canay-Kamat rule of thumb)
-#   .mccrary(x, h)                           → scalar p-value
-
-# ---------------------------------------------------------------------------
-# .q_rot
-# ---------------------------------------------------------------------------
-#' Canay-Kamat (2018) rule-of-thumb number of nearest observations per side
-#'
-#' The approximate permutation test uses the `q` observations nearest the cutoff
-#' on each side and is valid with `q` FIXED as `n` grows.  With a fixed `q` it
-#' over-rejects in finite samples when the covariate's conditional distribution
-#' varies steeply in the running variable at the cutoff (Canay & Kamat 2018,
-#' Model 7).  Their feasible rule of thumb (eq. 15 and Appendix D.1) adapts `q`:
-#' \deqn{q = \lceil \hat f(0)\, \hat\sigma_z \sqrt{1-\hat\rho^2}\; n^{0.9}/\log n
-#'        \rceil,} bounded to \eqn{[10,\, n^{0.9}/\log n]}.  \eqn{\hat f(0)} is a
-#' Gaussian-kernel density of the running variable at the cutoff and
-#' \eqn{\hat\rho} measures the running-variable / covariate association — a
-#' steeper relationship (large \eqn{\rho}) shrinks `q`.  Here the covariate is
-#' the categorical type, so we use the correlation ratio
-#' \eqn{\eta=\sqrt{SS_{\text{between}}/SS_{\text{total}}}} of the running
-#' variable grouped by type (the generalisation of \eqn{|\rho|} to a categorical
-#' covariate; it equals \eqn{|\rho|} when the type is binary).
-#'
-#' @param z numeric running variable.
-#' @param type covariate (the per-unit type label) the same length as `z`.
-#' @param c cutoff.
-#' @return integer `q`.
-#' @keywords internal
-#' @noRd
-.q_rot <- function(z, type, c = 0) {
-  n  <- length(z)
-  ub <- n^0.9 / log(n)
-  sd_z <- stats::sd(z)
-  if (n < 20L || !is.finite(sd_z) || sd_z == 0) return(max(10L, 1L))
-  dens <- stats::density(z)
-  f0   <- stats::approx(dens$x, dens$y, xout = c, rule = 2)$y
-  # correlation ratio eta of z by type (categorical generalisation of |rho|)
-  grand  <- mean(z)
-  ss_tot <- sum((z - grand)^2)
-  ss_bet <- sum(vapply(split(z, type), function(g)
-    length(g) * (mean(g) - grand)^2, numeric(1)))
-  rho2 <- if (ss_tot > 0) min(1, ss_bet / ss_tot) else 0
-  qhat <- f0 * sd_z * sqrt(max(0, 1 - rho2)) * ub
-  as.integer(max(10, min(ceiling(qhat), floor(ub))))
-}
 
 # ---------------------------------------------------------------------------
 # .build_types
@@ -64,7 +19,7 @@
 #' dropped from each period's type frame (their sign pattern is undefined).
 #'
 #' This is the single canonical implementation, shared by [rd_typecont()]
-#' (ass:type-cont) and [rd_homog()] (ass:homog).
+#' and [rd_homog()].
 #'
 #' @param data long data frame with one row per unit × period.
 #' @param x,time,id column name strings for running variable, period, period id.
@@ -158,24 +113,6 @@
 # ---------------------------------------------------------------------------
 # .mccrary
 #
-# Note: there is no shared single-cell Canay-Kamat helper.  rd_typecont() and
-# rd_compstable() each run a *joint* Canay-Kamat permutation that draws one
-# shared per-period unit-level shuffle across all type columns, so the test is
-# inlined in those functions rather than factored out here.
-# ---------------------------------------------------------------------------
-#' McCrary (2008) density-discontinuity test
-#'
-#' Bins the running variable into a histogram (bin width = 2*sd(x)*n^(-1/2)),
-#' fits a local-linear density estimator on each side of the cutoff (triangular
-#' kernel, bandwidth h), and tests log f_(+)/f_(-) = 0.  Sandwich standard
-#' error uses the Poisson bin-count variance approximation from McCrary (2008).
-#'
-#' @param x numeric running variable, centred at cutoff 0.
-#' @param h bandwidth for the local-linear density fit.
-#' @return scalar p-value (NA if fewer than 30 observations or numerical
-#'   failure).
-#' @keywords internal
-#' @noRd
 # ---------------------------------------------------------------------------
 # .cell_bandwidth
 # ---------------------------------------------------------------------------
@@ -255,44 +192,4 @@
   W  <- as.numeric(t(Delta) %*% Sigma_inv %*% Delta)
   pv <- stats::pchisq(W, df = df, lower.tail = FALSE)
   list(stat = W, df = df, p = pv)
-}
-
-
-.mccrary <- function(x, h) {
-  n <- length(x)
-  if (n < 30L) return(NA_real_)
-  binw <- 2 * stats::sd(x) * n^(-1 / 2)
-  lo   <- floor(min(x) / binw) * binw
-  hi   <- ceiling(max(x) / binw) * binw
-  brks <- seq(lo, hi, by = binw)
-  mids <- brks[-length(brks)] + binw / 2
-  cnt  <- tabulate(findInterval(x, brks, rightmost.closed = TRUE),
-                   nbins = length(mids))
-  Y    <- cnt / (n * binw)
-
-  fit_side <- function(keep) {
-    g <- mids[keep]; y <- Y[keep]
-    w <- pmax(0, 1 - abs(g) / h)
-    use <- w > 0
-    g <- g[use]; y <- y[use]; w <- w[use]
-    if (length(g) < 3L) return(NULL)
-    Z    <- cbind(1, g)
-    Zw   <- Z * w
-    XtWX <- crossprod(Z, Zw)
-    XtWXi <- tryCatch(solve(XtWX), error = function(e) NULL)
-    if (is.null(XtWXi)) return(NULL)
-    beta <- XtWXi %*% crossprod(Zw, y)
-    vj   <- pmax(y, 1e-8) / (n * binw)        # Poisson bin variance
-    Vb   <- XtWXi %*% crossprod(Zw, vj * Zw) %*% XtWXi
-    c(f0 = beta[1L], var = Vb[1L, 1L])
-  }
-
-  Rr <- fit_side(mids > 0)
-  Ll <- fit_side(mids < 0)
-  if (is.null(Rr) || is.null(Ll)) return(NA_real_)
-  if (Rr["f0"] <= 0 || Ll["f0"] <= 0)  return(NA_real_)
-
-  theta <- log(Rr["f0"]) - log(Ll["f0"])
-  se    <- sqrt(Rr["var"] / Rr["f0"]^2 + Ll["var"] / Ll["f0"]^2)
-  unname(2 * stats::pnorm(-abs(theta / se)))
 }

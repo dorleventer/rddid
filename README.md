@@ -17,6 +17,16 @@ Implements the framework of Leventer and Nevo.
 
 Paper: <https://arxiv.org/abs/2408.05847>
 
+The data are long, one row per unit-period, with an outcome, a running
+variable, a period and (for a panel) a unit id. Periods are of two
+kinds: in the RD period the treatment of interest switches at the
+cutoff; in a comparison period it does not, while the confounding policy
+switches in every period. `rddid()` nets the comparison-period
+discontinuities out of the RD-period one. When the running variable
+varies over time within a unit, four validation tests (`rd_typecont()`,
+`rd_compstable()`, `rd_homog()`, `rd_trendcell()`) check the identifying
+assumptions of Section 4 of the paper.
+
 ## Installation
 
 ``` r
@@ -26,10 +36,9 @@ devtools::install_github("dorleventer/rddid")
 
 ## Quick start
 
-The data are long, one row per unit-period, with an outcome, a running
-variable, a period and a unit id. Below, periods 1 and 2 are comparison
-periods (the confounding discontinuity is 1 in both) and period 3 is the
-RD period, where the treatment of interest adds 1 at the cutoff.
+Below, periods 1 and 2 are comparison periods (the confounding
+discontinuity is 1 in both) and period 3 is the RD period, where the
+treatment of interest adds 1 at the cutoff.
 
 ``` r
 library(rddid)
@@ -50,16 +59,17 @@ rddid(dat, y = "Y", x = "R", time = "t", id = "id",
 #> RD-DID estimate of ATT(t_RD)
 #>   RD period: 3   comparison periods: 1, 2
 #>   weights: constant [0.5, 0.5]
-#>   bandwidth: period-specific joint AMSE (coord. descent, 5 iters)
-#>   sampling scheme: PC (auto-detected)
+#>   bwselect: iter  (5 iterations)
+#>   scheme: pc (auto-detected)
 #> 
 #>                    Estimate   Std.Err.   95% CI
 #>   Conventional      1.09413    0.09746   [  0.90312,   1.28514]
 #>   Robust            1.12176    0.11715   [  0.89215,   1.35138]
 #> 
-#>   SEs by scheme (Robust): CS=0.18902  PC=0.11715  PV=0.11715
+#>   Robust SE by scheme: cs=0.18902  pc=0.11715  pv=0.11715
 ```
 
-The vignettes walk through the estimator, its bandwidth rules and
-sampling schemes, and the composition validation tests:
-<https://dorleventer.github.io/rddid/>.
+Three vignettes: the estimator (Get started), its bandwidth rules and
+sampling schemes, and, for a time-varying running variable, the
+composition validation tests:
+<https://dorleventer.github.io/rddid/articles/index.html>.

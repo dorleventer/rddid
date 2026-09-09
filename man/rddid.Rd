@@ -28,7 +28,8 @@ rddid(
 )
 }
 \arguments{
-\item{data}{a long data frame, one row per unit-period.}
+\item{data}{a long data frame, one row per unit-period (repeated
+cross-section or panel; a panel need not be balanced).}
 
 \item{y, x, time}{column names (strings) for the outcome, running variable, and
 period.}
@@ -38,8 +39,10 @@ distinct unit (repeated cross-section).}
 
 \item{t_rd}{the value of \code{time} identifying the RD (treated-at-cutoff) period.}
 
-\item{comparisons}{values of \code{time} to use as comparison periods; \code{NULL}
-(default) uses every other period present.}
+\item{comparisons}{values of \code{time} to use as comparison periods: periods
+in which the treatment of interest does not switch at the cutoff. \code{NULL}
+(default) uses every other period present, so with more than one RD
+period pass \code{comparisons} explicitly.}
 
 \item{weights}{\code{"constant"} (equal weights; constant confounding trend),
 \code{"linear"} (line through the comparison discontinuities extrapolated to
@@ -47,23 +50,26 @@ distinct unit (repeated cross-section).}
 
 \item{bwselect}{\code{"iter"} (default; period-specific bandwidths chosen jointly
 by coordinate descent on the aggregate AMSE, started at the common
-joint-optimal bandwidth — the rule the paper's Section 5.3 states as
-preferred), \code{"joint"} (a single common AMSE-optimal bandwidth for the
-aggregate estimator), or \code{"cct"} (per-period MSE-optimal bandwidths via
-\code{rdrobust}). Ignored if \code{h} is supplied.}
+joint-optimal bandwidth), \code{"joint"} (a single common AMSE-optimal
+bandwidth for the aggregate estimator), or \code{"cct"} (per-period CCT
+MSE-optimal bandwidths, \code{\link[=rd_bw_cct]{rd_bw_cct()}}). Ignored if \code{h} is supplied.}
 
 \item{h, b}{optional common point / pilot bandwidths; if \code{h} is given it is
 used for every period (with \code{b} defaulting to \code{h}).}
 
-\item{start}{seed for the iterative (\code{bwselect = "iter"}) coordinate descent.
-\code{"hstar"} (default) starts all periods at the common joint-optimal h*;
-\code{"cct"} starts each period at its own CCT/IK pilot h; or supply a named
+\item{start}{starting point of the iterative (\code{bwselect = "iter"}) coordinate
+descent. \code{"hstar"} (default) starts all periods at the common joint-optimal
+h*; \code{"cct"} starts each period at its own CCT h; or supply a named
 numeric vector/list with one entry per period. Ignored unless
 \code{bwselect = "iter"}.}
 
-\item{scheme}{\code{"auto"} (detect from the id/side structure) or one of \code{"cs"},
-\code{"pc"}, \code{"pv"}; selects which sampling-scheme variance is reported as the
-headline standard error. All three are always returned.}
+\item{scheme}{sampling scheme: \code{"cs"} (repeated cross-section), \code{"pc"}
+(panel, time-constant running variable), \code{"pv"} (panel, time-varying
+running variable), or \code{"auto"} (default), which reads it off the data: no
+\code{id} gives \code{"cs"}; units observed in more than one period, each on the
+same side of the cutoff in every period, give \code{"pc"}; any unit on
+different sides in different periods gives \code{"pv"}. The scheme selects
+which standard error and CI are printed; all three are always returned.}
 
 \item{regularize}{logical; if \code{TRUE} (default) the joint AMSE-optimal
 bandwidth adds an \code{rdrobust}-style regularization term to the squared bias
@@ -82,10 +88,21 @@ matching the CCT convention).}
 \item{level}{confidence level (default 0.95).}
 }
 \value{
-An object of class \code{"rddid"} with the conventional and robust
-bias-corrected estimates, standard errors under all three sampling schemes,
-confidence intervals at the recommended scheme, the per-period fits, the
-weights, and the bandwidth(s) used.
+An object of class \code{"rddid"}, a list with:
+\describe{
+\item{\code{estimates}}{matrix with rows \code{Conventional} and \code{Robust} (the
+bias-corrected estimate with its robust variance) and columns \code{est},
+\code{se}, \code{ci_l}, \code{ci_u} (at \code{scheme}), and \code{se_cs}, \code{se_pc}, \code{se_pv}.}
+\item{\code{scheme}}{the sampling scheme used; \code{scheme_requested} is the
+argument as passed.}
+\item{\code{weights}, \code{weights_type}}{the comparison-period weights and
+their kind.}
+\item{\code{bandwidth}}{list with \code{method} (the \code{bwselect} value, or
+\code{"fixed"}), \code{h}, \code{b}, and \code{niter} for \code{"iter"}.}
+\item{\code{fits}}{named list of \code{\link[=rd_period]{rd_period()}} objects by period, the RD
+period first (index by name).}
+\item{\code{t_rd}, \code{comparisons}, \code{level}, \code{call}}{as passed.}
+}
 }
 \description{
 Estimates a treatment effect in a regression-discontinuity
@@ -94,6 +111,6 @@ discontinuity is contaminated by a confounding policy that switches at the
 same cutoff; comparison periods, where the confounding is present but the
 treatment of interest is uniform at the cutoff, identify and net out that
 confounding. The estimator is
-\eqn{\widehat{\att} = \widehat D_{t_{\mathrm{RD}}} - \sum_t w_t \widehat D_t},
+\eqn{\widehat{\mathrm{ATT}} = \widehat D_{t_{\mathrm{RD}}} - \sum_t w_t \widehat D_t},
 with each \eqn{\widehat D_t} a standard local-linear RD.
 }

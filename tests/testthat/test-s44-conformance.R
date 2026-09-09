@@ -25,8 +25,6 @@
 #      scheme is passed explicitly wherever it can change a number.
 #
 # Bandwidths are fixed (`h = s44_h`, hence b = h) so nothing is data-driven.
-# The permutation components of rd_typecont / rd_compstable are irrelevant here
-# and are run with S = 19L behind a set.seed(); their output is ignored.
 # ---------------------------------------------------------------------------
 
 s44_tol <- 1e-10   # relative, expect_equal semantics
@@ -65,13 +63,13 @@ s44_one_sided <- function(y, x, h, c = 0, above = TRUE) {
 s44_pkg_typecont <- function(d, seed = 1L, ...) {
   set.seed(seed)
   rd_typecont(d, x = "x", time = "time", id = "id", c = 0, h = s44_h,
-              q = 25L, S = 19L, kernel = "triangular", ...)
+              kernel = "triangular", ...)
 }
 
 s44_pkg_compstable <- function(d, seed = 1L, ...) {
   set.seed(seed)
   rd_compstable(d, x = "x", time = "time", id = "id", t_rd = "trd",
-                comparisons = "t0", c = 0, h = s44_h, q = 25L, S = 19L,
+                comparisons = "t0", c = 0, h = s44_h,
                 kernel = "triangular", ...)
 }
 

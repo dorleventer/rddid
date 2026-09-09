@@ -2,7 +2,7 @@
 % Please edit documentation in R/test_compstable.R
 \name{rd_compstable}
 \alias{rd_compstable}
-\title{Test composition stability across periods (assumption \code{ass:comp-stable})}
+\title{Test composition stability across periods}
 \usage{
 rd_compstable(
   data,
@@ -14,8 +14,6 @@ rd_compstable(
   c = 0,
   h = NULL,
   bwselect = c("cct", "rot"),
-  q = NULL,
-  S = 499L,
   kernel = "triangular",
   scheme = c("auto", "cs", "pc", "pv"),
   bc = TRUE,
@@ -23,8 +21,10 @@ rd_compstable(
 )
 }
 \arguments{
-\item{data}{A long data frame, one row per unit-period (balanced or
-unbalanced panel).}
+\item{data}{a long data frame, one row per unit-period. A unit's type in
+period \eqn{t} is read from its running variable in the other period(s);
+units unobserved there are dropped from period \eqn{t}, so the panel need
+not be balanced.}
 
 \item{x}{Column name (string) for the running variable.}
 
@@ -49,16 +49,6 @@ type indicator RD in the reflected space; \code{"rot"} uses \eqn{0.5 \times
   \mathrm{IQR}(x)} as a rule-of-thumb applied to the full sample.  Ignored
 when \code{h} is supplied explicitly.}
 
-\item{q}{Number of observations nearest the artificial cutoff on each side
-for the Canay-Kamat permutation test. \code{NULL} (default) selects \code{q} per
-\eqn{(t_{\mathrm{RD}}, t_0)} pair by the Canay & Kamat (2018) rule of thumb
-(see \code{\link[=rd_typecont]{rd_typecont()}}); this is the recommended choice, since a fixed \code{q}
-over-rejects in finite samples when the type distribution varies steeply in
-the running variable at the cutoff. Supply an integer to force a fixed \code{q}
-on every pair. The per-pair \code{q} actually used is returned in \code{meta$q_used}.}
-
-\item{S}{Number of permutation replications (default 499).}
-
 \item{kernel}{Kernel for the local-linear RD: \code{"triangular"} (default),
 \code{"epanechnikov"}, or \code{"uniform"}.}
 
@@ -76,8 +66,7 @@ same-side minus opposite-side cross-period covariance.}
 \item{bc}{Use robust bias-corrected jumps and variances in the LL-Wald
 (Calonico, Cattaneo and Titiunik 2014). \code{TRUE} (default) aligns the test
 with the bias-corrected \code{\link[=rddid]{rddid()}} estimator; \code{FALSE} uses the conventional
-local-linear jumps and variances. Does not affect the Canay-Kamat
-permutation test.}
+local-linear jumps and variances.}
 
 \item{...}{Currently unused.}
 }
@@ -88,44 +77,37 @@ An object of class \code{"rd_compstable"}, a named list with:
 pair (named \code{"trd::t0"}), each containing:
 \describe{
 \item{\code{ll_wald}}{list with \code{stat}, \code{df}, \code{p}.}
-\item{\code{ck_perm}}{list with \code{stat} (observed sum of |mean diffs|)
-and \code{p}.}
 \item{\code{type_values}}{Character vector of \eqn{(\mathbf{u},b)} type
 labels present in this pair.}
 \item{\code{scheme}}{Scheme actually used.}
-\item{\code{q}}{Number of nearest observations per side actually used.}
 \item{\code{n_trd}}{Number of above-cutoff units from \eqn{t_RD}.}
 \item{\code{n_t0}}{Number of above-cutoff units from \eqn{t_0}.}
 \item{\code{n_both}}{Number of units above the cutoff in both periods.}
 }
 }
-\item{\code{joint}}{Joint result over all pairs (stacked Wald + minimum-p
-permutation envelope):
+\item{\code{joint}}{Joint result over all pairs (stacked Wald):
 \describe{
 \item{\code{ll_wald}}{list with \code{stat}, \code{df}, \code{p} (sum of the per-pair
 statistics and df, which assumes independent pairs; the pairs
 share the RD-period above-cutoff group, so treat the joint as
 approximate — the paper's test is per pair).}
-\item{\code{ck_perm}}{list with \code{stat} (sum of per-pair stats) and \code{p}.}
 }
 }
 \item{\code{meta}}{list with \code{t_rd}, \code{comparisons}, \code{h} (NA when
-\code{bwselect = "cct"}), \code{bwselect}, \code{q} (\code{"rot"} when the rule of
-thumb is used, otherwise the integer supplied), \code{q_used} (per-pair
-\code{q} actually used), \code{S}, \code{c}, \code{bc}.}
+\code{bwselect = "cct"}), \code{bwselect}, \code{c}, \code{bc}.}
 }
 }
 \description{
-Tests the composition-stability assumption (\code{ass:comp-stable}, Section 4.4
-of Leventer and Nevo):
-\deqn{\pi_{t_{\mathrm{RD}},(+)}(\mathbf{u}, b) =
-       \pi_{t_0,(+)}(\mathbf{u}, b)
-       \quad \forall\,(\mathbf{u}, b),}
-where \eqn{\mathbf{u} = \mathbf{v}_{-\{t_0, t_{\mathrm{RD}}\}}} are the
-sides of the OTHER periods (shared between the two confounding objects) and
-\eqn{b \in \{0,1\}} is the "partner" side.  This is a cross-period
-covariate-continuity statement: the above-cutoff \eqn{(\mathbf{u},b)} type
-mix must be the same at the RD period and at each comparison period.
+Wald test of the composition-stability assumption (Section 4.4 of Leventer
+and Nevo): for each RD-period / comparison-period pair
+\eqn{(t_{\mathrm{RD}}, t_0)}, the share of each type among the units just
+above the cutoff is the same in the two periods,
+\eqn{\pi_{t_{\mathrm{RD}},(+)}(v) = \pi_{t_0,(+)}(v)}. With two periods
+the type is binary (the unit's side in the other period) and this is the
+single share-jump test of the paper's Section 4.4; with more periods the
+type \eqn{(\mathbf{u}, b)} collects the unit's sides in the other
+comparison periods, \eqn{\mathbf{u}}, and its side \eqn{b} in the partner
+period of the pair.
 }
 \details{
 \subsection{Reflection construction}{
@@ -139,25 +121,10 @@ Stack the two groups into one artificial cross-section.  At the artificial
 cutoff the left/right limits of the \eqn{(\mathbf{u},b)} type share are
 then \eqn{\pi_{t_0,(+)}(\mathbf{u},b)} and
 \eqn{\pi_{t_{\mathrm{RD}},(+)}(\mathbf{u},b)}, so a jump at 0 equals the
-composition difference.  The same two tests from the type-continuity
-assessment (\code{ass:type-cont}, \code{\link[=rd_typecont]{rd_typecont()}}) then apply:
-
-\enumerate{
-\item \strong{LL-Wald} (necessary AND sufficient): local-linear RD of each
-\eqn{(\mathbf{u},b)} indicator on the reflected running variable; joint
-Wald that all jumps are zero, dropping one reference type (the type
-shares sum to 1, so the full set of jumps is rank-deficient). With
-binary types this is the single share-jump test of the paper's
-Section 4.4. This is the paper's test.
-\item \strong{Canay-Kamat permutation} (necessary AND sufficient): approximate
-sign randomisation test comparing the two sides of the artificial
-cutoff, permuted at the \strong{unit} level (see "Unit-level wrinkle" below).
-}
-
-Both tests are \strong{necessary AND sufficient} for \code{ass:comp-stable}. Section 4.4
-of the paper states the LL-Wald; the permutation test is reported in the
-paper's Section 6 validation table (Canay and Kamat 2018, rule-of-thumb \code{q}).
-See \code{dev/tests_map.md}.
+composition difference.  A local-linear RD of each \eqn{(\mathbf{u},b)}
+indicator on the reflected running variable, with a joint Wald that all
+jumps are zero (dropping one reference type, since the type shares sum to
+1 and the full set of jumps is rank-deficient), is then this test.
 }
 
 \subsection{Unit-level wrinkle}{
@@ -165,26 +132,13 @@ See \code{dev/tests_map.md}.
 A unit that is above the cutoff in BOTH periods \eqn{t_{\mathrm{RD}}} and
 \eqn{t_0} appears on BOTH sides of the artificial cutoff (as a
 \eqn{t_{\mathrm{RD}}}-above observation above the artificial 0 and a
-\eqn{t_0}-above observation below it).  This has two consequences handled
-by the function:
-
-(i) \strong{Wald test}: the covariance matrix between the left-side and
-right-side intercept estimates must include the id-matched cross-side
-covariance term (the two g-vectors can share unit ids).  The function
-computes \eqn{(\text{cov}_{++} + \text{cov}_{--} - \text{cov}_{+-} -
-  \text{cov}_{-+})} — the same formula as the PV scheme in the main
-estimator — rather than assuming the two sides are independent.
-
-(ii) \strong{Permutation test}: permutes at the unit level.  Each unit
-contributes its observations (possibly >1) as a block; the side label is
-permuted across units, not across individual rows.  This follows
-Amro and Pauly (2017) and Derrick et al. (2022) (see References).
+\eqn{t_0}-above observation below it).  The covariance matrix between the
+left-side and right-side intercept estimates must therefore include the
+id-matched cross-side covariance term (the two g-vectors can share unit
+ids).  The function computes \eqn{(\text{cov}_{++} + \text{cov}_{--} -
+\text{cov}_{+-} - \text{cov}_{-+})} — the same formula as the PV scheme in
+the main estimator — rather than assuming the two sides are independent.
 }
-}
-\note{
-\strong{Necessary and sufficient status:} Both the LL-Wald and the Canay-Kamat
-permutation test are necessary AND sufficient for \code{ass:comp-stable}
-(composition stability).  See Leventer and Nevo for the proof.
 }
 \examples{
 \dontrun{
@@ -198,24 +152,12 @@ dat <- data.frame(
   R    = c(eta + rnorm(n), eta + rnorm(n))
 )
 rd_compstable(dat, x = "R", time = "time", id = "id", t_rd = 2,
-              comparisons = 1, h = 0.5, S = 99)
+              comparisons = 1, h = 0.5)
 }
 }
 \references{
 Leventer, D. and Nevo, D. "Correcting Invalid Regression Discontinuity
 Designs." Working paper.
-
-Amro, L. and Pauly, M. (2017). Permuting longitudinal data in spite of the
-dependencies. \emph{Journal of Statistical Computation and Simulation}, 87(15),
-3033-3044.
-
-Derrick, B., Broad, A., Ruck, A., and White, P. (2022). The impact of
-repeated measures on the permutation test. \emph{Journal of Applied Quantitative
-Methods}, 17(1).
-
-Canay, I. A. and Kamat, V. (2018). Approximate permutation tests and
-induced order statistics in the regression discontinuity design. \emph{Review of
-Economic Studies}, 85(3), 1577-1608.
 }
 \seealso{
 \code{\link[=rd_typecont]{rd_typecont()}}, \code{\link[=rd_period]{rd_period()}}, \code{\link[=rddid]{rddid()}}

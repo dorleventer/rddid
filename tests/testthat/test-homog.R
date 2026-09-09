@@ -143,8 +143,8 @@ test_that("print.rd_homog does not error", {
   dat <- make_panel(n = 600, jump_pos = 0.5, jump_neg = 0.5)
   res <- rd_homog(dat, y = "y", x = "x", time = "time", id = "id",
                   comparisons = 2L, t_rd = 1L, h = 0.4)
-  expect_output(print(res), "Homogeneous confounding test \\(ass:homog\\)")
-  expect_output(print(res), "neither necessary nor sufficient", ignore.case = TRUE)
+  expect_output(print(res), "Homogeneous-confounding test")
+  expect_output(print(res), "Wald statistic")
 })
 
 # ---------------------------------------------------------------------------

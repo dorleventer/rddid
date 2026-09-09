@@ -1,15 +1,15 @@
-#' Test composition stability across periods (assumption `ass:comp-stable`)
+#' Test composition stability across periods
 #'
-#' Tests the composition-stability assumption (`ass:comp-stable`, Section 4.4
-#' of Leventer and Nevo):
-#' \deqn{\pi_{t_{\mathrm{RD}},(+)}(\mathbf{u}, b) =
-#'        \pi_{t_0,(+)}(\mathbf{u}, b)
-#'        \quad \forall\,(\mathbf{u}, b),}
-#' where \eqn{\mathbf{u} = \mathbf{v}_{-\{t_0, t_{\mathrm{RD}}\}}} are the
-#' sides of the OTHER periods (shared between the two confounding objects) and
-#' \eqn{b \in \{0,1\}} is the "partner" side.  This is a cross-period
-#' covariate-continuity statement: the above-cutoff \eqn{(\mathbf{u},b)} type
-#' mix must be the same at the RD period and at each comparison period.
+#' Wald test of the composition-stability assumption (Section 4.4 of Leventer
+#' and Nevo): for each RD-period / comparison-period pair
+#' \eqn{(t_{\mathrm{RD}}, t_0)}, the share of each type among the units just
+#' above the cutoff is the same in the two periods,
+#' \eqn{\pi_{t_{\mathrm{RD}},(+)}(v) = \pi_{t_0,(+)}(v)}. With two periods
+#' the type is binary (the unit's side in the other period) and this is the
+#' single share-jump test of the paper's Section 4.4; with more periods the
+#' type \eqn{(\mathbf{u}, b)} collects the unit's sides in the other
+#' comparison periods, \eqn{\mathbf{u}}, and its side \eqn{b} in the partner
+#' period of the pair.
 #'
 #' ## Reflection construction
 #'
@@ -22,48 +22,27 @@
 #' cutoff the left/right limits of the \eqn{(\mathbf{u},b)} type share are
 #' then \eqn{\pi_{t_0,(+)}(\mathbf{u},b)} and
 #' \eqn{\pi_{t_{\mathrm{RD}},(+)}(\mathbf{u},b)}, so a jump at 0 equals the
-#' composition difference.  The same two tests from the type-continuity
-#' assessment (`ass:type-cont`, [rd_typecont()]) then apply:
-#'
-#' \enumerate{
-#'   \item **LL-Wald** (necessary AND sufficient): local-linear RD of each
-#'     \eqn{(\mathbf{u},b)} indicator on the reflected running variable; joint
-#'     Wald that all jumps are zero, dropping one reference type (the type
-#'     shares sum to 1, so the full set of jumps is rank-deficient). With
-#'     binary types this is the single share-jump test of the paper's
-#'     Section 4.4. This is the paper's test.
-#'   \item **Canay-Kamat permutation** (necessary AND sufficient): approximate
-#'     sign randomisation test comparing the two sides of the artificial
-#'     cutoff, permuted at the **unit** level (see "Unit-level wrinkle" below).
-#' }
-#'
-#' Both tests are **necessary AND sufficient** for `ass:comp-stable`. Section 4.4
-#' of the paper states the LL-Wald; the permutation test is reported in the
-#' paper's Section 6 validation table (Canay and Kamat 2018, rule-of-thumb `q`).
-#' See `dev/tests_map.md`.
+#' composition difference.  A local-linear RD of each \eqn{(\mathbf{u},b)}
+#' indicator on the reflected running variable, with a joint Wald that all
+#' jumps are zero (dropping one reference type, since the type shares sum to
+#' 1 and the full set of jumps is rank-deficient), is then this test.
 #'
 #' ## Unit-level wrinkle
 #'
 #' A unit that is above the cutoff in BOTH periods \eqn{t_{\mathrm{RD}}} and
 #' \eqn{t_0} appears on BOTH sides of the artificial cutoff (as a
 #' \eqn{t_{\mathrm{RD}}}-above observation above the artificial 0 and a
-#' \eqn{t_0}-above observation below it).  This has two consequences handled
-#' by the function:
+#' \eqn{t_0}-above observation below it).  The covariance matrix between the
+#' left-side and right-side intercept estimates must therefore include the
+#' id-matched cross-side covariance term (the two g-vectors can share unit
+#' ids).  The function computes \eqn{(\text{cov}_{++} + \text{cov}_{--} -
+#' \text{cov}_{+-} - \text{cov}_{-+})} — the same formula as the PV scheme in
+#' the main estimator — rather than assuming the two sides are independent.
 #'
-#' (i) **Wald test**: the covariance matrix between the left-side and
-#'   right-side intercept estimates must include the id-matched cross-side
-#'   covariance term (the two g-vectors can share unit ids).  The function
-#'   computes \eqn{(\text{cov}_{++} + \text{cov}_{--} - \text{cov}_{+-} -
-#'   \text{cov}_{-+})} — the same formula as the PV scheme in the main
-#'   estimator — rather than assuming the two sides are independent.
-#'
-#' (ii) **Permutation test**: permutes at the unit level.  Each unit
-#'   contributes its observations (possibly >1) as a block; the side label is
-#'   permuted across units, not across individual rows.  This follows
-#'   Amro and Pauly (2017) and Derrick et al. (2022) (see References).
-#'
-#' @param data A long data frame, one row per unit-period (balanced or
-#'   unbalanced panel).
+#' @param data a long data frame, one row per unit-period. A unit's type in
+#'   period \eqn{t} is read from its running variable in the other period(s);
+#'   units unobserved there are dropped from period \eqn{t}, so the panel need
+#'   not be balanced.
 #' @param x Column name (string) for the running variable.
 #' @param time Column name (string) for the period indicator.
 #' @param id Column name (string) for the unit identifier.
@@ -79,14 +58,6 @@
 #'   type indicator RD in the reflected space; `"rot"` uses \eqn{0.5 \times
 #'   \mathrm{IQR}(x)} as a rule-of-thumb applied to the full sample.  Ignored
 #'   when `h` is supplied explicitly.
-#' @param q Number of observations nearest the artificial cutoff on each side
-#'   for the Canay-Kamat permutation test. `NULL` (default) selects `q` per
-#'   \eqn{(t_{\mathrm{RD}}, t_0)} pair by the Canay & Kamat (2018) rule of thumb
-#'   (see [rd_typecont()]); this is the recommended choice, since a fixed `q`
-#'   over-rejects in finite samples when the type distribution varies steeply in
-#'   the running variable at the cutoff. Supply an integer to force a fixed `q`
-#'   on every pair. The per-pair `q` actually used is returned in `meta$q_used`.
-#' @param S Number of permutation replications (default 499).
 #' @param kernel Kernel for the local-linear RD: `"triangular"` (default),
 #'   `"epanechnikov"`, or `"uniform"`.
 #' @param scheme Covariance scheme for the Wald test:
@@ -102,8 +73,7 @@
 #' @param bc Use robust bias-corrected jumps and variances in the LL-Wald
 #'   (Calonico, Cattaneo and Titiunik 2014). `TRUE` (default) aligns the test
 #'   with the bias-corrected [rddid()] estimator; `FALSE` uses the conventional
-#'   local-linear jumps and variances. Does not affect the Canay-Kamat
-#'   permutation test.
+#'   local-linear jumps and variances.
 #' @param ... Currently unused.
 #'
 #' @return An object of class `"rd_compstable"`, a named list with:
@@ -112,53 +82,29 @@
 #'       pair (named `"trd::t0"`), each containing:
 #'       \describe{
 #'         \item{`ll_wald`}{list with `stat`, `df`, `p`.}
-#'         \item{`ck_perm`}{list with `stat` (observed sum of |mean diffs|)
-#'           and `p`.}
 #'         \item{`type_values`}{Character vector of \eqn{(\mathbf{u},b)} type
 #'           labels present in this pair.}
 #'         \item{`scheme`}{Scheme actually used.}
-#'         \item{`q`}{Number of nearest observations per side actually used.}
 #'         \item{`n_trd`}{Number of above-cutoff units from \eqn{t_RD}.}
 #'         \item{`n_t0`}{Number of above-cutoff units from \eqn{t_0}.}
 #'         \item{`n_both`}{Number of units above the cutoff in both periods.}
 #'       }
 #'     }
-#'     \item{`joint`}{Joint result over all pairs (stacked Wald + minimum-p
-#'       permutation envelope):
+#'     \item{`joint`}{Joint result over all pairs (stacked Wald):
 #'       \describe{
 #'         \item{`ll_wald`}{list with `stat`, `df`, `p` (sum of the per-pair
 #'           statistics and df, which assumes independent pairs; the pairs
 #'           share the RD-period above-cutoff group, so treat the joint as
 #'           approximate — the paper's test is per pair).}
-#'         \item{`ck_perm`}{list with `stat` (sum of per-pair stats) and `p`.}
 #'       }
 #'     }
 #'     \item{`meta`}{list with `t_rd`, `comparisons`, `h` (NA when
-#'       `bwselect = "cct"`), `bwselect`, `q` (`"rot"` when the rule of
-#'       thumb is used, otherwise the integer supplied), `q_used` (per-pair
-#'       `q` actually used), `S`, `c`, `bc`.}
+#'       `bwselect = "cct"`), `bwselect`, `c`, `bc`.}
 #'   }
-#'
-#' @note
-#' **Necessary and sufficient status:** Both the LL-Wald and the Canay-Kamat
-#' permutation test are necessary AND sufficient for `ass:comp-stable`
-#' (composition stability).  See Leventer and Nevo for the proof.
 #'
 #' @references
 #' Leventer, D. and Nevo, D. "Correcting Invalid Regression Discontinuity
 #' Designs." Working paper.
-#'
-#' Amro, L. and Pauly, M. (2017). Permuting longitudinal data in spite of the
-#' dependencies. *Journal of Statistical Computation and Simulation*, 87(15),
-#' 3033-3044.
-#'
-#' Derrick, B., Broad, A., Ruck, A., and White, P. (2022). The impact of
-#' repeated measures on the permutation test. *Journal of Applied Quantitative
-#' Methods*, 17(1).
-#'
-#' Canay, I. A. and Kamat, V. (2018). Approximate permutation tests and
-#' induced order statistics in the regression discontinuity design. *Review of
-#' Economic Studies*, 85(3), 1577-1608.
 #'
 #' @seealso [rd_typecont()], [rd_period()], [rddid()]
 #'
@@ -174,7 +120,7 @@
 #'   R    = c(eta + rnorm(n), eta + rnorm(n))
 #' )
 #' rd_compstable(dat, x = "R", time = "time", id = "id", t_rd = 2,
-#'               comparisons = 1, h = 0.5, S = 99)
+#'               comparisons = 1, h = 0.5)
 #' }
 #' @export
 rd_compstable <- function(data, x, time, id, t_rd,
@@ -182,8 +128,6 @@ rd_compstable <- function(data, x, time, id, t_rd,
                           c = 0,
                           h = NULL,
                           bwselect = c("cct", "rot"),
-                          q = NULL,
-                          S  = 499L,
                           kernel = "triangular",
                           scheme = c("auto", "cs", "pc", "pv"),
                           bc = TRUE,
@@ -235,7 +179,6 @@ rd_compstable <- function(data, x, time, id, t_rd,
 
   # ---- per-pair analysis -------------------------------------------------------
   pairs_out <- list()
-  q_used    <- list()   # per-pair q actually used (rule of thumb or fixed)
 
   for (t0 in comparisons) {
     pair_key <- paste0(as.character(t_rd), "::", as.character(t0))
@@ -324,7 +267,7 @@ rd_compstable <- function(data, x, time, id, t_rd,
       if (n_both > 0L) "pv" else "cs"
     }
 
-    # ---- (1) LL-Wald -----------------------------------------------------------
+    # ---- LL-Wald -----------------------------------------------------------
     # For each type value v, run rd_period on the type indicator
     # y = 1{type == v}, x = xref, on the reflected data (trd above → "+", t0 above → "-")
     # The "+" side uses (xref_trd, id_trd, type_trd)
@@ -423,135 +366,14 @@ rd_compstable <- function(data, x, time, id, t_rd,
     ll_result <- if (length(ok_idx) == 0L) list(stat = 0, df = 0L, p = 1) else
       .joint_wald(theta[ok_idx], Sigma[ok_idx, ok_idx, drop = FALSE])
 
-    # ---- (2) Canay-Kamat permutation at the unit level -------------------------
-    # Construct the 2q nearest observations at the unit level.
-    # "+" side: t_rd-above units, sorted by x' = R_{i,t_rd} - c (ascending)
-    # "-" side: t_0-above units, sorted by |x'| = R_{i,t_0} - c (ascending)
-
-    # Sort each side by distance from artificial cutoff
-    ord_trd <- order(xref_trd)
-    ord_t0  <- order(-xref_t0)     # most negative (closest to 0) first
-
-    # Number of nearest observations per side: the Canay-Kamat rule of thumb
-    # on the pooled reflected sample (x_all is the signed artificial-cutoff
-    # distance, type_all the partner (u,b) type) when q is NULL, otherwise the
-    # user-supplied fixed q. Same fixed-q over-rejection exposure as rd_typecont.
-    q_pair <- if (is.null(q)) .q_rot(x_all, type_all, 0) else as.integer(q)
-    q_used[[pair_key]] <- q_pair
-
-    q_trd <- min(q_pair, n_trd_obs)
-    q_t0  <- min(q_pair, n_t0_obs)
-
-    sel_trd  <- ord_trd[seq_len(q_trd)]
-    sel_t0   <- ord_t0[seq_len(q_t0)]
-
-    id_near_trd  <- id_trd[sel_trd]
-    id_near_t0   <- id_t0[sel_t0]
-    type_near_trd <- type_trd[sel_trd]
-    type_near_t0  <- type_t0[sel_t0]
-
-    # Build the pooled observation table for the permutation:
-    # Each row is a unit-observation: (id, side [1=trd, 0=t0], type)
-    perm_df <- data.frame(
-      id   = base::c(id_near_trd,  id_near_t0),
-      side = base::c(rep(1L, q_trd), rep(0L, q_t0)),
-      type = base::c(type_near_trd, type_near_t0),
-      stringsAsFactors = FALSE
-    )
-
-    # Unique units present in the permutation set
-    unique_ids <- unique(perm_df$id)
-    n_units    <- length(unique_ids)
-    # The "+" side has q_trd observations; the "-" side has q_t0 observations
-    # For unit-level permutation: permute which units go to which side.
-    # Each unit is assigned entirely to one side OR keeps its actual side
-    # (units appearing twice get both rows permuted together).
-    # We implement: build a unit → side mapping; permute that mapping;
-    # re-assign each row's "side" from its unit's permuted side.
-    # For units that appear on both sides, they get ONE randomly chosen side.
-
-    # Observed statistic: sum over types of |mean(type==v | side==1) - mean(type==v | side==0)|
-    ck_obs <- 0
-    for (v in all_type_vals) {
-      g_trd_near <- as.numeric(type_near_trd == v)
-      g_t0_near  <- as.numeric(type_near_t0  == v)
-      if (length(g_trd_near) == 0L || length(g_t0_near) == 0L) next
-      ck_obs <- ck_obs + abs(mean(g_trd_near) - mean(g_t0_near))
-    }
-
-    # Unit-level (partially-overlapping samples) permutation null distribution.
-    #
-    # The observed statistic compares the type distribution of the t_rd-near
-    # group against the t0-near group. Under H0 (composition stable) the two
-    # one-sided type distributions are equal, so the group labels are
-    # exchangeable. A unit above the cutoff in BOTH periods contributes one
-    # observation to each group (its t_rd-side type and its t0-side type), so the
-    # two samples partially overlap. We use the partially-overlapping-samples
-    # permutation \citep{amro2017permuting,derrick2022review}: units present in
-    # both groups are PAIRED and their two labels swapped with probability 1/2;
-    # units in only one group are freely relabelled while preserving group sizes.
-    # With distinct units per period (cs scheme) there is no overlap and this
-    # reduces to the standard two-sample label permutation.
-    #
-    # Each period contributes one row per unit, so a unit appears at most once
-    # per side in the near set; map id -> its single type on each side.
-    trd_type_of <- stats::setNames(type_near_trd, as.character(id_near_trd))
-    t0_type_of  <- stats::setNames(type_near_t0,  as.character(id_near_t0))
-
-    both_ids     <- intersect(id_near_trd, id_near_t0)
-    only_trd_ids <- setdiff(id_near_trd, both_ids)
-    only_t0_ids  <- setdiff(id_near_t0,  both_ids)
-
-    both_trd_types <- unname(trd_type_of[as.character(both_ids)])   # paired, t_rd side
-    both_t0_types  <- unname(t0_type_of[as.character(both_ids)])    # paired, t0 side
-    free_trd_types <- unname(trd_type_of[as.character(only_trd_ids)])
-    free_t0_types  <- unname(t0_type_of[as.character(only_t0_ids)])
-    free_pool      <- base::c(free_trd_types, free_t0_types)
-    n_free         <- length(free_pool)
-    n_free_trd     <- length(free_trd_types)
-    n_both_near    <- length(both_ids)   # paired units within the near window
-
-    # statistic for a (trd-types, t0-types) split: sum_v |p_trd(v) - p_t0(v)|
-    .ck_stat <- function(tt, t0) {
-      if (length(tt) == 0L || length(t0) == 0L) return(NA_real_)
-      s <- 0
-      for (v in all_type_vals) s <- s + abs(mean(tt == v) - mean(t0 == v))
-      s
-    }
-
-    ck_perm_dist <- replicate(S, {
-      if (n_both_near > 0L) {
-        swap <- stats::runif(n_both_near) < 0.5
-        p_trd_both <- ifelse(swap, both_t0_types, both_trd_types)
-        p_t0_both  <- ifelse(swap, both_trd_types, both_t0_types)
-      } else {
-        p_trd_both <- character(0); p_t0_both <- character(0)
-      }
-      if (n_free > 0L) {
-        idx <- sample.int(n_free, n_free_trd)
-        p_trd_free <- free_pool[idx]
-        p_t0_free  <- free_pool[-idx]
-      } else {
-        p_trd_free <- character(0); p_t0_free <- character(0)
-      }
-      .ck_stat(base::c(p_trd_both, p_trd_free), base::c(p_t0_both, p_t0_free))
-    })
-
-    ck_perm_dist_clean <- ck_perm_dist[!is.na(ck_perm_dist)]
-    ck_p <- if (length(ck_perm_dist_clean) == 0L) NA_real_ else {
-      (1 + sum(ck_perm_dist_clean >= ck_obs)) / (length(ck_perm_dist_clean) + 1)
-    }
-
     pairs_out[[pair_key]] <- list(
       ll_wald    = ll_result,
       # the tested jumps (binary types: the single share jump pi_{tRD,(+)}(1) - pi_{t0,(+)}(1))
       # and their dependence-adjusted standard errors (diagonal of Sigma)
       jumps      = if (length(ok_idx)) stats::setNames(theta[ok_idx], all_type_vals[ok_idx]) else numeric(0),
       jump_se    = if (length(ok_idx)) stats::setNames(sqrt(diag(Sigma)[ok_idx]), all_type_vals[ok_idx]) else numeric(0),
-      ck_perm    = list(stat = ck_obs, p = ck_p),
       type_values = all_type_vals,
       scheme     = use_scheme,
-      q          = q_pair,
       n_trd      = n_trd_obs,
       n_t0       = n_t0_obs,
       n_both     = n_both
@@ -566,50 +388,26 @@ rd_compstable <- function(data, x, time, id, t_rd,
   # For the Wald: sum chi-sq statistics with summed df.
   joint_ll_stat <- 0
   joint_ll_df   <- 0L
-  joint_ck_stat <- 0
-  joint_ck_perms <- NULL
 
   for (pk in names(pairs_out)) {
     pr <- pairs_out[[pk]]
     joint_ll_stat <- joint_ll_stat + pr$ll_wald$stat
     joint_ll_df   <- joint_ll_df   + pr$ll_wald$df
-    joint_ck_stat <- joint_ck_stat + pr$ck_perm$stat
   }
   joint_ll_p <- if (joint_ll_df == 0L) 1 else
     stats::pchisq(joint_ll_stat, df = joint_ll_df, lower.tail = FALSE)
-
-  # Joint permutation p: re-run permutations jointly (independence across pairs
-  # means we can add the stats from each pair's permutation distribution, but
-  # that requires synchronised replication indices). Simpler: report the
-  # Fisher combined p-value if there are multiple pairs; otherwise use the
-  # single pair's p-value.
-  all_ck_ps <- vapply(pairs_out, function(pr) pr$ck_perm$p, numeric(1))
-  joint_ck_p <- if (length(all_ck_ps) == 0L) NA_real_ else if (length(all_ck_ps) == 1L) {
-    all_ck_ps[[1L]]
-  } else {
-    # Fisher's combined test: -2 sum log(p), chi-sq with 2*K df
-    valid_ps <- all_ck_ps[!is.na(all_ck_ps) & all_ck_ps > 0]
-    if (length(valid_ps) == 0L) NA_real_ else {
-      fisher_stat <- -2 * sum(log(valid_ps))
-      stats::pchisq(fisher_stat, df = 2L * length(valid_ps), lower.tail = FALSE)
-    }
-  }
 
   structure(
     list(
       pairs = pairs_out,
       joint = list(
-        ll_wald = list(stat = joint_ll_stat, df = joint_ll_df, p = joint_ll_p),
-        ck_perm = list(stat = joint_ck_stat, p = joint_ck_p)
+        ll_wald = list(stat = joint_ll_stat, df = joint_ll_df, p = joint_ll_p)
       ),
       meta = list(
         t_rd        = t_rd,
         comparisons = comparisons,
         h           = if (!is.null(h)) h else NA_real_,
         bwselect    = bwselect,
-        q           = if (is.null(q)) "rot" else as.integer(q),
-        q_used      = q_used,
-        S           = S,
         c           = c,
         bc          = bc
       )
@@ -621,32 +419,25 @@ rd_compstable <- function(data, x, time, id, t_rd,
 
 #' @export
 print.rd_compstable <- function(x, ...) {
-  cat("Composition-stability test (ass:comp-stable)\n")
+  cat("Composition-stability test\n")
   cat(sprintf("  RD period: %s   Comparison periods: %s\n",
               x$meta$t_rd,
               paste(x$meta$comparisons, collapse = ", ")))
-  q_lbl <- if (identical(x$meta$q, "rot")) "rule-of-thumb" else x$meta$q
   h_str <- if (is.na(x$meta$h)) paste0("per-cell ", toupper(x$meta$bwselect)) else sprintf("%.4g", x$meta$h)
-  cat(sprintf("  h=%s   bwselect=%s   q=%s   S=%d\n\n",
-              h_str, x$meta$bwselect, q_lbl, x$meta$S))
+  cat(sprintf("  h=%s   bwselect=%s\n\n", h_str, x$meta$bwselect))
 
   for (pk in names(x$pairs)) {
     pr <- x$pairs[[pk]]
-    cat(sprintf("Pair %s  [scheme=%s  q=%d  n_trd=%d  n_t0=%d  n_both=%d]\n",
-                pk, toupper(pr$scheme), pr$q, pr$n_trd, pr$n_t0, pr$n_both))
-    cat(sprintf("  (1) LL-Wald [nec & suff]:  chi2(%.0f) = %.4f   p = %.4f\n",
+    cat(sprintf("Pair %s  [scheme=%s  n_trd=%d  n_t0=%d  n_both=%d]\n",
+                pk, pr$scheme, pr$n_trd, pr$n_t0, pr$n_both))
+    cat(sprintf("  LL-Wald:  chi2(%.0f) = %.4f   p = %.4f\n\n",
                 pr$ll_wald$df, pr$ll_wald$stat, pr$ll_wald$p))
-    cat(sprintf("  (2) CK permutation [nec & suff]:  stat = %.4f   p = %.4f\n\n",
-                pr$ck_perm$stat, pr$ck_perm$p))
   }
 
   if (length(x$pairs) > 1L) {
     cat("Joint (across all pairs):\n")
     cat(sprintf("  LL-Wald:  chi2(%.0f) = %.4f   p = %.4f\n",
                 x$joint$ll_wald$df, x$joint$ll_wald$stat, x$joint$ll_wald$p))
-    cat(sprintf("  CK perm (Fisher):  p = %.4f\n", x$joint$ck_perm$p))
   }
-
-  cat("\nNOTE: Both tests are necessary AND sufficient for ass:comp-stable.\n")
   invisible(x)
 }

@@ -56,29 +56,31 @@
 #' same cutoff; comparison periods, where the confounding is present but the
 #' treatment of interest is uniform at the cutoff, identify and net out that
 #' confounding. The estimator is
-#' \eqn{\widehat{\att} = \widehat D_{t_{\mathrm{RD}}} - \sum_t w_t \widehat D_t},
+#' \eqn{\widehat{\mathrm{ATT}} = \widehat D_{t_{\mathrm{RD}}} - \sum_t w_t \widehat D_t},
 #' with each \eqn{\widehat D_t} a standard local-linear RD.
 #'
-#' @param data a long data frame, one row per unit-period.
+#' @param data a long data frame, one row per unit-period (repeated
+#'   cross-section or panel; a panel need not be balanced).
 #' @param y,x,time column names (strings) for the outcome, running variable, and
 #'   period.
 #' @param id column name for the unit id; `NULL` (default) treats every row as a
 #'   distinct unit (repeated cross-section).
 #' @param t_rd the value of `time` identifying the RD (treated-at-cutoff) period.
-#' @param comparisons values of `time` to use as comparison periods; `NULL`
-#'   (default) uses every other period present.
+#' @param comparisons values of `time` to use as comparison periods: periods
+#'   in which the treatment of interest does not switch at the cutoff. `NULL`
+#'   (default) uses every other period present, so with more than one RD
+#'   period pass `comparisons` explicitly.
 #' @param weights `"constant"` (equal weights; constant confounding trend),
 #'   `"linear"` (line through the comparison discontinuities extrapolated to
 #'   `t_rd`), or a numeric vector over `comparisons`.
 #' @param bwselect `"iter"` (default; period-specific bandwidths chosen jointly
 #'   by coordinate descent on the aggregate AMSE, started at the common
-#'   joint-optimal bandwidth — the rule the paper's Section 5.3 states as
-#'   preferred), `"joint"` (a single common AMSE-optimal bandwidth for the
-#'   aggregate estimator), or `"cct"` (per-period MSE-optimal bandwidths via
-#'   `rdrobust`). Ignored if `h` is supplied.
-#' @param start seed for the iterative (`bwselect = "iter"`) coordinate descent.
-#'   `"hstar"` (default) starts all periods at the common joint-optimal h*;
-#'   `"cct"` starts each period at its own CCT/IK pilot h; or supply a named
+#'   joint-optimal bandwidth), `"joint"` (a single common AMSE-optimal
+#'   bandwidth for the aggregate estimator), or `"cct"` (per-period CCT
+#'   MSE-optimal bandwidths, [rd_bw_cct()]). Ignored if `h` is supplied.
+#' @param start starting point of the iterative (`bwselect = "iter"`) coordinate
+#'   descent. `"hstar"` (default) starts all periods at the common joint-optimal
+#'   h*; `"cct"` starts each period at its own CCT h; or supply a named
 #'   numeric vector/list with one entry per period. Ignored unless
 #'   `bwselect = "iter"`.
 #' @param regularize logical; if `TRUE` (default) the joint AMSE-optimal
@@ -89,18 +91,33 @@
 #'   matching the CCT convention).
 #' @param h,b optional common point / pilot bandwidths; if `h` is given it is
 #'   used for every period (with `b` defaulting to `h`).
-#' @param scheme `"auto"` (detect from the id/side structure) or one of `"cs"`,
-#'   `"pc"`, `"pv"`; selects which sampling-scheme variance is reported as the
-#'   headline standard error. All three are always returned.
+#' @param scheme sampling scheme: `"cs"` (repeated cross-section), `"pc"`
+#'   (panel, time-constant running variable), `"pv"` (panel, time-varying
+#'   running variable), or `"auto"` (default), which reads it off the data: no
+#'   `id` gives `"cs"`; units observed in more than one period, each on the
+#'   same side of the cutoff in every period, give `"pc"`; any unit on
+#'   different sides in different periods gives `"pv"`. The scheme selects
+#'   which standard error and CI are printed; all three are always returned.
 #' @param c cutoff (default 0).
 #' @param p,q point / bias-correction polynomial orders (default 1, 2).
 #' @param kernel `"triangular"` (default), `"epanechnikov"`, or `"uniform"`.
 #' @param level confidence level (default 0.95).
 #'
-#' @return An object of class `"rddid"` with the conventional and robust
-#'   bias-corrected estimates, standard errors under all three sampling schemes,
-#'   confidence intervals at the recommended scheme, the per-period fits, the
-#'   weights, and the bandwidth(s) used.
+#' @return An object of class `"rddid"`, a list with:
+#'   \describe{
+#'     \item{`estimates`}{matrix with rows `Conventional` and `Robust` (the
+#'       bias-corrected estimate with its robust variance) and columns `est`,
+#'       `se`, `ci_l`, `ci_u` (at `scheme`), and `se_cs`, `se_pc`, `se_pv`.}
+#'     \item{`scheme`}{the sampling scheme used; `scheme_requested` is the
+#'       argument as passed.}
+#'     \item{`weights`, `weights_type`}{the comparison-period weights and
+#'       their kind.}
+#'     \item{`bandwidth`}{list with `method` (the `bwselect` value, or
+#'       `"fixed"`), `h`, `b`, and `niter` for `"iter"`.}
+#'     \item{`fits`}{named list of [rd_period()] objects by period, the RD
+#'       period first (index by name).}
+#'     \item{`t_rd`, `comparisons`, `level`, `call`}{as passed.}
+#'   }
 #' @export
 rddid <- function(data, y, x, time, id = NULL, t_rd,
                   comparisons = NULL, weights = "constant",
@@ -201,12 +218,12 @@ print.rddid <- function(x, ...) {
               paste(sprintf("%g", x$weights), collapse = ", ")))
   bw <- x$bandwidth
   bwtxt <- switch(bw$method,
-    fixed = sprintf("fixed h=%.4g, b=%.4g", bw$h, bw$b),
-    joint = sprintf("joint AMSE  h*=%.4g, b=%.4g", bw$h, bw$b),
-    cct   = "per-period CCT/IK",
-    iter  = sprintf("period-specific joint AMSE (coord. descent, %d iters)", bw$niter))
-  cat(sprintf("  bandwidth: %s\n", bwtxt))
-  cat(sprintf("  sampling scheme: %s%s\n", toupper(x$scheme),
+    fixed = sprintf("fixed  h=%.4g, b=%.4g", bw$h, bw$b),
+    joint = sprintf("joint  h=%.4g, b=%.4g", bw$h, bw$b),
+    cct   = "cct  (per-period)",
+    iter  = sprintf("iter  (%d iterations)", bw$niter))
+  cat(sprintf("  bwselect: %s\n", bwtxt))
+  cat(sprintf("  scheme: %s%s\n", x$scheme,
               if (x$scheme_requested == "auto") " (auto-detected)" else ""))
   e <- x$estimates
   cat(sprintf("\n  %-14s %10s %10s   %s%% CI\n", "", "Estimate", "Std.Err.",
@@ -214,7 +231,7 @@ print.rddid <- function(x, ...) {
   for (r in rownames(e))
     cat(sprintf("  %-14s %10.5f %10.5f   [%9.5f, %9.5f]\n",
                 r, e[r, "est"], e[r, "se"], e[r, "ci_l"], e[r, "ci_u"]))
-  cat(sprintf("\n  SEs by scheme (Robust): CS=%.5f  PC=%.5f  PV=%.5f\n",
+  cat(sprintf("\n  Robust SE by scheme: cs=%.5f  pc=%.5f  pv=%.5f\n",
               e["Robust", "se_cs"], e["Robust", "se_pc"], e["Robust", "se_pv"]))
   invisible(x)
 }

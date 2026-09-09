@@ -1,5 +1,26 @@
 # rddid 0.4.0.9000 (development)
 
+* **Canay-Kamat permutation test and McCrary tests removed** from `rd_typecont()` and
+  `rd_compstable()` (arguments `q`, `S`; outputs `ck_perm`, `mccrary_within`, `mccrary_pooled`;
+  internal helpers `.q_rot()`, `.mccrary()`). The paper reports the local-linear Wald tests only.
+  The remaining outputs are numerically unchanged.
+
+* `rd_homog()` default `type_by` is now `"rd_side"` (the unit's side of the cutoff in the RD
+  period, the partition of the paper's Section 4.4), matching `rd_trendcell()`; was `"pattern"`.
+
+* Print methods echo option values: `rddid()` prints `bwselect: iter (5 iterations)` and
+  `scheme: pc (auto-detected)` (were `bandwidth: period-specific joint AMSE ...` and
+  `sampling scheme: PC`), and `Robust SE by scheme: cs= pc= pv=`; the test print methods drop
+  the LaTeX assumption labels and the necessary/sufficient notes.
+
+* Documentation pass after a user-focused review of the site (`rd-did/docs/reviews/
+  2026-09-09_oren-persona_rddid-site.md`): what a comparison period is and the scheme detection
+  rule stated on the home page / in `rddid()`; the tests vignette opens with its scope (a
+  time-varying running variable); `rd_period()` leads with its `rdrobust` equivalence;
+  `rddid()`'s Value lists the element names; assumption references by name, not label; the
+  normative wording ("suggestive", "neither necessary nor sufficient", "preferred") removed
+  throughout.
+
 * **`rddid()` default bandwidth rule is now `bwselect = "iter"`** (period-specific bandwidths by
   coordinate descent on the aggregate AMSE, started at the common h*), the rule Section 5.3 of the
   paper states as preferred; previously `"joint"`. Calls that pass `bwselect` explicitly (all the

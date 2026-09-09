@@ -54,11 +54,11 @@ a side is \code{beta0 + slope * (x - c)}.
 Estimates the period-\eqn{t} outcome discontinuity
 \eqn{D_t = \beta^{(0)}_{(+)} - \beta^{(0)}_{(-)}} by a standard local-linear
 regression discontinuity, conventional and robust-bias-corrected
-(Calonico, Cattaneo and Titiunik 2014). This is the per-period engine that
-\code{\link[=rddid]{rddid()}} aggregates across periods; it implements the matrix form of
-Appendix B (\code{app:est-bias}, \code{app:est-var}) of Leventer and Nevo. The
-object-by-object map between this code and the paper's equations is
-\code{dev/appB_map.md}.
+(Calonico, Cattaneo and Titiunik 2014). At a given bandwidth pair
+(\code{h}, \code{b}) it reproduces the Conventional and Bias-Corrected estimates and
+the Conventional and Robust standard errors of \pkg{rdrobust} to machine
+precision. This is the per-period engine that \code{\link[=rddid]{rddid()}} aggregates across
+periods.
 }
 \details{
 The function returns, for each side of the cutoff, the per-unit influence
@@ -75,6 +75,7 @@ Variances use the HC1 finite-sample convention of \pkg{rdrobust}
 (\code{vce = "hc1"}): residuals are scaled by \code{sqrt(n_s / (n_s - k))} with \code{n_s}
 the side's active sample and \code{k} the number of fitted coefficients; the BC
 variance uses the residuals of the order-\code{q} pilot fit at \code{b}, as in
-\pkg{rdrobust}. The paper's Appendix B states neither convention (see
-\code{dev/appB_map.md}, section 0).
+\pkg{rdrobust}. The code follows the matrix form of Appendix B of Leventer
+and Nevo; the object-by-object map is \code{dev/appB_map.md} in the source
+repository.
 }

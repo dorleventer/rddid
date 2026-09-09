@@ -19,6 +19,8 @@ carried the old numbers until this pass. Cite by label, not number.
 | `ass:comp-stable` | Composition stability | A9 | A8 |
 | `ass:homog` | Homogeneous confounding | A10 | A9 |
 
+**Update 2026-09-09:** the permutation and McCrary rows below are REMOVED from the package (see NEWS 0.4.0.9000); `rd_homog()` now defaults to `type_by = "rd_side"`. The restructure note that follows is otherwise unchanged.
+
 **Paper restructure in progress (2026-09-08, 18:06–18:13, uncommitted while this was written).** Session 02 deleted Appendix C (simulation evidence) and the general-$P$ Appendix A, and moved the body proofs to a new Appendix A "Proofs". Once that lands: the McCrary rows below revert to NOT-IN-PAPER (the simulation appendix that ran them is gone), the general-$P$ sign-pattern types and $(\mathbf u,b)$ types are no longer licensed by a paper statement (`ass:type-cont-gen`, `ass:comp-stable-gen` deleted), and the labels `app:sim-val`, `app:sim-val-typecont`, `app:est-adjust` cited in the two maps must be re-pointed. Re-run `dev/check_appB_labels.R` against the new HEAD and update the sync stamps then; this file is pinned to `c1a9fbf`.
 
 **Status legend.** As in `dev/appB_map.md`: `MATCH` (verified by `tests/testthat/test-s44-conformance.R`
@@ -80,8 +82,8 @@ paper does not state it), `DECISION`.
 
 | Package object | Where | Paper | Status / note |
 |---|---|---|---|
-| Canay–Kamat permutation test (`ck_perm`, `per_period$ck_p`, `q`, `S`) | `rd_typecont`, `rd_compstable` (unit-level permutation, paired swap for units in both groups) | not in Section 4.4; defined in one sentence with citation in the notes to Table `tab:app-validation` (Section 6.3: \citet{canay2018approximate}, rule-of-thumb $q$), and reported there ($p\approx0.63$ for A8, $0.12$ for A9) | NOT-IN-4.4 → **DECISION D5**: leave it to the table notes, or add one sentence to 4.4 |
-| McCrary density tests (`mccrary_within`, `mccrary_pooled`) | `rd_typecont` | not in 4.4 (which argues McCrary "asks a different question"); the simulation appendix `app:sim-val-typecont` runs the LL-Wald with McCrary within-type and pooled and states the sufficiency ranking the roxygen carries; Section 6's own McCrary $p$-values come from `rddensity` | IN-APPENDIX (simulations), not in 4.4 |
+| Canay–Kamat permutation test | **REMOVED 2026-09-09** (args `q`, `S`; outputs `ck_perm`, `per_period$ck_p`) | dropped from the paper's validation table on 2026-09-09 (`27cf985`); the paper no longer mentions a permutation test | REMOVED |
+| McCrary density tests | **REMOVED 2026-09-09** (outputs `mccrary_within`, `mccrary_pooled`, helper `.mccrary`) | not in 4.4 (which argues McCrary "asks a different question"); the simulation appendix that ran them was deleted on 2026-09-08; Section 6's own McCrary $p$-values come from `rddensity` in `s5_application.R` | REMOVED |
 | Bias-corrected variants (`bc = TRUE`, the default) | all four | 4.4 silent; Section 6.3 reports the bias-corrected column with the caution paragraph | NOT-IN-PAPER as a definition; the construction is the App. B.1–B.2 BC jump/variance applied to the same regressions (MATCH by composition) |
 | General-$P$ types: sign pattern of all other periods (`"pattern"`); $(\mathbf u,b)$ types in the reflection | `.build_types()`, `rd_compstable` | Appendix A (`ass:type-cont-gen`, `ass:comp-stable-gen`) | consistent with Appendix A; identical to 4.4 at $P=2$ |
 | Joint over several $(t_{\mathrm{RD}},t_0)$ pairs (`joint$ll_wald` sums the per-pair $\chi^2$; `joint$ck_perm` Fisher-combines) | `rd_compstable` | 4.4 is one pair; Section 6 reports the 2004::2000 pair | NOT-IN-PAPER; the sum assumes independent pairs, which fails when the pairs share the RD-period above-cutoff group (they always do) — documented as approximate this pass; the paper's test is per pair |

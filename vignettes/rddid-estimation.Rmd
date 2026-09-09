@@ -22,7 +22,8 @@ fmt <- function(x, d = 2) formatC(x, format = "f", digits = d)
 A treatment of interest `W` and a confounding treatment `V` both switch at the
 same cutoff of a running variable `R`. In comparison periods `W` is uniformly
 zero, so the observed discontinuity in period $t$, $D_t$, equals the
-confounding discontinuity $\alpha_{t,0}$; in the RD period,
+confounding discontinuity $\alpha_{t,0}$ (the paper's notation: the jump in
+the untreated outcome at the cutoff); in the RD period,
 $D_{t_{\mathrm{RD}}} = \mathrm{ATT}(t_{\mathrm{RD}}) + \alpha_{t_{\mathrm{RD}},0}$.
 With comparison-period weights $w_t$,
 $$
@@ -46,7 +47,7 @@ dgp_a <- function(n = 2000, alpha = c(1, 1, 1), theta = c(2, 2, 2), tau = 1, see
   }))
 }
 
-alpha_true <- c(1, 1, 1)   # confounding discontinuity, alpha_t
+alpha_true <- c(1, 1, 1)   # confounding discontinuity, alpha_{t,0}
 tau_true   <- 1            # ATT(t_RD)
 dat <- dgp_a(alpha = alpha_true, tau = tau_true)
 head(dat)
@@ -58,7 +59,11 @@ This is the input format every function below expects.
 ## Per-period discontinuities
 
 Each $\hat D_t$ is a standard local-linear RD, estimated one period at a time
-with `rd_bw_cct()` (the per-period CCT/IK bandwidth) and `rd_period()`.
+with `rd_bw_cct()` (the per-period CCT bandwidth pair $h_t$, $b_t$) and
+`rd_period()` (the local-linear fit with the bias correction and robust
+variance of Calonico, Cattaneo and Titiunik 2014). At a given bandwidth pair,
+`rd_period()` reproduces the Conventional and Bias-Corrected estimates and the
+Conventional and Robust standard errors of `rdrobust` to machine precision.
 
 ```{r per-period}
 periods <- 1:3
@@ -116,7 +121,7 @@ ggplot(binned, aes(R, Y)) +
 ```
 
 The comparison-period discontinuities, $\hat D_1 = `r fmt(tab$D[1])`$ and
-$\hat D_2 = `r fmt(tab$D[2])`$, are the confounding $\alpha_t$; the RD-period
+$\hat D_2 = `r fmt(tab$D[2])`$, are the confounding $\alpha_{t,0}$; the RD-period
 one, $\hat D_3 = `r fmt(tab$D[3])`$, is confounding plus ATT.
 
 ## The RD-DID estimate
@@ -135,23 +140,29 @@ res
 - The two rows, `Conventional` and `Robust`, are the local-linear discontinuity
   estimator and its bias-corrected counterpart, each aggregated with the same
   weights.
-- The printed `Std.Err.` and CI are for the auto-detected sampling scheme,
-  `res$scheme` = "`r res$scheme`" — a panel with a time-constant running
-  variable.
-- The last line, `SEs by scheme`, lists the standard error under all three
-  sampling schemes (`res$estimates["Robust", "se_cs"]`, `"se_pc"`, `"se_pv"`);
+- The printed `Std.Err.` and CI are for the sampling scheme on the `scheme`
+  line, `res$scheme` = "`r res$scheme`". The three schemes are `cs`
+  (repeated cross-section: different units in each period), `pc` (panel with a
+  time-constant running variable) and `pv` (panel with a time-varying running
+  variable). With `scheme = "auto"` (the default) the scheme is read off the
+  data: no `id` gives `cs`; units observed in more than one period, each on
+  the same side of the cutoff in every period, give `pc`; any unit on
+  different sides of the cutoff in different periods gives `pv`.
+- The last line, `Robust SE by scheme`, lists the standard error under all
+  three schemes (`res$estimates["Robust", "se_cs"]`, `"se_pc"`, `"se_pv"`);
   here they read `r fmt(res$estimates["Robust", "se_cs"])`,
   `r fmt(res$estimates["Robust", "se_pc"])`, and
   `r fmt(res$estimates["Robust", "se_pv"])`.
 - The `weights` line shows `res$weights_type` ("`r res$weights_type`") and the
   values `res$weights`.
-- The `bandwidth` line reports `bwselect = "cct"`: each period is fit at its
-  own `rd_bw_cct()` bandwidth, so `res$fits` are exactly the per-period fits
-  built above. Other bandwidth rules and the sampling schemes are covered in
-  the "Bandwidth rules and sampling schemes" vignette.
+- The `bwselect` line reports `"cct"`: each period is fit at its own
+  `rd_bw_cct()` bandwidth, so `res$fits` are exactly the per-period fits built
+  above. Other bandwidth rules and the sampling schemes are covered in the
+  "Bandwidth rules and sampling schemes" vignette.
 
-The sampling scheme can be set instead of detected; the printed SE and CI
-then correspond to it:
+The scheme describes how the data were sampled; it changes the standard error,
+not the estimate. Setting `scheme` replaces the detection, and the printed SE
+and CI then correspond to it:
 
 ```{r scheme-explicit}
 res_pc <- rddid(dat, y = "Y", x = "R", time = "t", id = "id", t_rd = 3,

@@ -1,4 +1,4 @@
-# Test of the homogeneous-confounding assumption (ass:homog).
+# Test of the homogeneous-confounding assumption.
 # Manuscript ref: Leventer and Nevo, "Correcting Invalid RD Designs",
 # paragraph "Homogeneous confounding" of Section 4.4.
 #
@@ -8,8 +8,6 @@
 # We estimate that jump separately per type v_{-t0} using rd_period(), then
 # form a Wald test that the jumps are equal across types.
 #
-# IMPORTANT: this test is NEITHER necessary NOR sufficient for homogeneity at
-# the RD period; see documentation for rd_homog().
 
 # ---------------------------------------------------------------------------
 # This test has no local helpers: types come from the shared .build_types()
@@ -21,25 +19,16 @@
 # Main exported function
 # ---------------------------------------------------------------------------
 
-#' Test of homogeneous confounding (assumption `ass:homog`)
+#' Test of homogeneous confounding
 #'
-#' Tests whether the outcome RD discontinuity is constant across types in
-#' **comparison periods** (periods where the treatment of interest is absent).
-#' In a comparison period \eqn{t_0} the discontinuity equals the pure
-#' confounding: \eqn{D_{t_0}(\mathbf{v}_{-t_0}) = \alpha_{t_0,0}(\mathbf{v}_{-t_0})}.
-#' The function estimates the jump by type (sign pattern of the OTHER periods'
-#' running variables) via [rd_period()], then forms a joint Wald test that the
-#' jumps are equal across types and comparison periods.
-#'
-#' ## Scope and interpretation
-#'
-#' **This test is run in comparison periods only.**  The type-homogeneous
-#' confounding assumption (`ass:homog` in Leventer and Nevo) is needed at the *RD
-#' period* \eqn{t_{\mathrm{RD}}}, but there the jump also contains the ATT and
-#' \eqn{\alpha_{t_{\mathrm{RD}},0}(\mathbf{v}_{-t_{\mathrm{RD}}})} is not
-#' separately observable.  Testing homogeneity in comparison periods is
-#' therefore only **suggestive** evidence: it is **neither necessary nor
-#' sufficient** for the assumption to hold at \eqn{t_{\mathrm{RD}}}.
+#' Wald test of the homogeneous-confounding assumption (Section 4.4 of
+#' Leventer and Nevo): in the comparison periods, the outcome RD discontinuity
+#' is the same across types. In a comparison period \eqn{t_0} the
+#' discontinuity equals the confounding,
+#' \eqn{D_{t_0}(v) = \alpha_{t_0,0}(v)}, with \eqn{v} the unit's type (by
+#' default its side of the cutoff in the RD period). The function estimates the
+#' jump by type via [rd_period()], then forms a joint Wald test that the jumps
+#' are equal across types and comparison periods.
 #'
 #' ## Null hypothesis
 #'
@@ -54,7 +43,10 @@
 #' Across periods, id-matched covariance is used under the detected/requested
 #' sampling scheme (see `scheme`).
 #'
-#' @param data A long data frame, one row per unit-period.
+#' @param data a long data frame, one row per unit-period. A unit's type in
+#'   period \eqn{t} is read from its running variable in the other period(s);
+#'   units unobserved there are dropped from period \eqn{t}, so the panel need
+#'   not be balanced.
 #' @param y,x,time Column names (character strings) for the outcome, running
 #'   variable, and period indicator.
 #' @param id Column name for the unit identifier.  Required (the test uses the
@@ -87,13 +79,10 @@
 #'   (Calonico, Cattaneo and Titiunik 2014). `TRUE` (default) aligns the test
 #'   with the bias-corrected [rddid()] estimator; `FALSE` uses the conventional
 #'   local-linear jumps and variances.
-#' @param type_by How a unit's type is defined. `"pattern"` (default) uses the
-#'   full multi-period sign pattern of the other periods (the general case).
-#'   `"rd_side"` uses only the unit's side of the cutoff in the RD period `t_rd`,
-#'   a binary partition; this is the relevant partition for a single joint test
-#'   across comparison periods that share a running variable, where it yields one
-#'   contrast per period (a \eqn{\chi^2(P)} test for `P` comparison periods).
-#'   Requires `t_rd`.
+#' @param type_by How a unit's type is defined. `"rd_side"` (default) = the
+#'   unit's side of the cutoff in the RD period, the partition of the paper's
+#'   Section 4.4. `"pattern"` = the sign pattern of the other periods' running
+#'   variables.
 #' @param ... Further arguments passed to [rd_period()] (e.g. `p`, `q`, `b`).
 #'
 #' @return An object of class `"rd_homog"`, a list with:
@@ -111,13 +100,6 @@
 #'     \item{`comparisons`}{Comparison periods actually used.}
 #'     \item{`call`}{The matched call.}
 #'   }
-#'
-#' @note
-#' **Necessary and sufficient status:** This test is *neither necessary nor
-#' sufficient* for `ass:homog` (homogeneous confounding) to hold at the
-#' RD period.  Homogeneity in comparison periods is only suggestive because the
-#' assumption is needed at \eqn{t_{\mathrm{RD}}}, where the confounding jump is
-#' not separately identified.
 #'
 #' @seealso [rd_period()], [rddid()]
 #'
@@ -160,7 +142,7 @@ rd_homog <- function(data, y, x, time, id,
                      scheme = c("auto", "cs", "pc", "pv"),
                      min_n = 10L,
                      bc = TRUE,
-                     type_by = c("pattern", "rd_side"),
+                     type_by = c("rd_side", "pattern"),
                      ...) {
   cl       <- match.call()
   scheme   <- match.arg(scheme)
@@ -407,15 +389,12 @@ rd_homog <- function(data, y, x, time, id,
 
 #' @export
 print.rd_homog <- function(x, ...) {
-  cat("Homogeneous confounding test (ass:homog)\n")
+  cat("Homogeneous-confounding test\n")
   cat(sprintf("  Comparison periods: %s\n",
               paste(x$comparisons, collapse = ", ")))
-  cat(sprintf("  Sampling scheme: %s\n", toupper(x$scheme)))
+  cat(sprintf("  Sampling scheme: %s\n", x$scheme))
   cat(sprintf("  Wald statistic: %.4f   df: %d   p-value: %.4f\n",
               x$statistic, x$df, x$p_value))
-  cat("\n  NOTE: This test is NEITHER necessary NOR sufficient for ass:homog\n")
-  cat("  at the RD period. It is run in comparison periods only and is only\n")
-  cat("  suggestive of homogeneity where the assumption is needed (t_RD).\n")
   if (nrow(x$period_type_jumps) > 0L) {
     cat("\n  Per-type jumps (comparison periods):\n")
     df <- x$period_type_jumps

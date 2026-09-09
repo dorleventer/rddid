@@ -2,7 +2,7 @@
 % Please edit documentation in R/test_homog.R
 \name{rd_homog}
 \alias{rd_homog}
-\title{Test of homogeneous confounding (assumption \code{ass:homog})}
+\title{Test of homogeneous confounding}
 \usage{
 rd_homog(
   data,
@@ -19,12 +19,15 @@ rd_homog(
   scheme = c("auto", "cs", "pc", "pv"),
   min_n = 10L,
   bc = TRUE,
-  type_by = c("pattern", "rd_side"),
+  type_by = c("rd_side", "pattern"),
   ...
 )
 }
 \arguments{
-\item{data}{A long data frame, one row per unit-period.}
+\item{data}{a long data frame, one row per unit-period. A unit's type in
+period \eqn{t} is read from its running variable in the other period(s);
+units unobserved there are dropped from period \eqn{t}, so the panel need
+not be balanced.}
 
 \item{y, x, time}{Column names (character strings) for the outcome, running
 variable, and period indicator.}
@@ -69,13 +72,10 @@ period are silently dropped (default 10).}
 with the bias-corrected \code{\link[=rddid]{rddid()}} estimator; \code{FALSE} uses the conventional
 local-linear jumps and variances.}
 
-\item{type_by}{How a unit's type is defined. \code{"pattern"} (default) uses the
-full multi-period sign pattern of the other periods (the general case).
-\code{"rd_side"} uses only the unit's side of the cutoff in the RD period \code{t_rd},
-a binary partition; this is the relevant partition for a single joint test
-across comparison periods that share a running variable, where it yields one
-contrast per period (a \eqn{\chi^2(P)} test for \code{P} comparison periods).
-Requires \code{t_rd}.}
+\item{type_by}{How a unit's type is defined. \code{"rd_side"} (default) = the
+unit's side of the cutoff in the RD period, the partition of the paper's
+Section 4.4. \code{"pattern"} = the sign pattern of the other periods' running
+variables.}
 
 \item{...}{Further arguments passed to \code{\link[=rd_period]{rd_period()}} (e.g. \code{p}, \code{q}, \code{b}).}
 }
@@ -97,26 +97,16 @@ observations, and whether it was the reference type.}
 }
 }
 \description{
-Tests whether the outcome RD discontinuity is constant across types in
-\strong{comparison periods} (periods where the treatment of interest is absent).
-In a comparison period \eqn{t_0} the discontinuity equals the pure
-confounding: \eqn{D_{t_0}(\mathbf{v}_{-t_0}) = \alpha_{t_0,0}(\mathbf{v}_{-t_0})}.
-The function estimates the jump by type (sign pattern of the OTHER periods'
-running variables) via \code{\link[=rd_period]{rd_period()}}, then forms a joint Wald test that the
-jumps are equal across types and comparison periods.
+Wald test of the homogeneous-confounding assumption (Section 4.4 of
+Leventer and Nevo): in the comparison periods, the outcome RD discontinuity
+is the same across types. In a comparison period \eqn{t_0} the
+discontinuity equals the confounding,
+\eqn{D_{t_0}(v) = \alpha_{t_0,0}(v)}, with \eqn{v} the unit's type (by
+default its side of the cutoff in the RD period). The function estimates the
+jump by type via \code{\link[=rd_period]{rd_period()}}, then forms a joint Wald test that the jumps
+are equal across types and comparison periods.
 }
 \details{
-\subsection{Scope and interpretation}{
-
-\strong{This test is run in comparison periods only.}  The type-homogeneous
-confounding assumption (\code{ass:homog} in Leventer and Nevo) is needed at the \emph{RD
-period} \eqn{t_{\mathrm{RD}}}, but there the jump also contains the ATT and
-\eqn{\alpha_{t_{\mathrm{RD}},0}(\mathbf{v}_{-t_{\mathrm{RD}}})} is not
-separately observable.  Testing homogeneity in comparison periods is
-therefore only \strong{suggestive} evidence: it is \strong{neither necessary nor
-sufficient} for the assumption to hold at \eqn{t_{\mathrm{RD}}}.
-}
-
 \subsection{Null hypothesis}{
 
 \eqn{H_0 :} the outcome RD jump is equal across all type cells
@@ -130,13 +120,6 @@ Within a period, cross-type covariance is zero (types partition the sample).
 Across periods, id-matched covariance is used under the detected/requested
 sampling scheme (see \code{scheme}).
 }
-}
-\note{
-\strong{Necessary and sufficient status:} This test is \emph{neither necessary nor
-sufficient} for \code{ass:homog} (homogeneous confounding) to hold at the
-RD period.  Homogeneity in comparison periods is only suggestive because the
-assumption is needed at \eqn{t_{\mathrm{RD}}}, where the confounding jump is
-not separately identified.
 }
 \examples{
 \dontrun{

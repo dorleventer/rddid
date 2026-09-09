@@ -2,7 +2,7 @@
 % Please edit documentation in R/test_typecont.R
 \name{rd_typecont}
 \alias{rd_typecont}
-\title{Test the continuity of the type distribution (assumption \code{ass:type-cont})}
+\title{Test the continuity of the type distribution}
 \usage{
 rd_typecont(
   data,
@@ -12,8 +12,6 @@ rd_typecont(
   c = 0,
   h = NULL,
   bwselect = c("cct", "rot"),
-  q = NULL,
-  S = 499L,
   kernel = "triangular",
   scheme = c("auto", "cs", "pc", "pv"),
   bc = TRUE,
@@ -21,7 +19,10 @@ rd_typecont(
 )
 }
 \arguments{
-\item{data}{a long data frame, one row per unit × period (balanced panel).}
+\item{data}{a long data frame, one row per unit-period. A unit's type in
+period \eqn{t} is read from its running variable in the other period(s);
+units unobserved there are dropped from period \eqn{t}, so the panel need
+not be balanced.}
 
 \item{x}{column name (string) for the running variable.}
 
@@ -40,17 +41,6 @@ computes a per-cell CCT MSE-optimal bandwidth via \code{\link[=rd_bw_cct]{rd_bw_
 to the full sample (the previous default behaviour).  Ignored when \code{h} is
 supplied explicitly.}
 
-\item{q}{number of observations nearest the cutoff on each side for the
-Canay-Kamat permutation test. \code{NULL} (default) selects \code{q} per period by
-the Canay & Kamat (2018) rule of thumb; this is the
-recommended choice, since a fixed \code{q} over-rejects in finite samples when
-the type distribution varies steeply in the running variable at the cutoff.
-Supply an integer to force a fixed \code{q} on every period. The per-period \code{q}
-actually used is returned in \code{meta$q_used}.}
-
-\item{S}{number of permutation replications for the Canay-Kamat test
-(default 499).}
-
 \item{kernel}{kernel for the local-linear RD: \code{"triangular"} (default),
 \code{"epanechnikov"}, or \code{"uniform"}.}
 
@@ -60,8 +50,7 @@ the data (same logic as \code{\link[=rddid]{rddid()}}), or one of \code{"cs"}, \
 \item{bc}{use robust bias-corrected jumps and variances in the LL-Wald
 (Calonico, Cattaneo and Titiunik 2014). \code{TRUE} (default) aligns the test
 with the bias-corrected \code{\link[=rddid]{rddid()}} estimator; \code{FALSE} uses the conventional
-local-linear jumps and variances. Does not affect the Canay-Kamat
-permutation test (which operates on raw near-cutoff indicator means).}
+local-linear jumps and variances.}
 
 \item{...}{currently unused.}
 }
@@ -70,59 +59,25 @@ An object of class \code{"rd_typecont"}, a named list with:
 \item{ll_wald}{list with \code{stat} (chi-square), \code{df}, \code{p}.}
 \item{per_period}{named list (by period) of the per-period components the
 joint test aggregates; each entry has \code{ll_wald} (that period's own
-LL-Wald \code{stat}/\code{df}/\code{p}, restricted to its kept contrasts) and \code{ck_p}
-(per-period Canay-Kamat p-value, read off the same permutation draws as
-the joint statistic, or \code{NA} for a period with no active type cell).}
-\item{ck_perm}{list with \code{stat} (observed sum of |mean diffs|), \code{p}.}
-\item{mccrary_within}{data frame with columns \code{period}, \code{type},
-\code{p_raw} (per-type McCrary p-value); plus \code{p_bonf} (Bonferroni-adjusted
-p-value for the period, minimum × number of types).}
-\item{mccrary_pooled}{data frame with columns \code{period}, \code{p} (per-period
-McCrary p-value on pooled sample).}
+LL-Wald \code{stat}/\code{df}/\code{p}, restricted to its kept contrasts).}
 \item{meta}{list with \code{periods}, \code{type_values}, \code{h} (NA when
-\code{bwselect = "cct"}), \code{bwselect}, \code{q} (\code{"rot"} when the Canay-Kamat
-rule of thumb is used, otherwise the integer supplied), \code{q_used}
-(per-period integer \code{q} actually used), \code{S}, \code{scheme}, \code{bc}.}
+\code{bwselect = "cct"}), \code{bwselect}, \code{scheme}, \code{bc}.}
 }
 \description{
-Runs four tests for the continuous-type-distribution assumption
-(\code{ass:type-cont}, Section 4.4 of Leventer and Nevo). Section 4.4 states the
-LL-Wald; the McCrary variants are run in the paper's simulation appendix and
-the permutation test in its Section 6 validation table (see
-\code{dev/tests_map.md}). The "type" of unit \eqn{i} in period \eqn{t} is the
-sign pattern of its running variables in the OTHER periods,
-\eqn{\mathbf{V}_{i,-t} = (1\{R_{i,s} \ge c\})_{s \ne t}}.
+Wald test of the continuous-type-distribution assumption (Section 4.4 of
+Leventer and Nevo). The "type" of unit
+\eqn{i} in period \eqn{t} is the sign pattern of its running variables in
+the OTHER periods, \eqn{\mathbf{V}_{i,-t} = (1\{R_{i,s} \ge c\})_{s \ne t}}.
 }
 \details{
-\strong{Four tests, in order of interpretive strength:}
-\enumerate{
-\item \strong{LL-Wald} (necessary AND sufficient): for each period \eqn{t} and
-each type value \eqn{v}, estimate the local-linear RD jump of the type
-indicator \eqn{1\{\mathbf{V}_{i,-t} = v\}} on the running variable
-\eqn{R_{i,t}}.  The jump \eqn{\hat\pi_{t,(+)}(v) - \hat\pi_{t,(-)}(v)}
-is the output of \code{\link[=rd_period]{rd_period()}} with a binary outcome.  The joint Wald
-statistic across all (period, type) pairs drops one reference type per
-period, because within each period the type indicators sum to 1 (the
-full block is singular); df = number of kept contrasts.  The
-covariance is built from the per-unit influence vectors returned by
-\code{\link[=rd_period]{rd_period()}}, using the same within-period and cross-period id-matching
-as the main estimator, scheme-aware.
-\item \strong{Canay-Kamat permutation} (necessary AND sufficient): uses the
-\eqn{q} observations nearest the cutoff on each side to test whether the
-type distribution is the same on both sides, via approximate sign
-randomisation (Canay and Kamat 2018).  Run jointly over all types and
-periods: the test statistic is the sum of absolute mean differences
-across (period, type) pairs.
-\item \strong{McCrary within-type} (sufficient, NOT necessary): McCrary (2008)
-density test run separately for each type value within each period, then
-combined across types via Bonferroni (minimum p-value times number of
-tests).  If every within-type density is continuous at \eqn{c} then the
-type shares are continuous (sufficiency), but shares can remain continuous
-even when all within-type densities jump by a common proportional factor
-(not necessary).
-\item \strong{McCrary pooled} (NEITHER sufficient NOR necessary): McCrary (2008)
-density test on the pooled sample, run per period.  Neither sufficient
-(type shares can jump while pooled density is smooth) nor necessary
-(pooled density can jump while shares stay continuous).
-}
+For each period \eqn{t} and each type value \eqn{v}, estimate the
+local-linear RD jump of the type indicator \eqn{1\{\mathbf{V}_{i,-t} = v\}}
+on the running variable \eqn{R_{i,t}}.  The jump
+\eqn{\hat\pi_{t,(+)}(v) - \hat\pi_{t,(-)}(v)} is the output of \code{\link[=rd_period]{rd_period()}}
+with a binary outcome.  The joint Wald statistic across all (period, type)
+pairs drops one reference type per period, because within each period the
+type indicators sum to 1 (the full block is singular); df = number of kept
+contrasts.  The covariance is built from the per-unit influence vectors
+returned by \code{\link[=rd_period]{rd_period()}}, using the same within-period and cross-period
+id-matching as the main estimator, scheme-aware.
 }

@@ -1,4 +1,4 @@
-# Test of the constant-within-type-confounding assumption (ass:trend-cell).
+# Test of the constant-within-type-confounding assumption.
 # Manuscript ref: Leventer and Nevo, "Correcting Invalid RD Designs",
 # paragraph "Constant confounding discontinuity within types" of Section 4.4.
 #
@@ -10,8 +10,6 @@
 # Wald test that the per-cell jumps are flat (constant) or linear in t0
 # across comparison periods.
 #
-# IMPORTANT: this test is NEITHER necessary NOR sufficient for the trend-cell
-# assumption to hold at the RD period; see documentation for rd_trendcell().
 
 # ---------------------------------------------------------------------------
 # Cell assignment for ass:trend-cell must be FIXED across comparison periods.
@@ -29,27 +27,19 @@
 # Main exported function
 # ---------------------------------------------------------------------------
 
-#' Test of a constant within-type confounding discontinuity (assumption `ass:trend-cell`)
+#' Test of a constant within-type confounding discontinuity
 #'
-#' Tests whether the per-cell outcome RD discontinuity is constant (or linear)
-#' **across comparison periods** within each cell.
-#' In a comparison period \eqn{t_0} the discontinuity equals the pure
-#' confounding: \eqn{D_{t_0}(k) = \alpha_{t_0,0}(k)}, where \eqn{k} denotes
-#' the unit's cell (side of the cutoff in \eqn{t_{\mathrm{RD}}} under the
-#' default \code{type_by = "rd_side"}).  The function estimates the jump per
-#' cell via [rd_period()], then forms a joint Wald test that the within-cell
-#' jumps conform to the hypothesised trend \eqn{g_0} across comparison periods.
-#'
-#' ## Scope and interpretation
-#'
-#' **This test is run in comparison periods only.**  Assumption `ass:trend-cell`
-#' (within-cell confounding trend, \eqn{\text{ass:trend-cell}} in Leventer
-#' and Nevo) is needed at the *RD period* \eqn{t_{\mathrm{RD}}}, but there
-#' the jump also contains the ATT and the confounding is not separately
-#' observable.  Testing the trend assumption in comparison periods is therefore
-#' only **suggestive** evidence, analogous to a pre-trends check in
-#' difference-in-differences: it is **neither necessary nor sufficient** for the
-#' assumption to hold at \eqn{t_{\mathrm{RD}}}.
+#' Pre-trends check for the constant within-type confounding assumption
+#' (Section 4.4 of Leventer and Nevo), in the difference-in-differences sense:
+#' the assumption concerns the RD period, where the confounding is not
+#' separately observed, so the test asks whether the per-cell outcome RD
+#' discontinuity is constant (or linear) **across the comparison periods**. In
+#' a comparison period \eqn{t_0} the discontinuity equals the confounding,
+#' \eqn{D_{t_0}(k) = \alpha_{t_0,0}(k)}, where \eqn{k} is the unit's cell
+#' (its side of the cutoff in \eqn{t_{\mathrm{RD}}} under the default
+#' \code{type_by = "rd_side"}). The function estimates the jump per cell via
+#' [rd_period()], then forms a joint Wald test that the within-cell jumps
+#' conform to the hypothesised trend \eqn{g_0} across comparison periods.
 #'
 #' ## Null hypothesis
 #'
@@ -70,7 +60,10 @@
 #' comparison periods per cell**; if no cell reaches this threshold the
 #' function returns an object with `df = 0`, `statistic = NA`, and a message.
 #'
-#' @param data A long data frame, one row per unit-period.
+#' @param data a long data frame, one row per unit-period. A unit's type in
+#'   period \eqn{t} is read from its running variable in the other period(s);
+#'   units unobserved there are dropped from period \eqn{t}, so the panel need
+#'   not be balanced.
 #' @param y,x,time Column names (character strings) for the outcome, running
 #'   variable, and period indicator.
 #' @param id Column name for the unit identifier.  Required (the test needs a
@@ -105,12 +98,11 @@
 #'   (Calonico, Cattaneo and Titiunik 2014). `TRUE` (default) aligns the test
 #'   with the bias-corrected [rddid()] estimator; `FALSE` uses the conventional
 #'   local-linear jumps and variances.
-#' @param type_by How a unit's cell is defined.  `"rd_side"` (default) uses
-#'   the unit's side of the cutoff in the RD period `t_rd`, a binary partition;
-#'   this is the canonical partition for a joint cross-period trend test.
-#'   `"pattern"` uses the sign pattern of the other periods' running variables
-#'   (fixed via the `t_rd` or first-comparison-period perspective).  The cell
-#'   is **fixed** across comparison periods for all choices.
+#' @param type_by How a unit's type is defined. `"rd_side"` (default) = the
+#'   unit's side of the cutoff in the RD period, the partition of the paper's
+#'   Section 4.4. `"pattern"` = the sign pattern of the other periods' running
+#'   variables. The cell is **fixed** across comparison periods for both
+#'   choices.
 #' @param trend Trend form for the null hypothesis.  `"constant"` (default)
 #'   tests equal per-cell jumps across all comparison periods; `"linear"` tests
 #'   that the per-cell jumps lie on a line in time, using second-difference
@@ -139,15 +131,6 @@
 #'     \item{`comparisons`}{Comparison periods actually used (character).}
 #'     \item{`call`}{The matched call.}
 #'   }
-#'
-#' @note
-#' **Necessary and sufficient status:** This test is *neither necessary nor
-#' sufficient* for `ass:trend-cell` (constant within-type confounding) to hold at
-#' the RD period.  Conformity to the trend in comparison periods is only
-#' suggestive because the assumption is needed at \eqn{t_{\mathrm{RD}}},
-#' where the confounding jump is not separately identified.  It is a pre-trend
-#' check in the spirit of difference-in-differences and should be interpreted
-#' as such.
 #'
 #' **`trend = "linear"`** requires at least 3 comparison periods per cell to
 #' be informative.  With only 2 comparison periods the within-cell linear trend
@@ -481,11 +464,11 @@ rd_trendcell <- function(data, y, x, time, id,
 
 #' @export
 print.rd_trendcell <- function(x, ...) {
-  cat("Within-type confounding pre-trend test (ass:trend-cell)\n")
+  cat("Within-type confounding pre-trends test\n")
   cat(sprintf("  Trend form: %s\n", x$trend))
   cat(sprintf("  Comparison periods: %s\n",
               paste(x$comparisons, collapse = ", ")))
-  cat(sprintf("  Sampling scheme: %s\n", toupper(x$scheme)))
+  cat(sprintf("  Sampling scheme: %s\n", x$scheme))
   if (is.na(x$statistic)) {
     cat(sprintf("  Wald statistic: NA   df: %d   p-value: NA\n", x$df))
     cat("\n  NOTE: df = 0; the linear within-cell trend is just-identified\n")
@@ -494,10 +477,6 @@ print.rd_trendcell <- function(x, ...) {
     cat(sprintf("  Wald statistic: %.4f   df: %d   p-value: %.4f\n",
                 x$statistic, x$df, x$p_value))
   }
-  cat("\n  NOTE: This test is NEITHER necessary NOR sufficient for ass:trend-cell\n")
-  cat("  at the RD period. It is a pre-trend check run in comparison periods\n")
-  cat("  only and is only suggestive of trend conformity where the assumption\n")
-  cat("  is needed (t_RD).\n")
   if (!is.null(x$cell_period_jumps) && nrow(x$cell_period_jumps) > 0L) {
     cat("\n  Per-cell jumps (comparison periods):\n")
     df <- x$cell_period_jumps

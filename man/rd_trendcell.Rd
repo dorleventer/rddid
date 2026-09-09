@@ -2,7 +2,7 @@
 % Please edit documentation in R/test_trendcell.R
 \name{rd_trendcell}
 \alias{rd_trendcell}
-\title{Test of a constant within-type confounding discontinuity (assumption \code{ass:trend-cell})}
+\title{Test of a constant within-type confounding discontinuity}
 \usage{
 rd_trendcell(
   data,
@@ -25,7 +25,10 @@ rd_trendcell(
 )
 }
 \arguments{
-\item{data}{A long data frame, one row per unit-period.}
+\item{data}{a long data frame, one row per unit-period. A unit's type in
+period \eqn{t} is read from its running variable in the other period(s);
+units unobserved there are dropped from period \eqn{t}, so the panel need
+not be balanced.}
 
 \item{y, x, time}{Column names (character strings) for the outcome, running
 variable, and period indicator.}
@@ -72,12 +75,11 @@ either side are silently dropped (default 10).}
 with the bias-corrected \code{\link[=rddid]{rddid()}} estimator; \code{FALSE} uses the conventional
 local-linear jumps and variances.}
 
-\item{type_by}{How a unit's cell is defined.  \code{"rd_side"} (default) uses
-the unit's side of the cutoff in the RD period \code{t_rd}, a binary partition;
-this is the canonical partition for a joint cross-period trend test.
-\code{"pattern"} uses the sign pattern of the other periods' running variables
-(fixed via the \code{t_rd} or first-comparison-period perspective).  The cell
-is \strong{fixed} across comparison periods for all choices.}
+\item{type_by}{How a unit's type is defined. \code{"rd_side"} (default) = the
+unit's side of the cutoff in the RD period, the partition of the paper's
+Section 4.4. \code{"pattern"} = the sign pattern of the other periods' running
+variables. The cell is \strong{fixed} across comparison periods for both
+choices.}
 
 \item{trend}{Trend form for the null hypothesis.  \code{"constant"} (default)
 tests equal per-cell jumps across all comparison periods; \code{"linear"} tests
@@ -109,30 +111,26 @@ block-diagonal by cell.}
 \item{\code{comparisons}}{Comparison periods actually used (character).}
 \item{\code{call}}{The matched call.}
 }
+
+\strong{\code{trend = "linear"}} requires at least 3 comparison periods per cell to
+be informative.  With only 2 comparison periods the within-cell linear trend
+is just-identified (any two points define a line), so no second-difference
+contrast exists and the test returns \code{df = 0}.
 }
 \description{
-Tests whether the per-cell outcome RD discontinuity is constant (or linear)
-\strong{across comparison periods} within each cell.
-In a comparison period \eqn{t_0} the discontinuity equals the pure
-confounding: \eqn{D_{t_0}(k) = \alpha_{t_0,0}(k)}, where \eqn{k} denotes
-the unit's cell (side of the cutoff in \eqn{t_{\mathrm{RD}}} under the
-default \code{type_by = "rd_side"}).  The function estimates the jump per
-cell via \code{\link[=rd_period]{rd_period()}}, then forms a joint Wald test that the within-cell
-jumps conform to the hypothesised trend \eqn{g_0} across comparison periods.
+Pre-trends check for the constant within-type confounding assumption
+(Section 4.4 of Leventer and Nevo), in the difference-in-differences sense:
+the assumption concerns the RD period, where the confounding is not
+separately observed, so the test asks whether the per-cell outcome RD
+discontinuity is constant (or linear) \strong{across the comparison periods}. In
+a comparison period \eqn{t_0} the discontinuity equals the confounding,
+\eqn{D_{t_0}(k) = \alpha_{t_0,0}(k)}, where \eqn{k} is the unit's cell
+(its side of the cutoff in \eqn{t_{\mathrm{RD}}} under the default
+\code{type_by = "rd_side"}). The function estimates the jump per cell via
+\code{\link[=rd_period]{rd_period()}}, then forms a joint Wald test that the within-cell jumps
+conform to the hypothesised trend \eqn{g_0} across comparison periods.
 }
 \details{
-\subsection{Scope and interpretation}{
-
-\strong{This test is run in comparison periods only.}  Assumption \code{ass:trend-cell}
-(within-cell confounding trend, \eqn{\text{ass:trend-cell}} in Leventer
-and Nevo) is needed at the \emph{RD period} \eqn{t_{\mathrm{RD}}}, but there
-the jump also contains the ATT and the confounding is not separately
-observable.  Testing the trend assumption in comparison periods is therefore
-only \strong{suggestive} evidence, analogous to a pre-trends check in
-difference-in-differences: it is \strong{neither necessary nor sufficient} for the
-assumption to hold at \eqn{t_{\mathrm{RD}}}.
-}
-
 \subsection{Null hypothesis}{
 
 \deqn{H_0 : D_{t_0}(k) \text{ is } g_0 \text{ in } t_0,
@@ -152,20 +150,6 @@ yielding \eqn{|T_0| - 2} contrasts per cell.  \strong{This requires at least 3
 comparison periods per cell}; if no cell reaches this threshold the
 function returns an object with \code{df = 0}, \code{statistic = NA}, and a message.
 }
-}
-\note{
-\strong{Necessary and sufficient status:} This test is \emph{neither necessary nor
-sufficient} for \code{ass:trend-cell} (constant within-type confounding) to hold at
-the RD period.  Conformity to the trend in comparison periods is only
-suggestive because the assumption is needed at \eqn{t_{\mathrm{RD}}},
-where the confounding jump is not separately identified.  It is a pre-trend
-check in the spirit of difference-in-differences and should be interpreted
-as such.
-
-\strong{\code{trend = "linear"}} requires at least 3 comparison periods per cell to
-be informative.  With only 2 comparison periods the within-cell linear trend
-is just-identified (any two points define a line), so no second-difference
-contrast exists and the test returns \code{df = 0}.
 }
 \examples{
 \dontrun{

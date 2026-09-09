@@ -1,7 +1,7 @@
 # Tests for rd_typecont() / test_helpers.R
 # Three objectives:
-#  (a) package functions reproduce standalone ll_cov_p / ck_perm_p / mccrary_p
-#      p-values on the same simulated cross section (within tolerance)
+#  (a) package functions reproduce the standalone ll_cov_p p-value on the
+#      same simulated cross section (within tolerance)
 #  (b) under the null scenario p-values are not systematically tiny
 #  (c) under a sorting scenario the LL-Wald rejects
 
@@ -65,49 +65,11 @@ ll_cov_p_ref <- function(x, g, h) {
   2 * pnorm(-abs(tau / se))
 }
 
-mccrary_p_ref <- function(x, h) {
-  n <- length(x)
-  if (n < 30L) return(NA_real_)
-  binw <- 2 * sd(x) * n^(-1 / 2)
-  lo   <- floor(min(x) / binw) * binw
-  hi   <- ceiling(max(x) / binw) * binw
-  brks <- seq(lo, hi, by = binw)
-  mids <- brks[-length(brks)] + binw / 2
-  cnt  <- tabulate(findInterval(x, brks, rightmost.closed = TRUE),
-                   nbins = length(mids))
-  Y    <- cnt / (n * binw)
-  fit_side <- function(keep) {
-    g <- mids[keep]; y <- Y[keep]; w <- pmax(0, 1 - abs(g) / h); use <- w > 0
-    g <- g[use]; y <- y[use]; w <- w[use]
-    if (length(g) < 3L) return(NULL)
-    Z <- cbind(1, g); Zw <- Z * w
-    XtWXi <- tryCatch(solve(crossprod(Z, Zw)), error = function(e) NULL)
-    if (is.null(XtWXi)) return(NULL)
-    beta <- XtWXi %*% crossprod(Zw, y)
-    vj   <- pmax(y, 1e-8) / (n * binw)
-    Vb   <- XtWXi %*% crossprod(Zw, vj * Zw) %*% XtWXi
-    c(f0 = beta[1L], var = Vb[1L, 1L])
-  }
-  Rr <- fit_side(mids > 0); Ll <- fit_side(mids < 0)
-  if (is.null(Rr) || is.null(Ll) || Rr["f0"] <= 0 || Ll["f0"] <= 0)
-    return(NA_real_)
-  theta <- log(Rr["f0"]) - log(Ll["f0"])
-  se    <- sqrt(Rr["var"] / Rr["f0"]^2 + Ll["var"] / Ll["f0"]^2)
-  unname(2 * pnorm(-abs(theta / se)))
-}
 
 # ============================================================================
 # (a) Reproduction: package matches standalone on the same cross section
 # ============================================================================
 
-test_that(".mccrary matches mccrary_p_ref on same inputs", {
-  set.seed(7)
-  n <- 3000
-  x <- rnorm(n, 0, 0.8)   # centred at 0
-  h <- 0.5
-
-  expect_equal(.mccrary(x, h), mccrary_p_ref(x, h), tolerance = 1e-12)
-})
 
 test_that("rd_typecont LL jump matches ll_cov_p_ref on the same data (HC0 vs HC1 noted)", {
   # ll_cov_p_ref uses raw residuals (HC0); rd_period uses HC1 df correction.
@@ -143,22 +105,6 @@ test_that("rd_typecont LL jump matches ll_cov_p_ref on the same data (HC0 vs HC1
   }), tolerance = 1e-10)
 })
 
-test_that("rd_typecont McCrary pooled matches mccrary_p_ref on same cross section", {
-  set.seed(11)
-  n <- 3000; h <- 0.5
-  d     <- dgp_s3_local(n, "null", seed = 11)
-  panel <- xsec_to_panel(d)
-
-  out <- rd_typecont(panel, x = "R", time = "time", id = "id",
-                     c = 0, h = h, q = 75L, S = 99L, kernel = "triangular")
-
-  # Pooled McCrary for period 2 should match the standalone on d$R
-  pkg_p <- out$mccrary_pooled$p[out$mccrary_pooled$period == "2"]
-  ref_p <- mccrary_p_ref(d$R, h)
-
-  # They use the same centred x (d$R is already at cutoff 0)
-  expect_equal(pkg_p, ref_p, tolerance = 1e-10)
-})
 
 # ============================================================================
 # (b) Under the null, p-values are not systematically tiny
@@ -180,7 +126,7 @@ test_that("rd_typecont LL-Wald is correctly sized under the null", {
     d     <- dgp_s3_local(2000, "null", seed = s)
     panel <- xsec_to_panel(d)
     rd_typecont(panel, x = "R", time = "time", id = "id",
-                c = 0, h = 0.5, q = 50L, S = 49L, kernel = "triangular")$ll_wald$p
+                c = 0, h = 0.5, kernel = "triangular")$ll_wald$p
   }, numeric(1))
 
   # Under the null the LL-Wald p-values are ~Uniform(0,1): the median sits well
@@ -191,25 +137,6 @@ test_that("rd_typecont LL-Wald is correctly sized under the null", {
   expect_lte(sum(ll < 0.05), 4L)
 })
 
-test_that("rd_typecont default q follows the Canay-Kamat rule of thumb", {
-  steep <- xsec_to_panel(dgp_s3_local(3000, "null", sigma_R = 0.3, seed = 1))
-  mild  <- xsec_to_panel(dgp_s3_local(3000, "null", sigma_R = 1.5, seed = 1))
-  o_s <- rd_typecont(steep, x = "R", time = "time", id = "id", c = 0, h = 0.5, S = 99L)
-  o_m <- rd_typecont(mild,  x = "R", time = "time", id = "id", c = 0, h = 0.5, S = 99L)
-
-  # Default q = NULL -> per-period rule of thumb, flagged in meta.
-  expect_identical(o_s$meta$q, "rot")
-  ub <- ceiling(3000^0.9 / log(3000))
-  expect_true(all(o_s$meta$q_used >= 10L & o_s$meta$q_used <= ub))
-
-  # A steeper type-vs-running-variable slope (smaller sigma_R) must shrink q.
-  expect_lt(mean(o_s$meta$q_used), mean(o_m$meta$q_used))
-
-  # A supplied q overrides the rule of thumb on every period.
-  o_fix <- rd_typecont(steep, x = "R", time = "time", id = "id",
-                       c = 0, h = 0.5, q = 30L, S = 99L)
-  expect_true(all(o_fix$meta$q_used == 30L))
-})
 
 # ============================================================================
 # (c) Under a sorting scenario the LL-Wald rejects
@@ -222,11 +149,10 @@ test_that("rd_typecont rejects LL-Wald under a7_pooled (type-1 mass moves up)", 
   panel <- xsec_to_panel(d)
 
   out <- rd_typecont(panel, x = "R", time = "time", id = "id",
-                     c = 0, h = 0.5, q = 75L, S = 99L, kernel = "triangular")
+                     c = 0, h = 0.5, kernel = "triangular")
 
   # Strong violation: expect rejection at 1% level
   expect_lt(out$ll_wald$p, 0.01)
-  expect_lt(out$ck_perm$p, 0.05)
 })
 
 # ============================================================================
@@ -240,27 +166,20 @@ test_that("rd_typecont returns an rd_typecont object with expected fields", {
   panel <- xsec_to_panel(d)
 
   out <- rd_typecont(panel, x = "R", time = "time", id = "id",
-                     c = 0, h = 0.5, S = 49L)
+                     c = 0, h = 0.5)
 
   expect_s3_class(out, "rd_typecont")
-  expect_named(out, c("ll_wald", "per_period", "ck_perm", "mccrary_within", "mccrary_pooled", "meta"))
+  expect_named(out, c("ll_wald", "per_period", "meta"))
   expect_named(out$ll_wald, c("stat", "df", "p"))
-  expect_named(out$ck_perm, c("stat", "p"))
-  # per_period: one entry per period, each with its own LL-Wald and CK p
+  # per_period: one entry per period, each with its own LL-Wald
   expect_named(out$per_period, out$meta$periods)
   for (pp in out$per_period) {
-    expect_named(pp, c("ll_wald", "ck_p"))
+    expect_named(pp, c("ll_wald"))
     expect_named(pp$ll_wald, c("stat", "df", "p"))
     expect_true(pp$ll_wald$p >= 0 && pp$ll_wald$p <= 1)
-    expect_true(is.na(pp$ck_p) || (pp$ck_p >= 0 && pp$ck_p <= 1))
   }
-  expect_true(is.data.frame(out$mccrary_within))
-  expect_true(is.data.frame(out$mccrary_pooled))
   # p-values in [0,1]
   expect_true(out$ll_wald$p >= 0 && out$ll_wald$p <= 1)
-  expect_true(out$ck_perm$p >= 0 && out$ck_perm$p <= 1)
-  expect_true(all(out$mccrary_pooled$p >= 0 & out$mccrary_pooled$p <= 1,
-                  na.rm = TRUE))
 })
 
 test_that("print.rd_typecont runs without error", {
@@ -269,7 +188,7 @@ test_that("print.rd_typecont runs without error", {
   d     <- dgp_s3_local(n, "null", seed = 6)
   panel <- xsec_to_panel(d)
   out   <- rd_typecont(panel, x = "R", time = "time", id = "id",
-                       c = 0, h = 0.5, S = 49L)
+                       c = 0, h = 0.5)
   expect_output(print(out), "LL-Wald")
 })
 
@@ -284,7 +203,7 @@ test_that("rd_typecont works with 3 periods", {
   }))
 
   out <- rd_typecont(panel3, x = "R", time = "time", id = "id",
-                     c = 0, h = 0.5, S = 49L)
+                     c = 0, h = 0.5)
   expect_s3_class(out, "rd_typecont")
   expect_equal(length(out$meta$periods), 3L)
   # With P=3 periods, n_types = 2^(3-1) = 4 possible type values
@@ -328,28 +247,7 @@ make_panel3_sort <- function(n, seed, p_sort = 0.6) {
   }))
 }
 
-test_that("CK permutation (P=3) does not over-reject under no-sorting DGP", {
-  # Under the null, the Canay-Kamat p-value should not be systematically tiny.
-  # We run 5 independent draws and require at least 3 of them to exceed 0.01,
-  # which gives <1% probability of failure if the true size is <=5%.
-  seeds  <- c(201L, 202L, 203L, 204L, 205L)
-  p_vals <- vapply(seeds, function(s) {
-    panel3 <- make_panel3_null(1500L, s)
-    out    <- rd_typecont(panel3, x = "R", time = "time", id = "id",
-                          c = 0, h = 0.5, q = 75L, S = 399L)
-    out$ck_perm$p
-  }, numeric(1L))
-  # At least 3 out of 5 must not reject at 0.01 level
-  expect_gte(sum(p_vals > 0.01), 3L)
-})
 
-test_that("CK permutation (P=3) rejects under sorting DGP", {
-  # Under strong type-sorting, p-value should be small.
-  panel3 <- make_panel3_sort(3000L, seed = 301L, p_sort = 0.7)
-  out    <- rd_typecont(panel3, x = "R", time = "time", id = "id",
-                        c = 0, h = 0.5, q = 75L, S = 499L)
-  expect_lt(out$ck_perm$p, 0.05)
-})
 
 test_that("rd_typecont bwselect = 'cct' runs end-to-end and returns finite stat", {
   skip_if_not_installed("rdrobust")
@@ -357,29 +255,8 @@ test_that("rd_typecont bwselect = 'cct' runs end-to-end and returns finite stat"
   d     <- dgp_s3_local(1500, "null", seed = 42L)
   panel <- xsec_to_panel(d)
   out   <- rd_typecont(panel, x = "R", time = "time", id = "id",
-                       c = 0, bwselect = "cct", q = 50L, S = 49L,
-                       kernel = "triangular")
+                       c = 0, bwselect = "cct", kernel = "triangular")
   expect_true(is.finite(out$ll_wald$stat))
   expect_gte(out$ll_wald$df, 1L)
 })
 
-test_that("CK permutation (P=3): observed stat is deterministic and p in [0,1]", {
-  # The observed statistic is computed from the data (no randomness); it must
-  # be identical across two calls.  p-value must be a valid probability.
-  # This also indirectly verifies the shared-draw structure: the observed stat
-  # is the sum of |mean_right - mean_left| across (period, type) cells, which
-  # is the same formula used for permuted stats — so the test is internally
-  # consistent only if both sides use the same grouping.
-  panel3 <- make_panel3_null(800L, seed = 401L)
-
-  out1 <- rd_typecont(panel3, x = "R", time = "time", id = "id",
-                      c = 0, h = 0.5, q = 50L, S = 99L)
-  out2 <- rd_typecont(panel3, x = "R", time = "time", id = "id",
-                      c = 0, h = 0.5, q = 50L, S = 99L)
-
-  # Observed stat is purely deterministic — must match exactly
-  expect_equal(out1$ck_perm$stat, out2$ck_perm$stat, tolerance = 1e-12)
-  # p-value is a valid probability
-  expect_gte(out1$ck_perm$p, 0)
-  expect_lte(out1$ck_perm$p, 1)
-})

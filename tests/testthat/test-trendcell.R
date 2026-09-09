@@ -204,8 +204,8 @@ test_that("print.rd_trendcell does not error", {
                                jump_fn = function(k, t) 0.4)
   res <- rd_trendcell(dat, y = "y", x = "x", time = "time", id = "id",
                       comparisons = 1:2, t_rd = 3L, h = 0.4)
-  expect_output(print(res), "Within-type confounding pre-trend test \\(ass:trend-cell\\)")
-  expect_output(print(res), "neither necessary nor sufficient", ignore.case = TRUE)
+  expect_output(print(res), "Within-type confounding pre-trends test")
+  expect_output(print(res), "Wald statistic")
 })
 
 # ---------------------------------------------------------------------------

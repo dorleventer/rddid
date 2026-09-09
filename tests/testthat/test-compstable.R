@@ -69,8 +69,7 @@ test_that("rd_compstable null scenario: p-values not tiny", {
 
   out <- rd_compstable(dat, x = "R", time = "time", id = "id",
                        t_rd = 2L, comparisons = 1L,
-                       c = 0, h = 0.5, q = 75L, S = 499L,
-                       kernel = "triangular")
+                       c = 0, h = 0.5, kernel = "triangular")
 
   expect_s3_class(out, "rd_compstable")
   pr <- out$pairs[["2::1"]]
@@ -79,7 +78,6 @@ test_that("rd_compstable null scenario: p-values not tiny", {
   # Under the null, do NOT expect systematic rejection.
   # Use a very conservative 0.001 threshold to avoid false CI failures.
   expect_gt(pr$ll_wald$p, 0.001)
-  expect_gt(pr$ck_perm$p, 0.001)
 })
 
 # ============================================================================
@@ -91,8 +89,7 @@ test_that("rd_compstable alternative: LL-Wald rejects when composition shifts", 
 
   out <- rd_compstable(dat, x = "R", time = "time", id = "id",
                        t_rd = 2L, comparisons = 1L,
-                       c = 0, h = 0.5, q = 75L, S = 99L,
-                       kernel = "triangular")
+                       c = 0, h = 0.5, kernel = "triangular")
 
   expect_s3_class(out, "rd_compstable")
   pr <- out$pairs[["2::1"]]
@@ -111,7 +108,7 @@ test_that("rd_compstable returns expected structure", {
 
   out <- rd_compstable(dat, x = "R", time = "time", id = "id",
                        t_rd = 2L, comparisons = 1L,
-                       c = 0, h = 0.5, S = 49L)
+                       c = 0, h = 0.5)
 
   # Class
   expect_s3_class(out, "rd_compstable")
@@ -122,8 +119,8 @@ test_that("rd_compstable returns expected structure", {
   # Pair result
   pr <- out$pairs[["2::1"]]
   expect_false(is.null(pr))
-  expect_named(pr, c("ll_wald", "jumps", "jump_se", "ck_perm", "type_values",
-                     "scheme", "q", "n_trd", "n_t0", "n_both"))
+  expect_named(pr, c("ll_wald", "jumps", "jump_se", "type_values",
+                     "scheme", "n_trd", "n_t0", "n_both"))
   # binary types: the single kept jump reproduces the chi-square(1) Wald statistic
   expect_equal(length(pr$jumps), 1L)
   expect_equal(unname((pr$jumps / pr$jump_se)^2), pr$ll_wald$stat, tolerance = 1e-10)
@@ -133,11 +130,6 @@ test_that("rd_compstable returns expected structure", {
   expect_true(is.numeric(pr$ll_wald$stat))
   expect_true(pr$ll_wald$df >= 0)
   expect_true(pr$ll_wald$p  >= 0 && pr$ll_wald$p <= 1)
-
-  # ck_perm
-  expect_named(pr$ck_perm, c("stat", "p"))
-  expect_true(is.numeric(pr$ck_perm$stat))
-  expect_true(pr$ck_perm$p >= 0 && pr$ck_perm$p <= 1)
 
   # meta
   expect_equal(out$meta$t_rd, 2L)
@@ -150,7 +142,7 @@ test_that("rd_compstable n_both > 0 when eta drives both periods", {
 
   out <- rd_compstable(dat, x = "R", time = "time", id = "id",
                        t_rd = 2L, comparisons = 1L,
-                       c = 0, h = 0.5, S = 49L)
+                       c = 0, h = 0.5)
 
   pr <- out$pairs[["2::1"]]
   # With strong eta correlation there should be units above in both periods.
@@ -159,27 +151,6 @@ test_that("rd_compstable n_both > 0 when eta drives both periods", {
   expect_equal(pr$scheme, "pv")
 })
 
-test_that("rd_compstable default q follows the Canay-Kamat rule of thumb", {
-  dat <- make_panel_null(n = 3000, seed = 42L)
-
-  out <- rd_compstable(dat, x = "R", time = "time", id = "id",
-                       t_rd = 2L, comparisons = 1L,
-                       c = 0, h = 0.5, S = 99L)
-
-  # Default q = NULL -> per-pair rule of thumb, flagged in meta.
-  expect_identical(out$meta$q, "rot")
-  ub <- ceiling(3000^0.9 / log(3000))
-  q_used <- unlist(out$meta$q_used)
-  expect_true(all(q_used >= 10L & q_used <= ub))
-  # Per-pair q is echoed into the pair output and matches meta$q_used.
-  expect_equal(out$pairs[["2::1"]]$q, out$meta$q_used[["2::1"]])
-
-  # A supplied q overrides the rule of thumb on every pair.
-  out_fix <- rd_compstable(dat, x = "R", time = "time", id = "id",
-                           t_rd = 2L, comparisons = 1L,
-                           c = 0, h = 0.5, q = 30L, S = 99L)
-  expect_true(all(unlist(out_fix$meta$q_used) == 30L))
-})
 
 test_that("rd_compstable multiple comparison periods works", {
   # 3-period panel: t_rd=3, comparisons = c(1, 2)
@@ -194,7 +165,7 @@ test_that("rd_compstable multiple comparison periods works", {
 
   out <- rd_compstable(dat, x = "R", time = "time", id = "id",
                        t_rd = 3L, comparisons = c(1L, 2L),
-                       c = 0, h = 0.5, S = 49L)
+                       c = 0, h = 0.5)
 
   expect_s3_class(out, "rd_compstable")
   expect_length(out$pairs, 2L)
@@ -209,16 +180,16 @@ test_that("print.rd_compstable runs without error", {
   dat <- make_panel_null(n = 500, seed = 6L)
   out <- rd_compstable(dat, x = "R", time = "time", id = "id",
                        t_rd = 2L, comparisons = 1L,
-                       c = 0, h = 0.5, S = 49L)
+                       c = 0, h = 0.5)
   expect_output(print(out), "Composition-stability")
-  expect_output(print(out), "nec & suff")
+  expect_output(print(out), "Composition-stability test")
 })
 
 test_that("rd_compstable scheme = 'cs' overrides auto", {
   dat <- make_panel_null(n = 600, seed = 11L)
   out <- rd_compstable(dat, x = "R", time = "time", id = "id",
                        t_rd = 2L, comparisons = 1L,
-                       c = 0, h = 0.5, S = 49L, scheme = "cs")
+                       c = 0, h = 0.5, scheme = "cs")
   pr <- out$pairs[["2::1"]]
   expect_equal(pr$scheme, "cs")
   expect_true(pr$ll_wald$p >= 0 && pr$ll_wald$p <= 1)
@@ -233,7 +204,7 @@ test_that("rd_compstable: NULL comparisons defaults to all non-t_rd periods", {
   }))
   out <- rd_compstable(dat, x = "R", time = "time", id = "id",
                        t_rd = 3L, comparisons = NULL,
-                       c = 0, h = 0.5, S = 29L)
+                       c = 0, h = 0.5)
   # Should have pairs for t0 = 1 and t0 = 2
   expect_length(out$pairs, 2L)
 })
@@ -283,8 +254,7 @@ test_that("rd_compstable high-dual-sided: size controlled under the null", {
 
   out <- rd_compstable(dat, x = "R", time = "time", id = "id",
                        t_rd = 2L, comparisons = 1L,
-                       c = 0, h = 0.5, q = 75L, S = 499L,
-                       kernel = "triangular")
+                       c = 0, h = 0.5, kernel = "triangular")
 
   pr <- out$pairs[["2::1"]]
   expect_false(is.null(pr))
@@ -294,7 +264,6 @@ test_that("rd_compstable high-dual-sided: size controlled under the null", {
 
   # Size control: neither test should systematically reject under the null.
   expect_gt(pr$ll_wald$p, 0.001)
-  expect_gt(pr$ck_perm$p, 0.001)
 })
 
 test_that("rd_compstable bwselect = 'cct' runs end-to-end and returns finite stat", {
@@ -302,8 +271,7 @@ test_that("rd_compstable bwselect = 'cct' runs end-to-end and returns finite sta
   dat <- make_panel_null(n = 1500, seed = 42L)
   out <- rd_compstable(dat, x = "R", time = "time", id = "id",
                        t_rd = 2L, comparisons = 1L,
-                       c = 0, bwselect = "cct", q = 50L, S = 49L,
-                       kernel = "triangular")
+                       c = 0, bwselect = "cct", kernel = "triangular")
   expect_true(is.finite(out$joint$ll_wald$stat))
   expect_gte(out$joint$ll_wald$df, 1L)
 })
@@ -314,8 +282,7 @@ test_that("rd_compstable high-dual-sided: rejects under composition shift", {
 
   out <- rd_compstable(dat, x = "R", time = "time", id = "id",
                        t_rd = 2L, comparisons = 1L,
-                       c = 0, h = 0.5, q = 75L, S = 199L,
-                       kernel = "triangular")
+                       c = 0, h = 0.5, kernel = "triangular")
 
   pr <- out$pairs[["2::1"]]
   expect_false(is.null(pr))
