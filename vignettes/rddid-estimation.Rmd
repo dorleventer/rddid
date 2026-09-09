@@ -176,6 +176,9 @@ res_lin <- rddid(dat_lin, y = "Y", x = "R", time = "t", id = "id", t_rd = 3,
                   comparisons = c(1, 2), weights = "linear", bwselect = "cct")
 res_lin$weights
 res_lin$estimates[, c("est", "se")]
+```
+
+```{r linear-arith, include = FALSE}
 D1_lin <- res_lin$fits[["1"]]$D
 D2_lin <- res_lin$fits[["2"]]$D
 D3_lin <- res_lin$fits[["3"]]$D
