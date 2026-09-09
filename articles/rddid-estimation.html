@@ -318,11 +318,7 @@ to <code>t_rd</code>.</p>
 <span><span class="va">res_lin</span><span class="op">$</span><span class="va">estimates</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"est"</span>, <span class="st">"se"</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="co">#&gt;                   est        se</span></span>
 <span><span class="co">#&gt; Conventional 1.287077 0.1940728</span></span>
-<span><span class="co">#&gt; Robust       1.354870 0.2283461</span></span>
-<span><span class="va">D1_lin</span> <span class="op">&lt;-</span> <span class="va">res_lin</span><span class="op">$</span><span class="va">fits</span><span class="op">[[</span><span class="st">"1"</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">D</span></span>
-<span><span class="va">D2_lin</span> <span class="op">&lt;-</span> <span class="va">res_lin</span><span class="op">$</span><span class="va">fits</span><span class="op">[[</span><span class="st">"2"</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">D</span></span>
-<span><span class="va">D3_lin</span> <span class="op">&lt;-</span> <span class="va">res_lin</span><span class="op">$</span><span class="va">fits</span><span class="op">[[</span><span class="st">"3"</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">D</span></span>
-<span><span class="va">pred_lin</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">res_lin</span><span class="op">$</span><span class="va">weights</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">D1_lin</span>, <span class="va">D2_lin</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<span><span class="co">#&gt; Robust       1.354870 0.2283461</span></span></code></pre></div>
 <p><code>res_lin$weights</code> is -1, 2: extrapolating the line through
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>,</mo><mn>0.97</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(1, 0.97)</annotation></semantics></math>
 and
@@ -343,11 +339,6 @@ are admissible, e.g. on the constant-trend data:</p>
 <span><span class="co">#&gt;                   est         se</span></span>
 <span><span class="co">#&gt; Conventional 1.106545 0.09013533</span></span>
 <span><span class="co">#&gt; Robust       1.142396 0.10725730</span></span></code></pre></div>
-<p>With only two comparison periods, the linear trend is
-just-identified: the line through
-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>D</mi><mo accent="true">̂</mo></mover><mn>1</mn></msub><mo>,</mo><msub><mover><mi>D</mi><mo accent="true">̂</mo></mover><mn>2</mn></msub></mrow><annotation encoding="application/x-tex">\hat D_1, \hat D_2</annotation></semantics></math>
-passes through both points exactly, so the data cannot distinguish a
-constant from a linear confounding trend.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

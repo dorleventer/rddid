@@ -213,10 +213,6 @@ res_lin$estimates[, c("est", "se")]
 #>                   est        se
 #> Conventional 1.287077 0.1940728
 #> Robust       1.354870 0.2283461
-D1_lin <- res_lin$fits[["1"]]$D
-D2_lin <- res_lin$fits[["2"]]$D
-D3_lin <- res_lin$fits[["3"]]$D
-pred_lin <- sum(res_lin$weights * c(D1_lin, D2_lin))
 ```
 
 `res_lin$weights` is -1, 2: extrapolating the line through $`(1, 0.97)`$
@@ -236,8 +232,3 @@ res_custom$estimates[, c("est", "se")]
 #> Conventional 1.106545 0.09013533
 #> Robust       1.142396 0.10725730
 ```
-
-With only two comparison periods, the linear trend is just-identified:
-the line through $`\hat D_1, \hat D_2`$ passes through both points
-exactly, so the data cannot distinguish a constant from a linear
-confounding trend.
