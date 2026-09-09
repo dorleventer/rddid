@@ -70,10 +70,12 @@
 #' @param weights `"constant"` (equal weights; constant confounding trend),
 #'   `"linear"` (line through the comparison discontinuities extrapolated to
 #'   `t_rd`), or a numeric vector over `comparisons`.
-#' @param bwselect `"joint"` (default; a single common AMSE-optimal bandwidth
-#'   for the aggregate estimator), `"cct"` (per-period MSE-optimal bandwidths
-#'   via `rdrobust`), or `"iter"` (period-specific bandwidths chosen jointly by
-#'   coordinate descent on the aggregate AMSE). Ignored if `h` is supplied.
+#' @param bwselect `"iter"` (default; period-specific bandwidths chosen jointly
+#'   by coordinate descent on the aggregate AMSE, started at the common
+#'   joint-optimal bandwidth — the rule the paper's Section 5.3 states as
+#'   preferred), `"joint"` (a single common AMSE-optimal bandwidth for the
+#'   aggregate estimator), or `"cct"` (per-period MSE-optimal bandwidths via
+#'   `rdrobust`). Ignored if `h` is supplied.
 #' @param start seed for the iterative (`bwselect = "iter"`) coordinate descent.
 #'   `"hstar"` (default) starts all periods at the common joint-optimal h*;
 #'   `"cct"` starts each period at its own CCT/IK pilot h; or supply a named
@@ -102,7 +104,7 @@
 #' @export
 rddid <- function(data, y, x, time, id = NULL, t_rd,
                   comparisons = NULL, weights = "constant",
-                  bwselect = c("joint", "cct", "iter"), h = NULL, b = NULL,
+                  bwselect = c("iter", "joint", "cct"), h = NULL, b = NULL,
                   start = "hstar",
                   scheme = c("auto", "cs", "pc", "pv"),
                   regularize = TRUE, reg_const = 3,

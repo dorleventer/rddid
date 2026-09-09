@@ -1,5 +1,10 @@
 # rddid 0.4.0.9000 (development)
 
+* **`rddid()` default bandwidth rule is now `bwselect = "iter"`** (period-specific bandwidths by
+  coordinate descent on the aggregate AMSE, started at the common h*), the rule Section 5.3 of the
+  paper states as preferred; previously `"joint"`. Calls that pass `bwselect` explicitly (all the
+  paper's scripts do) are unaffected.
+
 * **Site rebuilt around three vignettes** (`vignettes/`, plan in `dev/site_plan.md`): *Estimating
   the ATT with rddid()* (per-period `rd_bw_cct()` + `rd_period()`, then `rddid()` under constant,
   linear and custom weights), *Bandwidth rules and sampling schemes* (`bwselect = "cct" / "joint" /

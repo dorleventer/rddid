@@ -50,14 +50,14 @@ rddid(dat, y = "Y", x = "R", time = "t", id = "id",
 #> RD-DID estimate of ATT(t_RD)
 #>   RD period: 3   comparison periods: 1, 2
 #>   weights: constant [0.5, 0.5]
-#>   bandwidth: joint AMSE  h*=0.3269, b=0.4772
+#>   bandwidth: period-specific joint AMSE (coord. descent, 5 iters)
 #>   sampling scheme: PC (auto-detected)
 #> 
 #>                    Estimate   Std.Err.   95% CI
-#>   Conventional      1.08535    0.09717   [  0.89489,   1.27581]
-#>   Robust            1.12101    0.11686   [  0.89198,   1.35004]
+#>   Conventional      1.09413    0.09746   [  0.90312,   1.28514]
+#>   Robust            1.12176    0.11715   [  0.89215,   1.35138]
 #> 
-#>   SEs by scheme (Robust): CS=0.18497  PC=0.11686  PV=0.11686
+#>   SEs by scheme (Robust): CS=0.18902  PC=0.11715  PV=0.11715
 ```
 
 The vignettes walk through the estimator, its bandwidth rules and
