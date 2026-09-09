@@ -177,18 +177,6 @@ res
   Other bandwidth rules and the sampling schemes are covered in the
   “Bandwidth rules and sampling schemes” vignette.
 
-``` r
-
-Dvec       <- setNames(tab$D, as.character(tab$t))
-manual_est <- sum(res$coef * Dvec[names(res$coef)])
-stopifnot(isTRUE(all.equal(manual_est, res$estimates["Conventional", "est"])))
-```
-
-`res$fits[["3"]]$D` = 1.97546 is the per-period $`\hat D_3`$ above.
-`res$coef` holds the coefficients on the raw $`\hat D_t`$’s (one on the
-RD period, $`-w_t`$ on the comparison periods), and `sum(res$coef * D)`
-= 1.07877 reproduces `res$estimates["Conventional", "est"]` = 1.07877.
-
 ## Linear confounding trend
 
 ``` r
