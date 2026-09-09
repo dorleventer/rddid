@@ -1,0 +1,229 @@
+---
+title: "Estimating the ATT with rddid()"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Estimating the ATT with rddid()}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.width = 7, fig.height = 2.8)
+```
+
+```{r setup}
+library(rddid)
+library(ggplot2)
+fmt <- function(x, d = 2) formatC(x, format = "f", digits = d)
+```
+
+## Setup
+
+A treatment of interest `W` and a confounding treatment `V` both switch at the
+same cutoff of a running variable `R`. In comparison periods `W` is uniformly
+zero, so the observed discontinuity in period $t$, $D_t$, equals the
+confounding discontinuity $\alpha_{t,0}$; in the RD period,
+$D_{t_{\mathrm{RD}}} = \mathrm{ATT}(t_{\mathrm{RD}}) + \alpha_{t_{\mathrm{RD}},0}$.
+With comparison-period weights $w_t$,
+$$
+\widehat{\mathrm{ATT}}(t_{\mathrm{RD}}) = \hat D_{t_{\mathrm{RD}}} - \sum_t w_t \hat D_t .
+$$
+
+The DGP below has periods $t = 1, 2$ as comparisons, $t = 3$ as the RD period,
+and a constant confounding discontinuity `alpha_true` across periods.
+
+```{r dgp}
+m_a <- function(r, theta) r + (theta / 2) * r^2 * (r >= 0)
+dgp_a <- function(n = 2000, alpha = c(1, 1, 1), theta = c(2, 2, 2), tau = 1, seed = 1) {
+  set.seed(seed)
+  R <- runif(n, -1, 1)                  # time-invariant running variable, cutoff at 0
+  u <- rnorm(n, 0, 0.5)                 # unit effect
+  do.call(rbind, lapply(1:3, function(t) {
+    V <- as.integer(R >= 0)             # confounding treatment: sharp RD every period
+    W <- V * (t == 3)                    # treatment of interest: sharp RD in the RD period only
+    data.frame(id = seq_len(n), t = t, R = R,
+               Y = m_a(R, theta[t]) + alpha[t] * V + tau * W + u + rnorm(n, 0, 0.5))
+  }))
+}
+
+alpha_true <- c(1, 1, 1)   # confounding discontinuity, alpha_t
+tau_true   <- 1            # ATT(t_RD)
+dat <- dgp_a(alpha = alpha_true, tau = tau_true)
+head(dat)
+```
+
+The data are long: one row per unit-period, with columns `id`, `t`, `R`, `Y`.
+This is the input format every function below expects.
+
+## Per-period discontinuities
+
+Each $\hat D_t$ is a standard local-linear RD, estimated one period at a time
+with `rd_bw_cct()` (the per-period CCT/IK bandwidth) and `rd_period()`.
+
+```{r per-period}
+periods <- 1:3
+per_period <- lapply(periods, function(t) {
+  d  <- dat[dat$t == t, ]
+  bw <- rd_bw_cct(d$Y, d$R, c = 0)
+  fit <- rd_period(d$Y, d$R, h = unname(bw["h"]), b = unname(bw["b"]), id = d$id, c = 0)
+  list(d = d, fit = fit)
+})
+names(per_period) <- periods
+
+truth <- alpha_true + tau_true * (periods == 3)
+tab <- data.frame(
+  t     = periods,
+  D     = sapply(per_period, function(p) p$fit$D),
+  SE    = sapply(per_period, function(p) sqrt(p$fit$V_D)),
+  D_bc  = sapply(per_period, function(p) p$fit$D_bc),
+  SE_bc = sapply(per_period, function(p) sqrt(p$fit$V_D_bc)),
+  h     = sapply(per_period, function(p) unname(p$fit$h)),
+  n     = sapply(per_period, function(p) p$fit$n),
+  truth = truth
+)
+knitr::kable(tab, digits = 3,
+             col.names = c("t", "D", "SE", "D (bc)", "SE (bc)", "h", "n", "truth"))
+```
+
+```{r rd-plot, fig.alt = "Binned scatter of Y on R with local-linear fits, one facet per period"}
+bin_w <- 0.05
+binned <- do.call(rbind, lapply(periods, function(t) {
+  d   <- per_period[[as.character(t)]]$d
+  bin <- (floor(d$R / bin_w) + 0.5) * bin_w
+  agg <- aggregate(d$Y, by = list(R = bin), FUN = mean)
+  names(agg)[2] <- "Y"
+  agg$t <- t
+  agg
+}))
+
+fit_lines <- do.call(rbind, lapply(periods, function(t) {
+  f <- per_period[[as.character(t)]]$fit
+  h <- unname(f$h)
+  rbind(
+    data.frame(t = t, side = "-", R = c(-h, 0),
+               Y = f$sides[["-"]]$beta0 + f$sides[["-"]]$slope * (c(-h, 0) - 0)),
+    data.frame(t = t, side = "+", R = c(0, h),
+               Y = f$sides[["+"]]$beta0 + f$sides[["+"]]$slope * (c(0, h) - 0))
+  )
+}))
+
+ggplot(binned, aes(R, Y)) +
+  geom_point(size = 0.9, colour = "grey45") +
+  geom_line(data = fit_lines, aes(group = side), colour = "firebrick", linewidth = 1.1) +
+  geom_vline(xintercept = 0, linetype = "dashed") +
+  facet_wrap(~ t, nrow = 1) +
+  theme_bw()
+```
+
+The comparison-period discontinuities, $\hat D_1 = `r fmt(tab$D[1])`$ and
+$\hat D_2 = `r fmt(tab$D[2])`$, are the confounding $\alpha_t$; the RD-period
+one, $\hat D_3 = `r fmt(tab$D[3])`$, is confounding plus ATT.
+
+## The RD-DID estimate
+
+Averaging the two comparison-period discontinuities,
+$(\hat D_1 + \hat D_2)/2 = `r fmt((tab$D[1] + tab$D[2]) / 2)`$, and subtracting
+from $\hat D_3 = `r fmt(tab$D[3])`$ gives
+`r fmt(tab$D[3] - (tab$D[1] + tab$D[2]) / 2)`. `rddid()` does the same aggregation:
+
+```{r rddid-call}
+res <- rddid(dat, y = "Y", x = "R", time = "t", id = "id", t_rd = 3,
+             comparisons = c(1, 2), weights = "constant", bwselect = "cct")
+res
+```
+
+- The two rows, `Conventional` and `Robust`, are the local-linear discontinuity
+  estimator and its bias-corrected counterpart, each aggregated with the same
+  weights.
+- The printed `Std.Err.` and CI are for the auto-detected sampling scheme,
+  `res$scheme` = "`r res$scheme`" — a panel with a time-constant running
+  variable.
+- The last line, `SEs by scheme`, lists the standard error under all three
+  sampling schemes (`res$estimates["Robust", "se_cs"]`, `"se_pc"`, `"se_pv"`);
+  here they read `r fmt(res$estimates["Robust", "se_cs"])`,
+  `r fmt(res$estimates["Robust", "se_pc"])`, and
+  `r fmt(res$estimates["Robust", "se_pv"])`.
+- The `weights` line shows `res$weights_type` ("`r res$weights_type`") and the
+  values `res$weights`.
+- The `bandwidth` line reports `bwselect = "cct"`: each period is fit at its
+  own `rd_bw_cct()` bandwidth, so `res$fits` are exactly the per-period fits
+  built above. Other bandwidth rules and the sampling schemes are covered in
+  the "Bandwidth rules and sampling schemes" vignette.
+
+```{r cross-check}
+Dvec       <- setNames(tab$D, as.character(tab$t))
+manual_est <- sum(res$coef * Dvec[names(res$coef)])
+stopifnot(isTRUE(all.equal(manual_est, res$estimates["Conventional", "est"])))
+```
+
+`res$fits[["3"]]$D` = `r fmt(res$fits[["3"]]$D, 5)` is the per-period
+$\hat D_3$ above. `res$coef` holds the coefficients on the raw $\hat D_t$'s
+(one on the RD period, $-w_t$ on the comparison periods), and
+`sum(res$coef * D)` = `r fmt(manual_est, 5)` reproduces
+`res$estimates["Conventional", "est"]` = `r fmt(res$estimates["Conventional", "est"], 5)`.
+
+## Linear confounding trend
+
+```{r linear-alpha}
+alpha_lin <- 0.5 + 0.5 * (1:3)
+dat_lin <- dgp_a(alpha = alpha_lin, tau = tau_true)
+res_const <- rddid(dat_lin, y = "Y", x = "R", time = "t", id = "id", t_rd = 3,
+                    comparisons = c(1, 2), weights = "constant", bwselect = "cct")
+res_const$estimates[, c("est", "se")]
+bias_truth <- alpha_lin[3] - mean(alpha_lin[1:2])
+```
+
+With `alpha_lin` growing linearly across periods, constant weights (the equal
+average of $\hat D_1, \hat D_2$) net out only the average confounding level,
+leaving a bias of $\alpha_3 - (\alpha_1+\alpha_2)/2 = `r fmt(bias_truth)`$
+against $\tau = `r fmt(tau_true, 0)`$: the Conventional estimate,
+`r fmt(res_const$estimates["Conventional", "est"])`, sits near
+$\tau + `r fmt(bias_truth)` = `r fmt(tau_true + bias_truth)`$.
+
+For a linear confounding trend, set `weights = "linear"`: it extrapolates the
+line through the comparison-period $\hat D_t$'s to `t_rd`.
+
+```{r linear-weights}
+res_lin <- rddid(dat_lin, y = "Y", x = "R", time = "t", id = "id", t_rd = 3,
+                  comparisons = c(1, 2), weights = "linear", bwselect = "cct")
+res_lin$weights
+res_lin$estimates[, c("est", "se")]
+D1_lin <- res_lin$fits[["1"]]$D
+D2_lin <- res_lin$fits[["2"]]$D
+D3_lin <- res_lin$fits[["3"]]$D
+pred_lin <- sum(res_lin$weights * c(D1_lin, D2_lin))
+```
+
+`res_lin$weights` is `r fmt(res_lin$weights[["1"]], 0)`, `r fmt(res_lin$weights[["2"]], 0)`:
+extrapolating the line through $(1, `r fmt(D1_lin)`)$ and $(2, `r fmt(D2_lin)`)$
+to $t = 3$ gives `r fmt(pred_lin)`, subtracted from
+$\hat D_3 = `r fmt(D3_lin)`$ to leave
+`r fmt(res_lin$estimates["Conventional", "est"])` (SE
+`r fmt(res_lin$estimates["Conventional", "se"])`) next to
+$\tau = `r fmt(tau_true, 0)`$.
+
+A numeric vector over `comparisons` supplies custom weights. Under a constant
+confounding trend any weights summing to one are admissible, e.g. on the
+constant-trend data:
+
+```{r custom-weights}
+res_custom <- rddid(dat, y = "Y", x = "R", time = "t", id = "id", t_rd = 3,
+                    comparisons = c(1, 2), weights = c(0.3, 0.7), bwselect = "cct")
+res_custom$estimates[, c("est", "se")]
+```
+
+With only two comparison periods, the linear trend is just-identified: the
+line through $\hat D_1, \hat D_2$ passes through both points exactly, so the
+data cannot distinguish a constant from a linear confounding trend.
+
+```{r checks, include = FALSE}
+stopifnot(
+  abs(res$estimates["Conventional", "est"] - tau_true) < 4 * res$estimates["Conventional", "se"],
+  abs(res$estimates["Robust", "est"] - tau_true) < 4 * res$estimates["Robust", "se"],
+  abs(res_lin$estimates["Conventional", "est"] - tau_true) < 4 * res_lin$estimates["Conventional", "se"],
+  abs(res_lin$estimates["Robust", "est"] - tau_true) < 4 * res_lin$estimates["Robust", "se"]
+)
+for (tt in periods) {
+  stopifnot(abs(tab$D[tab$t == tt] - tab$truth[tab$t == tt]) < 4 * tab$SE[tab$t == tt])
+}
+```
