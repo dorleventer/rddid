@@ -63,13 +63,3 @@ rddid(dat, y = "Y", x = "R", time = "t", id = "id",
 The vignettes walk through the estimator, its bandwidth rules and
 sampling schemes, and the composition validation tests:
 <https://dorleventer.github.io/rddid/>.
-
-## Development
-
-After cloning, enable the doc-sync pre-commit hook (regenerates
-`man/*.Rd` from roxygen and blocks commits where the generated docs are
-stale — the mismatch that otherwise fails `R CMD check`):
-
-``` sh
-git config core.hooksPath .githooks
-```
