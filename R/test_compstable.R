@@ -544,6 +544,10 @@ rd_compstable <- function(data, x, time, id, t_rd,
 
     pairs_out[[pair_key]] <- list(
       ll_wald    = ll_result,
+      # the tested jumps (binary types: the single share jump pi_{tRD,(+)}(1) - pi_{t0,(+)}(1))
+      # and their dependence-adjusted standard errors (diagonal of Sigma)
+      jumps      = if (length(ok_idx)) stats::setNames(theta[ok_idx], all_type_vals[ok_idx]) else numeric(0),
+      jump_se    = if (length(ok_idx)) stats::setNames(sqrt(diag(Sigma)[ok_idx]), all_type_vals[ok_idx]) else numeric(0),
       ck_perm    = list(stat = ck_obs, p = ck_p),
       type_values = all_type_vals,
       scheme     = use_scheme,

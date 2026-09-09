@@ -122,8 +122,11 @@ test_that("rd_compstable returns expected structure", {
   # Pair result
   pr <- out$pairs[["2::1"]]
   expect_false(is.null(pr))
-  expect_named(pr, c("ll_wald", "ck_perm", "type_values",
+  expect_named(pr, c("ll_wald", "jumps", "jump_se", "ck_perm", "type_values",
                      "scheme", "q", "n_trd", "n_t0", "n_both"))
+  # binary types: the single kept jump reproduces the chi-square(1) Wald statistic
+  expect_equal(length(pr$jumps), 1L)
+  expect_equal(unname((pr$jumps / pr$jump_se)^2), pr$ll_wald$stat, tolerance = 1e-10)
 
   # ll_wald
   expect_named(pr$ll_wald, c("stat", "df", "p"))
