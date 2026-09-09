@@ -70,3 +70,4 @@ Uses the pairwise (P = 2) design: for each comparison period in
 errors are a unit-level cluster bootstrap at bandwidths held fixed at the
 point-estimate values.
 }
+\keyword{internal}

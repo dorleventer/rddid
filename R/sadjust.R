@@ -119,6 +119,7 @@
 #'   `table` (columns `comparison`, `period`, `role`, `S`, `S_bc`, `S_se`,
 #'   `S_bc_se`, `D`, `D_bc`, `adjusted`, `adjusted_bc`, `n`,
 #'   `n_control_switchers`) and meta fields.
+#' @keywords internal
 #' @export
 rd_sadjust <- function(data, y, x, time, id, comparisons, t_rd, c = 0,
                        h = NULL, bwselect = "cct", kernel = "triangular",

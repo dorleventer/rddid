@@ -76,3 +76,4 @@ Bandwidths default to a per-block CCT selection, made once on the original
 sample and held fixed across the unit-level cluster bootstrap that supplies
 the standard error (recomputing CCT on the thin cells is unstable).
 }
+\keyword{internal}

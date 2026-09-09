@@ -170,6 +170,7 @@
 #'   standard errors (`C_se`, `C_bc_se`), the ordered periods (`t`, `s`), a
 #'   per-cell `cells` data frame (`label`, `dpi`, `dpi_bc`, `D`, `D_bc`,
 #'   `pi_s_plus`, `pi_t_plus`, `contrib`, `contrib_bc`), and meta fields.
+#' @keywords internal
 #' @export
 rd_c <- function(data, y, x, time, id, t, s, c = 0,
                  h = NULL, bwselect = "cct", kernel = "triangular",

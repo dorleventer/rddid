@@ -102,3 +102,4 @@ cross-primitive covariances, so the combination SEs are valid.
 This is the correction form and does not reimplement or depend on the
 within-type (reweighting) \code{att_adj} of \code{\link[=rd_adjust]{rd_adjust()}}, which is retained as-is.
 }
+\keyword{internal}

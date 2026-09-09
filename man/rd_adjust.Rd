@@ -65,3 +65,4 @@ confounding trend (\code{ass:trend-cell}, \code{\link[=rd_trendcell]{rd_trendcel
 share-weighted aggregate, alongside the unadjusted estimator. Standard errors
 are a unit-level cluster bootstrap.
 }
+\keyword{internal}

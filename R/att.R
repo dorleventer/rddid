@@ -194,6 +194,7 @@
 #'     \item meta fields (`t_rd`, `comparisons`, `weights`, `trend`, `c`,
 #'       `kernel`, `bwselect`, `se`, `B`, `n_boot_ok`, `call`).
 #'   }
+#' @keywords internal
 #' @export
 rd_att <- function(data, y, x, time, id, comparisons, t_rd, c = 0,
                    h = NULL, bwselect = "cct", kernel = "triangular",

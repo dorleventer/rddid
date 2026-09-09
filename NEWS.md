@@ -1,3 +1,21 @@
+# rddid 0.4.0.9000 (development)
+
+* **Site rebuilt around three vignettes** (`vignettes/`, plan in `dev/site_plan.md`): *Estimating
+  the ATT with rddid()* (per-period `rd_bw_cct()` + `rd_period()`, then `rddid()` under constant,
+  linear and custom weights), *Bandwidth rules and sampling schemes* (`bwselect = "cct" / "joint" /
+  "iter"`, `start`, fixed `h`; `scheme` detection and the three standard errors) and *Composition
+  validation tests* (`rd_typecont()`, `rd_compstable()`, `rd_homog()`, `rd_trendcell()` on
+  simulated scenarios that satisfy or violate each assumption). Every vignette hand-codes its DGP
+  and prints the truth next to each estimate; `dev/site_dgp_check.R` verifies the scenario claims.
+  `_pkgdown.yml` groups the reference into *Estimation* and *Validation tests*; README gains a
+  quick start (now generated from `README.Rmd`).
+
+* The composition-adjusted estimators (`rd_adjust()`, `rd_sadjust()`, `rd_c()`, `rd_att()`) are
+  tagged `@keywords internal`: still exported and tested, but no longer listed on the site. They
+  belong to a companion paper and are not part of the current manuscript.
+
+* `Suggests` gains `knitr`, `rmarkdown`, `ggplot2`; `VignetteBuilder: knitr`.
+
 # rddid 0.3.5.9000 (development)
 
 * **Synced with Appendix B of the paper (rewritten 2026-09-08).** A code <-> equation map now

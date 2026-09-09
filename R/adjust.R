@@ -131,6 +131,7 @@
 #' @param B bootstrap replications (default 500).
 #'
 #' @return object of class `"rd_adjust"`.
+#' @keywords internal
 #' @export
 rd_adjust <- function(data, y, x, time, id, t_rd, comparisons = NULL,
                       c = 0, h, b = h, weights = "constant",
