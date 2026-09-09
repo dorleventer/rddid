@@ -75,7 +75,8 @@ cat("\n--- V2 bandwidths, theta=(1,6,3) ---\n")
 a3 <- dgp_a(theta = c(1, 6, 3))
 for (rule in c("cct", "joint", "iter")) { tic()
   r <- rddid(a3, y = "Y", x = "R", time = "t", id = "id", t_rd = 3, bwselect = rule)
-  hs <- vapply(r$fits, function(f) unname(f$h), 1); e <- r$estimates
+  hs <- vapply(r$fits, function(f) unname(f$h), 1); hs <- hs[order(as.numeric(names(hs)))]  # r$fits lists the RD period first
+  e <- r$estimates
   cat(sprintf("%-5s h=%s  est=%.3f (%.3f) bc=%.3f (%.3f)", rule, paste(round(hs, 3), collapse = "/"), e[1,"est"], e[1,"se"], e[2,"est"], e[2,"se"])); toc(rule) }
 cat("\n--- V2 schemes ---\n")
 for (sc in c("cs", "pc", "pv")) { r <- rddid(dgp_a(scheme = sc), y = "Y", x = "R", time = "t", id = if (sc == "cs") NULL else "id", t_rd = 3, bwselect = "cct")
