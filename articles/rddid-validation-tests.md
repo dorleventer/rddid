@@ -12,11 +12,14 @@ bin_x <- function(x, w = 0.1) ifelse(x >= 0, floor(x / w) * w + w / 2, -(floor(-
 
 ## Setup
 
-When the running variable $`R`$ varies over time within a unit, a unit
-can sit on different sides of the cutoff in different periods. Its
-**type** in period $`t`$ is its side of the cutoff in the *other*
-period(s); $`\pi_{t,(+)}(v)`$ and $`\pi_{t,(-)}(v)`$ are the shares of
-type $`v`$ just above / below the cutoff in period $`t`$, and
+The four tests in this vignette apply when the running variable $`R`$
+varies over time within a unit (the `pv` sampling scheme); with a
+time-constant running variable every unit is on the same side of the
+cutoff in every period and the objects below are degenerate. When $`R`$
+varies, a unit can sit on different sides of the cutoff in different
+periods. Its **type** in period $`t`$ is its side of the cutoff in the
+*other* period(s); $`\pi_{t,(+)}(v)`$ and $`\pi_{t,(-)}(v)`$ are the
+shares of type $`v`$ just above / below the cutoff in period $`t`$, and
 $`\alpha_{t,0}(v)`$ is the within-type confounding discontinuity in
 period $`t`$. Section 4 of the paper states four assumptions on these
 objects and Section 4.4 gives a test for each. Every test function below
@@ -128,13 +131,15 @@ knitr::kable(tab_ss, digits = 3, col.names = c("scenario", "t", "jump", "SE"))
 [`rd_typecont()`](https://dorleventer.github.io/rddid/reference/rd_typecont.md)
 computes the same jumps and combines them into a joint Wald statistic
 across periods, with the cross-period covariance of the two jumps (the
-same units enter both regressions) inside it:
+same units enter both regressions) inside it. The statistic, its degrees
+of freedom and p-value are `$ll_wald$stat`, `$df`, `$p`; the per-period
+versions sit in `$per_period[[t]]$ll_wald`:
 
 ``` r
 
-tc0 <- rd_typecont(S0, x = "R", time = "t", id = "id", bwselect = "cct", S = 99L, bc = FALSE)
-tc3 <- rd_typecont(S3, x = "R", time = "t", id = "id", bwselect = "cct", S = 99L, bc = FALSE)
-tc0_bc <- rd_typecont(S0, x = "R", time = "t", id = "id", bwselect = "cct", S = 99L, bc = TRUE)
+tc0 <- rd_typecont(S0, x = "R", time = "t", id = "id", bwselect = "cct", bc = FALSE)
+tc3 <- rd_typecont(S3, x = "R", time = "t", id = "id", bwselect = "cct", bc = FALSE)
+tc0_bc <- rd_typecont(S0, x = "R", time = "t", id = "id", bwselect = "cct", bc = TRUE)
 ```
 
 For S0, $`\chi^2(2) = 0.835`$, $`p = 0.659`$ (per period $`p = 0.423`$
@@ -219,8 +224,8 @@ test:
 
 ``` r
 
-cs0 <- rd_compstable(S0, x = "R", time = "t", id = "id", t_rd = 2, comparisons = 1, bwselect = "cct", S = 99L, bc = FALSE)
-cs1 <- rd_compstable(S1, x = "R", time = "t", id = "id", t_rd = 2, comparisons = 1, bwselect = "cct", S = 99L, bc = FALSE)
+cs0 <- rd_compstable(S0, x = "R", time = "t", id = "id", t_rd = 2, comparisons = 1, bwselect = "cct", bc = FALSE)
+cs1 <- rd_compstable(S1, x = "R", time = "t", id = "id", t_rd = 2, comparisons = 1, bwselect = "cct", bc = FALSE)
 p1 <- cs1$pairs[["2::1"]]; p0 <- cs0$pairs[["2::1"]]
 ```
 
@@ -229,22 +234,20 @@ $`p < 0.001`$, with 2680 above-cutoff units from $`t_{\mathrm{RD}}`$,
 1985 from $`t_0`$, and 1848 above the cutoff in both periods. The
 package SE accounts for those 1848 doubly-counted units through the
 id-matched cross-side covariance term. For S0, for contrast: jump
-$`= 0.003`$, $`p = 0.946`$. With drift, the share of period-1-above
-units among units just above the period-2 cutoff is lower than the share
-of period-2-above units among units just above the period-1 cutoff.
+$`= 0.003`$, $`p = 0.946`$.
 
 ## Homogeneous confounding — `rd_homog()`
 
 Homogeneous confounding requires
 $`\alpha_{t_0,0}(0) = \alpha_{t_0,0}(1)`$ in the comparison period. The
-test estimates the outcome RD jump within each type (here, the unit’s
-side of the RD-period cutoff), in the comparison period, and tests
-equality:
+test estimates the outcome RD jump within each type (the unit’s side of
+the cutoff in the RD period, `type_by = "rd_side"`, the default), in the
+comparison period, and tests equality:
 
 ``` r
 
-h1 <- rd_homog(S1, y = "Y", x = "R", time = "t", id = "id", comparisons = 1, t_rd = 2, bwselect = "cct", type_by = "rd_side", bc = FALSE)
-h2 <- rd_homog(S2, y = "Y", x = "R", time = "t", id = "id", comparisons = 1, t_rd = 2, bwselect = "cct", type_by = "rd_side", bc = FALSE)
+h1 <- rd_homog(S1, y = "Y", x = "R", time = "t", id = "id", comparisons = 1, t_rd = 2, bwselect = "cct", bc = FALSE)
+h2 <- rd_homog(S2, y = "Y", x = "R", time = "t", id = "id", comparisons = 1, t_rd = 2, bwselect = "cct", bc = FALSE)
 tab_h <- rbind(cbind(scenario = "S1", h1$period_type_jumps), cbind(scenario = "S2", h2$period_type_jumps))
 knitr::kable(tab_h[, c("scenario", "period", "type", "jump", "se", "n")], digits = 3, row.names = FALSE)
 ```
@@ -281,12 +284,13 @@ within-type confounding jump at the RD period as at the comparison
 period. It is not directly testable at the RD period; with two
 comparison periods ($`t = 1, 2`$, RD period $`t = 3`$) the test instead
 checks whether the within-type jumps are constant *across* the two
-comparison periods:
+comparison periods, a pre-trends check in the difference-in-differences
+sense:
 
 ``` r
 
-tr0 <- rd_trendcell(S0_3, y = "Y", x = "R", time = "t", id = "id", comparisons = c(1, 2), t_rd = 3, bwselect = "cct", type_by = "rd_side", trend = "constant", bc = FALSE)
-tr4 <- rd_trendcell(S4, y = "Y", x = "R", time = "t", id = "id", comparisons = c(1, 2), t_rd = 3, bwselect = "cct", type_by = "rd_side", trend = "constant", bc = FALSE)
+tr0 <- rd_trendcell(S0_3, y = "Y", x = "R", time = "t", id = "id", comparisons = c(1, 2), t_rd = 3, bwselect = "cct", trend = "constant", bc = FALSE)
+tr4 <- rd_trendcell(S4, y = "Y", x = "R", time = "t", id = "id", comparisons = c(1, 2), t_rd = 3, bwselect = "cct", trend = "constant", bc = FALSE)
 tab_tr <- rbind(cbind(scenario = "S0_3", tr0$cell_period_jumps), cbind(scenario = "S4", tr4$cell_period_jumps))
 knitr::kable(tab_tr[, c("scenario", "cell", "period", "jump", "se", "n")], digits = 3, row.names = FALSE)
 ```
@@ -324,12 +328,12 @@ S0_3/S4](rddid-validation-tests_files/figure-html/trendcell-plot-1.png)
 
 ``` r
 
-tc1 <- rd_typecont(S1, x = "R", time = "t", id = "id", bwselect = "cct", S = 99L, bc = FALSE)
-tc2 <- rd_typecont(S2, x = "R", time = "t", id = "id", bwselect = "cct", S = 99L, bc = FALSE)
-cs2 <- rd_compstable(S2, x = "R", time = "t", id = "id", t_rd = 2, comparisons = 1, bwselect = "cct", S = 99L, bc = FALSE)
-cs3 <- rd_compstable(S3, x = "R", time = "t", id = "id", t_rd = 2, comparisons = 1, bwselect = "cct", S = 99L, bc = FALSE)
-h0 <- rd_homog(S0, y = "Y", x = "R", time = "t", id = "id", comparisons = 1, t_rd = 2, bwselect = "cct", type_by = "rd_side", bc = FALSE)
-h3 <- rd_homog(S3, y = "Y", x = "R", time = "t", id = "id", comparisons = 1, t_rd = 2, bwselect = "cct", type_by = "rd_side", bc = FALSE)
+tc1 <- rd_typecont(S1, x = "R", time = "t", id = "id", bwselect = "cct", bc = FALSE)
+tc2 <- rd_typecont(S2, x = "R", time = "t", id = "id", bwselect = "cct", bc = FALSE)
+cs2 <- rd_compstable(S2, x = "R", time = "t", id = "id", t_rd = 2, comparisons = 1, bwselect = "cct", bc = FALSE)
+cs3 <- rd_compstable(S3, x = "R", time = "t", id = "id", t_rd = 2, comparisons = 1, bwselect = "cct", bc = FALSE)
+h0 <- rd_homog(S0, y = "Y", x = "R", time = "t", id = "id", comparisons = 1, t_rd = 2, bwselect = "cct", bc = FALSE)
+h3 <- rd_homog(S3, y = "Y", x = "R", time = "t", id = "id", comparisons = 1, t_rd = 2, bwselect = "cct", bc = FALSE)
 
 rid <- function(dat, ...) rddid(dat, y = "Y", x = "R", time = "t", id = "id", t_rd = max(dat$t), bwselect = "cct", ...)
 estfmt <- function(r) sprintf("%s (%s)", fmt(r$estimates["Conventional", "est"]), fmt(r$estimates["Conventional", "se"]))

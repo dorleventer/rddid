@@ -12,8 +12,9 @@ fmt <- function(x, d = 2) formatC(x, format = "f", digits = d)
 A treatment of interest `W` and a confounding treatment `V` both switch
 at the same cutoff of a running variable `R`. In comparison periods `W`
 is uniformly zero, so the observed discontinuity in period $`t`$,
-$`D_t`$, equals the confounding discontinuity $`\alpha_{t,0}`$; in the
-RD period,
+$`D_t`$, equals the confounding discontinuity $`\alpha_{t,0}`$ (the
+paper’s notation: the jump in the untreated outcome at the cutoff); in
+the RD period,
 $`D_{t_{\mathrm{RD}}} = \mathrm{ATT}(t_{\mathrm{RD}}) + \alpha_{t_{\mathrm{RD}},0}`$.
 With comparison-period weights $`w_t`$,
 ``` math
@@ -39,7 +40,7 @@ dgp_a <- function(n = 2000, alpha = c(1, 1, 1), theta = c(2, 2, 2), tau = 1, see
   }))
 }
 
-alpha_true <- c(1, 1, 1)   # confounding discontinuity, alpha_t
+alpha_true <- c(1, 1, 1)   # confounding discontinuity, alpha_{t,0}
 tau_true   <- 1            # ATT(t_RD)
 dat <- dgp_a(alpha = alpha_true, tau = tau_true)
 head(dat)
@@ -60,8 +61,14 @@ The data are long: one row per unit-period, with columns `id`, `t`, `R`,
 Each $`\hat D_t`$ is a standard local-linear RD, estimated one period at
 a time with
 [`rd_bw_cct()`](https://dorleventer.github.io/rddid/reference/rd_bw_cct.md)
-(the per-period CCT/IK bandwidth) and
-[`rd_period()`](https://dorleventer.github.io/rddid/reference/rd_period.md).
+(the per-period CCT bandwidth pair $`h_t`$, $`b_t`$) and
+[`rd_period()`](https://dorleventer.github.io/rddid/reference/rd_period.md)
+(the local-linear fit with the bias correction and robust variance of
+Calonico, Cattaneo and Titiunik 2014). At a given bandwidth pair,
+[`rd_period()`](https://dorleventer.github.io/rddid/reference/rd_period.md)
+reproduces the Conventional and Bias-Corrected estimates and the
+Conventional and Robust standard errors of `rdrobust` to machine
+precision.
 
 ``` r
 
@@ -130,7 +137,7 @@ ggplot(binned, aes(R, Y)) +
 period](rddid-estimation_files/figure-html/rd-plot-1.png)
 
 The comparison-period discontinuities, $`\hat D_1 = 0.97`$ and
-$`\hat D_2 = 0.83`$, are the confounding $`\alpha_t`$; the RD-period
+$`\hat D_2 = 0.83`$, are the confounding $`\alpha_{t,0}`$; the RD-period
 one, $`\hat D_3 = 1.98`$, is confounding plus ATT.
 
 ## The RD-DID estimate
@@ -149,36 +156,42 @@ res
 #> RD-DID estimate of ATT(t_RD)
 #>   RD period: 3   comparison periods: 1, 2
 #>   weights: constant [0.5, 0.5]
-#>   bandwidth: per-period CCT/IK
-#>   sampling scheme: PC (auto-detected)
+#>   bwselect: cct  (per-period)
+#>   scheme: pc (auto-detected)
 #> 
 #>                    Estimate   Std.Err.   95% CI
 #>   Conventional      1.07877    0.08881   [  0.90471,   1.25283]
 #>   Robust            1.10971    0.10639   [  0.90118,   1.31823]
 #> 
-#>   SEs by scheme (Robust): CS=0.17082  PC=0.10639  PV=0.10639
+#>   Robust SE by scheme: cs=0.17082  pc=0.10639  pv=0.10639
 ```
 
 - The two rows, `Conventional` and `Robust`, are the local-linear
   discontinuity estimator and its bias-corrected counterpart, each
   aggregated with the same weights.
-- The printed `Std.Err.` and CI are for the auto-detected sampling
-  scheme, `res$scheme` = “pc” — a panel with a time-constant running
-  variable.
-- The last line, `SEs by scheme`, lists the standard error under all
-  three sampling schemes (`res$estimates["Robust", "se_cs"]`, `"se_pc"`,
+- The printed `Std.Err.` and CI are for the sampling scheme on the
+  `scheme` line, `res$scheme` = “pc”. The three schemes are `cs`
+  (repeated cross-section: different units in each period), `pc` (panel
+  with a time-constant running variable) and `pv` (panel with a
+  time-varying running variable). With `scheme = "auto"` (the default)
+  the scheme is read off the data: no `id` gives `cs`; units observed in
+  more than one period, each on the same side of the cutoff in every
+  period, give `pc`; any unit on different sides of the cutoff in
+  different periods gives `pv`.
+- The last line, `Robust SE by scheme`, lists the standard error under
+  all three schemes (`res$estimates["Robust", "se_cs"]`, `"se_pc"`,
   `"se_pv"`); here they read 0.17, 0.11, and 0.11.
 - The `weights` line shows `res$weights_type` (“constant”) and the
   values `res$weights`.
-- The `bandwidth` line reports `bwselect = "cct"`: each period is fit at
-  its own
+- The `bwselect` line reports `"cct"`: each period is fit at its own
   [`rd_bw_cct()`](https://dorleventer.github.io/rddid/reference/rd_bw_cct.md)
   bandwidth, so `res$fits` are exactly the per-period fits built above.
   Other bandwidth rules and the sampling schemes are covered in the
   “Bandwidth rules and sampling schemes” vignette.
 
-The sampling scheme can be set instead of detected; the printed SE and
-CI then correspond to it:
+The scheme describes how the data were sampled; it changes the standard
+error, not the estimate. Setting `scheme` replaces the detection, and
+the printed SE and CI then correspond to it:
 
 ``` r
 

@@ -58,7 +58,7 @@ dgp_a <- function(n = 2000, alpha = c(1, 1, 1), theta = c(2, 2, 2), tau = 1,
 ## Bandwidth rules
 
 Data for this section have a curvature $`\theta_t`$ that differs across
-periods, under the PC sampling scheme:
+periods, under the `pc` sampling scheme:
 
 ``` r
 
@@ -67,7 +67,7 @@ dat1 <- dgp_a(theta = c(1, 6, 3))
 
 ### `bwselect = "cct"`
 
-Per-period CCT/IK bandwidths: each $`h_t`$ (and pilot $`b_t`$) minimizes
+Per-period CCT bandwidths: each $`h_t`$ (and pilot $`b_t`$) minimizes
 the MSE of its own $`\widehat D_t`$, ignoring the other periods.
 
 ``` r
@@ -125,10 +125,10 @@ peek(r_iter)
 #> Robust       1.124 0.117
 ```
 
-`start` sets the seed of the descent: `start = "hstar"` (default) starts
-every period at the common $`h^\ast`$; `start = "cct"` starts each
-period at its own CCT/IK $`h_t`$; or a named vector supplies a manual
-per-period seed.
+`start` sets the starting point of the descent: `start = "hstar"`
+(default) starts every period at the common $`h^\ast`$; `start = "cct"`
+starts each period at its own CCT $`h_t`$; or a named vector supplies a
+per-period starting point.
 
 ``` r
 
@@ -180,16 +180,17 @@ each other (1.073 to 1.094, each with SE around 0.089).
 
 ## Sampling schemes
 
-CS is repeated cross-section (different units each period), PC is a
-panel with a time-constant running variable, and PV is a panel with a
-time-varying running variable. The three differ in the standard error:
-under PC the same units enter every period’s local regression, so the
-per-period discontinuity estimates are correlated through the unit
-effect; under PV units move across the window, so the shared-unit
-covariance is of smaller order than the variance; under CS there is no
-cross-period covariance.
+The three schemes, `cs` (repeated cross-section), `pc` (panel,
+time-constant running variable) and `pv` (panel, time-varying running
+variable), are defined and their detection rule stated in the Get
+started vignette. They differ in the standard error: under `pc` the same
+units enter every period’s local regression, so the per-period
+discontinuity estimates are correlated through the unit effect; under
+`pv` units move across the window, so the shared-unit covariance is of
+smaller order than the variance; under `cs` there is no cross-period
+covariance.
 
-For the CS data, `id = NULL` treats every row as a distinct unit:
+For the `cs` data, `id = NULL` treats every row as a distinct unit:
 
 ``` r
 
@@ -220,9 +221,11 @@ knitr::kable(se_tab, digits = 3, row.names = FALSE)
 | pc   | 0.143 | 0.089 | 0.089 |
 | pv   | 0.139 | 0.129 | 0.140 |
 
-On the PC data, `se_pc` (0.089) is smaller than `se_cs` (0.143); on the
-PV data, `se_pv` (0.140) is close to `se_cs` (0.139) while `se_pc`
-(0.129) is smaller; on the CS data all three coincide, at 0.147.
+On the `pc` data, `se_pc` (0.089) is smaller than `se_cs` (0.143); on
+the `pv` data, `se_pv` (0.140) is close to `se_cs` (0.139) while `se_pc`
+(0.129) is smaller; on the `cs` data all three coincide, at 0.147. The
+scheme is a description of how the data were sampled, not a choice among
+the three columns.
 
 Passing `scheme` explicitly picks which of the three the print method’s
 SE and CI correspond to, rather than detecting it from the data:

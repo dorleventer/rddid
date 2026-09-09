@@ -18,24 +18,10 @@ Tests of the identification assumptions for a time-varying running
 variable (Section 4.4 of the paper).
 
 - [`rd_typecont()`](https://dorleventer.github.io/rddid/reference/rd_typecont.md)
-  :
-
-  Test the continuity of the type distribution (assumption
-  `ass:type-cont`)
-
+  : Test the continuity of the type distribution
 - [`rd_compstable()`](https://dorleventer.github.io/rddid/reference/rd_compstable.md)
-  :
-
-  Test composition stability across periods (assumption
-  `ass:comp-stable`)
-
+  : Test composition stability across periods
 - [`rd_homog()`](https://dorleventer.github.io/rddid/reference/rd_homog.md)
-  :
-
-  Test of homogeneous confounding (assumption `ass:homog`)
-
+  : Test of homogeneous confounding
 - [`rd_trendcell()`](https://dorleventer.github.io/rddid/reference/rd_trendcell.md)
-  :
-
-  Test of a constant within-type confounding discontinuity (assumption
-  `ass:trend-cell`)
+  : Test of a constant within-type confounding discontinuity

@@ -1,11 +1,12 @@
-# Test of homogeneous confounding (assumption `ass:homog`)
+# Test of homogeneous confounding
 
-Tests whether the outcome RD discontinuity is constant across types in
-**comparison periods** (periods where the treatment of interest is
-absent). In a comparison period \\t_0\\ the discontinuity equals the
-pure confounding: \\D\_{t_0}(\mathbf{v}\_{-t_0}) =
-\alpha\_{t_0,0}(\mathbf{v}\_{-t_0})\\. The function estimates the jump
-by type (sign pattern of the OTHER periods' running variables) via
+Wald test of the homogeneous-confounding assumption (Section 4.4 of
+Leventer and Nevo): in the comparison periods, the outcome RD
+discontinuity is the same across types. In a comparison period \\t_0\\
+the discontinuity equals the confounding, \\D\_{t_0}(v) =
+\alpha\_{t_0,0}(v)\\, with \\v\\ the unit's type (by default its side of
+the cutoff in the RD period). The function estimates the jump by type
+via
 [`rd_period()`](https://dorleventer.github.io/rddid/reference/rd_period.md),
 then forms a joint Wald test that the jumps are equal across types and
 comparison periods.
@@ -28,7 +29,7 @@ rd_homog(
   scheme = c("auto", "cs", "pc", "pv"),
   min_n = 10L,
   bc = TRUE,
-  type_by = c("pattern", "rd_side"),
+  type_by = c("rd_side", "pattern"),
   ...
 )
 ```
@@ -37,7 +38,10 @@ rd_homog(
 
 - data:
 
-  A long data frame, one row per unit-period.
+  a long data frame, one row per unit-period. A unit's type in period
+  \\t\\ is read from its running variable in the other period(s); units
+  unobserved there are dropped from period \\t\\, so the panel need not
+  be balanced.
 
 - y, x, time:
 
@@ -109,13 +113,10 @@ rd_homog(
 
 - type_by:
 
-  How a unit's type is defined. `"pattern"` (default) uses the full
-  multi-period sign pattern of the other periods (the general case).
-  `"rd_side"` uses only the unit's side of the cutoff in the RD period
-  `t_rd`, a binary partition; this is the relevant partition for a
-  single joint test across comparison periods that share a running
-  variable, where it yields one contrast per period (a \\\chi^2(P)\\
-  test for `P` comparison periods). Requires `t_rd`.
+  How a unit's type is defined. `"rd_side"` (default) = the unit's side
+  of the cutoff in the RD period, the partition of the paper's Section
+  4.4. `"pattern"` = the sign pattern of the other periods' running
+  variables.
 
 - ...:
 
@@ -168,17 +169,6 @@ An object of class `"rd_homog"`, a list with:
 
 ## Details
 
-### Scope and interpretation
-
-**This test is run in comparison periods only.** The type-homogeneous
-confounding assumption (`ass:homog` in Leventer and Nevo) is needed at
-the *RD period* \\t\_{\mathrm{RD}}\\, but there the jump also contains
-the ATT and
-\\\alpha\_{t\_{\mathrm{RD}},0}(\mathbf{v}\_{-t\_{\mathrm{RD}}})\\ is not
-separately observable. Testing homogeneity in comparison periods is
-therefore only **suggestive** evidence: it is **neither necessary nor
-sufficient** for the assumption to hold at \\t\_{\mathrm{RD}}\\.
-
 ### Null hypothesis
 
 \\H_0 :\\ the outcome RD jump is equal across all type cells
@@ -193,14 +183,6 @@ with covariance estimated from the
 influence vectors. Within a period, cross-type covariance is zero (types
 partition the sample). Across periods, id-matched covariance is used
 under the detected/requested sampling scheme (see `scheme`).
-
-## Note
-
-**Necessary and sufficient status:** This test is *neither necessary nor
-sufficient* for `ass:homog` (homogeneous confounding) to hold at the RD
-period. Homogeneity in comparison periods is only suggestive because the
-assumption is needed at \\t\_{\mathrm{RD}}\\, where the confounding jump
-is not separately identified.
 
 ## References
 

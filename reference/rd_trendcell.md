@@ -1,11 +1,15 @@
-# Test of a constant within-type confounding discontinuity (assumption `ass:trend-cell`)
+# Test of a constant within-type confounding discontinuity
 
-Tests whether the per-cell outcome RD discontinuity is constant (or
-linear) **across comparison periods** within each cell. In a comparison
-period \\t_0\\ the discontinuity equals the pure confounding:
-\\D\_{t_0}(k) = \alpha\_{t_0,0}(k)\\, where \\k\\ denotes the unit's
-cell (side of the cutoff in \\t\_{\mathrm{RD}}\\ under the default
-`type_by = "rd_side"`). The function estimates the jump per cell via
+Pre-trends check for the constant within-type confounding assumption
+(Section 4.4 of Leventer and Nevo), in the difference-in-differences
+sense: the assumption concerns the RD period, where the confounding is
+not separately observed, so the test asks whether the per-cell outcome
+RD discontinuity is constant (or linear) **across the comparison
+periods**. In a comparison period \\t_0\\ the discontinuity equals the
+confounding, \\D\_{t_0}(k) = \alpha\_{t_0,0}(k)\\, where \\k\\ is the
+unit's cell (its side of the cutoff in \\t\_{\mathrm{RD}}\\ under the
+default `type_by = "rd_side"`). The function estimates the jump per cell
+via
 [`rd_period()`](https://dorleventer.github.io/rddid/reference/rd_period.md),
 then forms a joint Wald test that the within-cell jumps conform to the
 hypothesised trend \\g_0\\ across comparison periods.
@@ -38,7 +42,10 @@ rd_trendcell(
 
 - data:
 
-  A long data frame, one row per unit-period.
+  a long data frame, one row per unit-period. A unit's type in period
+  \\t\\ is read from its running variable in the other period(s); units
+  unobserved there are dropped from period \\t\\, so the panel need not
+  be balanced.
 
 - y, x, time:
 
@@ -112,12 +119,10 @@ rd_trendcell(
 
 - type_by:
 
-  How a unit's cell is defined. `"rd_side"` (default) uses the unit's
-  side of the cutoff in the RD period `t_rd`, a binary partition; this
-  is the canonical partition for a joint cross-period trend test.
-  `"pattern"` uses the sign pattern of the other periods' running
-  variables (fixed via the `t_rd` or first-comparison-period
-  perspective). The cell is **fixed** across comparison periods for all
+  How a unit's type is defined. `"rd_side"` (default) = the unit's side
+  of the cutoff in the RD period, the partition of the paper's Section
+  4.4. `"pattern"` = the sign pattern of the other periods' running
+  variables. The cell is **fixed** across comparison periods for both
   choices.
 
 - trend:
@@ -185,19 +190,12 @@ An object of class `"rd_trendcell"`, a list with:
 
   The matched call.
 
+**`trend = "linear"`** requires at least 3 comparison periods per cell
+to be informative. With only 2 comparison periods the within-cell linear
+trend is just-identified (any two points define a line), so no
+second-difference contrast exists and the test returns `df = 0`.
+
 ## Details
-
-### Scope and interpretation
-
-**This test is run in comparison periods only.** Assumption
-`ass:trend-cell` (within-cell confounding trend,
-\\\text{ass:trend-cell}\\ in Leventer and Nevo) is needed at the *RD
-period* \\t\_{\mathrm{RD}}\\, but there the jump also contains the ATT
-and the confounding is not separately observable. Testing the trend
-assumption in comparison periods is therefore only **suggestive**
-evidence, analogous to a pre-trends check in difference-in-differences:
-it is **neither necessary nor sufficient** for the assumption to hold at
-\\t\_{\mathrm{RD}}\\.
 
 ### Null hypothesis
 
@@ -217,21 +215,6 @@ D\_{t_j}(k) + D\_{t\_{j-1}}(k)\\, yielding \\\|T_0\| - 2\\ contrasts per
 cell. **This requires at least 3 comparison periods per cell**; if no
 cell reaches this threshold the function returns an object with
 `df = 0`, `statistic = NA`, and a message.
-
-## Note
-
-**Necessary and sufficient status:** This test is *neither necessary nor
-sufficient* for `ass:trend-cell` (constant within-type confounding) to
-hold at the RD period. Conformity to the trend in comparison periods is
-only suggestive because the assumption is needed at
-\\t\_{\mathrm{RD}}\\, where the confounding jump is not separately
-identified. It is a pre-trend check in the spirit of
-difference-in-differences and should be interpreted as such.
-
-**`trend = "linear"`** requires at least 3 comparison periods per cell
-to be informative. With only 2 comparison periods the within-cell linear
-trend is just-identified (any two points define a line), so no
-second-difference contrast exists and the test returns `df = 0`.
 
 ## References
 

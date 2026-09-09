@@ -5,9 +5,9 @@ difference-in-discontinuities design. The period-\\t\_{\mathrm{RD}}\\
 discontinuity is contaminated by a confounding policy that switches at
 the same cutoff; comparison periods, where the confounding is present
 but the treatment of interest is uniform at the cutoff, identify and net
-out that confounding. The estimator is \\\widehat{\att} = \widehat
-D\_{t\_{\mathrm{RD}}} - \sum_t w_t \widehat D_t\\, with each \\\widehat
-D_t\\ a standard local-linear RD.
+out that confounding. The estimator is \\\widehat{\mathrm{ATT}} =
+\widehat D\_{t\_{\mathrm{RD}}} - \sum_t w_t \widehat D_t\\, with each
+\\\widehat D_t\\ a standard local-linear RD.
 
 ## Usage
 
@@ -40,7 +40,8 @@ rddid(
 
 - data:
 
-  a long data frame, one row per unit-period.
+  a long data frame, one row per unit-period (repeated cross-section or
+  panel; a panel need not be balanced).
 
 - y, x, time:
 
@@ -57,8 +58,10 @@ rddid(
 
 - comparisons:
 
-  values of `time` to use as comparison periods; `NULL` (default) uses
-  every other period present.
+  values of `time` to use as comparison periods: periods in which the
+  treatment of interest does not switch at the cutoff. `NULL` (default)
+  uses every other period present, so with more than one RD period pass
+  `comparisons` explicitly.
 
 - weights:
 
@@ -70,10 +73,11 @@ rddid(
 
   `"iter"` (default; period-specific bandwidths chosen jointly by
   coordinate descent on the aggregate AMSE, started at the common
-  joint-optimal bandwidth — the rule the paper's Section 5.3 states as
-  preferred), `"joint"` (a single common AMSE-optimal bandwidth for the
-  aggregate estimator), or `"cct"` (per-period MSE-optimal bandwidths
-  via `rdrobust`). Ignored if `h` is supplied.
+  joint-optimal bandwidth), `"joint"` (a single common AMSE-optimal
+  bandwidth for the aggregate estimator), or `"cct"` (per-period CCT
+  MSE-optimal bandwidths,
+  [`rd_bw_cct()`](https://dorleventer.github.io/rddid/reference/rd_bw_cct.md)).
+  Ignored if `h` is supplied.
 
 - h, b:
 
@@ -82,17 +86,21 @@ rddid(
 
 - start:
 
-  seed for the iterative (`bwselect = "iter"`) coordinate descent.
-  `"hstar"` (default) starts all periods at the common joint-optimal
-  h\*; `"cct"` starts each period at its own CCT/IK pilot h; or supply a
-  named numeric vector/list with one entry per period. Ignored unless
-  `bwselect = "iter"`.
+  starting point of the iterative (`bwselect = "iter"`) coordinate
+  descent. `"hstar"` (default) starts all periods at the common
+  joint-optimal h\*; `"cct"` starts each period at its own CCT h; or
+  supply a named numeric vector/list with one entry per period. Ignored
+  unless `bwselect = "iter"`.
 
 - scheme:
 
-  `"auto"` (detect from the id/side structure) or one of `"cs"`, `"pc"`,
-  `"pv"`; selects which sampling-scheme variance is reported as the
-  headline standard error. All three are always returned.
+  sampling scheme: `"cs"` (repeated cross-section), `"pc"` (panel,
+  time-constant running variable), `"pv"` (panel, time-varying running
+  variable), or `"auto"` (default), which reads it off the data: no `id`
+  gives `"cs"`; units observed in more than one period, each on the same
+  side of the cutoff in every period, give `"pc"`; any unit on different
+  sides in different periods gives `"pv"`. The scheme selects which
+  standard error and CI are printed; all three are always returned.
 
 - regularize:
 
@@ -124,7 +132,34 @@ rddid(
 
 ## Value
 
-An object of class `"rddid"` with the conventional and robust
-bias-corrected estimates, standard errors under all three sampling
-schemes, confidence intervals at the recommended scheme, the per-period
-fits, the weights, and the bandwidth(s) used.
+An object of class `"rddid"`, a list with:
+
+- `estimates`:
+
+  matrix with rows `Conventional` and `Robust` (the bias-corrected
+  estimate with its robust variance) and columns `est`, `se`, `ci_l`,
+  `ci_u` (at `scheme`), and `se_cs`, `se_pc`, `se_pv`.
+
+- `scheme`:
+
+  the sampling scheme used; `scheme_requested` is the argument as
+  passed.
+
+- `weights`, `weights_type`:
+
+  the comparison-period weights and their kind.
+
+- `bandwidth`:
+
+  list with `method` (the `bwselect` value, or `"fixed"`), `h`, `b`, and
+  `niter` for `"iter"`.
+
+- `fits`:
+
+  named list of
+  [`rd_period()`](https://dorleventer.github.io/rddid/reference/rd_period.md)
+  objects by period, the RD period first (index by name).
+
+- `t_rd`, `comparisons`, `level`, `call`:
+
+  as passed.

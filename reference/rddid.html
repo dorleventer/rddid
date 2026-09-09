@@ -5,14 +5,14 @@ discontinuity is contaminated by a confounding policy that switches at the
 same cutoff; comparison periods, where the confounding is present but the
 treatment of interest is uniform at the cutoff, identify and net out that
 confounding. The estimator is
-\(\widehat{\att} = \widehat D_{t_{\mathrm{RD}}} - \sum_t w_t \widehat D_t\),
+\(\widehat{\mathrm{ATT}} = \widehat D_{t_{\mathrm{RD}}} - \sum_t w_t \widehat D_t\),
 with each \(\widehat D_t\) a standard local-linear RD."><meta property="og:description" content="Estimates a treatment effect in a regression-discontinuity
 difference-in-discontinuities design. The period-\(t_{\mathrm{RD}}\)
 discontinuity is contaminated by a confounding policy that switches at the
 same cutoff; comparison periods, where the confounding is present but the
 treatment of interest is uniform at the cutoff, identify and net out that
 confounding. The estimator is
-\(\widehat{\att} = \widehat D_{t_{\mathrm{RD}}} - \sum_t w_t \widehat D_t\),
+\(\widehat{\mathrm{ATT}} = \widehat D_{t_{\mathrm{RD}}} - \sum_t w_t \widehat D_t\),
 with each \(\widehat D_t\) a standard local-linear RD."></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
@@ -61,7 +61,7 @@ discontinuity is contaminated by a confounding policy that switches at the
 same cutoff; comparison periods, where the confounding is present but the
 treatment of interest is uniform at the cutoff, identify and net out that
 confounding. The estimator is
-\(\widehat{\att} = \widehat D_{t_{\mathrm{RD}}} - \sum_t w_t \widehat D_t\),
+\(\widehat{\mathrm{ATT}} = \widehat D_{t_{\mathrm{RD}}} - \sum_t w_t \widehat D_t\),
 with each \(\widehat D_t\) a standard local-linear RD.</p>
     </div>
 
@@ -96,7 +96,8 @@ with each \(\widehat D_t\) a standard local-linear RD.</p>
 
 
 <dl><dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
-<dd><p>a long data frame, one row per unit-period.</p></dd>
+<dd><p>a long data frame, one row per unit-period (repeated
+cross-section or panel; a panel need not be balanced).</p></dd>
 
 
 <dt id="arg-y-x-time">y, x, time<a class="anchor" aria-label="anchor" href="#arg-y-x-time"></a></dt>
@@ -114,8 +115,10 @@ distinct unit (repeated cross-section).</p></dd>
 
 
 <dt id="arg-comparisons">comparisons<a class="anchor" aria-label="anchor" href="#arg-comparisons"></a></dt>
-<dd><p>values of <code>time</code> to use as comparison periods; <code>NULL</code>
-(default) uses every other period present.</p></dd>
+<dd><p>values of <code>time</code> to use as comparison periods: periods
+in which the treatment of interest does not switch at the cutoff. <code>NULL</code>
+(default) uses every other period present, so with more than one RD
+period pass <code>comparisons</code> explicitly.</p></dd>
 
 
 <dt id="arg-weights">weights<a class="anchor" aria-label="anchor" href="#arg-weights"></a></dt>
@@ -127,10 +130,9 @@ distinct unit (repeated cross-section).</p></dd>
 <dt id="arg-bwselect">bwselect<a class="anchor" aria-label="anchor" href="#arg-bwselect"></a></dt>
 <dd><p><code>"iter"</code> (default; period-specific bandwidths chosen jointly
 by coordinate descent on the aggregate AMSE, started at the common
-joint-optimal bandwidth — the rule the paper's Section 5.3 states as
-preferred), <code>"joint"</code> (a single common AMSE-optimal bandwidth for the
-aggregate estimator), or <code>"cct"</code> (per-period MSE-optimal bandwidths via
-<code>rdrobust</code>). Ignored if <code>h</code> is supplied.</p></dd>
+joint-optimal bandwidth), <code>"joint"</code> (a single common AMSE-optimal
+bandwidth for the aggregate estimator), or <code>"cct"</code> (per-period CCT
+MSE-optimal bandwidths, <code><a href="rd_bw_cct.html">rd_bw_cct()</a></code>). Ignored if <code>h</code> is supplied.</p></dd>
 
 
 <dt id="arg-h-b">h, b<a class="anchor" aria-label="anchor" href="#arg-h-b"></a></dt>
@@ -139,17 +141,21 @@ used for every period (with <code>b</code> defaulting to <code>h</code>).</p></d
 
 
 <dt id="arg-start">start<a class="anchor" aria-label="anchor" href="#arg-start"></a></dt>
-<dd><p>seed for the iterative (<code>bwselect = "iter"</code>) coordinate descent.
-<code>"hstar"</code> (default) starts all periods at the common joint-optimal h*;
-<code>"cct"</code> starts each period at its own CCT/IK pilot h; or supply a named
+<dd><p>starting point of the iterative (<code>bwselect = "iter"</code>) coordinate
+descent. <code>"hstar"</code> (default) starts all periods at the common joint-optimal
+h*; <code>"cct"</code> starts each period at its own CCT h; or supply a named
 numeric vector/list with one entry per period. Ignored unless
 <code>bwselect = "iter"</code>.</p></dd>
 
 
 <dt id="arg-scheme">scheme<a class="anchor" aria-label="anchor" href="#arg-scheme"></a></dt>
-<dd><p><code>"auto"</code> (detect from the id/side structure) or one of <code>"cs"</code>,
-<code>"pc"</code>, <code>"pv"</code>; selects which sampling-scheme variance is reported as the
-headline standard error. All three are always returned.</p></dd>
+<dd><p>sampling scheme: <code>"cs"</code> (repeated cross-section), <code>"pc"</code>
+(panel, time-constant running variable), <code>"pv"</code> (panel, time-varying
+running variable), or <code>"auto"</code> (default), which reads it off the data: no
+<code>id</code> gives <code>"cs"</code>; units observed in more than one period, each on the
+same side of the cutoff in every period, give <code>"pc"</code>; any unit on
+different sides in different periods gives <code>"pv"</code>. The scheme selects
+which standard error and CI are printed; all three are always returned.</p></dd>
 
 
 <dt id="arg-regularize">regularize<a class="anchor" aria-label="anchor" href="#arg-regularize"></a></dt>
@@ -182,11 +188,32 @@ matching the CCT convention).</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>An object of class <code>"rddid"</code> with the conventional and robust
-bias-corrected estimates, standard errors under all three sampling schemes,
-confidence intervals at the recommended scheme, the per-period fits, the
-weights, and the bandwidth(s) used.</p>
-    </div>
+    <p>An object of class <code>"rddid"</code>, a list with:</p><dl><dt><code>estimates</code></dt>
+<dd><p>matrix with rows <code>Conventional</code> and <code>Robust</code> (the
+bias-corrected estimate with its robust variance) and columns <code>est</code>,
+<code>se</code>, <code>ci_l</code>, <code>ci_u</code> (at <code>scheme</code>), and <code>se_cs</code>, <code>se_pc</code>, <code>se_pv</code>.</p></dd>
+
+<dt><code>scheme</code></dt>
+<dd><p>the sampling scheme used; <code>scheme_requested</code> is the
+argument as passed.</p></dd>
+
+<dt><code>weights</code>, <code>weights_type</code></dt>
+<dd><p>the comparison-period weights and
+their kind.</p></dd>
+
+<dt><code>bandwidth</code></dt>
+<dd><p>list with <code>method</code> (the <code>bwselect</code> value, or
+<code>"fixed"</code>), <code>h</code>, <code>b</code>, and <code>niter</code> for <code>"iter"</code>.</p></dd>
+
+<dt><code>fits</code></dt>
+<dd><p>named list of <code><a href="rd_period.html">rd_period()</a></code> objects by period, the RD
+period first (index by name).</p></dd>
+
+<dt><code>t_rd</code>, <code>comparisons</code>, <code>level</code>, <code>call</code></dt>
+<dd><p>as passed.</p></dd>
+
+
+</dl></div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>

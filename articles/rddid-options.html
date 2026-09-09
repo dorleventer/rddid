@@ -136,14 +136,15 @@ the sampling scheme.</p>
 </h2>
 <p>Data for this section have a curvature
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>θ</mi><mi>t</mi></msub><annotation encoding="application/x-tex">\theta_t</annotation></semantics></math>
-that differs across periods, under the PC sampling scheme:</p>
+that differs across periods, under the <code>pc</code> sampling
+scheme:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">dat1</span> <span class="op">&lt;-</span> <span class="fu">dgp_a</span><span class="op">(</span>theta <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">6</span>, <span class="fl">3</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <div class="section level3">
 <h3 id="bwselect-cct">
 <code>bwselect = "cct"</code><a class="anchor" aria-label="anchor" href="#bwselect-cct"></a>
 </h3>
-<p>Per-period CCT/IK bandwidths: each
+<p>Per-period CCT bandwidths: each
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>h</mi><mi>t</mi></msub><annotation encoding="application/x-tex">h_t</annotation></semantics></math>
 (and pilot
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>b</mi><mi>t</mi></msub><annotation encoding="application/x-tex">b_t</annotation></semantics></math>)
@@ -208,12 +209,12 @@ per period, found by coordinate descent started at
 <span><span class="co">#&gt;                est    se</span></span>
 <span><span class="co">#&gt; Conventional 1.094 0.098</span></span>
 <span><span class="co">#&gt; Robust       1.124 0.117</span></span></code></pre></div>
-<p><code>start</code> sets the seed of the descent:
+<p><code>start</code> sets the starting point of the descent:
 <code>start = "hstar"</code> (default) starts every period at the common
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>h</mi><mo>*</mo></msup><annotation encoding="application/x-tex">h^\ast</annotation></semantics></math>;
-<code>start = "cct"</code> starts each period at its own CCT/IK
+<code>start = "cct"</code> starts each period at its own CCT
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>h</mi><mi>t</mi></msub><annotation encoding="application/x-tex">h_t</annotation></semantics></math>;
-or a named vector supplies a manual per-period seed.</p>
+or a named vector supplies a per-period starting point.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">r_iter_cct</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rddid.html">rddid</a></span><span class="op">(</span><span class="va">dat1</span>, y <span class="op">=</span> <span class="st">"Y"</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"t"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span>,</span>
 <span>                    bwselect <span class="op">=</span> <span class="st">"iter"</span>, start <span class="op">=</span> <span class="st">"cct"</span><span class="op">)</span></span>
@@ -297,16 +298,18 @@ around 0.089).</p>
 <div class="section level2">
 <h2 id="sampling-schemes">Sampling schemes<a class="anchor" aria-label="anchor" href="#sampling-schemes"></a>
 </h2>
-<p>CS is repeated cross-section (different units each period), PC is a
-panel with a time-constant running variable, and PV is a panel with a
-time-varying running variable. The three differ in the standard error:
-under PC the same units enter every period’s local regression, so the
-per-period discontinuity estimates are correlated through the unit
-effect; under PV units move across the window, so the shared-unit
-covariance is of smaller order than the variance; under CS there is no
-cross-period covariance.</p>
-<p>For the CS data, <code>id = NULL</code> treats every row as a
-distinct unit:</p>
+<p>The three schemes, <code>cs</code> (repeated cross-section),
+<code>pc</code> (panel, time-constant running variable) and
+<code>pv</code> (panel, time-varying running variable), are defined and
+their detection rule stated in the Get started vignette. They differ in
+the standard error: under <code>pc</code> the same units enter every
+period’s local regression, so the per-period discontinuity estimates are
+correlated through the unit effect; under <code>pv</code> units move
+across the window, so the shared-unit covariance is of smaller order
+than the variance; under <code>cs</code> there is no cross-period
+covariance.</p>
+<p>For the <code>cs</code> data, <code>id = NULL</code> treats every row
+as a distinct unit:</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">dat_cs</span> <span class="op">&lt;-</span> <span class="fu">dgp_a</span><span class="op">(</span>scheme <span class="op">=</span> <span class="st">"cs"</span><span class="op">)</span></span>
 <span><span class="va">dat_pc</span> <span class="op">&lt;-</span> <span class="fu">dgp_a</span><span class="op">(</span>scheme <span class="op">=</span> <span class="st">"pc"</span><span class="op">)</span></span>
@@ -352,10 +355,12 @@ distinct unit:</p>
 </tr>
 </tbody>
 </table>
-<p>On the PC data, <code>se_pc</code> (0.089) is smaller than
-<code>se_cs</code> (0.143); on the PV data, <code>se_pv</code> (0.140)
-is close to <code>se_cs</code> (0.139) while <code>se_pc</code> (0.129)
-is smaller; on the CS data all three coincide, at 0.147.</p>
+<p>On the <code>pc</code> data, <code>se_pc</code> (0.089) is smaller
+than <code>se_cs</code> (0.143); on the <code>pv</code> data,
+<code>se_pv</code> (0.140) is close to <code>se_cs</code> (0.139) while
+<code>se_pc</code> (0.129) is smaller; on the <code>cs</code> data all
+three coincide, at 0.147. The scheme is a description of how the data
+were sampled, not a choice among the three columns.</p>
 <p>Passing <code>scheme</code> explicitly picks which of the three the
 print method’s SE and CI correspond to, rather than detecting it from
 the data:</p>

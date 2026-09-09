@@ -62,6 +62,7 @@
 
 <p>Estimation and inference for regression-discontinuity difference-in-discontinuities (RD-DID) designs, where a confounding policy switches at the same cutoff as the treatment of interest. Implements the framework of Leventer and Nevo.</p>
 <p>Paper: <a href="https://arxiv.org/abs/2408.05847" class="external-link uri">https://arxiv.org/abs/2408.05847</a></p>
+<p>The data are long, one row per unit-period, with an outcome, a running variable, a period and (for a panel) a unit id. Periods are of two kinds: in the RD period the treatment of interest switches at the cutoff; in a comparison period it does not, while the confounding policy switches in every period. <code><a href="reference/rddid.html">rddid()</a></code> nets the comparison-period discontinuities out of the RD-period one. When the running variable varies over time within a unit, four validation tests (<code><a href="reference/rd_typecont.html">rd_typecont()</a></code>, <code><a href="reference/rd_compstable.html">rd_compstable()</a></code>, <code><a href="reference/rd_homog.html">rd_homog()</a></code>, <code><a href="reference/rd_trendcell.html">rd_trendcell()</a></code>) check the identifying assumptions of Section 4 of the paper.</p>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
@@ -72,7 +73,7 @@
 <div class="section level2">
 <h2 id="quick-start">Quick start<a class="anchor" aria-label="anchor" href="#quick-start"></a>
 </h2>
-<p>The data are long, one row per unit-period, with an outcome, a running variable, a period and a unit id. Below, periods 1 and 2 are comparison periods (the confounding discontinuity is 1 in both) and period 3 is the RD period, where the treatment of interest adds 1 at the cutoff.</p>
+<p>Below, periods 1 and 2 are comparison periods (the confounding discontinuity is 1 in both) and period 3 is the RD period, where the treatment of interest adds 1 at the cutoff.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/dorleventer/rddid" class="external-link">rddid</a></span><span class="op">)</span></span>
 <span></span>
@@ -92,15 +93,15 @@
 <span><span class="co">#&gt; RD-DID estimate of ATT(t_RD)</span></span>
 <span><span class="co">#&gt;   RD period: 3   comparison periods: 1, 2</span></span>
 <span><span class="co">#&gt;   weights: constant [0.5, 0.5]</span></span>
-<span><span class="co">#&gt;   bandwidth: period-specific joint AMSE (coord. descent, 5 iters)</span></span>
-<span><span class="co">#&gt;   sampling scheme: PC (auto-detected)</span></span>
+<span><span class="co">#&gt;   bwselect: iter  (5 iterations)</span></span>
+<span><span class="co">#&gt;   scheme: pc (auto-detected)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;                    Estimate   Std.Err.   95% CI</span></span>
 <span><span class="co">#&gt;   Conventional      1.09413    0.09746   [  0.90312,   1.28514]</span></span>
 <span><span class="co">#&gt;   Robust            1.12176    0.11715   [  0.89215,   1.35138]</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   SEs by scheme (Robust): CS=0.18902  PC=0.11715  PV=0.11715</span></span></code></pre></div>
-<p>The vignettes walk through the estimator, its bandwidth rules and sampling schemes, and the composition validation tests: <a href="https://dorleventer.github.io/rddid/" class="uri">https://dorleventer.github.io/rddid/</a>.</p>
+<span><span class="co">#&gt;   Robust SE by scheme: cs=0.18902  pc=0.11715  pv=0.11715</span></span></code></pre></div>
+<p>Three vignettes: the estimator (Get started), its bandwidth rules and sampling schemes, and, for a time-varying running variable, the composition validation tests: <a href="https://dorleventer.github.io/rddid/articles/index.html" class="uri">https://dorleventer.github.io/rddid/articles/index.html</a>.</p>
 </div>
 </div>
   </main><aside class="col-md-3"><div class="links">
