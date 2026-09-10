@@ -1,6 +1,6 @@
 # dev/ — developer notes for rddid
 
-Not part of the package build (`.Rbuildignore`). Contents: `appB_map.md` and `tests_map.md` (code ↔ paper maps), `check_appB_labels.R`, `snapshot_rddid.R`, `site_plan.md` and `site_dgp_check.R` (pkgdown site rebuild, 2026-09).
+Not part of the package build (`.Rbuildignore`). Contents: `appB_map.md` and `tests_map.md` (code ↔ paper maps), `check_appB_labels.R`, `snapshot_rddid.R`, `site_plan.md` and `site_dgp_check.R` (pkgdown site rebuild, 2026-09), `atu_estimand_plan.md` (the `estimand` argument, 2026-09-10).
 
 ## Pre-commit hook
 
