@@ -25,6 +25,7 @@ rd_trendcell(
   id,
   comparisons = NULL,
   t_rd = NULL,
+  estimand = c("att", "atu"),
   c = 0,
   h = NULL,
   bwselect = c("cct", "rot"),
@@ -70,6 +71,13 @@ rd_trendcell(
   of all comparison periods from \\t\_{\mathrm{RD}}\\'s perspective; if
   `NULL`, the pattern is taken from the first comparison period's
   perspective.
+
+- estimand:
+
+  `"att"` (default) or `"atu"`. Label only: under `"atu"` the
+  within-type comparison-period discontinuities are the confounding
+  discontinuities among TREATED units, \\\alpha\_{t_0,1}(v)\\; the
+  estimates and test are numerically identical to the `"att"` call.
 
 - c:
 
@@ -177,6 +185,10 @@ An object of class `"rd_trendcell"`, a list with:
 - `bc`:
 
   Whether bias-corrected jumps were used.
+
+- `estimand`:
+
+  `"att"` or `"atu"`, as passed.
 
 - `trend`:
 

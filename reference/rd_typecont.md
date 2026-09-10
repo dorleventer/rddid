@@ -13,6 +13,7 @@ rd_typecont(
   x,
   time,
   id,
+  estimand = c("att", "atu"),
   c = 0,
   h = NULL,
   bwselect = c("cct", "rot"),
@@ -43,6 +44,12 @@ rd_typecont(
 - id:
 
   column name (string) for the unit identifier.
+
+- estimand:
+
+  `"att"` (default) or `"atu"`. Label only: the test is identical under
+  either estimand, because the continuous-type-distribution assumption
+  is symmetric in the two sides of the cutoff.
 
 - c:
 
@@ -104,7 +111,7 @@ An object of class `"rd_typecont"`, a named list with:
 - meta:
 
   list with `periods`, `type_values`, `h` (NA when `bwselect = "cct"`),
-  `bwselect`, `scheme`, `bc`.
+  `bwselect`, `scheme`, `bc`, `estimand`.
 
 ## Details
 

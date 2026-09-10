@@ -32,7 +32,7 @@ are equal across types and comparison periods."></head><body>
       <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/rddid-estimation.html">Get started</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/rddid-estimation.html">Estimating the ATT with rddid()</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/rddid-estimation.html">Estimating the ATT or ATU with rddid()</a></li>
     <li><a class="dropdown-item" href="../articles/rddid-options.html">Bandwidth rules and sampling schemes</a></li>
     <li><a class="dropdown-item" href="../articles/rddid-validation-tests.html">Composition validation tests</a></li>
   </ul></li>
@@ -75,6 +75,7 @@ are equal across types and comparison periods.</p>
 <span>  <span class="va">id</span>,</span>
 <span>  comparisons <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  t_rd <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  estimand <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"att"</span>, <span class="st">"atu"</span><span class="op">)</span>,</span>
 <span>  c <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  h <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  bwselect <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cct"</span>, <span class="st">"rot"</span><span class="op">)</span>,</span>
@@ -118,6 +119,13 @@ to all periods except <code>t_rd</code> (if <code>t_rd</code> is supplied) or al
 <dd><p>Value of <code>time</code> for the RD period.  Used only to exclude it from
 comparison periods when <code>comparisons = NULL</code>; the RD period is <strong>not</strong>
 used in the test itself.</p></dd>
+
+
+<dt id="arg-estimand">estimand<a class="anchor" aria-label="anchor" href="#arg-estimand"></a></dt>
+<dd><p><code>"att"</code> (default) or <code>"atu"</code>. Label only: under <code>"atu"</code> the
+within-type comparison-period discontinuities are the confounding
+discontinuities among TREATED units, \(\alpha_{t_0,1}(v)\); the
+estimates and test are numerically identical to the <code>"att"</code> call.</p></dd>
 
 
 <dt id="arg-c">c<a class="anchor" aria-label="anchor" href="#arg-c"></a></dt>
@@ -199,6 +207,9 @@ observations, and whether it was the reference type.</p></dd>
 
 <dt><code>scheme</code></dt>
 <dd><p>Sampling scheme used.</p></dd>
+
+<dt><code>estimand</code></dt>
+<dd><p><code>"att"</code> or <code>"atu"</code>, as passed.</p></dd>
 
 <dt><code>comparisons</code></dt>
 <dd><p>Comparison periods actually used.</p></dd>

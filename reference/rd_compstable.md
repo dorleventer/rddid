@@ -21,6 +21,7 @@ rd_compstable(
   id,
   t_rd,
   comparisons = NULL,
+  estimand = c("att", "atu"),
   c = 0,
   h = NULL,
   bwselect = c("cct", "rot"),
@@ -60,6 +61,14 @@ rd_compstable(
 
   Values of `time` to use as comparison periods. If `NULL` (default),
   all periods except `t_rd` are used.
+
+- estimand:
+
+  `"att"` (default) or `"atu"`. Under `"atu"` the running variable is
+  mirrored before the test runs, so the test is on the below-cutoff
+  shares instead of the above-cutoff shares; this is the ONE function
+  among the five with `estimand` where the computation actually differs.
+  See "ATU designs" above.
 
 - c:
 
@@ -134,6 +143,11 @@ An object of class `"rd_compstable"`, a named list with:
 
   :   list with `stat`, `df`, `p`.
 
+  `jumps`, `jump_se`
+
+  :   The tested type-share jump(s) and their standard errors
+      (below-cutoff units when `estimand = "atu"`).
+
   `type_values`
 
   :   Character vector of \\(\mathbf{u},b)\\ type labels present in this
@@ -145,15 +159,18 @@ An object of class `"rd_compstable"`, a named list with:
 
   `n_trd`
 
-  :   Number of above-cutoff units from \\t_RD\\.
+  :   Number of above-cutoff units from \\t_RD\\ (below-cutoff units
+      when `estimand = "atu"`).
 
   `n_t0`
 
-  :   Number of above-cutoff units from \\t_0\\.
+  :   Number of above-cutoff units from \\t_0\\ (below-cutoff units when
+      `estimand = "atu"`).
 
   `n_both`
 
-  :   Number of units above the cutoff in both periods.
+  :   Number of units above the cutoff in both periods (below-cutoff
+      units when `estimand = "atu"`).
 
 - `joint`:
 
@@ -169,7 +186,8 @@ An object of class `"rd_compstable"`, a named list with:
 - `meta`:
 
   list with `t_rd`, `comparisons`, `h` (NA when `bwselect = "cct"`),
-  `bwselect`, `c`, `bc`.
+  `bwselect`, `c` (the original, unmirrored cutoff, as passed), `bc`,
+  `estimand`.
 
 ## Details
 
@@ -201,6 +219,20 @@ ids). The function computes \\(\text{cov}\_{++} + \text{cov}\_{--} -
 \text{cov}\_{+-} - \text{cov}\_{-+})\\ — the same formula as the PV
 scheme in the main estimator — rather than assuming the two sides are
 independent.
+
+### ATU designs
+
+With `estimand = "atu"` the running variable is mirrored, \\x \to c -
+x\\ (and the cutoff reset to 0), before the construction above runs.
+This takes the units BELOW the original cutoff in each period, and the
+jump estimates \\\pi\_{t\_{\mathrm{RD}},(-)}(0) - \pi\_{t_0,(-)}(0)\\,
+the change across periods in the share of below-cutoff units that are
+below the cutoff in the other period – the composition-stability
+condition the ATU requires (Leventer and Nevo, Section 6). Units with
+`x == c` are treated in the original design but cannot be placed on the
+treated side of the mirrored design, so `estimand = "atu"` errors if any
+are present; place the cutoff between support points (e.g. `c = 4999.5`
+for integer populations) so that no unit sits on it.
 
 ## References
 

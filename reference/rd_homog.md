@@ -22,6 +22,7 @@ rd_homog(
   id,
   comparisons = NULL,
   t_rd = NULL,
+  estimand = c("att", "atu"),
   c = 0,
   h = NULL,
   bwselect = c("cct", "rot"),
@@ -64,6 +65,13 @@ rd_homog(
   Value of `time` for the RD period. Used only to exclude it from
   comparison periods when `comparisons = NULL`; the RD period is **not**
   used in the test itself.
+
+- estimand:
+
+  `"att"` (default) or `"atu"`. Label only: under `"atu"` the
+  within-type comparison-period discontinuities are the confounding
+  discontinuities among TREATED units, \\\alpha\_{t_0,1}(v)\\; the
+  estimates and test are numerically identical to the `"att"` call.
 
 - c:
 
@@ -158,6 +166,10 @@ An object of class `"rd_homog"`, a list with:
 - `scheme`:
 
   Sampling scheme used.
+
+- `estimand`:
+
+  `"att"` or `"atu"`, as passed.
 
 - `comparisons`:
 

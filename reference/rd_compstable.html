@@ -36,7 +36,7 @@ period of the pair."></head><body>
       <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/rddid-estimation.html">Get started</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/rddid-estimation.html">Estimating the ATT with rddid()</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/rddid-estimation.html">Estimating the ATT or ATU with rddid()</a></li>
     <li><a class="dropdown-item" href="../articles/rddid-options.html">Bandwidth rules and sampling schemes</a></li>
     <li><a class="dropdown-item" href="../articles/rddid-validation-tests.html">Composition validation tests</a></li>
   </ul></li>
@@ -80,6 +80,7 @@ period of the pair.</p>
 <span>  <span class="va">id</span>,</span>
 <span>  <span class="va">t_rd</span>,</span>
 <span>  comparisons <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  estimand <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"att"</span>, <span class="st">"atu"</span><span class="op">)</span>,</span>
 <span>  c <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  h <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  bwselect <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cct"</span>, <span class="st">"rot"</span><span class="op">)</span>,</span>
@@ -120,6 +121,14 @@ not be balanced.</p></dd>
 <dt id="arg-comparisons">comparisons<a class="anchor" aria-label="anchor" href="#arg-comparisons"></a></dt>
 <dd><p>Values of <code>time</code> to use as comparison periods.  If
 <code>NULL</code> (default), all periods except <code>t_rd</code> are used.</p></dd>
+
+
+<dt id="arg-estimand">estimand<a class="anchor" aria-label="anchor" href="#arg-estimand"></a></dt>
+<dd><p><code>"att"</code> (default) or <code>"atu"</code>. Under <code>"atu"</code> the running
+variable is mirrored before the test runs, so the test is on the
+below-cutoff shares instead of the above-cutoff shares; this is the ONE
+function among the five with <code>estimand</code> where the computation actually
+differs. See "ATU designs" above.</p></dd>
 
 
 <dt id="arg-c">c<a class="anchor" aria-label="anchor" href="#arg-c"></a></dt>
@@ -183,6 +192,10 @@ local-linear jumps and variances.</p></dd>
 pair (named <code>"trd::t0"</code>), each containing:</p><dl><dt><code>ll_wald</code></dt>
 <dd><p>list with <code>stat</code>, <code>df</code>, <code>p</code>.</p></dd>
 
+<dt><code>jumps</code>, <code>jump_se</code></dt>
+<dd><p>The tested type-share jump(s) and their
+standard errors (below-cutoff units when <code>estimand = "atu"</code>).</p></dd>
+
 <dt><code>type_values</code></dt>
 <dd><p>Character vector of \((\mathbf{u},b)\) type
 labels present in this pair.</p></dd>
@@ -191,13 +204,16 @@ labels present in this pair.</p></dd>
 <dd><p>Scheme actually used.</p></dd>
 
 <dt><code>n_trd</code></dt>
-<dd><p>Number of above-cutoff units from \(t_RD\).</p></dd>
+<dd><p>Number of above-cutoff units from \(t_RD\)
+(below-cutoff units when <code>estimand = "atu"</code>).</p></dd>
 
 <dt><code>n_t0</code></dt>
-<dd><p>Number of above-cutoff units from \(t_0\).</p></dd>
+<dd><p>Number of above-cutoff units from \(t_0\)
+(below-cutoff units when <code>estimand = "atu"</code>).</p></dd>
 
 <dt><code>n_both</code></dt>
-<dd><p>Number of units above the cutoff in both periods.</p></dd>
+<dd><p>Number of units above the cutoff in both periods
+(below-cutoff units when <code>estimand = "atu"</code>).</p></dd>
 
 
 </dl></dd>
@@ -214,7 +230,8 @@ approximate — the paper's test is per pair).</p></dd>
 
 <dt><code>meta</code></dt>
 <dd><p>list with <code>t_rd</code>, <code>comparisons</code>, <code>h</code> (NA when
-<code>bwselect = "cct"</code>), <code>bwselect</code>, <code>c</code>, <code>bc</code>.</p></dd>
+<code>bwselect = "cct"</code>), <code>bwselect</code>, <code>c</code> (the original, unmirrored
+cutoff, as passed), <code>bc</code>, <code>estimand</code>.</p></dd>
 
 
 </dl></div>
@@ -253,6 +270,24 @@ id-matched cross-side covariance term (the two g-vectors can share unit
 ids).  The function computes \((\text{cov}_{++} + \text{cov}_{--} -
 \text{cov}_{+-} - \text{cov}_{-+})\) — the same formula as the PV scheme in
 the main estimator — rather than assuming the two sides are independent.</p>
+</div>
+
+<div class="section">
+<h3 id="atu-designs">ATU designs<a class="anchor" aria-label="anchor" href="#atu-designs"></a></h3>
+
+
+<p>With <code>estimand = "atu"</code> the running variable is mirrored,
+\(x \to c - x\) (and the cutoff reset to 0), before the construction
+above runs. This takes the units BELOW the original cutoff in each period,
+and the jump estimates
+\(\pi_{t_{\mathrm{RD}},(-)}(0) - \pi_{t_0,(-)}(0)\), the change across
+periods in the share of below-cutoff units that are below the cutoff in
+the other period – the composition-stability condition the ATU requires
+(Leventer and Nevo, Section 6). Units with <code>x == c</code> are treated in the
+original design but cannot be placed on the treated side of the mirrored
+design, so <code>estimand = "atu"</code> errors if any are present; place the cutoff
+between support points (e.g. <code>c = 4999.5</code> for integer populations) so that
+no unit sits on it.</p>
 </div>
 
     </div>

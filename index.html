@@ -35,7 +35,7 @@
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="articles/rddid-estimation.html">Estimating the ATT with rddid()</a></li>
+<li><a class="dropdown-item" href="articles/rddid-estimation.html">Estimating the ATT or ATU with rddid()</a></li>
     <li><a class="dropdown-item" href="articles/rddid-options.html">Bandwidth rules and sampling schemes</a></li>
     <li><a class="dropdown-item" href="articles/rddid-validation-tests.html">Composition validation tests</a></li>
   </ul>
@@ -101,6 +101,7 @@
 <span><span class="co">#&gt;   Robust            1.12176    0.11715   [  0.89215,   1.35138]</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Robust SE by scheme: cs=0.18902  pc=0.11715  pv=0.11715</span></span></code></pre></div>
+<p>Set <code>estimand = "atu"</code> when the comparison periods are uniformly treated instead of uniformly untreated (paper, Section 6).</p>
 <p>Three vignettes: the estimator (Get started), its bandwidth rules and sampling schemes, and, for a time-varying running variable, the composition validation tests: <a href="https://dorleventer.github.io/rddid/articles/index.html" class="uri">https://dorleventer.github.io/rddid/articles/index.html</a>.</p>
 </div>
 </div>

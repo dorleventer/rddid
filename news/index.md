@@ -2,6 +2,29 @@
 
 ## rddid 0.4.0.9000 (development)
 
+- **New argument `estimand = c("att", "atu")`** on
+  [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md),
+  [`rd_typecont()`](https://dorleventer.github.io/rddid/reference/rd_typecont.md),
+  [`rd_compstable()`](https://dorleventer.github.io/rddid/reference/rd_compstable.md),
+  [`rd_homog()`](https://dorleventer.github.io/rddid/reference/rd_homog.md)
+  and
+  [`rd_trendcell()`](https://dorleventer.github.io/rddid/reference/rd_trendcell.md)
+  (default `"att"`, nothing existing moves). Set `"atu"` when the
+  comparison periods are uniformly *treated* (the paper’s Section 6: the
+  ATU design is the ATT design with the sides of the cutoff exchanged).
+  For
+  [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md),
+  [`rd_typecont()`](https://dorleventer.github.io/rddid/reference/rd_typecont.md),
+  [`rd_homog()`](https://dorleventer.github.io/rddid/reference/rd_homog.md)
+  and
+  [`rd_trendcell()`](https://dorleventer.github.io/rddid/reference/rd_trendcell.md)
+  the estimates and tests are numerically identical, so `estimand` only
+  labels the output (pinned by `test-mirror-invariance.R`).
+  `rd_compstable(estimand = "atu")` mirrors the running variable
+  (`x -> c - x`) and tests composition stability on the **below**-cutoff
+  shares; observations at `x == c` error under `"atu"` (place the cutoff
+  between support points).
+
 - **Canay-Kamat permutation test and McCrary tests removed** from
   [`rd_typecont()`](https://dorleventer.github.io/rddid/reference/rd_typecont.md)
   and

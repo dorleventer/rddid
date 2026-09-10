@@ -236,6 +236,41 @@ package SE accounts for those 1848 doubly-counted units through the
 id-matched cross-side covariance term. For S0, for contrast: jump
 $`= 0.003`$, $`p = 0.946`$.
 
+## ATU designs — estimand = “atu”
+
+With comparison periods uniformly treated, the ATU requires composition
+stability of the below-cutoff shares,
+$`\pi_{t_{\mathrm{RD}},(-)}(v) = \pi_{t_0,(-)}(v)`$ (paper, Section 6);
+`rd_compstable(estimand = "atu")` mirrors the running variable and runs
+the same construction on the below-cutoff units.
+
+``` r
+
+cs1_atu <- rd_compstable(S1, x = "R", time = "t", id = "id", t_rd = 2, comparisons = 1,
+                         bwselect = "cct", bc = FALSE, estimand = "atu")
+p1_atu <- cs1_atu$pairs[["2::1"]]
+```
+
+For S1, the `"att"` call above gives jump $`= -0.543`$,
+$`\chi^2(1) = 227.946`$, $`p < 0.001`$, on 2680 above-cutoff units from
+$`t_{\mathrm{RD}}`$ and 1985 from $`t_0`$; the `"atu"` call gives jump
+$`= 0.572`$, $`\chi^2(1) = 218.010`$, $`p < 0.001`$, on 1320
+below-cutoff units from $`t_{\mathrm{RD}}`$ and 2015 from $`t_0`$ –
+different units from the `"att"` call. Both reject under S1’s drift.
+
+The other three tests are unchanged under `estimand = "atu"`:
+
+``` r
+
+tc_att <- rd_typecont(S1, x = "R", time = "t", id = "id", bwselect = "cct", bc = FALSE)
+tc_atu <- rd_typecont(S1, x = "R", time = "t", id = "id", bwselect = "cct", bc = FALSE,
+                      estimand = "atu")
+```
+
+[`rd_typecont()`](https://dorleventer.github.io/rddid/reference/rd_typecont.md)
+on S1 gives the same joint statistic either way, $`\chi^2(2) = 0.299`$
+under `"att"` and 0.299 under `"atu"`.
+
 ## Homogeneous confounding — `rd_homog()`
 
 Homogeneous confounding requires

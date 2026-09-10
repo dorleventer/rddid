@@ -33,7 +33,7 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/rddid-estimation.html">Estimating the ATT with rddid()</a></li>
+<li><a class="dropdown-item" href="../articles/rddid-estimation.html">Estimating the ATT or ATU with rddid()</a></li>
     <li><a class="dropdown-item" href="../articles/rddid-options.html">Bandwidth rules and sampling schemes</a></li>
     <li><a class="dropdown-item" href="../articles/rddid-validation-tests.html">Composition validation tests</a></li>
   </ul>
@@ -344,6 +344,48 @@ covariance term. For S0, for contrast: jump
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>=</mo><mn>0.946</mn></mrow><annotation encoding="application/x-tex">p = 0.946</annotation></semantics></math>.</p>
 </div>
 <div class="section level2">
+<h2 id="atu-designs-estimand-atu">ATU designs — estimand = “atu”<a class="anchor" aria-label="anchor" href="#atu-designs-estimand-atu"></a>
+</h2>
+<p>With comparison periods uniformly treated, the ATU requires
+composition stability of the below-cutoff shares,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>π</mi><mrow><msub><mi>t</mi><mrow><mi mathvariant="normal">R</mi><mi mathvariant="normal">D</mi></mrow></msub><mo>,</mo><mo stretchy="false" form="prefix">(</mo><mi>−</mi><mo stretchy="false" form="postfix">)</mo></mrow></msub><mo stretchy="false" form="prefix">(</mo><mi>v</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msub><mi>π</mi><mrow><msub><mi>t</mi><mn>0</mn></msub><mo>,</mo><mo stretchy="false" form="prefix">(</mo><mi>−</mi><mo stretchy="false" form="postfix">)</mo></mrow></msub><mo stretchy="false" form="prefix">(</mo><mi>v</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\pi_{t_{\mathrm{RD}},(-)}(v) = \pi_{t_0,(-)}(v)</annotation></semantics></math>
+(paper, Section 6); <code>rd_compstable(estimand = "atu")</code> mirrors
+the running variable and runs the same construction on the below-cutoff
+units.</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">cs1_atu</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rd_compstable.html">rd_compstable</a></span><span class="op">(</span><span class="va">S1</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"t"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">2</span>, comparisons <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>                         bwselect <span class="op">=</span> <span class="st">"cct"</span>, bc <span class="op">=</span> <span class="cn">FALSE</span>, estimand <span class="op">=</span> <span class="st">"atu"</span><span class="op">)</span></span>
+<span><span class="va">p1_atu</span> <span class="op">&lt;-</span> <span class="va">cs1_atu</span><span class="op">$</span><span class="va">pairs</span><span class="op">[[</span><span class="st">"2::1"</span><span class="op">]</span><span class="op">]</span></span></code></pre></div>
+<p>For S1, the <code>"att"</code> call above gives jump
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>=</mo><mi>−</mi><mn>0.543</mn></mrow><annotation encoding="application/x-tex">= -0.543</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>χ</mi><mn>2</mn></msup><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>227.946</mn></mrow><annotation encoding="application/x-tex">\chi^2(1) = 227.946</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>&lt;</mo><mn>0.001</mn></mrow><annotation encoding="application/x-tex">p &lt; 0.001</annotation></semantics></math>,
+on 2680 above-cutoff units from
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>t</mi><mrow><mi mathvariant="normal">R</mi><mi mathvariant="normal">D</mi></mrow></msub><annotation encoding="application/x-tex">t_{\mathrm{RD}}</annotation></semantics></math>
+and 1985 from
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>t</mi><mn>0</mn></msub><annotation encoding="application/x-tex">t_0</annotation></semantics></math>;
+the <code>"atu"</code> call gives jump
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>=</mo><mn>0.572</mn></mrow><annotation encoding="application/x-tex">= 0.572</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>χ</mi><mn>2</mn></msup><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>218.010</mn></mrow><annotation encoding="application/x-tex">\chi^2(1) = 218.010</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>&lt;</mo><mn>0.001</mn></mrow><annotation encoding="application/x-tex">p &lt; 0.001</annotation></semantics></math>,
+on 1320 below-cutoff units from
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>t</mi><mrow><mi mathvariant="normal">R</mi><mi mathvariant="normal">D</mi></mrow></msub><annotation encoding="application/x-tex">t_{\mathrm{RD}}</annotation></semantics></math>
+and 2015 from
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>t</mi><mn>0</mn></msub><annotation encoding="application/x-tex">t_0</annotation></semantics></math>
+– different units from the <code>"att"</code> call. Both reject under
+S1’s drift.</p>
+<p>The other three tests are unchanged under
+<code>estimand = "atu"</code>:</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">tc_att</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rd_typecont.html">rd_typecont</a></span><span class="op">(</span><span class="va">S1</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"t"</span>, id <span class="op">=</span> <span class="st">"id"</span>, bwselect <span class="op">=</span> <span class="st">"cct"</span>, bc <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="va">tc_atu</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rd_typecont.html">rd_typecont</a></span><span class="op">(</span><span class="va">S1</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"t"</span>, id <span class="op">=</span> <span class="st">"id"</span>, bwselect <span class="op">=</span> <span class="st">"cct"</span>, bc <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>                      estimand <span class="op">=</span> <span class="st">"atu"</span><span class="op">)</span></span></code></pre></div>
+<p><code><a href="../reference/rd_typecont.html">rd_typecont()</a></code> on S1 gives the same joint statistic
+either way,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>χ</mi><mn>2</mn></msup><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>0.299</mn></mrow><annotation encoding="application/x-tex">\chi^2(2) = 0.299</annotation></semantics></math>
+under <code>"att"</code> and 0.299 under <code>"atu"</code>.</p>
+</div>
+<div class="section level2">
 <h2 id="homogeneous-confounding-rd_homog">Homogeneous confounding — <code>rd_homog()</code><a class="anchor" aria-label="anchor" href="#homogeneous-confounding-rd_homog"></a>
 </h2>
 <p>Homogeneous confounding requires
@@ -352,7 +394,7 @@ in the comparison period. The test estimates the outcome RD jump within
 each type (the unit’s side of the cutoff in the RD period,
 <code>type_by = "rd_side"</code>, the default), in the comparison
 period, and tests equality:</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">h1</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rd_homog.html">rd_homog</a></span><span class="op">(</span><span class="va">S1</span>, y <span class="op">=</span> <span class="st">"Y"</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"t"</span>, id <span class="op">=</span> <span class="st">"id"</span>, comparisons <span class="op">=</span> <span class="fl">1</span>, t_rd <span class="op">=</span> <span class="fl">2</span>, bwselect <span class="op">=</span> <span class="st">"cct"</span>, bc <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span><span class="va">h2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rd_homog.html">rd_homog</a></span><span class="op">(</span><span class="va">S2</span>, y <span class="op">=</span> <span class="st">"Y"</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"t"</span>, id <span class="op">=</span> <span class="st">"id"</span>, comparisons <span class="op">=</span> <span class="fl">1</span>, t_rd <span class="op">=</span> <span class="fl">2</span>, bwselect <span class="op">=</span> <span class="st">"cct"</span>, bc <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span><span class="va">tab_h</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span>scenario <span class="op">=</span> <span class="st">"S1"</span>, <span class="va">h1</span><span class="op">$</span><span class="va">period_type_jumps</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span>scenario <span class="op">=</span> <span class="st">"S2"</span>, <span class="va">h2</span><span class="op">$</span><span class="va">period_type_jumps</span><span class="op">)</span><span class="op">)</span></span>
@@ -418,7 +460,7 @@ in S2 they are
 and
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>1.526</mn><annotation encoding="application/x-tex">1.526</annotation></semantics></math>,
 close to the construction values <code>alpha = c(0.5, 1.5)</code>.</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">tab_h</span><span class="op">$</span><span class="va">scenario</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">tab_h</span><span class="op">$</span><span class="va">scenario</span>, levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"S1"</span>, <span class="st">"S2"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">tab_h</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">type</span>, <span class="va">jump</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_linerange.html" class="external-link">geom_pointrange</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>ymin <span class="op">=</span> <span class="va">jump</span> <span class="op">-</span> <span class="fl">1.96</span> <span class="op">*</span> <span class="va">se</span>, ymax <span class="op">=</span> <span class="va">jump</span> <span class="op">+</span> <span class="fl">1.96</span> <span class="op">*</span> <span class="va">se</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
@@ -440,7 +482,7 @@ RD period
 the test instead checks whether the within-type jumps are constant
 <em>across</em> the two comparison periods, a pre-trends check in the
 difference-in-differences sense:</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">tr0</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rd_trendcell.html">rd_trendcell</a></span><span class="op">(</span><span class="va">S0_3</span>, y <span class="op">=</span> <span class="st">"Y"</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"t"</span>, id <span class="op">=</span> <span class="st">"id"</span>, comparisons <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span>, t_rd <span class="op">=</span> <span class="fl">3</span>, bwselect <span class="op">=</span> <span class="st">"cct"</span>, trend <span class="op">=</span> <span class="st">"constant"</span>, bc <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span><span class="va">tr4</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rd_trendcell.html">rd_trendcell</a></span><span class="op">(</span><span class="va">S4</span>, y <span class="op">=</span> <span class="st">"Y"</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"t"</span>, id <span class="op">=</span> <span class="st">"id"</span>, comparisons <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span>, t_rd <span class="op">=</span> <span class="fl">3</span>, bwselect <span class="op">=</span> <span class="st">"cct"</span>, trend <span class="op">=</span> <span class="st">"constant"</span>, bc <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span><span class="va">tab_tr</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span>scenario <span class="op">=</span> <span class="st">"S0_3"</span>, <span class="va">tr0</span><span class="op">$</span><span class="va">cell_period_jumps</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span>scenario <span class="op">=</span> <span class="st">"S4"</span>, <span class="va">tr4</span><span class="op">$</span><span class="va">cell_period_jumps</span><span class="op">)</span><span class="op">)</span></span>
@@ -542,7 +584,7 @@ to
 by about the construction increment <code>gamma = 0.3</code>. With only
 two comparison periods the constant form is what can be tested here;
 <code>trend = "linear"</code> needs three or more.</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">tab_tr</span><span class="op">$</span><span class="va">scenario</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">tab_tr</span><span class="op">$</span><span class="va">scenario</span>, levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"S0_3"</span>, <span class="st">"S4"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">tab_tr</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">period</span>, <span class="va">jump</span>, colour <span class="op">=</span> <span class="va">cell</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_linerange.html" class="external-link">geom_pointrange</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>ymin <span class="op">=</span> <span class="va">jump</span> <span class="op">-</span> <span class="fl">1.96</span> <span class="op">*</span> <span class="va">se</span>, ymax <span class="op">=</span> <span class="va">jump</span> <span class="op">+</span> <span class="fl">1.96</span> <span class="op">*</span> <span class="va">se</span><span class="op">)</span>, position <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/position_dodge.html" class="external-link">position_dodge</a></span><span class="op">(</span>width <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
@@ -552,7 +594,7 @@ two comparison periods the constant form is what can be tested here;
 <div class="section level2">
 <h2 id="summary">Summary<a class="anchor" aria-label="anchor" href="#summary"></a>
 </h2>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">tc1</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rd_typecont.html">rd_typecont</a></span><span class="op">(</span><span class="va">S1</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"t"</span>, id <span class="op">=</span> <span class="st">"id"</span>, bwselect <span class="op">=</span> <span class="st">"cct"</span>, bc <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span><span class="va">tc2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rd_typecont.html">rd_typecont</a></span><span class="op">(</span><span class="va">S2</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"t"</span>, id <span class="op">=</span> <span class="st">"id"</span>, bwselect <span class="op">=</span> <span class="st">"cct"</span>, bc <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
 <span><span class="va">cs2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rd_compstable.html">rd_compstable</a></span><span class="op">(</span><span class="va">S2</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"t"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">2</span>, comparisons <span class="op">=</span> <span class="fl">1</span>, bwselect <span class="op">=</span> <span class="st">"cct"</span>, bc <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
@@ -626,7 +668,7 @@ two comparison periods the constant form is what can be tested here;
 </tr>
 </tbody>
 </table>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span><span class="va">tab2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>  scenario <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"S0_3"</span>, <span class="st">"S4"</span><span class="op">)</span>, trendcell_p <span class="op">=</span> <span class="fu">fmtp</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">tr0</span><span class="op">$</span><span class="va">p_value</span>, <span class="va">tr4</span><span class="op">$</span><span class="va">p_value</span><span class="op">)</span><span class="op">)</span>,</span>

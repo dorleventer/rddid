@@ -33,7 +33,7 @@
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/rddid-estimation.html">Estimating the ATT with rddid()</a></li>
+<li><a class="dropdown-item" href="../articles/rddid-estimation.html">Estimating the ATT or ATU with rddid()</a></li>
     <li><a class="dropdown-item" href="../articles/rddid-options.html">Bandwidth rules and sampling schemes</a></li>
     <li><a class="dropdown-item" href="../articles/rddid-validation-tests.html">Composition validation tests</a></li>
   </ul>
@@ -362,6 +362,75 @@ are admissible, e.g. on the constant-trend data:</p>
 <span><span class="co">#&gt;                   est         se</span></span>
 <span><span class="co">#&gt; Conventional 1.106545 0.09013533</span></span>
 <span><span class="co">#&gt; Robust       1.142396 0.10725730</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="comparison-periods-that-are-uniformly-treated">Comparison periods that are uniformly treated<a class="anchor" aria-label="anchor" href="#comparison-periods-that-are-uniformly-treated"></a>
+</h2>
+<p>When the treatment of interest <code>W</code> is uniformly one in the
+comparison periods, rather than uniformly zero, the same difference of
+discontinuities identifies the ATU: Leventer and Nevo, Section 6, show
+that the ATU design is the ATT design with the two sides of the cutoff
+exchanged. The estimate, its standard errors and its bandwidths are the
+same as for an ATT call, so <code>estimand = "atu"</code> only labels
+the output; among the four validation tests, only
+<code><a href="../reference/rd_compstable.html">rd_compstable()</a></code> computes differently (see the “ATU designs”
+section of the <a href="rddid-validation-tests.html#atu-designs-estimand-atu">validation-tests
+vignette</a>).</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">dgp_atu</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">n</span> <span class="op">=</span> <span class="fl">2000</span>, <span class="va">alpha</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span>, <span class="va">theta</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">2</span>, <span class="fl">2</span><span class="op">)</span>,</span>
+<span>                    <span class="va">tau0</span> <span class="op">=</span> <span class="fl">1</span>, <span class="va">tau1</span> <span class="op">=</span> <span class="fl">2</span>, <span class="va">seed</span> <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="va">seed</span><span class="op">)</span></span>
+<span>  <span class="va">R</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">runif</a></span><span class="op">(</span><span class="va">n</span>, <span class="op">-</span><span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span>                  <span class="co"># time-invariant running variable, cutoff at 0</span></span>
+<span>  <span class="va">u</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span>, <span class="fl">0</span>, <span class="fl">0.5</span><span class="op">)</span>                 <span class="co"># unit effect</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">rbind</span>, <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">3</span>, <span class="kw">function</span><span class="op">(</span><span class="va">t</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="va">V</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="va">R</span> <span class="op">&gt;=</span> <span class="fl">0</span><span class="op">)</span>             <span class="co"># confounding treatment: sharp RD every period</span></span>
+<span>    <span class="va">W</span> <span class="op">&lt;-</span> <span class="kw">if</span> <span class="op">(</span><span class="va">t</span> <span class="op">==</span> <span class="fl">3</span><span class="op">)</span> <span class="va">V</span> <span class="kw">else</span> <span class="fl">1</span>           <span class="co"># treatment of interest: uniformly on in comparison periods</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>id <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">n</span><span class="op">)</span>, t <span class="op">=</span> <span class="va">t</span>, R <span class="op">=</span> <span class="va">R</span>,</span>
+<span>               Y <span class="op">=</span> <span class="fu">m_a</span><span class="op">(</span><span class="va">R</span>, <span class="va">theta</span><span class="op">[</span><span class="va">t</span><span class="op">]</span><span class="op">)</span> <span class="op">+</span> <span class="va">alpha</span><span class="op">[</span><span class="va">t</span><span class="op">]</span> <span class="op">*</span> <span class="va">V</span> <span class="op">+</span></span>
+<span>                 <span class="va">tau0</span> <span class="op">*</span> <span class="va">W</span> <span class="op">*</span> <span class="op">(</span><span class="fl">1</span> <span class="op">-</span> <span class="va">V</span><span class="op">)</span> <span class="op">+</span> <span class="va">tau1</span> <span class="op">*</span> <span class="va">W</span> <span class="op">*</span> <span class="va">V</span> <span class="op">+</span> <span class="va">u</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n</span>, <span class="fl">0</span>, <span class="fl">0.5</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="op">}</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">}</span></span>
+<span></span>
+<span><span class="va">tau0</span> <span class="op">&lt;-</span> <span class="fl">1</span>   <span class="co"># ATU(t_RD): effect of W below the cutoff, where V = 0</span></span>
+<span><span class="va">tau1</span> <span class="op">&lt;-</span> <span class="fl">2</span>   <span class="co"># effect of W above the cutoff, where V = 1 -- not identified by this design</span></span>
+<span><span class="va">dat_atu</span> <span class="op">&lt;-</span> <span class="fu">dgp_atu</span><span class="op">(</span>tau0 <span class="op">=</span> <span class="va">tau0</span>, tau1 <span class="op">=</span> <span class="va">tau1</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">dat_atu</span><span class="op">)</span></span>
+<span><span class="co">#&gt;   id t          R          Y</span></span>
+<span><span class="co">#&gt; 1  1 1 -0.4689827  1.4680573</span></span>
+<span><span class="co">#&gt; 2  2 1 -0.2557522  1.4935181</span></span>
+<span><span class="co">#&gt; 3  3 1  0.1457067  3.3797469</span></span>
+<span><span class="co">#&gt; 4  4 1  0.8164156  4.1865366</span></span>
+<span><span class="co">#&gt; 5  5 1 -0.5966361 -0.3632511</span></span>
+<span><span class="co">#&gt; 6  6 1  0.7967794  4.0669378</span></span></code></pre></div>
+<p><code>tau0</code> is the ATU, the effect of <code>W</code> below the
+cutoff where <code>V = 0</code>; <code>tau1</code> is the effect of
+<code>W</code> above the cutoff where <code>V = 1</code>, not identified
+by this design. <code>W</code> is uniformly one in the comparison
+periods and equal to <code>V</code> in the RD period, so a comparison
+period’s discontinuity is now
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>D</mi><mi>t</mi></msub><mo>=</mo><msub><mi>α</mi><mrow><mi>t</mi><mo>,</mo><mn>1</mn></mrow></msub><mo>=</mo><msub><mi>α</mi><mi>t</mi></msub><mo>+</mo><msub><mi>τ</mi><mn>1</mn></msub><mo>−</mo><msub><mi>τ</mi><mn>0</mn></msub></mrow><annotation encoding="application/x-tex">D_t = \alpha_{t,1} = \alpha_t + \tau_1 - \tau_0</annotation></semantics></math>,
+the confounding discontinuity among treated units.</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">res_atu</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rddid.html">rddid</a></span><span class="op">(</span><span class="va">dat_atu</span>, y <span class="op">=</span> <span class="st">"Y"</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"t"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span>,</span>
+<span>                  comparisons <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span>, weights <span class="op">=</span> <span class="st">"constant"</span>, bwselect <span class="op">=</span> <span class="st">"iter"</span>,</span>
+<span>                  scheme <span class="op">=</span> <span class="st">"pc"</span>, estimand <span class="op">=</span> <span class="st">"atu"</span><span class="op">)</span></span>
+<span><span class="va">res_atu</span></span>
+<span><span class="co">#&gt; RD-DID estimate of ATU(t_RD)</span></span>
+<span><span class="co">#&gt;   RD period: 3   comparison periods: 1, 2</span></span>
+<span><span class="co">#&gt;   weights: constant [0.5, 0.5]</span></span>
+<span><span class="co">#&gt;   bwselect: iter  (5 iterations)</span></span>
+<span><span class="co">#&gt;   scheme: pc</span></span>
+<span><span class="co">#&gt;   estimand: ATU (comparison periods uniformly treated)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;                    Estimate   Std.Err.   95% CI</span></span>
+<span><span class="co">#&gt;   Conventional      1.09413    0.09746   [  0.90312,   1.28514]</span></span>
+<span><span class="co">#&gt;   Robust            1.12176    0.11715   [  0.89215,   1.35138]</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;   Robust SE by scheme: cs=0.18902  pc=0.11715  pv=0.11715</span></span>
+<span><span class="va">tau0</span></span>
+<span><span class="co">#&gt; [1] 1</span></span></code></pre></div>
+<p>The estimate is 1.09 (SE 0.10), against the truth <code>tau0</code> =
+1.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

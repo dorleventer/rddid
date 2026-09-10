@@ -7,7 +7,9 @@ the same cutoff; comparison periods, where the confounding is present
 but the treatment of interest is uniform at the cutoff, identify and net
 out that confounding. The estimator is \\\widehat{\mathrm{ATT}} =
 \widehat D\_{t\_{\mathrm{RD}}} - \sum_t w_t \widehat D_t\\, with each
-\\\widehat D_t\\ a standard local-linear RD.
+\\\widehat D_t\\ a standard local-linear RD. This estimates the ATT, or
+the ATU when the comparison periods are uniformly treated
+(`estimand = "atu"`).
 
 ## Usage
 
@@ -21,6 +23,7 @@ rddid(
   t_rd,
   comparisons = NULL,
   weights = "constant",
+  estimand = c("att", "atu"),
   bwselect = c("iter", "joint", "cct"),
   h = NULL,
   b = NULL,
@@ -68,6 +71,12 @@ rddid(
   `"constant"` (equal weights; constant confounding trend), `"linear"`
   (line through the comparison discontinuities extrapolated to `t_rd`),
   or a numeric vector over `comparisons`.
+
+- estimand:
+
+  `"att"` (default) when the treatment of interest is uniformly ZERO in
+  the comparison periods (targets the ATT), `"atu"` when it is uniformly
+  ONE (targets the ATU). See "Targeting the ATU" below.
 
 - bwselect:
 
@@ -149,6 +158,10 @@ An object of class `"rddid"`, a list with:
 
   the comparison-period weights and their kind.
 
+- `estimand`:
+
+  `"att"` or `"atu"`, as passed.
+
 - `bandwidth`:
 
   list with `method` (the `bwselect` value, or `"fixed"`), `h`, `b`, and
@@ -163,3 +176,23 @@ An object of class `"rddid"`, a list with:
 - `t_rd`, `comparisons`, `level`, `call`:
 
   as passed.
+
+## Details
+
+### Targeting the ATU
+
+When the treatment of interest is uniformly present (equal to one) in
+the comparison periods rather than uniformly absent, the same difference
+of discontinuities identifies the ATU: Leventer and Nevo, Section 6,
+show that the ATU design is the ATT design with the sides of the cutoff
+exchanged (mirror \\\tilde R = c - R\\ and apply the ATT procedure
+unchanged). The point estimate, standard errors, and bandwidth rules are
+numerically the same either way, so `estimand` only labels the output
+here; the argument is also passed through to the validation tests
+([`?rd_typecont`](https://dorleventer.github.io/rddid/reference/rd_typecont.md),
+[`?rd_homog`](https://dorleventer.github.io/rddid/reference/rd_homog.md),
+[`?rd_trendcell`](https://dorleventer.github.io/rddid/reference/rd_trendcell.md),
+[`?rd_compstable`](https://dorleventer.github.io/rddid/reference/rd_compstable.md)),
+where only
+[`rd_compstable()`](https://dorleventer.github.io/rddid/reference/rd_compstable.md)
+computes differently.

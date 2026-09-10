@@ -257,3 +257,78 @@ res_custom$estimates[, c("est", "se")]
 #> Conventional 1.106545 0.09013533
 #> Robust       1.142396 0.10725730
 ```
+
+## Comparison periods that are uniformly treated
+
+When the treatment of interest `W` is uniformly one in the comparison
+periods, rather than uniformly zero, the same difference of
+discontinuities identifies the ATU: Leventer and Nevo, Section 6, show
+that the ATU design is the ATT design with the two sides of the cutoff
+exchanged. The estimate, its standard errors and its bandwidths are the
+same as for an ATT call, so `estimand = "atu"` only labels the output;
+among the four validation tests, only
+[`rd_compstable()`](https://dorleventer.github.io/rddid/reference/rd_compstable.md)
+computes differently (see the “ATU designs” section of the
+[validation-tests
+vignette](https://dorleventer.github.io/rddid/articles/rddid-validation-tests.html#atu-designs-estimand-atu)).
+
+``` r
+
+dgp_atu <- function(n = 2000, alpha = c(1, 1, 1), theta = c(2, 2, 2),
+                    tau0 = 1, tau1 = 2, seed = 1) {
+  set.seed(seed)
+  R <- runif(n, -1, 1)                  # time-invariant running variable, cutoff at 0
+  u <- rnorm(n, 0, 0.5)                 # unit effect
+  do.call(rbind, lapply(1:3, function(t) {
+    V <- as.integer(R >= 0)             # confounding treatment: sharp RD every period
+    W <- if (t == 3) V else 1           # treatment of interest: uniformly on in comparison periods
+    data.frame(id = seq_len(n), t = t, R = R,
+               Y = m_a(R, theta[t]) + alpha[t] * V +
+                 tau0 * W * (1 - V) + tau1 * W * V + u + rnorm(n, 0, 0.5))
+  }))
+}
+
+tau0 <- 1   # ATU(t_RD): effect of W below the cutoff, where V = 0
+tau1 <- 2   # effect of W above the cutoff, where V = 1 -- not identified by this design
+dat_atu <- dgp_atu(tau0 = tau0, tau1 = tau1)
+head(dat_atu)
+#>   id t          R          Y
+#> 1  1 1 -0.4689827  1.4680573
+#> 2  2 1 -0.2557522  1.4935181
+#> 3  3 1  0.1457067  3.3797469
+#> 4  4 1  0.8164156  4.1865366
+#> 5  5 1 -0.5966361 -0.3632511
+#> 6  6 1  0.7967794  4.0669378
+```
+
+`tau0` is the ATU, the effect of `W` below the cutoff where `V = 0`;
+`tau1` is the effect of `W` above the cutoff where `V = 1`, not
+identified by this design. `W` is uniformly one in the comparison
+periods and equal to `V` in the RD period, so a comparison period’s
+discontinuity is now
+$`D_t = \alpha_{t,1} = \alpha_t + \tau_1 - \tau_0`$, the confounding
+discontinuity among treated units.
+
+``` r
+
+res_atu <- rddid(dat_atu, y = "Y", x = "R", time = "t", id = "id", t_rd = 3,
+                  comparisons = c(1, 2), weights = "constant", bwselect = "iter",
+                  scheme = "pc", estimand = "atu")
+res_atu
+#> RD-DID estimate of ATU(t_RD)
+#>   RD period: 3   comparison periods: 1, 2
+#>   weights: constant [0.5, 0.5]
+#>   bwselect: iter  (5 iterations)
+#>   scheme: pc
+#>   estimand: ATU (comparison periods uniformly treated)
+#> 
+#>                    Estimate   Std.Err.   95% CI
+#>   Conventional      1.09413    0.09746   [  0.90312,   1.28514]
+#>   Robust            1.12176    0.11715   [  0.89215,   1.35138]
+#> 
+#>   Robust SE by scheme: cs=0.18902  pc=0.11715  pv=0.11715
+tau0
+#> [1] 1
+```
+
+The estimate is 1.09 (SE 0.10), against the truth `tau0` = 1.
