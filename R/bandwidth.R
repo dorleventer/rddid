@@ -27,68 +27,163 @@
   lapply(plist, function(d) rd_bw_cct(d$y, d$x, c = c, p = p, kernel = kernel))
 }
 
+#' Per-period asymptotic constants for the aggregate AMSE (App. B.4)
+#'
+#' Shared by the two joint selectors. Fits every period at its OWN pilot pair
+#' (default: its CCT/IK pair from [rd_bw_cct()]) and returns the plug-ins of
+#' eq:amse-att: the curvature constant `B-hat_t` (`rd_period`'s `b_const`), the
+#' variance constant `V-hat_t` (`v_const`), the period sample size `n_t`, the
+#' variance of `B-hat_t` for the regularization term, the pilot `h`'s and `b/h`
+#' ratios, and, under `"pc"`, the per-side h-free scales `kappa` of the same-side
+#' cross-period covariance (`lem:cov-pc`; see the `.bw_joint_iter` header for the
+#' construction). Nothing here depends on which period is the RD period, so the
+#' selectors built on it are invariant to that label; this matters when the
+#' estimator aggregates several RD periods (drafts/agg_att_note.tex, 2026-09-10).
+#'
+#' @param plist named per-period data list; `coef` named period coefficients.
+#' @param scheme one of `"cs"`, `"pc"`, `"pv"`.
+#' @param pilot_bws optional named list of per-period `c(h, b)`; defaults to CCT.
+#' @return list with `keys`, `cf` (coefficients in `keys` order), `bt`, `vt`, `nt`,
+#'   `var_b`, `h0v`, `ratio`, `kap_p`, `kap_m`, `fitp` (the pilot fits), `pilot_bws`.
+#' @keywords internal
+#' @noRd
+.bw_constants <- function(plist, coef, scheme = "cs", pilot_bws = NULL,
+                          c = 0, p = 1L, q = 2L, kernel = "triangular") {
+  keys <- names(coef)
+  fp1 <- factorial(p + 1)
+  if (is.null(pilot_bws))
+    pilot_bws <- .bw_cct(plist, c = c, p = p, kernel = kernel)
+  missing_k <- setdiff(keys, names(pilot_bws))
+  if (length(missing_k) > 0L)
+    stop("`pilot_bws` is missing entries for period(s): ",
+         paste(missing_k, collapse = ", "), ".")
+
+  # per-period asymptotic constants from a pilot fit: B-hat_t (curvature, via the
+  # conventional/BC gap) and V-hat_t (variance constant); rd_period returns both
+  # (eq:per-period-orders).
+  fitp <- lapply(keys, function(k)
+    rd_period(plist[[k]]$y, plist[[k]]$x, h = pilot_bws[[k]][["h"]],
+              b = pilot_bws[[k]][["b"]], id = plist[[k]]$id,
+              c = c, p = p, q = q, kernel = kernel))
+  names(fitp) <- keys
+  cf <- unname(vapply(keys, function(k) coef[[k]], numeric(1)))
+  bt <- vapply(keys, function(k) fitp[[k]]$b_const, numeric(1))
+  vt <- vapply(keys, function(k) fitp[[k]]$v_const, numeric(1))
+  nt <- vapply(keys, function(k) fitp[[k]]$n,       numeric(1))
+  ratio <- vapply(keys, function(k)
+    unname(pilot_bws[[k]][["b"]] / pilot_bws[[k]][["h"]]), numeric(1))
+  h0v <- vapply(keys, function(k) unname(pilot_bws[[k]][["h"]]), numeric(1))
+
+  # per-period variance of the bias-constant estimate, Var(B-hat_t) =
+  # ((p+1)!/h0^{p+1})^2 Var(D - D_bc), for the B.4 regularization term.
+  var_b <- vapply(keys, function(k) {
+    s <- fitp[[k]]$sides
+    (fp1 / h0v[[k]]^(p + 1))^2 * (sum(s[["+"]]$g_diff^2) + sum(s[["-"]]$g_diff^2))
+  }, numeric(1))
+
+  # PC covariance precomputation (see the .bw_joint_iter header): per side,
+  # kappa_side[i, j] = pilot same-side covariance * h0_j / c_side(p, h0_i / h0_j).
+  # Only under scheme "pc".
+  K <- length(keys)
+  kap_p <- matrix(0, K, K)
+  kap_m <- matrix(0, K, K)
+  if (scheme == "pc" && K >= 2L) {
+    for (i in seq_len(K - 1L)) {
+      for (j in (i + 1L):K) {
+        cc   <- .cross_cov(fitp[[keys[i]]], fitp[[keys[j]]], bc = FALSE)
+        rho0 <- h0v[i] / h0v[j]
+        kap_p[i, j] <- cc$pc_p * h0v[j] / .kc_c(p, "+", rho0, kernel)
+        kap_m[i, j] <- cc$pc_m * h0v[j] / .kc_c(p, "-", rho0, kernel)
+      }
+    }
+    if (all(kap_p == 0) && all(kap_m == 0))
+      warning("scheme = \"pc\" but no unit is active in two periods' windows: ",
+              "the cross-period term is identically zero (same as scheme = \"cs\").")
+  }
+  list(keys = keys, cf = cf, bt = bt, vt = vt, nt = nt, var_b = var_b,
+       h0v = h0v, ratio = ratio, kap_p = kap_p, kap_m = kap_m,
+       fitp = fitp, pilot_bws = pilot_bws)
+}
+
 #' Joint AMSE-optimal common bandwidth for the aggregate estimator
 #'
-#' Feasible plug-in for eq:common_h_opt (App. B.4 P3): fit every period at a common
-#' pilot bandwidth `(h0, b0)`, read the aggregate bias constant off the bias
-#' correction, `ATT_conv - ATT_bc = h0^{p+1}/(p+1)! * B`, and the variance scale off
-#' `h0 * V^S(h0)` (`lem:agg-var` at a common h: `n h V^S -> V^S(t_RD)`, so
-#' `h0 * V^S(h0) ~ V^S(t_RD) / n` and the `n^{-1/(2p+3)}` factor is absorbed); then
-#' `h* = ( ((p+1)!)^2/(2(p+1)) * Veff / (B^2 + reg) )^{1/(2p+3)}`.
+#' Feasible plug-in for eq:common_h_opt (App. B.4 P3). With the per-period constants
+#' of [.bw_constants()] (each period at its own CCT pilot), the aggregate objective
+#' at a common `h` is
+#'   AMSE^S(h) = (h^{p+1}/(p+1)!)^2 (B^2 + reg) + Veff / h,
+#'   B    = sum_tau w~_tau B-hat_tau                       (signed; can cancel),
+#'   Veff = sum_tau w~_tau^2 V-hat_tau / n_tau
+#'          + 1{S = PC} 2 sum_{t<s} w~_t w~_s [kappa_+ c_+(p,1) + kappa_- c_-(p,1)],
+#'   reg  = lambda sum_tau w~_tau^2 Var(B-hat_tau),
+#' (`Veff` is `V^S(t_RD) / n` of `lem:agg-var` at a common h, so the `n^{-1/(2p+3)}`
+#' factor is absorbed), whose minimizer is
+#'   h* = ( ((p+1)!)^2/(2(p+1)) * Veff / (B^2 + reg) )^{1/(2p+3)}.
+#' This is exactly the scalar restriction of the `.bw_joint_iter` objective, so the
+#' two selectors optimize one function (pinned in test-appB-bandwidth.R). The pilot
+#' bandwidth keeps each period's CCT ratio, `b_t = h* b_t^CCT / h_t^CCT` (B.4 after
+#' eq:common_h_opt; consistent with Assumption R(f)).
+#'
+#' Before 2026-09-10 every period was fitted at the RD period's CCT pilot; the
+#' selector then depended on which period carried the `t_rd` label, which is
+#' arbitrary for an aggregate over several RD periods. The label no longer enters.
 #'
 #' @param plist named per-period data list; `coef` named period coefficients
-#'   (RD period = +1, comparisons = -w_t); `t_rd` the RD-period label.
+#'   (RD period = +1, comparisons = -w_t); `t_rd` the RD-period label (kept for
+#'   call compatibility; the selector does not use it).
 #' @param scheme one of `"cs"`, `"pc"`, `"pv"`; sets which variance scales the
 #'   bandwidth. Under `"pc"` the same-side cross-period covariances enter (they are
 #'   O(1/(nh)), `lem:cov-pc`); under `"pv"` they are O(1/n) = o(1/(nh)) (`lem:cov-pv`)
 #'   and drop, so the covariance-free CS form is used (`lem:agg-var`).
-#' @param pilot optional `c(h, b)` pilot bandwidth; defaults to the RD period's
-#'   CCT/IK bandwidth.
+#' @param pilot_bws optional named list of per-period `c(h, b)` pilots; defaults to
+#'   each period's CCT/IK pair.
 #' @param regularize add the App. B.4 regularization term to the squared bias so a
 #'   small, noisy estimated bias constant cannot inflate `h*` (mirrors the
 #'   `regularize = TRUE` default of [rdrobust::rdbwselect]). Default `TRUE`.
 #' @param reg_const multiple of the bias-estimate variance used as the
 #'   regularization term (the paper's `lambda`; default 3, the CCT convention).
-#' @return list with `h`, `b`, the bias constant `B`, the variance scale `Veff`,
-#'   the regularization term `reg`, and the `pilot` used.
+#' @param constants optional precomputed [.bw_constants()] output (used by
+#'   `.bw_joint_iter` to seed without refitting).
+#' @return list with the common `h`, the per-period pilot bandwidths `b` (named by
+#'   period), the bias constant `B`, the variance scale `Veff`, the regularization
+#'   term `reg`, the `pilot_bws` used, and the `constants`.
 #' @keywords internal
 #' @noRd
-.bw_joint <- function(plist, coef, t_rd, scheme = "cs", pilot = NULL,
+.bw_joint <- function(plist, coef, t_rd = NULL, scheme = "cs", pilot_bws = NULL,
                       c = 0, p = 1L, q = 2L, kernel = "triangular",
-                      regularize = TRUE, reg_const = 3) {
-  if (is.null(pilot))
-    pilot <- rd_bw_cct(plist[[t_rd]]$y, plist[[t_rd]]$x, c = c, p = p, kernel = kernel)
-  h0 <- pilot[["h"]]; b0 <- pilot[["b"]]
+                      regularize = TRUE, reg_const = 3, constants = NULL) {
+  if (is.null(constants))
+    constants <- .bw_constants(plist, coef, scheme = scheme, pilot_bws = pilot_bws,
+                               c = c, p = p, q = q, kernel = kernel)
+  cs <- constants
   fp1 <- factorial(p + 1)
+  K <- length(cs$keys)
 
-  fits <- lapply(names(coef), function(k)
-    rd_period(plist[[k]]$y, plist[[k]]$x, h = h0, b = b0, id = plist[[k]]$id,
-              c = c, p = p, q = q, kernel = kernel))
-  names(fits) <- names(coef)
-
-  aggc <- .aggregate_fits(fits, coef, bc = FALSE)
-  aggb <- .aggregate_fits(fits, coef, bc = TRUE)
-  Vfld <- switch(scheme, cs = "V_cs", pc = "V_pc", pv = "V_cs")
-
-  # estimated aggregate bias constant B(t_RD) = sum_tau coef_tau B-hat_tau (B.4 P3), read
-  # off the bias correction: ATT_conv - ATT_bc = h0^{p+1}/(p+1)! * B (eq:bias-agg).
-  B <- fp1 * (aggc[["est"]] - aggb[["est"]]) / h0^(p + 1)
-  Veff <- h0 * aggc[[Vfld]]
-
-  # Regularization (B.4): add lambda * sum_tau coef_tau^2 (h^{p+1}/(p+1)!)^2 Var(B-hat_tau) to
-  # the objective. At a common h this carries the same h^{2(p+1)} factor as B^2, so it
-  # enters the denominator of h*. Var(B-hat_tau) = ((p+1)!/h0^{p+1})^2 Var(D - D_bc),
-  # with Var(D - D_bc) from the per-unit influence difference g_diff (rd_period).
-  var_delta <- sum(vapply(names(coef), function(k) {
-    s <- fits[[k]]$sides
-    coef[[k]]^2 * (sum(s[["+"]]$g_diff^2) + sum(s[["-"]]$g_diff^2))
-  }, numeric(1)))
-  reg <- if (regularize) reg_const * (fp1 / h0^(p + 1))^2 * var_delta else 0
+  # estimated aggregate bias constant B(t_RD) = sum_tau coef_tau B-hat_tau (B.4 P3)
+  B <- sum(cs$cf * cs$bt)
+  # variance scale: own-period terms sum_tau coef_tau^2 V-hat_tau / n_tau (lem:agg-var)
+  Veff <- sum(cs$cf^2 * cs$vt / cs$nt)
+  # PC same-side cross-period term at a common h (rho = 1), lem:agg-var / B.4 P3
+  if (scheme == "pc" && K >= 2L) {
+    for (i in seq_len(K - 1L)) {
+      for (j in (i + 1L):K) {
+        Veff <- Veff + 2 * cs$cf[i] * cs$cf[j] *
+          (cs$kap_p[i, j] * .kc_c(p, "+", 1, kernel) +
+           cs$kap_m[i, j] * .kc_c(p, "-", 1, kernel))
+      }
+    }
+  }
+  # Regularization (B.4): lambda * sum_tau coef_tau^2 (h^{p+1}/(p+1)!)^2 Var(B-hat_tau).
+  # At a common h this carries the same h^{2(p+1)} factor as B^2, so it enters the
+  # denominator of h*.
+  reg <- if (regularize) reg_const * sum(cs$cf^2 * cs$var_b) else 0
   denom <- B^2 + reg
 
   if (!is.finite(denom) || denom <= 0)
     stop("aggregate bias constant B is ~0 and regularization is off: the ",
          "AMSE-optimal bandwidth diverges. Use bwselect = \"cct\" or pass h.")
+  if (!is.finite(Veff) || Veff <= 0)
+    stop("aggregate variance scale is not positive; check the sampling scheme and ",
+         "the per-period fits.")
   # eq:common_h_opt; for p = 1 the leading constant is ((2)!)^2/(2*2) = 1 and the
   # exponent 1/5.
   h_star <- (fp1^2 / (2 * (p + 1)) * Veff / denom)^(1 / (2 * p + 3))
@@ -97,8 +192,9 @@
     warning("joint AMSE-optimal bandwidth h* = ", signif(h_star, 4),
             " exceeds the running-variable radius ", signif(radius, 4),
             " (the period biases nearly cancel); consider bwselect = \"cct\" or a fixed h.")
-  list(h = h_star, b = h_star * (b0 / h0), B = B, Veff = Veff, reg = reg,
-       pilot = pilot)
+  b <- stats::setNames(h_star * cs$ratio, cs$keys)
+  list(h = h_star, b = b, B = B, Veff = Veff, reg = reg,
+       pilot_bws = cs$pilot_bws, constants = cs)
 }
 
 #' Period-specific joint AMSE bandwidths by coordinate descent
@@ -112,7 +208,8 @@
 #'                        + regularization,
 #' over `[lo, hmax]`. Each update weakly lowers the objective, so the returned
 #' bandwidths weakly improve on their starting point (B.4 P4). The starting point is
-#' controlled by `start` (default: the common joint-optimal h*).
+#' controlled by `start` (default: the common joint-optimal h* of [.bw_joint()],
+#' computed from the same constants).
 #'
 #' PC cross-period term (`lem:cov-pc`, B.4 P4). Per side, the same-side covariance of
 #' two intercepts satisfies `n h_s Cov -> sigma_{t,s,(side)} c_side(p, h_t/h_s) / f(c)`,
@@ -126,7 +223,7 @@
 #' term is omitted for both.
 #'
 #' @param plist named per-period data; `coef` named period coefficients;
-#'   `t_rd` RD-period label.
+#'   `t_rd` RD-period label (kept for call compatibility; not used by the selector).
 #' @param scheme one of `"cs"`, `"pc"`, `"pv"`; determines whether the
 #'   cross-period covariance term enters the AMSE (only for `"pc"`).
 #' @param pilot_bws optional named list of per-period `c(h, b)` used to
@@ -153,59 +250,21 @@
 #'   and tests.
 #' @keywords internal
 #' @noRd
-.bw_joint_iter <- function(plist, coef, t_rd, scheme = "cs", pilot_bws = NULL,
+.bw_joint_iter <- function(plist, coef, t_rd = NULL, scheme = "cs", pilot_bws = NULL,
                            start = "hstar",
                            c = 0, p = 1L, q = 2L, kernel = "triangular",
                            regularize = TRUE, reg_const = 3,
                            hmax = NULL, maxit = 50L, tol = 1e-4) {
-  keys <- names(coef)
+  cs <- .bw_constants(plist, coef, scheme = scheme, pilot_bws = pilot_bws,
+                      c = c, p = p, q = q, kernel = kernel)
+  keys <- cs$keys
   fp1 <- factorial(p + 1)
-  if (is.null(pilot_bws))
-    pilot_bws <- .bw_cct(plist, c = c, p = p, kernel = kernel)
-
-  # per-period asymptotic constants from a pilot fit: B-hat_t (curvature, via the
-  # conventional/BC gap) and V-hat_t (variance constant); rd_period returns both
-  # (eq:per-period-orders).
-  fitp <- lapply(keys, function(k)
-    rd_period(plist[[k]]$y, plist[[k]]$x, h = pilot_bws[[k]]["h"],
-              b = pilot_bws[[k]]["b"], id = plist[[k]]$id,
-              c = c, p = p, q = q, kernel = kernel))
-  names(fitp) <- keys
-  cf <- unname(vapply(keys, function(k) coef[[k]], numeric(1)))
-  bt <- vapply(keys, function(k) fitp[[k]]$b_const, numeric(1))
-  vt <- vapply(keys, function(k) fitp[[k]]$v_const, numeric(1))
-  nt <- vapply(keys, function(k) fitp[[k]]$n,       numeric(1))
-  ratio <- vapply(keys, function(k)
-    unname(pilot_bws[[k]]["b"] / pilot_bws[[k]]["h"]), numeric(1))
-  h0v <- vapply(keys, function(k) unname(pilot_bws[[k]]["h"]), numeric(1))
+  cf <- cs$cf; bt <- cs$bt; vt <- cs$vt; nt <- cs$nt
+  ratio <- cs$ratio; h0v <- cs$h0v; var_b <- cs$var_b
+  kap_p <- cs$kap_p; kap_m <- cs$kap_m
+  K <- length(keys)
   if (is.null(hmax))
     hmax <- max(vapply(plist, function(d) max(abs(d$x - c), na.rm = TRUE), numeric(1)))
-
-  # per-period variance of the bias-constant estimate, Var(B-hat_t) =
-  # ((p+1)!/h0^{p+1})^2 Var(D - D_bc), for the B.4 regularization term.
-  var_b <- vapply(keys, function(k) {
-    s <- fitp[[k]]$sides
-    (fp1 / h0v[[k]]^(p + 1))^2 * (sum(s[["+"]]$g_diff^2) + sum(s[["-"]]$g_diff^2))
-  }, numeric(1))
-
-  # PC covariance precomputation (see the header): per side, kappa_side[i, j] =
-  # pilot same-side covariance * h0_j / c_side(p, h0_i / h0_j). Only under scheme "pc".
-  K <- length(keys)
-  kap_p <- matrix(0, K, K)
-  kap_m <- matrix(0, K, K)
-  if (scheme == "pc" && K >= 2L) {
-    for (i in seq_len(K - 1L)) {
-      for (j in (i + 1L):K) {
-        cc   <- .cross_cov(fitp[[keys[i]]], fitp[[keys[j]]], bc = FALSE)
-        rho0 <- h0v[i] / h0v[j]
-        kap_p[i, j] <- cc$pc_p * h0v[j] / .kc_c(p, "+", rho0, kernel)
-        kap_m[i, j] <- cc$pc_m * h0v[j] / .kc_c(p, "-", rho0, kernel)
-      }
-    }
-    if (all(kap_p == 0) && all(kap_m == 0))
-      warning("scheme = \"pc\" but no unit is active in two periods' windows: ",
-              "the cross-period term is identically zero (same as scheme = \"cs\").")
-  }
 
   amse <- function(hv) {
     # leading bias of the aggregate, B.4 P2: sum_t w~_t h_t^{p+1} B_t / (p+1)!
@@ -234,11 +293,11 @@
   if (is.character(start) && length(start) == 1L) {
     start <- match.arg(start, c("hstar", "cct"))
     if (start == "hstar") {
-      # Default: start all periods at the common joint-optimal h*.
-      jb <- .bw_joint(plist, coef, t_rd, scheme = scheme,
-                      pilot = pilot_bws[[t_rd]], c = c, p = p, q = q,
+      # Default: start all periods at the common joint-optimal h*, from the same
+      # constants (no refit).
+      jb <- .bw_joint(plist, coef, t_rd, scheme = scheme, c = c, p = p, q = q,
                       kernel = kernel, regularize = regularize,
-                      reg_const = reg_const)
+                      reg_const = reg_const, constants = cs)
       h0 <- rep(jb$h, length(keys))
     } else {
       # "cct": start each period at its own CCT pilot h.
@@ -289,7 +348,7 @@
   bws <- stats::setNames(lapply(seq_along(keys), function(j)
     c(h = unname(h[j]), b = unname(h[j] * ratio[j]))), keys)
   list(bws = bws, b_const = bt, v_const = vt, niter = it,
-       objective = amse(h), amse_fun = amse)
+       objective = amse(h), amse_fun = amse, pilot_bws = cs$pilot_bws)
 }
 
 #' CCT (MSE-optimal) bandwidth for a single local-linear RD

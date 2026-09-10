@@ -96,6 +96,10 @@
 #'   joint-optimal bandwidth), `"joint"` (a single common AMSE-optimal
 #'   bandwidth for the aggregate estimator), or `"cct"` (per-period CCT
 #'   MSE-optimal bandwidths, [rd_bw_cct()]). Ignored if `h` is supplied.
+#'   Both joint rules estimate each period's bias and variance constants at
+#'   that period's own CCT pilot, so neither depends on which period is
+#'   labelled `t_rd`; under `"joint"` the pilot `b_t` keeps each period's CCT
+#'   ratio `b_t^CCT / h_t^CCT` (Appendix B.4 of the paper).
 #' @param start starting point of the iterative (`bwselect = "iter"`) coordinate
 #'   descent. `"hstar"` (default) starts all periods at the common joint-optimal
 #'   h*; `"cct"` starts each period at its own CCT h; or supply a named
@@ -193,10 +197,11 @@ rddid <- function(data, y, x, time, id = NULL, t_rd,
     jb <- .bw_joint(plist, coef, as.character(t_rd), scheme = use_scheme,
                     c = c, p = p, q = q, kernel = kernel,
                     regularize = regularize, reg_const = reg_const)
-    bws <- stats::setNames(rep(list(c(h = jb$h, b = jb$b)), length(periods)),
-                           as.character(periods))
+    # one common h*; the pilot b keeps each period's own CCT ratio (B.4)
+    bws <- stats::setNames(lapply(as.character(periods), function(k)
+      c(h = jb$h, b = unname(jb$b[[k]]))), as.character(periods))
     bw_info <- list(method = "joint", h = jb$h, b = jb$b, B = jb$B,
-                    Veff = jb$Veff, reg = jb$reg, pilot = jb$pilot)
+                    Veff = jb$Veff, reg = jb$reg, pilot_bws = jb$pilot_bws)
   }
 
   # ---- per-period fits at chosen bandwidth(s) ----
@@ -242,7 +247,8 @@ print.rddid <- function(x, ...) {
   bw <- x$bandwidth
   bwtxt <- switch(bw$method,
     fixed = sprintf("fixed  h=%.4g, b=%.4g", bw$h, bw$b),
-    joint = sprintf("joint  h=%.4g, b=%.4g", bw$h, bw$b),
+    joint = sprintf("joint  h=%.4g (common), b=%s (per period)", bw$h,
+                    paste(sprintf("%.4g", bw$b), collapse = "/")),
     cct   = "cct  (per-period)",
     iter  = sprintf("iter  (%d iterations)", bw$niter))
   cat(sprintf("  bwselect: %s\n", bwtxt))

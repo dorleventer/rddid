@@ -57,7 +57,11 @@ it is uniformly ONE (targets the ATU). See "Targeting the ATU" below.}
 by coordinate descent on the aggregate AMSE, started at the common
 joint-optimal bandwidth), \code{"joint"} (a single common AMSE-optimal
 bandwidth for the aggregate estimator), or \code{"cct"} (per-period CCT
-MSE-optimal bandwidths, \code{\link[=rd_bw_cct]{rd_bw_cct()}}). Ignored if \code{h} is supplied.}
+MSE-optimal bandwidths, \code{\link[=rd_bw_cct]{rd_bw_cct()}}). Ignored if \code{h} is supplied.
+Both joint rules estimate each period's bias and variance constants at
+that period's own CCT pilot, so neither depends on which period is
+labelled \code{t_rd}; under \code{"joint"} the pilot \code{b_t} keeps each period's CCT
+ratio \code{b_t^CCT / h_t^CCT} (Appendix B.4 of the paper).}
 
 \item{h, b}{optional common point / pilot bandwidths; if \code{h} is given it is
 used for every period (with \code{b} defaulting to \code{h}).}

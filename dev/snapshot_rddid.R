@@ -46,7 +46,7 @@ for (sc in c("cs", "pc", "pv")) {
       scheme = r$scheme,
       estimates = r$estimates,
       bws = lapply(r$fits, function(f) c(h = f$h, b = f$b)),
-      bw_info = bwi[setdiff(names(bwi), c("bws", "pilot"))],
+      bw_info = bwi[setdiff(names(bwi), c("bws", "pilot", "pilot_bws"))],
       consts = t(sapply(r$fits, function(f) c(b_const = f$b_const, v_const = f$v_const, n = f$n))))
   }
   # iter seeded from cct too (p = 1)
