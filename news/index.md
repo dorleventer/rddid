@@ -22,8 +22,10 @@
   labels the output (pinned by `test-mirror-invariance.R`).
   `rd_compstable(estimand = "atu")` mirrors the running variable
   (`x -> c - x`) and tests composition stability on the **below**-cutoff
-  shares; observations at `x == c` error under `"atu"` (place the cutoff
-  between support points).
+  shares (type indicator unchanged, “above the cutoff in the other
+  period”, so the jump is `pi_{t_RD,(-)}(1) - pi_{t_0,(-)}(1)`);
+  observations at `x == c` error under `"atu"` (place the cutoff between
+  support points).
 
 - **Canay-Kamat permutation test and McCrary tests removed** from
   [`rd_typecont()`](https://dorleventer.github.io/rddid/reference/rd_typecont.md)

@@ -224,15 +224,18 @@ independent.
 
 With `estimand = "atu"` the running variable is mirrored, \\x \to c -
 x\\ (and the cutoff reset to 0), before the construction above runs.
-This takes the units BELOW the original cutoff in each period, and the
-jump estimates \\\pi\_{t\_{\mathrm{RD}},(-)}(0) - \pi\_{t_0,(-)}(0)\\,
-the change across periods in the share of below-cutoff units that are
-below the cutoff in the other period – the composition-stability
-condition the ATU requires (Leventer and Nevo, Section 6). Units with
-`x == c` are treated in the original design but cannot be placed on the
-treated side of the mirrored design, so `estimand = "atu"` errors if any
-are present; place the cutoff between support points (e.g. `c = 4999.5`
-for integer populations) so that no unit sits on it.
+This takes the units BELOW the original cutoff in each period. The type
+indicator keeps its original orientation, "above the cutoff in the other
+period", so the jump estimates \\\pi\_{t\_{\mathrm{RD}},(-)}(1) -
+\pi\_{t_0,(-)}(1)\\, the change across periods in the share of
+below-cutoff units that are above the cutoff in the other period – the
+composition-stability condition the ATU requires (Leventer and Nevo,
+Section 6). (Stating the jump for the complementary type, "below in the
+other period", would flip its sign and leave the Wald test unchanged.)
+Units with `x == c` are treated in the original design but cannot be
+placed on the treated side of the mirrored design, so `estimand = "atu"`
+errors if any are present; place the cutoff between support points (e.g.
+`c = 4999.5` for integer populations) so that no unit sits on it.
 
 ## References
 
