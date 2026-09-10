@@ -76,6 +76,10 @@
 #'   cell is the sign pattern of all comparison periods from \eqn{t_{\mathrm{RD}}}'s
 #'   perspective; if `NULL`, the pattern is taken from the first comparison
 #'   period's perspective.
+#' @param estimand `"att"` (default) or `"atu"`. Label only: under `"atu"` the
+#'   within-type comparison-period discontinuities are the confounding
+#'   discontinuities among TREATED units, \eqn{\alpha_{t_0,1}(v)}; the
+#'   estimates and test are numerically identical to the `"att"` call.
 #' @param c Cutoff value for the running variable (default 0).
 #' @param h Main bandwidth.  If `NULL` (default), bandwidth is chosen
 #'   according to `bwselect`.  An explicit numeric value overrides `bwselect`
@@ -127,6 +131,7 @@
 #'       block-diagonal by cell.}
 #'     \item{`scheme`}{Sampling scheme used.}
 #'     \item{`bc`}{Whether bias-corrected jumps were used.}
+#'     \item{`estimand`}{`"att"` or `"atu"`, as passed.}
 #'     \item{`trend`}{Trend form used (`"constant"` or `"linear"`).}
 #'     \item{`comparisons`}{Comparison periods actually used (character).}
 #'     \item{`call`}{The matched call.}
@@ -173,6 +178,7 @@
 #' @export
 rd_trendcell <- function(data, y, x, time, id,
                          comparisons = NULL, t_rd = NULL,
+                         estimand = c("att", "atu"),
                          c = 0, h = NULL,
                          bwselect = c("cct", "rot"),
                          kernel = "triangular",
@@ -187,6 +193,7 @@ rd_trendcell <- function(data, y, x, time, id,
   type_by  <- match.arg(type_by)
   trend    <- match.arg(trend)
   bwselect <- match.arg(bwselect)
+  estimand <- match.arg(estimand)
 
   # ---- validate columns ----
   for (nm in base::c(y, x, time, id))
@@ -423,6 +430,7 @@ rd_trendcell <- function(data, y, x, time, id,
              cov_matrix       = matrix(numeric(0), 0L, 0L),
              scheme           = use_scheme,
              bc               = bc,
+             estimand         = estimand,
              trend            = trend,
              comparisons      = as.character(comparisons),
              call             = cl),
@@ -455,6 +463,7 @@ rd_trendcell <- function(data, y, x, time, id,
          cov_matrix       = Sigma_all,
          scheme           = use_scheme,
          bc               = bc,
+         estimand         = estimand,
          trend            = trend,
          comparisons      = as.character(comparisons),
          call             = cl),
@@ -469,6 +478,9 @@ print.rd_trendcell <- function(x, ...) {
   cat(sprintf("  Comparison periods: %s\n",
               paste(x$comparisons, collapse = ", ")))
   cat(sprintf("  Sampling scheme: %s\n", x$scheme))
+  est <- if (is.null(x$estimand)) "att" else x$estimand
+  if (est == "atu")
+    cat("  estimand: atu (test is unchanged; see ?rd_trendcell)\n")
   if (is.na(x$statistic)) {
     cat(sprintf("  Wald statistic: NA   df: %d   p-value: NA\n", x$df))
     cat("\n  NOTE: df = 0; the linear within-cell trend is just-identified\n")

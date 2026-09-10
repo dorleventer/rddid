@@ -29,6 +29,10 @@ paper does not state it), `DECISION`.
 
 ---
 
+## 0b. ATU designs (paper Section 6, `sec:atu`; added 2026-09-10)
+
+With `estimand = "atu"` (comparison periods uniformly treated) the paper mirrors the design and applies the ATT procedure as it stands. In the package: `rd_typecont()`, `rd_homog()`, `rd_trendcell()` are numerically identical to the `"att"` call (label only); `rd_compstable()` mirrors `x <- c - x` so its "above-cutoff units" are the original below-cutoff units and the jump is $\pi_{t_{\mathrm{RD}},(-)}(0)-\pi_{t_0,(-)}(0)$. Tests: `test-mirror-invariance.R` (hand-mirrored data vs original for every function), `test-estimand.R` (the argument). Plan and results log: `dev/atu_estimand_plan.md`.
+
 ## 1. The four tests
 
 ### 1.1 `ass:type-cont` — `rd_typecont()`

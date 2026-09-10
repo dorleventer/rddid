@@ -154,6 +154,7 @@ Function-level map only. B.5 has not changed in substance since the 2026-06-30 c
 | `.rddid_weights()` (`constant` = equal $1/m$; `linear` = OLS line through the comparison periods extrapolated to $t_{\mathrm{RD}}$) | Corollary `cor:trend`, Section 3 | admissibility ($\sum w=1$ for constant, line weights for linear) |
 | `rd_typecont`, `rd_compstable`, `rd_homog`, `rd_trendcell` | Section 4.4 (`sec:tvrv-assess`); simulations `app:sim-val` | mapped in `dev/tests_map.md` (this repo) |
 | `.detect_scheme()` | Section 5.2 prose | data-driven; the paper defines schemes by design |
+| `estimand = "atu"` on `rddid()` and the four tests | Section 6 (`sec:atu`): mirrored design $\tilde R=c-R$, $\tilde W=1-W$, $\tilde V=1-V$; $\widehat{\tilde D}_t=-\widehat D_t$, SEs and bandwidths identical, three tests unchanged, composition stability on the below-cutoff shares | label only except `rd_compstable()`, which sets `x <- c - x; c <- 0` (ties at `x == c` error); invariance pinned by `test-mirror-invariance.R`, the API by `test-estimand.R` (plan: `dev/atu_estimand_plan.md`, 2026-09-10) |
 
 ---
 

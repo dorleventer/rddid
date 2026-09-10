@@ -57,6 +57,10 @@
 #' @param t_rd Value of `time` for the RD period.  Used only to exclude it from
 #'   comparison periods when `comparisons = NULL`; the RD period is **not**
 #'   used in the test itself.
+#' @param estimand `"att"` (default) or `"atu"`. Label only: under `"atu"` the
+#'   within-type comparison-period discontinuities are the confounding
+#'   discontinuities among TREATED units, \eqn{\alpha_{t_0,1}(v)}; the
+#'   estimates and test are numerically identical to the `"att"` call.
 #' @param c Cutoff value for the running variable (default 0).
 #' @param h Main bandwidth.  If `NULL` (default), bandwidth is chosen
 #'   according to `bwselect`.  An explicit numeric value overrides `bwselect`
@@ -97,6 +101,7 @@
 #'       (non-reference minus reference), stacked across periods.}
 #'     \item{`cov_matrix`}{Estimated covariance matrix of the contrasts.}
 #'     \item{`scheme`}{Sampling scheme used.}
+#'     \item{`estimand`}{`"att"` or `"atu"`, as passed.}
 #'     \item{`comparisons`}{Comparison periods actually used.}
 #'     \item{`call`}{The matched call.}
 #'   }
@@ -136,6 +141,7 @@
 #' @export
 rd_homog <- function(data, y, x, time, id,
                      comparisons = NULL, t_rd = NULL,
+                     estimand = c("att", "atu"),
                      c = 0, h = NULL,
                      bwselect = c("cct", "rot"),
                      kernel = "triangular",
@@ -148,6 +154,7 @@ rd_homog <- function(data, y, x, time, id,
   scheme   <- match.arg(scheme)
   type_by  <- match.arg(type_by)
   bwselect <- match.arg(bwselect)
+  estimand <- match.arg(estimand)
 
   # ---- validate columns ----
   for (nm in base::c(y, x, time, id))
@@ -380,6 +387,7 @@ rd_homog <- function(data, y, x, time, id,
       cov_matrix        = Sigma,
       scheme            = use_scheme,
       bc                = bc,
+      estimand          = estimand,
       comparisons       = names(contrast_keys),
       call              = cl
     ),
@@ -393,6 +401,9 @@ print.rd_homog <- function(x, ...) {
   cat(sprintf("  Comparison periods: %s\n",
               paste(x$comparisons, collapse = ", ")))
   cat(sprintf("  Sampling scheme: %s\n", x$scheme))
+  est <- if (is.null(x$estimand)) "att" else x$estimand
+  if (est == "atu")
+    cat("  estimand: atu (test is unchanged; see ?rd_homog)\n")
   cat(sprintf("  Wald statistic: %.4f   df: %d   p-value: %.4f\n",
               x$statistic, x$df, x$p_value))
   if (nrow(x$period_type_jumps) > 0L) {

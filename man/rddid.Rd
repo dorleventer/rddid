@@ -13,6 +13,7 @@ rddid(
   t_rd,
   comparisons = NULL,
   weights = "constant",
+  estimand = c("att", "atu"),
   bwselect = c("iter", "joint", "cct"),
   h = NULL,
   b = NULL,
@@ -47,6 +48,10 @@ period pass \code{comparisons} explicitly.}
 \item{weights}{\code{"constant"} (equal weights; constant confounding trend),
 \code{"linear"} (line through the comparison discontinuities extrapolated to
 \code{t_rd}), or a numeric vector over \code{comparisons}.}
+
+\item{estimand}{\code{"att"} (default) when the treatment of interest is
+uniformly ZERO in the comparison periods (targets the ATT), \code{"atu"} when
+it is uniformly ONE (targets the ATU). See "Targeting the ATU" below.}
 
 \item{bwselect}{\code{"iter"} (default; period-specific bandwidths chosen jointly
 by coordinate descent on the aggregate AMSE, started at the common
@@ -97,6 +102,7 @@ bias-corrected estimate with its robust variance) and columns \code{est},
 argument as passed.}
 \item{\code{weights}, \code{weights_type}}{the comparison-period weights and
 their kind.}
+\item{\code{estimand}}{\code{"att"} or \code{"atu"}, as passed.}
 \item{\code{bandwidth}}{list with \code{method} (the \code{bwselect} value, or
 \code{"fixed"}), \code{h}, \code{b}, and \code{niter} for \code{"iter"}.}
 \item{\code{fits}}{named list of \code{\link[=rd_period]{rd_period()}} objects by period, the RD
@@ -112,5 +118,22 @@ same cutoff; comparison periods, where the confounding is present but the
 treatment of interest is uniform at the cutoff, identify and net out that
 confounding. The estimator is
 \eqn{\widehat{\mathrm{ATT}} = \widehat D_{t_{\mathrm{RD}}} - \sum_t w_t \widehat D_t},
-with each \eqn{\widehat D_t} a standard local-linear RD.
+with each \eqn{\widehat D_t} a standard local-linear RD. This estimates the
+ATT, or the ATU when the comparison periods are uniformly treated
+(\code{estimand = "atu"}).
+}
+\details{
+\subsection{Targeting the ATU}{
+
+When the treatment of interest is uniformly present (equal to one) in the
+comparison periods rather than uniformly absent, the same difference of
+discontinuities identifies the ATU: Leventer and Nevo, Section 6, show that
+the ATU design is the ATT design with the sides of the cutoff exchanged
+(mirror \eqn{\tilde R = c - R} and apply the ATT procedure unchanged). The
+point estimate, standard errors, and bandwidth rules are numerically the
+same either way, so \code{estimand} only labels the output here; the argument is
+also passed through to the validation tests (\code{?rd_typecont}, \code{?rd_homog},
+\code{?rd_trendcell}, \code{?rd_compstable}), where only \code{\link[=rd_compstable]{rd_compstable()}} computes
+differently.
+}
 }

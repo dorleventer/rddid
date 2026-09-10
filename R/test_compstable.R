@@ -39,6 +39,21 @@
 #' \text{cov}_{+-} - \text{cov}_{-+})} — the same formula as the PV scheme in
 #' the main estimator — rather than assuming the two sides are independent.
 #'
+#' ## ATU designs
+#'
+#' With `estimand = "atu"` the running variable is mirrored,
+#' \eqn{x \to c - x} (and the cutoff reset to 0), before the construction
+#' above runs. This takes the units BELOW the original cutoff in each period,
+#' and the jump estimates
+#' \eqn{\pi_{t_{\mathrm{RD}},(-)}(0) - \pi_{t_0,(-)}(0)}, the change across
+#' periods in the share of below-cutoff units that are below the cutoff in
+#' the other period -- the composition-stability condition the ATU requires
+#' (Leventer and Nevo, Section 6). Units with `x == c` are treated in the
+#' original design but cannot be placed on the treated side of the mirrored
+#' design, so `estimand = "atu"` errors if any are present; place the cutoff
+#' between support points (e.g. `c = 4999.5` for integer populations) so that
+#' no unit sits on it.
+#'
 #' @param data a long data frame, one row per unit-period. A unit's type in
 #'   period \eqn{t} is read from its running variable in the other period(s);
 #'   units unobserved there are dropped from period \eqn{t}, so the panel need
@@ -49,6 +64,11 @@
 #' @param t_rd Value of `time` identifying the RD period.
 #' @param comparisons Values of `time` to use as comparison periods.  If
 #'   `NULL` (default), all periods except `t_rd` are used.
+#' @param estimand `"att"` (default) or `"atu"`. Under `"atu"` the running
+#'   variable is mirrored before the test runs, so the test is on the
+#'   below-cutoff shares instead of the above-cutoff shares; this is the ONE
+#'   function among the five with `estimand` where the computation actually
+#'   differs. See "ATU designs" above.
 #' @param c Cutoff for the running variable (default 0).
 #' @param h Bandwidth.  If `NULL` (default), the bandwidth is determined by
 #'   `bwselect`; an explicit numeric value overrides `bwselect` and is used
@@ -82,12 +102,17 @@
 #'       pair (named `"trd::t0"`), each containing:
 #'       \describe{
 #'         \item{`ll_wald`}{list with `stat`, `df`, `p`.}
+#'         \item{`jumps`, `jump_se`}{The tested type-share jump(s) and their
+#'           standard errors (below-cutoff units when `estimand = "atu"`).}
 #'         \item{`type_values`}{Character vector of \eqn{(\mathbf{u},b)} type
 #'           labels present in this pair.}
 #'         \item{`scheme`}{Scheme actually used.}
-#'         \item{`n_trd`}{Number of above-cutoff units from \eqn{t_RD}.}
-#'         \item{`n_t0`}{Number of above-cutoff units from \eqn{t_0}.}
-#'         \item{`n_both`}{Number of units above the cutoff in both periods.}
+#'         \item{`n_trd`}{Number of above-cutoff units from \eqn{t_RD}
+#'           (below-cutoff units when `estimand = "atu"`).}
+#'         \item{`n_t0`}{Number of above-cutoff units from \eqn{t_0}
+#'           (below-cutoff units when `estimand = "atu"`).}
+#'         \item{`n_both`}{Number of units above the cutoff in both periods
+#'           (below-cutoff units when `estimand = "atu"`).}
 #'       }
 #'     }
 #'     \item{`joint`}{Joint result over all pairs (stacked Wald):
@@ -99,7 +124,8 @@
 #'       }
 #'     }
 #'     \item{`meta`}{list with `t_rd`, `comparisons`, `h` (NA when
-#'       `bwselect = "cct"`), `bwselect`, `c`, `bc`.}
+#'       `bwselect = "cct"`), `bwselect`, `c` (the original, unmirrored
+#'       cutoff, as passed), `bc`, `estimand`.}
 #'   }
 #'
 #' @references
@@ -125,6 +151,7 @@
 #' @export
 rd_compstable <- function(data, x, time, id, t_rd,
                           comparisons = NULL,
+                          estimand = c("att", "atu"),
                           c = 0,
                           h = NULL,
                           bwselect = c("cct", "rot"),
@@ -134,12 +161,26 @@ rd_compstable <- function(data, x, time, id, t_rd,
                           ...) {
   scheme   <- match.arg(scheme)
   bwselect <- match.arg(bwselect)
+  estimand <- match.arg(estimand)
 
   # ---- input validation -------------------------------------------------------
   for (nm in base::c(x, time, id)) {
     if (!nm %in% names(data))
       stop("column '", nm, "' not found in `data`.")
   }
+
+  c_orig <- c
+  if (estimand == "atu") {
+    if (any(data[[x]] == c, na.rm = TRUE))
+      stop("estimand = \"atu\": ", sum(data[[x]] == c, na.rm = TRUE),
+           " observation(s) have x == c. Units at the cutoff are treated in the original ",
+           "design but cannot be placed on the treated side of the mirrored design; ",
+           "set the cutoff between support points (e.g. c = 4999.5 for integer populations) ",
+           "so that no unit sits on it.")
+    data[[x]] <- c - data[[x]]
+    c <- 0
+  }
+
   data <- data[stats::complete.cases(data[, base::c(x, time, id)]), , drop = FALSE]
 
   all_periods <- sort(unique(data[[time]]))
@@ -408,8 +449,9 @@ rd_compstable <- function(data, x, time, id, t_rd,
         comparisons = comparisons,
         h           = if (!is.null(h)) h else NA_real_,
         bwselect    = bwselect,
-        c           = c,
-        bc          = bc
+        c           = c_orig,
+        bc          = bc,
+        estimand    = estimand
       )
     ),
     class = "rd_compstable"
@@ -419,7 +461,10 @@ rd_compstable <- function(data, x, time, id, t_rd,
 
 #' @export
 print.rd_compstable <- function(x, ...) {
+  est <- if (is.null(x$meta$estimand)) "att" else x$meta$estimand
   cat("Composition-stability test\n")
+  if (est == "atu")
+    cat("  estimand: atu -- test is on the below-cutoff shares (mirrored design)\n")
   cat(sprintf("  RD period: %s   Comparison periods: %s\n",
               x$meta$t_rd,
               paste(x$meta$comparisons, collapse = ", ")))

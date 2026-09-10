@@ -57,7 +57,22 @@
 #' treatment of interest is uniform at the cutoff, identify and net out that
 #' confounding. The estimator is
 #' \eqn{\widehat{\mathrm{ATT}} = \widehat D_{t_{\mathrm{RD}}} - \sum_t w_t \widehat D_t},
-#' with each \eqn{\widehat D_t} a standard local-linear RD.
+#' with each \eqn{\widehat D_t} a standard local-linear RD. This estimates the
+#' ATT, or the ATU when the comparison periods are uniformly treated
+#' (`estimand = "atu"`).
+#'
+#' ## Targeting the ATU
+#'
+#' When the treatment of interest is uniformly present (equal to one) in the
+#' comparison periods rather than uniformly absent, the same difference of
+#' discontinuities identifies the ATU: Leventer and Nevo, Section 6, show that
+#' the ATU design is the ATT design with the sides of the cutoff exchanged
+#' (mirror \eqn{\tilde R = c - R} and apply the ATT procedure unchanged). The
+#' point estimate, standard errors, and bandwidth rules are numerically the
+#' same either way, so `estimand` only labels the output here; the argument is
+#' also passed through to the validation tests (`?rd_typecont`, `?rd_homog`,
+#' `?rd_trendcell`, `?rd_compstable`), where only [rd_compstable()] computes
+#' differently.
 #'
 #' @param data a long data frame, one row per unit-period (repeated
 #'   cross-section or panel; a panel need not be balanced).
@@ -73,6 +88,9 @@
 #' @param weights `"constant"` (equal weights; constant confounding trend),
 #'   `"linear"` (line through the comparison discontinuities extrapolated to
 #'   `t_rd`), or a numeric vector over `comparisons`.
+#' @param estimand `"att"` (default) when the treatment of interest is
+#'   uniformly ZERO in the comparison periods (targets the ATT), `"atu"` when
+#'   it is uniformly ONE (targets the ATU). See "Targeting the ATU" below.
 #' @param bwselect `"iter"` (default; period-specific bandwidths chosen jointly
 #'   by coordinate descent on the aggregate AMSE, started at the common
 #'   joint-optimal bandwidth), `"joint"` (a single common AMSE-optimal
@@ -112,6 +130,7 @@
 #'       argument as passed.}
 #'     \item{`weights`, `weights_type`}{the comparison-period weights and
 #'       their kind.}
+#'     \item{`estimand`}{`"att"` or `"atu"`, as passed.}
 #'     \item{`bandwidth`}{list with `method` (the `bwselect` value, or
 #'       `"fixed"`), `h`, `b`, and `niter` for `"iter"`.}
 #'     \item{`fits`}{named list of [rd_period()] objects by period, the RD
@@ -121,6 +140,7 @@
 #' @export
 rddid <- function(data, y, x, time, id = NULL, t_rd,
                   comparisons = NULL, weights = "constant",
+                  estimand = c("att", "atu"),
                   bwselect = c("iter", "joint", "cct"), h = NULL, b = NULL,
                   start = "hstar",
                   scheme = c("auto", "cs", "pc", "pv"),
@@ -128,6 +148,7 @@ rddid <- function(data, y, x, time, id = NULL, t_rd,
                   c = 0, p = 1L, q = 2L, kernel = "triangular", level = 0.95) {
   bwselect <- match.arg(bwselect)
   scheme   <- match.arg(scheme)
+  estimand <- match.arg(estimand)
   for (nm in c(y, x, time)) if (!nm %in% names(data))
     stop("column '", nm, "' not found in `data`.")
 
@@ -201,6 +222,7 @@ rddid <- function(data, y, x, time, id = NULL, t_rd,
   structure(list(
     estimates = as.data.frame(est_tab),
     coef = coef, weights = w, weights_type = if (is.numeric(weights)) "custom" else weights,
+    estimand = estimand,
     t_rd = t_rd, comparisons = comparisons,
     scheme = use_scheme, scheme_detected = detected, scheme_requested = scheme,
     bandwidth = bw_info, fits = fits, level = level,
@@ -211,7 +233,8 @@ rddid <- function(data, y, x, time, id = NULL, t_rd,
 
 #' @export
 print.rddid <- function(x, ...) {
-  cat("RD-DID estimate of ATT(t_RD)\n")
+  est <- if (is.null(x$estimand)) "att" else x$estimand
+  cat(sprintf("RD-DID estimate of %s(t_RD)\n", toupper(est)))
   cat(sprintf("  RD period: %s   comparison periods: %s\n",
               x$t_rd, paste(x$comparisons, collapse = ", ")))
   cat(sprintf("  weights: %s [%s]\n", x$weights_type,
@@ -225,6 +248,8 @@ print.rddid <- function(x, ...) {
   cat(sprintf("  bwselect: %s\n", bwtxt))
   cat(sprintf("  scheme: %s%s\n", x$scheme,
               if (x$scheme_requested == "auto") " (auto-detected)" else ""))
+  if (est == "atu")
+    cat("  estimand: ATU (comparison periods uniformly treated)\n")
   e <- x$estimates
   cat(sprintf("\n  %-14s %10s %10s   %s%% CI\n", "", "Estimate", "Std.Err.",
               format(100 * x$level)))

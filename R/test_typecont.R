@@ -23,6 +23,9 @@
 #' @param x column name (string) for the running variable.
 #' @param time column name (string) for the period.
 #' @param id column name (string) for the unit identifier.
+#' @param estimand `"att"` (default) or `"atu"`. Label only: the test is
+#'   identical under either estimand, because the continuous-type-distribution
+#'   assumption is symmetric in the two sides of the cutoff.
 #' @param c cutoff (default 0).
 #' @param h bandwidth.  If `NULL`, the bandwidth is determined by `bwselect`;
 #'   an explicit numeric value overrides `bwselect` and is used directly.
@@ -47,9 +50,10 @@
 #'     joint test aggregates; each entry has `ll_wald` (that period's own
 #'     LL-Wald `stat`/`df`/`p`, restricted to its kept contrasts).}
 #'   \item{meta}{list with `periods`, `type_values`, `h` (NA when
-#'     `bwselect = "cct"`), `bwselect`, `scheme`, `bc`.}
+#'     `bwselect = "cct"`), `bwselect`, `scheme`, `bc`, `estimand`.}
 #' @export
 rd_typecont <- function(data, x, time, id,
+                        estimand = c("att", "atu"),
                         c = 0,
                         h = NULL,
                         bwselect = c("cct", "rot"),
@@ -59,6 +63,7 @@ rd_typecont <- function(data, x, time, id,
                         ...) {
   scheme   <- match.arg(scheme)
   bwselect <- match.arg(bwselect)
+  estimand <- match.arg(estimand)
 
   # ----- input checks -------------------------------------------------------
   for (nm in c(x, time, id)) {
@@ -228,7 +233,8 @@ rd_typecont <- function(data, x, time, id,
         h            = if (!is.null(h)) h else NA_real_,
         bwselect     = bwselect,
         scheme       = use_scheme,
-        bc           = bc
+        bc           = bc,
+        estimand     = estimand
       )
     ),
     class = "rd_typecont"
@@ -244,6 +250,9 @@ print.rd_typecont <- function(x, ...) {
               paste(x$meta$periods, collapse = ", "),
               paste(x$meta$type_values, collapse = ", "),
               h_str, x$meta$bwselect, x$meta$scheme))
+  est <- if (is.null(x$meta$estimand)) "att" else x$meta$estimand
+  if (est == "atu")
+    cat("  estimand: atu (test is unchanged; see ?rd_typecont)\n")
 
   cat("LL-Wald:\n")
   cat(sprintf("    chi2(%.0f) = %.4f   p = %.4f\n",

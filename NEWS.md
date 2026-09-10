@@ -1,5 +1,14 @@
 # rddid 0.4.0.9000 (development)
 
+* **New argument `estimand = c("att", "atu")`** on `rddid()`, `rd_typecont()`, `rd_compstable()`,
+  `rd_homog()` and `rd_trendcell()` (default `"att"`, nothing existing moves). Set `"atu"` when the
+  comparison periods are uniformly *treated* (the paper's Section 6: the ATU design is the ATT
+  design with the sides of the cutoff exchanged). For `rddid()`, `rd_typecont()`, `rd_homog()` and
+  `rd_trendcell()` the estimates and tests are numerically identical, so `estimand` only labels the
+  output (pinned by `test-mirror-invariance.R`). `rd_compstable(estimand = "atu")` mirrors the
+  running variable (`x -> c - x`) and tests composition stability on the **below**-cutoff shares;
+  observations at `x == c` error under `"atu"` (place the cutoff between support points).
+
 * **Canay-Kamat permutation test and McCrary tests removed** from `rd_typecont()` and
   `rd_compstable()` (arguments `q`, `S`; outputs `ck_perm`, `mccrary_within`, `mccrary_pooled`;
   internal helpers `.q_rot()`, `.mccrary()`). The paper reports the local-linear Wald tests only.

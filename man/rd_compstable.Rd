@@ -11,6 +11,7 @@ rd_compstable(
   id,
   t_rd,
   comparisons = NULL,
+  estimand = c("att", "atu"),
   c = 0,
   h = NULL,
   bwselect = c("cct", "rot"),
@@ -36,6 +37,12 @@ not be balanced.}
 
 \item{comparisons}{Values of \code{time} to use as comparison periods.  If
 \code{NULL} (default), all periods except \code{t_rd} are used.}
+
+\item{estimand}{\code{"att"} (default) or \code{"atu"}. Under \code{"atu"} the running
+variable is mirrored before the test runs, so the test is on the
+below-cutoff shares instead of the above-cutoff shares; this is the ONE
+function among the five with \code{estimand} where the computation actually
+differs. See "ATU designs" above.}
 
 \item{c}{Cutoff for the running variable (default 0).}
 
@@ -77,12 +84,17 @@ An object of class \code{"rd_compstable"}, a named list with:
 pair (named \code{"trd::t0"}), each containing:
 \describe{
 \item{\code{ll_wald}}{list with \code{stat}, \code{df}, \code{p}.}
+\item{\code{jumps}, \code{jump_se}}{The tested type-share jump(s) and their
+standard errors (below-cutoff units when \code{estimand = "atu"}).}
 \item{\code{type_values}}{Character vector of \eqn{(\mathbf{u},b)} type
 labels present in this pair.}
 \item{\code{scheme}}{Scheme actually used.}
-\item{\code{n_trd}}{Number of above-cutoff units from \eqn{t_RD}.}
-\item{\code{n_t0}}{Number of above-cutoff units from \eqn{t_0}.}
-\item{\code{n_both}}{Number of units above the cutoff in both periods.}
+\item{\code{n_trd}}{Number of above-cutoff units from \eqn{t_RD}
+(below-cutoff units when \code{estimand = "atu"}).}
+\item{\code{n_t0}}{Number of above-cutoff units from \eqn{t_0}
+(below-cutoff units when \code{estimand = "atu"}).}
+\item{\code{n_both}}{Number of units above the cutoff in both periods
+(below-cutoff units when \code{estimand = "atu"}).}
 }
 }
 \item{\code{joint}}{Joint result over all pairs (stacked Wald):
@@ -94,7 +106,8 @@ approximate — the paper's test is per pair).}
 }
 }
 \item{\code{meta}}{list with \code{t_rd}, \code{comparisons}, \code{h} (NA when
-\code{bwselect = "cct"}), \code{bwselect}, \code{c}, \code{bc}.}
+\code{bwselect = "cct"}), \code{bwselect}, \code{c} (the original, unmirrored
+cutoff, as passed), \code{bc}, \code{estimand}.}
 }
 }
 \description{
@@ -138,6 +151,22 @@ id-matched cross-side covariance term (the two g-vectors can share unit
 ids).  The function computes \eqn{(\text{cov}_{++} + \text{cov}_{--} -
 \text{cov}_{+-} - \text{cov}_{-+})} — the same formula as the PV scheme in
 the main estimator — rather than assuming the two sides are independent.
+}
+
+\subsection{ATU designs}{
+
+With \code{estimand = "atu"} the running variable is mirrored,
+\eqn{x \to c - x} (and the cutoff reset to 0), before the construction
+above runs. This takes the units BELOW the original cutoff in each period,
+and the jump estimates
+\eqn{\pi_{t_{\mathrm{RD}},(-)}(0) - \pi_{t_0,(-)}(0)}, the change across
+periods in the share of below-cutoff units that are below the cutoff in
+the other period -- the composition-stability condition the ATU requires
+(Leventer and Nevo, Section 6). Units with \code{x == c} are treated in the
+original design but cannot be placed on the treated side of the mirrored
+design, so \code{estimand = "atu"} errors if any are present; place the cutoff
+between support points (e.g. \code{c = 4999.5} for integer populations) so that
+no unit sits on it.
 }
 }
 \examples{

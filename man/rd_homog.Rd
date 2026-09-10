@@ -12,6 +12,7 @@ rd_homog(
   id,
   comparisons = NULL,
   t_rd = NULL,
+  estimand = c("att", "atu"),
   c = 0,
   h = NULL,
   bwselect = c("cct", "rot"),
@@ -42,6 +43,11 @@ to all periods except \code{t_rd} (if \code{t_rd} is supplied) or all periods (i
 \item{t_rd}{Value of \code{time} for the RD period.  Used only to exclude it from
 comparison periods when \code{comparisons = NULL}; the RD period is \strong{not}
 used in the test itself.}
+
+\item{estimand}{\code{"att"} (default) or \code{"atu"}. Label only: under \code{"atu"} the
+within-type comparison-period discontinuities are the confounding
+discontinuities among TREATED units, \eqn{\alpha_{t_0,1}(v)}; the
+estimates and test are numerically identical to the \code{"att"} call.}
 
 \item{c}{Cutoff value for the running variable (default 0).}
 
@@ -92,6 +98,7 @@ observations, and whether it was the reference type.}
 (non-reference minus reference), stacked across periods.}
 \item{\code{cov_matrix}}{Estimated covariance matrix of the contrasts.}
 \item{\code{scheme}}{Sampling scheme used.}
+\item{\code{estimand}}{\code{"att"} or \code{"atu"}, as passed.}
 \item{\code{comparisons}}{Comparison periods actually used.}
 \item{\code{call}}{The matched call.}
 }

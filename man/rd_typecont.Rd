@@ -9,6 +9,7 @@ rd_typecont(
   x,
   time,
   id,
+  estimand = c("att", "atu"),
   c = 0,
   h = NULL,
   bwselect = c("cct", "rot"),
@@ -29,6 +30,10 @@ not be balanced.}
 \item{time}{column name (string) for the period.}
 
 \item{id}{column name (string) for the unit identifier.}
+
+\item{estimand}{\code{"att"} (default) or \code{"atu"}. Label only: the test is
+identical under either estimand, because the continuous-type-distribution
+assumption is symmetric in the two sides of the cutoff.}
 
 \item{c}{cutoff (default 0).}
 
@@ -61,7 +66,7 @@ An object of class \code{"rd_typecont"}, a named list with:
 joint test aggregates; each entry has \code{ll_wald} (that period's own
 LL-Wald \code{stat}/\code{df}/\code{p}, restricted to its kept contrasts).}
 \item{meta}{list with \code{periods}, \code{type_values}, \code{h} (NA when
-\code{bwselect = "cct"}), \code{bwselect}, \code{scheme}, \code{bc}.}
+\code{bwselect = "cct"}), \code{bwselect}, \code{scheme}, \code{bc}, \code{estimand}.}
 }
 \description{
 Wald test of the continuous-type-distribution assumption (Section 4.4 of

@@ -12,6 +12,7 @@ rd_trendcell(
   id,
   comparisons = NULL,
   t_rd = NULL,
+  estimand = c("att", "atu"),
   c = 0,
   h = NULL,
   bwselect = c("cct", "rot"),
@@ -45,6 +46,11 @@ to all periods except \code{t_rd} (if \code{t_rd} is supplied) or all periods (i
 cell is the sign pattern of all comparison periods from \eqn{t_{\mathrm{RD}}}'s
 perspective; if \code{NULL}, the pattern is taken from the first comparison
 period's perspective.}
+
+\item{estimand}{\code{"att"} (default) or \code{"atu"}. Label only: under \code{"atu"} the
+within-type comparison-period discontinuities are the confounding
+discontinuities among TREATED units, \eqn{\alpha_{t_0,1}(v)}; the
+estimates and test are numerically identical to the \code{"att"} call.}
 
 \item{c}{Cutoff value for the running variable (default 0).}
 
@@ -107,6 +113,7 @@ cells.}
 block-diagonal by cell.}
 \item{\code{scheme}}{Sampling scheme used.}
 \item{\code{bc}}{Whether bias-corrected jumps were used.}
+\item{\code{estimand}}{\code{"att"} or \code{"atu"}, as passed.}
 \item{\code{trend}}{Trend form used (\code{"constant"} or \code{"linear"}).}
 \item{\code{comparisons}}{Comparison periods actually used (character).}
 \item{\code{call}}{The matched call.}
