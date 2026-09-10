@@ -6,7 +6,9 @@
   design with the sides of the cutoff exchanged). For `rddid()`, `rd_typecont()`, `rd_homog()` and
   `rd_trendcell()` the estimates and tests are numerically identical, so `estimand` only labels the
   output (pinned by `test-mirror-invariance.R`). `rd_compstable(estimand = "atu")` mirrors the
-  running variable (`x -> c - x`) and tests composition stability on the **below**-cutoff shares;
+  running variable (`x -> c - x`) and tests composition stability on the **below**-cutoff shares
+  (type indicator unchanged, "above the cutoff in the other period", so the jump is
+  `pi_{t_RD,(-)}(1) - pi_{t_0,(-)}(1)`);
   observations at `x == c` error under `"atu"` (place the cutoff between support points).
 
 * **Canay-Kamat permutation test and McCrary tests removed** from `rd_typecont()` and

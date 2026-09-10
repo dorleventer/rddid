@@ -140,7 +140,11 @@ test_that("rd_compstable(atu) on d equals rd_compstable(att) on hand-mirrored dm
   pb <- cs_att_dm$pairs[[pk]]
 
   expect_equal(pa$ll_wald$stat, pb$ll_wald$stat, tolerance = 1e-12)
-  expect_equal(pa$jumps,        pb$jumps,        tolerance = 1e-12)
+  # Convention (Dor, 2026-09-10): under "atu" the type keeps its original
+  # orientation ("above in the other period"), whereas the literal ATT recipe on
+  # mirrored data uses "below in the other period"; pi(0) = 1 - pi(1), so the
+  # jump flips sign and the Wald is identical.
+  expect_equal(pa$jumps,        -pb$jumps,       tolerance = 1e-12)
   expect_equal(pa$jump_se,      pb$jump_se,      tolerance = 1e-12)
   expect_identical(pa$n_trd, pb$n_trd)
   expect_identical(pa$n_t0,  pb$n_t0)
@@ -172,14 +176,15 @@ test_that("rd_compstable(atu) on d equals rd_compstable(att) on hand-mirrored dm
 # ============================================================================
 
 test_that("rd_compstable(atu) jump matches a from-the-equations below-side reflected fit", {
-  # period-1 units with R1 < 0: x = R1 (negative side), ind = 1{R2 < 0}
+  # period-1 units with R1 < 0: x = R1 (negative side, as is), ind = 1{R2 >= 0}
+  # (type = ABOVE the cutoff in the other period, the package's convention)
   keep1 <- R1 < 0
   x1    <- R1[keep1]
-  ind1  <- as.integer(R2[keep1] < 0)
-  # period-2 units with R2 < 0: x = -R2 (positive side), ind = 1{R1 < 0}
+  ind1  <- as.integer(R2[keep1] >= 0)
+  # period-2 units with R2 < 0: x = -R2 (positive side, mirrored), ind = 1{R1 >= 0}
   keep2 <- R2 < 0
   x2    <- -R2[keep2]
-  ind2  <- as.integer(R1[keep2] < 0)
+  ind2  <- as.integer(R1[keep2] >= 0)
 
   x   <- c(x1, x2)
   ind <- c(ind1, ind2)

@@ -179,7 +179,8 @@ With comparison periods uniformly treated, the ATU requires composition
 stability of the below-cutoff shares,
 $\pi_{t_{\mathrm{RD}},(-)}(v) = \pi_{t_0,(-)}(v)$ (paper, Section 6);
 `rd_compstable(estimand = "atu")` mirrors the running variable and runs the
-same construction on the below-cutoff units.
+same construction on the below-cutoff units, with the same type indicator
+(above the cutoff in the other period).
 
 ```{r compstable-atu}
 cs1_atu <- rd_compstable(S1, x = "R", time = "t", id = "id", t_rd = 2, comparisons = 1,
