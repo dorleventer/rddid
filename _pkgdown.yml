@@ -13,7 +13,7 @@ navbar:
     articles:
       text: Articles
       menu:
-        - text: Estimating the ATT with rddid()
+        - text: Estimating the ATT or ATU with rddid()
           href: articles/rddid-estimation.html
         - text: Bandwidth rules and sampling schemes
           href: articles/rddid-options.html

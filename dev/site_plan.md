@@ -11,6 +11,9 @@ Goal: the pkgdown site (`https://dorleventer.github.io/rddid/`) shows how to use
 - **Notation as in the paper, with a one-line reminder at first use** (e.g. "`D_t` is the observed outcome discontinuity in period `t`", "`alpha_{t,0}` the confounding discontinuity", "`w_t` the comparison-period weights", "CS / PC / PV = repeated cross-section / panel with time-constant / time-varying running variable", "a unit's type in period `t` is its side of the cutoff in the other period").
 - **Descriptive, not normative.** "For standard errors under the PV sampling scheme, set `scheme = "pv"`", not "you should use PV". Each bandwidth rule: what it is, how to call it, how to read the output — no ranking.
 - ATT framing throughout; **no ATU mention**. Generic periods `t = 1, 2, 3`.
+  (2026-09-10: lifted by Dor for two sections only — `rddid-estimation`
+  closing section and `rddid-validation-tests` "ATU designs" — to show
+  `estimand = "atu"`; see `dev/atu_estimand_plan.md` §5.)
 - **No composition-adjusted estimators anywhere on the site** (`rd_adjust`, `rd_sadjust`, `rd_c`, `rd_att`): tagged `@keywords internal` so they stay exported and tested but leave the reference index; not mentioned in any vignette or the README.
 
 ## 1. Where the site stands

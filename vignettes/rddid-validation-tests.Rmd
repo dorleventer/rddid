@@ -173,6 +173,50 @@ p1 <- cs1$pairs[["2::1"]]; p0 <- cs0$pairs[["2::1"]]
 
 For S1: jump $= `r fmt(p1$jumps)`$, SE $= `r fmt(p1$jump_se)`$, $\chi^2(`r p1$ll_wald$df`) = `r fmt(p1$ll_wald$stat)`$, $`r pmath(p1$ll_wald$p)`$, with `r p1$n_trd` above-cutoff units from $t_{\mathrm{RD}}$, `r p1$n_t0` from $t_0$, and `r p1$n_both` above the cutoff in both periods. The package SE accounts for those `r p1$n_both` doubly-counted units through the id-matched cross-side covariance term. For S0, for contrast: jump $= `r fmt(p0$jumps)`$, $`r pmath(p0$ll_wald$p)`$.
 
+## ATU designs — estimand = "atu"
+
+With comparison periods uniformly treated, the ATU requires composition
+stability of the below-cutoff shares,
+$\pi_{t_{\mathrm{RD}},(-)}(v) = \pi_{t_0,(-)}(v)$ (paper, Section 6);
+`rd_compstable(estimand = "atu")` mirrors the running variable and runs the
+same construction on the below-cutoff units.
+
+```{r compstable-atu}
+cs1_atu <- rd_compstable(S1, x = "R", time = "t", id = "id", t_rd = 2, comparisons = 1,
+                         bwselect = "cct", bc = FALSE, estimand = "atu")
+p1_atu <- cs1_atu$pairs[["2::1"]]
+```
+
+For S1, the `"att"` call above gives jump $= `r fmt(p1$jumps)`$,
+$\chi^2(`r p1$ll_wald$df`) = `r fmt(p1$ll_wald$stat)`$, $`r pmath(p1$ll_wald$p)`$,
+on `r p1$n_trd` above-cutoff units from $t_{\mathrm{RD}}$ and `r p1$n_t0` from
+$t_0$; the `"atu"` call gives jump $= `r fmt(p1_atu$jumps)`$,
+$\chi^2(`r p1_atu$ll_wald$df`) = `r fmt(p1_atu$ll_wald$stat)`$,
+$`r pmath(p1_atu$ll_wald$p)`$, on `r p1_atu$n_trd` below-cutoff units from
+$t_{\mathrm{RD}}$ and `r p1_atu$n_t0` from $t_0$ -- different units from the
+`"att"` call. Both reject under S1's drift.
+
+The other three tests are unchanged under `estimand = "atu"`:
+
+```{r typecont-atu}
+tc_att <- rd_typecont(S1, x = "R", time = "t", id = "id", bwselect = "cct", bc = FALSE)
+tc_atu <- rd_typecont(S1, x = "R", time = "t", id = "id", bwselect = "cct", bc = FALSE,
+                      estimand = "atu")
+```
+
+`rd_typecont()` on S1 gives the same joint statistic either way,
+$\chi^2(`r tc_att$ll_wald$df`) = `r fmt(tc_att$ll_wald$stat)`$ under `"att"`
+and `r fmt(tc_atu$ll_wald$stat)` under `"atu"`.
+
+```{r checks-atu-section, include = FALSE}
+stat_att <- tc_att$ll_wald$stat
+stat_atu <- tc_atu$ll_wald$stat
+stopifnot(
+  isTRUE(all.equal(stat_att, stat_atu)),
+  !isTRUE(all.equal(p1$ll_wald$stat, p1_atu$ll_wald$stat))
+)
+```
+
 ## Homogeneous confounding — `rd_homog()`
 
 Homogeneous confounding requires $\alpha_{t_0,0}(0) = \alpha_{t_0,0}(1)$ in the comparison period. The test estimates the outcome RD jump within each type (the unit's side of the cutoff in the RD period, `type_by = "rd_side"`, the default), in the comparison period, and tests equality:

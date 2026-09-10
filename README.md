@@ -69,6 +69,9 @@ rddid(dat, y = "Y", x = "R", time = "t", id = "id",
 #>   Robust SE by scheme: cs=0.18902  pc=0.11715  pv=0.11715
 ```
 
+Set `estimand = "atu"` when the comparison periods are uniformly treated
+instead of uniformly untreated (paper, Section 6).
+
 Three vignettes: the estimator (Get started), its bandwidth rules and
 sampling schemes, and, for a time-varying running variable, the
 composition validation tests:

@@ -62,6 +62,9 @@ rddid(dat, y = "Y", x = "R", time = "t", id = "id",
       t_rd = 3, comparisons = c(1, 2), weights = "constant")
 ```
 
+Set `estimand = "atu"` when the comparison periods are uniformly treated
+instead of uniformly untreated (paper, Section 6).
+
 Three vignettes: the estimator (Get started), its bandwidth rules and
 sampling schemes, and, for a time-varying running variable, the composition
 validation tests: <https://dorleventer.github.io/rddid/articles/index.html>.
