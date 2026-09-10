@@ -98,13 +98,13 @@ r_joint <- rddid(dat1, y = "Y", x = "R", time = "t", id = "id", t_rd = 3, bwsele
 peek(r_joint)
 #> method: joint 
 #>     1     2     3 
-#> 0.329 0.329 0.329 
-#>                est    se
-#> Conventional 1.087 0.097
-#> Robust       1.120 0.116
+#> 0.305 0.305 0.305 
+#>               est   se
+#> Conventional 1.09 0.10
+#> Robust       1.12 0.12
 ```
 
-`r_joint$bandwidth$h` is the common $`h^\ast = 0.329`$, applied to every
+`r_joint$bandwidth$h` is the common $`h^\ast = 0.305`$, applied to every
 period’s `fits[[k]]$h`.
 
 ### `bwselect = "iter"` (the default)
@@ -170,7 +170,7 @@ knitr::kable(tab, digits = 3)
 | rule  |   h_1 |   h_2 |   h_3 | Conventional  | Robust        | truth |
 |:------|------:|------:|------:|:--------------|:--------------|------:|
 | cct   | 0.390 | 0.328 | 0.398 | 1.073 (0.089) | 1.107 (0.106) |     1 |
-| joint | 0.329 | 0.329 | 0.329 | 1.087 (0.097) | 1.120 (0.116) |     1 |
+| joint | 0.305 | 0.305 | 0.305 | 1.090 (0.100) | 1.120 (0.120) |     1 |
 | iter  | 0.335 | 0.263 | 0.317 | 1.094 (0.098) | 1.124 (0.117) |     1 |
 
 The three rules give different per-period bandwidths — from

@@ -86,7 +86,11 @@ rddid(
   bandwidth for the aggregate estimator), or `"cct"` (per-period CCT
   MSE-optimal bandwidths,
   [`rd_bw_cct()`](https://dorleventer.github.io/rddid/reference/rd_bw_cct.md)).
-  Ignored if `h` is supplied.
+  Ignored if `h` is supplied. Both joint rules estimate each period's
+  bias and variance constants at that period's own CCT pilot, so neither
+  depends on which period is labelled `t_rd`; under `"joint"` the pilot
+  `b_t` keeps each period's CCT ratio `b_t^CCT / h_t^CCT` (Appendix B.4
+  of the paper).
 
 - h, b:
 

@@ -2,6 +2,25 @@
 
 ## rddid 0.4.0.9000 (development)
 
+- **`bwselect = "joint"` no longer depends on which period is labelled
+  `t_rd`.** The common AMSE-optimal bandwidth used to fit *every* period
+  at the RD period’s CCT pilot pair to estimate the aggregate bias and
+  variance constants, so an estimator that aggregates several RD periods
+  (the same linear combination of per-period discontinuities, whichever
+  RD period carries the `t_rd` label) got a different `h*` for each
+  labelling (Grembi, aggregate ATU over 2001-2004: 482 vs 320). Both
+  joint rules now estimate each period’s constants at that period’s
+  **own** CCT pilot through one shared helper (`.bw_constants()`), and
+  the common `h*` is the exact scalar minimizer of the iterative rule’s
+  objective (pinned in `test-appB-bandwidth.R`, together with a
+  `t_rd`-relabelling invariance test). Under `"joint"` the pilot `b_t`
+  now keeps each period’s CCT ratio, `b_t = h* b_t^CCT / h_t^CCT` (was
+  the RD period’s ratio for all periods); `rddid()$bandwidth$b` is
+  therefore a named per-period vector. `"joint"` numbers move (a few
+  percent in the snapshot DGPs; Grembi Table 1 common-`h*` rows change);
+  `"iter"` moves only through its seed (below 1e-4 relative); `"cct"` is
+  unchanged.
+
 - **New argument `estimand = c("att", "atu")`** on
   [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md),
   [`rd_typecont()`](https://dorleventer.github.io/rddid/reference/rd_typecont.md),

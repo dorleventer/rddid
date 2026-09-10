@@ -59,8 +59,8 @@ rddid(dat, y = "Y", x = "R", time = "t", id = "id",
 #>   scheme: pc (auto-detected)
 #> 
 #>                    Estimate   Std.Err.   95% CI
-#>   Conventional      1.09413    0.09746   [  0.90312,   1.28514]
-#>   Robust            1.12176    0.11715   [  0.89215,   1.35138]
+#>   Conventional      1.09414    0.09745   [  0.90313,   1.28514]
+#>   Robust            1.12177    0.11715   [  0.89215,   1.35138]
 #> 
 #>   Robust SE by scheme: cs=0.18902  pc=0.11715  pv=0.11715
 ```

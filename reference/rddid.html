@@ -145,7 +145,11 @@ it is uniformly ONE (targets the ATU). See "Targeting the ATU" below.</p></dd>
 by coordinate descent on the aggregate AMSE, started at the common
 joint-optimal bandwidth), <code>"joint"</code> (a single common AMSE-optimal
 bandwidth for the aggregate estimator), or <code>"cct"</code> (per-period CCT
-MSE-optimal bandwidths, <code><a href="rd_bw_cct.html">rd_bw_cct()</a></code>). Ignored if <code>h</code> is supplied.</p></dd>
+MSE-optimal bandwidths, <code><a href="rd_bw_cct.html">rd_bw_cct()</a></code>). Ignored if <code>h</code> is supplied.
+Both joint rules estimate each period's bias and variance constants at
+that period's own CCT pilot, so neither depends on which period is
+labelled <code>t_rd</code>; under <code>"joint"</code> the pilot <code>b_t</code> keeps each period's CCT
+ratio <code>b_t^CCT / h_t^CCT</code> (Appendix B.4 of the paper).</p></dd>
 
 
 <dt id="arg-h-b">h, b<a class="anchor" aria-label="anchor" href="#arg-h-b"></a></dt>
