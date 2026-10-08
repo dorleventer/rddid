@@ -28,3 +28,18 @@
                side = as.integer(plist[[k]]$x >= c))))
   .scheme_from_long(long)
 }
+
+#' Sampling scheme read off the comparison periods only (rd_homog, rd_trendcell)
+#'
+#' The scheme here sets the covariance between comparison-period jumps, so only those periods
+#' enter, every row of them (units without a type included). rddid() reads the scheme off every
+#' period, so the two can differ for the same data.
+#' @keywords internal
+#' @noRd
+.detect_scheme_comparisons <- function(data, x, time, id, comparisons, cutoff) {
+  comp_plist <- stats::setNames(lapply(as.character(comparisons), function(tp) {
+    d_cp <- data[data[[time]] == tp, , drop = FALSE]
+    list(id = d_cp[[id]], x = d_cp[[x]])
+  }), as.character(comparisons))
+  .detect_scheme(comp_plist, c = cutoff)
+}

@@ -2,14 +2,6 @@
 # each comparison period (reflected-sample construction), with its print method. Shared pieces:
 # assumption_tests_helpers.R, cross_period_covariance.R.
 
-#' Rule-of-thumb bandwidth for bwselect = "rot": 0.5 * IQR of the running variable over all rows,
-#' or its standard deviation if the IQR is zero; returns `h`.
-#' @noRd
-.compstable_rot_bandwidth <- function(all_x) {
-  h <- 0.5 * stats::IQR(all_x)
-  if (h <= 0) h <- stats::sd(all_x)
-  h
-}
 
 #' Wide table of the panel, one row per unit (column `id`): `R_<period>`, the running variable
 #' (mirrored under "atu"), and `side_<period>`, 1 if the unit is above the original cutoff in that
@@ -420,10 +412,7 @@ rd_compstable <- function(data, x, time, id, t_rd,
   cutoff   <- c   # the cutoff; `c` stays the argument name for rdrobust users
 
   # ----- inputs and periods (the stops stay here so that errors name rd_compstable()) -----
-  for (col in base::c(x, time, id)) {
-    if (!col %in% names(data))
-      stop("column '", col, "' not found in `data`.")
-  }
+  .check_columns(data, c(x, time, id))
   c_orig <- cutoff
   if (estimand == "atu") {
     if (any(data[[x]] == cutoff, na.rm = TRUE))
@@ -447,7 +436,7 @@ rd_compstable <- function(data, x, time, id, t_rd,
     stop("comparison periods not in data: ", paste(missing_comp, collapse = ", "))
 
   # bwselect = "cct" leaves h NULL: each type regression then gets its own CCT bandwidths
-  if (is.null(h) && bwselect == "rot") h <- .compstable_rot_bandwidth(data[[x]])
+  if (is.null(h) && bwselect == "rot") h <- .rot_bandwidth_iqr(data[[x]])
 
   # ----- one Wald test per (RD period, comparison period) pair -----
   period_labels <- as.character(all_periods)

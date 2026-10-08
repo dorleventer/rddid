@@ -5,13 +5,6 @@
 # Layout of the stacked jumps: cell (type idx_v, period idx_t) is entry
 # (idx_t - 1) * n_types + idx_v of `theta` and row/column of `Sigma` (the type index runs fastest).
 
-#' Rule-of-thumb bandwidth for `bwselect = "rot"`: 0.5 * IQR(x), or sd(x) if the IQR is zero.
-#' @noRd
-.typecont_rot_bandwidth <- function(all_x) {
-  h <- 0.5 * stats::IQR(all_x)
-  if (h <= 0) h <- stats::sd(all_x)
-  h
-}
 
 #' The sampling scheme used: `scheme` itself, or under "auto" the one ("cs", "pc" or "pv") read
 #' off the units that have a type in each period.
@@ -285,10 +278,7 @@ rd_typecont <- function(data, x, time, id,
   cutoff   <- c   # the cutoff; `c` stays the argument name for rdrobust users
 
   # ----- inputs and periods (the stops stay here so that errors name rd_typecont()) -----
-  for (nm in c(x, time, id)) {
-    if (!nm %in% names(data))
-      stop("column '", nm, "' not found in `data`.")
-  }
+  .check_columns(data, c(x, time, id))
   # `t_rd`/`comparisons` only select which periods enter: the test treats every period alike
   if (!is.null(comparisons)) {
     use_periods <- c(t_rd, comparisons)
@@ -303,7 +293,7 @@ rd_typecont <- function(data, x, time, id,
   if (n_periods < 2L) stop("need at least 2 periods to define a type.")
 
   # bwselect = "cct" leaves h NULL: each cell then gets its own CCT bandwidths
-  if (is.null(h) && bwselect == "rot") h <- .typecont_rot_bandwidth(data[[x]])
+  if (is.null(h) && bwselect == "rot") h <- .rot_bandwidth_iqr(data[[x]])
 
   # ----- types, scheme, fits, covariance -----
   period_types <- .build_types(data, x, time, id, c = cutoff)$period_types

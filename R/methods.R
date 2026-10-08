@@ -56,6 +56,9 @@ print.summary.rddid <- function(x, digits = 4, ...) {
   invisible(x)
 }
 
+#' Per-period table behind summary.rddid(): role, coefficient, n, bandwidths, jumps
+#' @keywords internal
+#' @noRd
 .rddid_period_table <- function(x) {
   per <- names(x$fits)
   f <- x$fits
@@ -171,6 +174,9 @@ glance.rddid <- function(x, ...) {
              level = x$level, row.names = NULL, stringsAsFactors = FALSE)
 }
 
+#' One-row tidy() data frame for a validation test
+#' @keywords internal
+#' @noRd
 .tidy_test <- function(x, name) {
   data.frame(test = name, statistic = x$statistic, df = x$df, p.value = x$p_value,
              row.names = NULL, stringsAsFactors = FALSE)
@@ -189,6 +195,9 @@ tidy.rd_homog <- function(x, ...) .tidy_test(x, "homogeneous confounding")
 tidy.rd_trendcell <- function(x, ...) .tidy_test(x, "constant within-type confounding")
 
 # ---- shared print helpers for the validation tests ------------------------------------------
+#' Header shared by the four tests' print methods: title, H0, scheme, estimand
+#' @keywords internal
+#' @noRd
 .print_test_header <- function(title, fn, h0, scheme, scheme_detected = TRUE, estimand = "att",
                                atu_note = "test unchanged") {
   cat(sprintf("Test of %s  [%s()]\n", title, fn))
@@ -198,6 +207,9 @@ tidy.rd_trendcell <- function(x, ...) .tidy_test(x, "constant within-type confou
                 if (scheme_detected) " (detected from the data)" else ""))
   if (identical(estimand, "atu")) cat(sprintf("  Estimand: ATU (%s)\n", atu_note))
 }
+#' One line: Wald chi-squared(df) = stat, p = p (or 'not testable')
+#' @keywords internal
+#' @noRd
 .print_wald <- function(stat, df, p, label = "Wald", indent = "  ") {
   if (is.na(stat)) {
     cat(sprintf("%s%s: not testable (df = %d)\n", indent, label, df))
@@ -206,11 +218,17 @@ tidy.rd_trendcell <- function(x, ...) .tidy_test(x, "constant within-type confou
                 if (p < 1e-3) "<0.001" else formatC(p, digits = 3, format = "f")))
   }
 }
+#' Bandwidth description for the tests' printouts
+#' @keywords internal
+#' @noRd
 .bw_label_test <- function(h, bwselect) {
   if (!is.null(h) && !is.na(h)) sprintf("h = %.4g in every cell", h)
   else if (bwselect == "cct") "CCT MSE-optimal, chosen per cell"
   else "rule of thumb, per cell"
 }
+#' Per-cell jump table shared by print.rd_homog / print.rd_trendcell
+#' @keywords internal
+#' @noRd
 .print_jump_table <- function(df, cols, labels) {
   if (is.null(df) || nrow(df) == 0L) return(invisible())
   cat(sprintf("\n  Per-cell local-linear jumps (%s):\n", "comparison periods"))
@@ -219,4 +237,7 @@ tidy.rd_trendcell <- function(x, ...) .tidy_test(x, "constant within-type confou
     cat(sprintf("    %-10s %-12s %10.4f %10.4f %7d%s\n", df[[cols[1]]][k], df[[cols[2]]][k],
                 df$jump[k], df$se[k], df$n[k], if (isTRUE(df$reference[k])) "  (reference)" else ""))
 }
+#' NULL-coalescing operator
+#' @keywords internal
+#' @noRd
 `%||%` <- function(a, b) if (is.null(a)) b else a

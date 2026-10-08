@@ -255,8 +255,7 @@ rddid <- function(data, y, x, time, id = NULL, t_rd,
   }
 
   # ---- periods and data -------------------------------------------------------------------
-  for (nm in c(y, x, time, id)) if (!nm %in% names(data))
-    stop("column '", nm, "' not found in `data`.")
+  .check_columns(data, c(y, x, time, id))
   time_col <- data[[time]]
   if (!t_rd %in% time_col) stop("t_rd = ", t_rd, " not present in `", time, "`.")
   if (is.null(comparisons)) comparisons <- sort(setdiff(unique(time_col), t_rd))
@@ -390,16 +389,25 @@ print.rddid <- function(x, digits = 4, ...) {
 }
 
 # ---- print helpers shared by print.rddid / summary.rddid ------------------------------------
+#' Sampling scheme in words, for printouts
+#' @keywords internal
+#' @noRd
 .scheme_label <- function(s) {
   labels <- c(cs = "repeated cross-section",
               pc = "panel, running variable fixed over time",
               pv = "panel, running variable varies over time")
   if (s %in% names(labels)) labels[[s]] else s   # e.g. "mixed" (rd_compstable pairs differ)
 }
+#' Confounding-trend assumption in words, for printouts
+#' @keywords internal
+#' @noRd
 .trend_label <- function(wt) {
   switch(wt, constant = "constant confounding trend", linear = "linear confounding trend",
          custom = "user-supplied weights", wt)
 }
+#' Bandwidth rule and the values used, for print.rddid
+#' @keywords internal
+#' @noRd
 .bandwidth_label <- function(bw) {
   by_t <- function(v) paste(trimws(formatC(v, digits = 4, format = "g")), collapse = ", ")
   switch(bw$method,
@@ -410,6 +418,9 @@ print.rddid <- function(x, digits = 4, ...) {
     iter  = sprintf("period-specific (rule \"iter\", %d iterations): h by period %s", bw$niter,
                     by_t(bw$h_by_period)))
 }
+#' The two-row estimate table of print.rddid
+#' @keywords internal
+#' @noRd
 .print_estimates <- function(x, digits = 4) {
   e <- x$estimates
   lab <- c(Conventional = "Conventional", Robust = "Robust (bias-corrected)")

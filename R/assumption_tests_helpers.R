@@ -189,3 +189,13 @@
   pv <- stats::pchisq(W, df = df, lower.tail = FALSE)
   list(stat = W, df = df, p = pv)
 }
+
+#' Rule-of-thumb bandwidth of rd_typecont() and rd_compstable(): half the IQR of the running
+#' variable (its sd if the IQR is zero), used as both h and b in every cell
+#' @keywords internal
+#' @noRd
+.rot_bandwidth_iqr <- function(all_x) {
+  h <- 0.5 * stats::IQR(all_x)
+  if (h <= 0) h <- stats::sd(all_x)
+  h
+}

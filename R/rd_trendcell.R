@@ -28,16 +28,6 @@
   cell_map
 }
 
-#' The sampling scheme read off the comparison periods: "cs", "pc" or "pv".
-#' @noRd
-.trendcell_detect_scheme <- function(data, x, time, id, comparisons, cutoff) {
-  # every row of the comparison periods enters, including units without a type
-  comp_plist <- stats::setNames(lapply(as.character(comparisons), function(tp) {
-    d_cp <- data[data[[time]] == tp, , drop = FALSE]
-    list(id = d_cp[[id]], x = d_cp[[x]])
-  }), as.character(comparisons))
-  .detect_scheme(comp_plist, c = cutoff)
-}
 
 #' The fit of every (type, comparison period) cell: list(fits, meta, skipped), keyed "type::period".
 #' @noRd
@@ -438,9 +428,7 @@ rd_trendcell <- function(data, y, x, time, id,
   kernel   <- match.arg(kernel, c("triangular", "epanechnikov", "uniform"))
   cutoff   <- c   # the cutoff; `c` stays the argument name for rdrobust users
 
-  for (nm in base::c(y, x, time, id))
-    if (!nm %in% names(data))
-      stop("column '", nm, "' not found in `data`.")
+  .check_columns(data, c(y, x, time, id))
 
   times_all <- sort(unique(data[[time]]))
   if (is.null(comparisons))
@@ -452,7 +440,7 @@ rd_trendcell <- function(data, y, x, time, id,
   types    <- .build_types(data, x = x, time = time, id = id, c = cutoff)
   cell_map <- .trendcell_cell_map(types, type_by, t_rd, comparisons)
 
-  detected_scheme <- .trendcell_detect_scheme(data, x, time, id, comparisons, cutoff)
+  detected_scheme <- .detect_scheme_comparisons(data, x, time, id, comparisons, cutoff)
   use_scheme      <- if (scheme == "auto") detected_scheme else scheme
 
   cells   <- .trendcell_fit_cells(data, y, x, time, id, comparisons, cell_map, cutoff, kernel, h,

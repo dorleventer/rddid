@@ -23,17 +23,6 @@
   type_list
 }
 
-#' Sampling scheme ("cs", "pc" or "pv") read off the comparison periods by .detect_scheme().
-#' @noRd
-.homog_detect_scheme <- function(data, x, time, id, comparisons, cutoff) {
-  # Only the comparison periods enter: the scheme here sets the covariance between
-  # comparison-period jumps. rddid() reads it off every period, so the two can differ.
-  comp_plist <- stats::setNames(lapply(as.character(comparisons), function(tp) {
-    d_cp <- data[data[[time]] == tp, , drop = FALSE]
-    list(id = d_cp[[id]], x = d_cp[[x]])
-  }), as.character(comparisons))
-  .detect_scheme(comp_plist, c = cutoff)
-}
 
 #' Local-linear fit of every (comparison period, type) cell: list(fits, meta, contrast_keys,
 #' skipped), with `fits` and `meta` keyed "period::type".
@@ -369,9 +358,7 @@ rd_homog <- function(data, y, x, time, id,
   kernel   <- match.arg(kernel, c("triangular", "epanechnikov", "uniform"))
   cutoff   <- c   # the cutoff; `c` stays the argument name for rdrobust users
 
-  for (nm in base::c(y, x, time, id))
-    if (!nm %in% names(data))
-      stop("column '", nm, "' not found in `data`.")
+  .check_columns(data, c(y, x, time, id))
 
   times_all <- sort(unique(data[[time]]))
   if (is.null(comparisons)) {
@@ -393,7 +380,7 @@ rd_homog <- function(data, y, x, time, id,
     type_list <- .homog_rd_side_types(type_list, types$wide, side_col)
   }
 
-  detected_scheme <- .homog_detect_scheme(data, x, time, id, comparisons, cutoff)
+  detected_scheme <- .detect_scheme_comparisons(data, x, time, id, comparisons, cutoff)
   cells <- .homog_fit_cells(data, y, x, time, id, comparisons, type_list, cutoff, kernel,
                             h, bwselect, min_n, bc, p, q)
   use_scheme <- if (scheme == "auto") detected_scheme else scheme
