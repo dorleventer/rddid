@@ -5,9 +5,11 @@ one period, the **RD period**. A **confounding policy** switches at the
 same cutoff, in every period, so the jump in the outcome at the cutoff
 in the RD period mixes the treatment effect with the **confounding
 jump**. In the **comparison periods** the treatment of interest is
-uniform at the cutoff (nobody treated, or everybody treated), so the
-jump there *is* the confounding jump. `rddid()` estimates the jump in
-every period by local-linear RD and subtracts a weighted average of the
+uniform at the cutoff (nobody treated, or everybody treated), so,
+provided the treatment of interest has no anticipation or carry-over
+effects there (which the paper assumes), the jump there *is* the
+confounding jump. `rddid()` estimates the jump in every period by
+local-linear RD and subtracts a weighted average of the
 comparison-period jumps from the RD-period jump. How the weights are set
 is the **confounding-trend assumption**: constant (equal weights) or
 linear in time.
@@ -268,27 +270,28 @@ with its coefficient in the sum.
 With `trend = "constant"` the confounding jump is the same in every
 period, so the comparison periods get equal weights, \\w_t = 1/m\\ with
 \\m\\ comparison periods. With `trend = "linear"` the confounding jump
-moves linearly in time; the weights then extrapolate the straight line
-through the comparison-period jumps to the RD period. They sum to one
-and can be negative: with comparison periods 1 and 2 and RD period 3
-they are -1 and 2. A numeric `trend` supplies the weights directly.
+moves linearly in time; the weights then extrapolate the least-squares
+line through the comparison-period jumps to the RD period (with two
+comparison periods, the line through them). They sum to one and can be
+negative: with comparison periods 1 and 2 and RD period 3 they are -1
+and 2. A numeric `trend` supplies the weights directly.
 
 ### Sampling schemes
 
-The estimate is built from the period jumps alone, so the sampling
-scheme does not enter its formula; it enters the standard error. In a
-repeated cross-section (`"cs"`) the periods' samples are independent and
-the variance is the weighted sum of the period variances. In a panel the
-same units appear in several periods, so the period jumps are correlated
-and the variance adds their covariances, computed by matching units on
-`id`: under `"pc"` from units on the same side of the cutoff in both
-periods; under `"pv"` also from the units that change side, which enter
-with the opposite sign. With a fixed `h` or `bwselect = "cct"`, the
-scheme changes only the standard error. Under `"joint"` and `"iter"` it
-can also change the bandwidth, and with it the estimate, because those
-rules balance bias against the variance under the scheme in use. The
-standard errors under all three schemes, at the bandwidths actually
-used, are in `estimates` and in
+The scheme sets the standard error and, under `"joint"` and `"iter"`,
+the bandwidth (so the estimate); with a fixed `h` or `"cct"` it changes
+only the standard error. In a repeated cross-section (`"cs"`) the
+periods' samples are independent and the variance is the weighted sum of
+the period variances. In a panel the same units appear in several
+periods, so the period jumps are correlated and the variance adds their
+covariances, computed by matching units on `id`: under `"pc"` from units
+on the same side of the cutoff in both periods; under `"pv"` also from
+the units that change side, which enter with the opposite sign. With a
+fixed `h` or `bwselect = "cct"`, the scheme changes only the standard
+error. Under `"joint"` and `"iter"` it can also change the bandwidth,
+and with it the estimate, because those rules balance bias against the
+variance under the scheme in use. The standard errors under all three
+schemes, at the bandwidths actually used, are in `estimates` and in
 [`summary()`](https://rdrr.io/r/base/summary.html).
 
 ### Bandwidth rules
@@ -339,15 +342,16 @@ period's bias constant and variance constant; these are combined, with
 the coefficients of the sum above (and, under `"pc"`, the covariances
 between periods), into the AMSE, which is then minimized in closed form.
 Each period's pilot bandwidth keeps that period's CCT ratio \\b/h\\.
-Because each period's constants come from its own pilot fit, neither
-this rule nor `"iter"` depends on which period is labelled `t_rd`. The
-`"iter"` rule minimizes the same objective over one bandwidth per period
-by coordinate descent, starting from `start`. With `regularize = TRUE`
-both rules add `reg_const` times the estimated variance of the bias
-constants to the squared bias, as rdrobust does, so a near-zero
-estimated bias cannot make the bandwidth very large. Standard errors use
-the HC1 convention of rdrobust. The derivations are in the paper's
-appendix on estimation and bandwidth choice.
+Each period's bias and variance constants are estimated at that period's
+own CCT pilot bandwidths, not at the RD period's, so an aggregate of
+several RD periods gets the same bandwidth whichever of them carries the
+`t_rd` label. The `"iter"` rule minimizes the same objective over one
+bandwidth per period by coordinate descent, starting from `start`. With
+`regularize = TRUE` both rules add `reg_const` times the estimated
+variance of the bias constants to the squared bias, as rdrobust does, so
+a near-zero estimated bias cannot make the bandwidth very large.
+Standard errors use the HC1 convention of rdrobust. The derivations are
+in the paper's appendix on estimation and bandwidth choice.
 
 ## References
 
@@ -390,9 +394,9 @@ fit <- rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 fit            # the estimate, its standard error and confidence interval
 #> RD-DID estimate of the ATT in period 3
 #>   Comparison periods: 1, 2   (constant confounding trend; weights 0.5, 0.5)
-#>   Sampling scheme: panel, running variable fixed over time (detected from the data)
+#>   Sampling scheme: panel, running variable fixed over time: no unit changes side of the cutoff (detected from the data)
 #>   Bandwidth: common h = 0.2672 (rule "joint", AMSE-optimal for the aggregate)
-#>   Pilot bandwidth b by period: 0.3951, 0.4102, 0.3868
+#>   Pilot bandwidth b (period = value): 3 = 0.3951, 1 = 0.4102, 2 = 0.3868
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI
 #>   Conventional                 1.0927     0.1264    8.64   <0.001   [0.8450, 1.3405]
@@ -402,9 +406,9 @@ fit            # the estimate, its standard error and confidence interval
 summary(fit)   # the jump in every period, and the s.e. under each scheme
 #> RD-DID estimate of the ATT in period 3
 #>   Comparison periods: 1, 2   (constant confounding trend; weights 0.5, 0.5)
-#>   Sampling scheme: panel, running variable fixed over time (detected from the data)
+#>   Sampling scheme: panel, running variable fixed over time: no unit changes side of the cutoff (detected from the data)
 #>   Bandwidth: common h = 0.2672 (rule "joint", AMSE-optimal for the aggregate)
-#>   Pilot bandwidth b by period: 0.3951, 0.4102, 0.3868
+#>   Pilot bandwidth b (period = value): 3 = 0.3951, 1 = 0.4102, 2 = 0.3868
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI
 #>   Conventional                 1.0927     0.1264    8.64   <0.001   [0.8450, 1.3405]
@@ -419,7 +423,7 @@ summary(fit)   # the jump in every period, and the s.e. under each scheme
 #>   2        comparison    -0.5   1000   0.2672   0.3868     0.6306    0.1686     0.6240    0.2012
 #> 
 #>   Robust s.e. under each sampling scheme:  cross-section 0.2385   panel, fixed R 0.1494   panel, varying R 0.1494
-#>   (the printed s.e. uses "pc"; set scheme= to choose another)
+#>   (the printed s.e. is the one for scheme "pc"; the others are shown for comparison)
 coef(fit)
 #> Conventional       Robust 
 #>     1.092709     1.141380 
@@ -431,9 +435,9 @@ rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
       trend = "linear")
 #> RD-DID estimate of the ATT in period 3
 #>   Comparison periods: 1, 2   (linear confounding trend; weights -1, 2)
-#>   Sampling scheme: panel, running variable fixed over time (detected from the data)
+#>   Sampling scheme: panel, running variable fixed over time: no unit changes side of the cutoff (detected from the data)
 #>   Bandwidth: common h = 0.2672 (rule "joint", AMSE-optimal for the aggregate)
-#>   Pilot bandwidth b by period: 0.3951, 0.4102, 0.3869
+#>   Pilot bandwidth b (period = value): 3 = 0.3951, 1 = 0.4102, 2 = 0.3869
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI
 #>   Conventional                 0.9147     0.2582    3.54   <0.001   [0.4087, 1.4207]

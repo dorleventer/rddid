@@ -54,9 +54,9 @@ fit <- rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 summary(fit)
 #> RD-DID estimate of the ATT in period 3
 #>   Comparison periods: 1, 2   (constant confounding trend; weights 0.5, 0.5)
-#>   Sampling scheme: panel, running variable fixed over time (detected from the data)
+#>   Sampling scheme: panel, running variable fixed over time: no unit changes side of the cutoff (detected from the data)
 #>   Bandwidth: common h = 0.2672 (rule "joint", AMSE-optimal for the aggregate)
-#>   Pilot bandwidth b by period: 0.3951, 0.4102, 0.3868
+#>   Pilot bandwidth b (period = value): 3 = 0.3951, 1 = 0.4102, 2 = 0.3868
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI
 #>   Conventional                 1.0927     0.1264    8.64   <0.001   [0.8450, 1.3405]
@@ -71,7 +71,7 @@ summary(fit)
 #>   2        comparison    -0.5   1000   0.2672   0.3868     0.6306    0.1686     0.6240    0.2012
 #> 
 #>   Robust s.e. under each sampling scheme:  cross-section 0.2385   panel, fixed R 0.1494   panel, varying R 0.1494
-#>   (the printed s.e. uses "pc"; set scheme= to choose another)
+#>   (the printed s.e. is the one for scheme "pc"; the others are shown for comparison)
 summary(fit)$per_period
 #>   period       role coef    n         h         b      jump        se   jump_bc
 #> 1      3         RD  1.0 1000 0.2672096 0.3950840 1.6639868 0.1641410 1.6853502

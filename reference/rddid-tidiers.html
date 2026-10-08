@@ -89,8 +89,9 @@ can be passed to table makers such as <code>modelsummary</code>. The generics co
     <p><code>tidy()</code> returns a data frame with one row per estimate (<code>term</code>, <code>estimate</code>,
 <code>std.error</code>, <code>statistic</code>, <code>p.value</code>, <code>conf.low</code>, <code>conf.high</code>) for a fit, and one row per
 test (<code>test</code>, <code>statistic</code>, <code>df</code>, <code>p.value</code>) for a validation test. <code>glance()</code> returns a
-one-row data frame describing the fit (<code>nobs</code>, <code>t_rd</code>, <code>n_comparisons</code>, <code>trend</code>,
-<code>bwselect</code>, <code>scheme</code>, <code>level</code>).</p>
+one-row data frame describing the fit (<code>nobs</code>, <code>t_rd</code>, <code>comparisons</code>, <code>trend</code>, <code>weights</code>,
+<code>bwselect</code>, <code>h</code> (the common bandwidth under <code>"joint"</code>/fixed <code>h</code>, <code>NA</code> otherwise),
+<code>scheme</code>, <code>level</code>).</p>
     </div>
 
     <div class="section level2">

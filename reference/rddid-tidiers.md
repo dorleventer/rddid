@@ -49,8 +49,9 @@ tidy(x, ...)
 `estimate`, `std.error`, `statistic`, `p.value`, `conf.low`,
 `conf.high`) for a fit, and one row per test (`test`, `statistic`, `df`,
 `p.value`) for a validation test. `glance()` returns a one-row data
-frame describing the fit (`nobs`, `t_rd`, `n_comparisons`, `trend`,
-`bwselect`, `scheme`, `level`).
+frame describing the fit (`nobs`, `t_rd`, `comparisons`, `trend`,
+`weights`, `bwselect`, `h` (the common bandwidth under `"joint"`/fixed
+`h`, `NA` otherwise), `scheme`, `level`).
 
 ## Examples
 

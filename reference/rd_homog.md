@@ -274,7 +274,7 @@ hc <- rd_homog(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 
 hc          # the Wald test, then each type's jump in each comparison period
 #> Test of homogeneous confounding  [rd_homog()]
 #>   H0: in each comparison period the confounding jump is the same for every type
-#>   Sampling scheme: panel, running variable varies over time (detected from the data)
+#>   Sampling scheme: panel, running variable varies over time: some units change side (detected from the data)
 #>   Comparison periods: 1, 2
 #> 
 #>   Wald chi-squared(2) = 0.465,  p = 0.793

@@ -78,8 +78,8 @@ bandwidth $`b_t`$) and
 Calonico, Cattaneo and Titiunik, 2014). At a given bandwidth pair,
 [`rd_period()`](https://dorleventer.github.io/rddid/reference/rd_period.md)
 reproduces the conventional and bias-corrected estimates and the
-conventional and robust standard errors of `rdrobust` to machine
-precision.
+conventional and robust standard errors of `rdrobust` (with
+`vce = "hc1"`) to machine precision.
 
 ``` r
 
@@ -169,8 +169,8 @@ res <- rddid(dat, y = "Y", x = "R", time = "t", id = "id", t_rd = 3, bwselect = 
 res
 #> RD-DID estimate of the ATT in period 3
 #>   Comparison periods: 1, 2   (constant confounding trend; weights 0.5, 0.5)
-#>   Sampling scheme: panel, running variable fixed over time (detected from the data)
-#>   Bandwidth: per-period CCT MSE-optimal (rule "cct"): h by period 0.403, 0.3952, 0.3109
+#>   Sampling scheme: panel, running variable fixed over time: no unit changes side of the cutoff (detected from the data)
+#>   Bandwidth: per-period CCT MSE-optimal (rule "cct"): h (period = value) 3 = 0.403, 1 = 0.3952, 2 = 0.3109
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI
 #>   Conventional                 1.0788     0.0888   12.15   <0.001   [0.9047, 1.2528]
@@ -307,9 +307,9 @@ res_atu <- rddid(dat_atu, y = "Y", x = "R", time = "t", id = "id", t_rd = 3,
 res_atu
 #> RD-DID estimate of the ATU in period 3
 #>   Comparison periods: 1, 2   (constant confounding trend; weights 0.5, 0.5)
-#>   Sampling scheme: panel, running variable fixed over time (detected from the data)
+#>   Sampling scheme: panel, running variable fixed over time: no unit changes side of the cutoff (detected from the data)
 #>   Bandwidth: common h = 0.3025 (rule "joint", AMSE-optimal for the aggregate)
-#>   Pilot bandwidth b by period: 0.4415, 0.452, 0.4691
+#>   Pilot bandwidth b (period = value): 3 = 0.4415, 1 = 0.452, 2 = 0.4691
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI
 #>   Conventional                 1.0874     0.1008   10.79   <0.001   [0.8899, 1.2850]
@@ -502,7 +502,7 @@ ggplot(binned, aes(R, ind)) +
 
 Composition stability requires
 $`\pi_{t_{\mathrm{RD}},(+)}(v) = \pi_{t_0,(+)}(v)`$, with $`t_0`$ a
-comparison period: the share of each type among the units above the
+comparison period: the share of each type among the units just above the
 cutoff is the same in the RD period and in the comparison period. The
 test reflects the comparison-period above-cutoff units onto a negative
 axis and stacks them with the RD-period above-cutoff units. For S1 (RD

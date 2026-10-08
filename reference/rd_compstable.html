@@ -3,7 +3,7 @@
 in one period and below it in another. A unit's type is the side of the
 cutoff it is on in the other period(s); with two periods, &quot;above in the
 other period&quot; or &quot;below in the other period&quot;. rd_compstable() tests the
-null that the share of each type among the units above the cutoff is the
+null that the share of each type among the units just above the cutoff is the
 same in the RD period and in each comparison period. Composition
 stability and homogeneous confounding (rd_homog()) are alternatives: the
 estimate of rddid() needs one of the two (together with type continuity,
@@ -15,7 +15,7 @@ types are degenerate and the test is not informative."><meta property="og:descri
 in one period and below it in another. A unit's type is the side of the
 cutoff it is on in the other period(s); with two periods, &quot;above in the
 other period&quot; or &quot;below in the other period&quot;. rd_compstable() tests the
-null that the share of each type among the units above the cutoff is the
+null that the share of each type among the units just above the cutoff is the
 same in the RD period and in each comparison period. Composition
 stability and homogeneous confounding (rd_homog()) are alternatives: the
 estimate of rddid() needs one of the two (together with type continuity,
@@ -69,7 +69,7 @@ types are degenerate and the test is not informative."></head><body>
 in one period and below it in another. A unit's <strong>type</strong> is the side of the
 cutoff it is on in the other period(s); with two periods, "above in the
 other period" or "below in the other period". <code>rd_compstable()</code> tests the
-null that <strong>the share of each type among the units above the cutoff is the
+null that <strong>the share of each type among the units just above the cutoff is the
 same in the RD period and in each comparison period</strong>. Composition
 stability and homogeneous confounding (<code><a href="rd_homog.html">rd_homog()</a></code>) are alternatives: the
 estimate of <code><a href="rddid.html">rddid()</a></code> needs one of the two (together with type continuity,
@@ -314,8 +314,8 @@ confidence intervals for regression-discontinuity designs. <em>Econometrica</em>
 <span class="r-in"><span><span class="va">cs</span> <span class="op">&lt;-</span> <span class="fu">rd_compstable</span><span class="op">(</span><span class="va">rddid_sim_pv</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">cs</span>          <span class="co"># one Wald test per (RD period, comparison period) pair, then their sum</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Test of composition stability  [rd_compstable()]</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   H0: the share of each type among the units above the cutoff is the same in the RD period and in each comparison period</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Sampling scheme: panel, running variable varies over time (detected from the data)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   H0: the share of each type among the units just above the cutoff is the same in the RD period and in each comparison period</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Sampling scheme: panel, running variable varies over time: some units change side (detected from the data)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   RD period: 3   Comparison periods: 1, 2   Bandwidth: CCT MSE-optimal, chosen per cell</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Pair 3::1: chi-squared(3) = 21.982,  p = &lt;0.001</span>
@@ -331,8 +331,8 @@ confidence intervals for regression-discontinuity designs. <em>Econometrica</em>
 <span class="r-in"><span><span class="fu">rd_compstable</span><span class="op">(</span><span class="va">rddid_sim_pv</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span>,</span></span>
 <span class="r-in"><span>              estimand <span class="op">=</span> <span class="st">"atu"</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Test of composition stability  [rd_compstable()]</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   H0: the share of each type among the units below the cutoff is the same in the RD period and in each comparison period</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Sampling scheme: panel, running variable varies over time (detected from the data)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   H0: the share of each type among the units just below the cutoff is the same in the RD period and in each comparison period</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Sampling scheme: panel, running variable varies over time: some units change side (detected from the data)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Estimand: ATU (the units below the cutoff are the ones untreated in the RD period, so the test is on their shares (mirrored design))</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   RD period: 3   Comparison periods: 1, 2   Bandwidth: CCT MSE-optimal, chosen per cell</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>

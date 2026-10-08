@@ -54,7 +54,7 @@ tc <- rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id")
 tc
 #> Test of a continuous type distribution  [rd_typecont()]
 #>   H0: the share of each type jumps by zero at the cutoff, in every period
-#>   Sampling scheme: panel, running variable varies over time (detected from the data)
+#>   Sampling scheme: panel, running variable varies over time: some units change side (detected from the data)
 #>   Periods: 1, 2, 3   Types: ++, +-, -+, --   Bandwidth: CCT MSE-optimal, chosen per cell
 #> 
 #>   Joint Wald chi-squared(9) = 4.782,  p = 0.853
@@ -80,21 +80,21 @@ so a p-value below 0.05 would be a false rejection, which a test at the
 
 **If it rejects:** units sort around the cutoff according to their side
 in other periods, so the jump in the outcome partly reflects a jump in
-who the units are. The RD-DID estimate is then biased, whatever the
+who the units are. The RD-DID estimate can then be biased, whatever the
 other tests say.
 
 ## Composition stability: `rd_compstable()`
 
-**H0: the share of each type among the units above the cutoff is the
-same in the RD period and in each comparison period.**
+**H0: the share of each type among the units just above the cutoff is
+the same in the RD period and in each comparison period.**
 
 ``` r
 
 cs <- rd_compstable(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
 cs
 #> Test of composition stability  [rd_compstable()]
-#>   H0: the share of each type among the units above the cutoff is the same in the RD period and in each comparison period
-#>   Sampling scheme: panel, running variable varies over time (detected from the data)
+#>   H0: the share of each type among the units just above the cutoff is the same in the RD period and in each comparison period
+#>   Sampling scheme: panel, running variable varies over time: some units change side (detected from the data)
 #>   RD period: 3   Comparison periods: 1, 2   Bandwidth: CCT MSE-optimal, chosen per cell
 #> 
 #>   Pair 3::1: chi-squared(3) = 21.982,  p = <0.001
@@ -117,7 +117,10 @@ cs
   the comparison year, and in both. Units above the cutoff in both years
   appear on both sides of the stacked regression; the standard error
   accounts for them.
-- `Joint over pairs`: the sum of the pair statistics.
+- `Joint over pairs`: the sum of the pair statistics and degrees of
+  freedom. It treats the pairs as independent although they share the
+  RD-period units, so read it as approximate; the paper’s test is per
+  pair.
 
 Here p \< 0.001. Composition stability is false in `rddid_sim_pv` by
 construction: the units at the year-3 cutoff were mostly on the same
@@ -146,7 +149,7 @@ hg <- rd_homog(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 
 hg
 #> Test of homogeneous confounding  [rd_homog()]
 #>   H0: in each comparison period the confounding jump is the same for every type
-#>   Sampling scheme: panel, running variable varies over time (detected from the data)
+#>   Sampling scheme: panel, running variable varies over time: some units change side (detected from the data)
 #>   Comparison periods: 1, 2
 #> 
 #>   Wald chi-squared(2) = 0.465,  p = 0.793
@@ -187,7 +190,7 @@ tr <- rd_trendcell(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_r
 tr
 #> Test of a constant within-type confounding discontinuity  [rd_trendcell()]
 #>   H0: within each type, the confounding jump is the same in every comparison period
-#>   Sampling scheme: panel, running variable varies over time (detected from the data)
+#>   Sampling scheme: panel, running variable varies over time: some units change side (detected from the data)
 #>   Comparison periods: 1, 2   Trend: constant
 #> 
 #>   Wald chi-squared(2) = 0.078,  p = 0.962
@@ -241,8 +244,8 @@ mechanics:
 
 rd_compstable(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3, estimand = "atu")
 #> Test of composition stability  [rd_compstable()]
-#>   H0: the share of each type among the units below the cutoff is the same in the RD period and in each comparison period
-#>   Sampling scheme: panel, running variable varies over time (detected from the data)
+#>   H0: the share of each type among the units just below the cutoff is the same in the RD period and in each comparison period
+#>   Sampling scheme: panel, running variable varies over time: some units change side (detected from the data)
 #>   Estimand: ATU (the units below the cutoff are the ones untreated in the RD period, so the test is on their shares (mirrored design))
 #>   RD period: 3   Comparison periods: 1, 2   Bandwidth: CCT MSE-optimal, chosen per cell
 #> 
@@ -294,9 +297,9 @@ valid:
 rddid(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 #> RD-DID estimate of the ATT in period 3
 #>   Comparison periods: 1, 2   (constant confounding trend; weights 0.5, 0.5)
-#>   Sampling scheme: panel, running variable varies over time (detected from the data)
+#>   Sampling scheme: panel, running variable varies over time: some units change side (detected from the data)
 #>   Bandwidth: common h = 0.2367 (rule "joint", AMSE-optimal for the aggregate)
-#>   Pilot bandwidth b by period: 0.3933, 0.3889, 0.3847
+#>   Pilot bandwidth b (period = value): 3 = 0.3933, 1 = 0.3889, 2 = 0.3847
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI
 #>   Conventional                 0.9654     0.1933    4.99   <0.001   [0.5866, 1.3442]

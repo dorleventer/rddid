@@ -5,7 +5,7 @@ cutoff in one period and below it in another. A unit's **type** is the
 side of the cutoff it is on in the other period(s); with two periods,
 "above in the other period" or "below in the other period".
 `rd_compstable()` tests the null that **the share of each type among the
-units above the cutoff is the same in the RD period and in each
+units just above the cutoff is the same in the RD period and in each
 comparison period**. Composition stability and homogeneous confounding
 ([`rd_homog()`](https://dorleventer.github.io/rddid/reference/rd_homog.md))
 are alternatives: the estimate of
@@ -260,8 +260,8 @@ Other tests of the assumptions:
 cs <- rd_compstable(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
 cs          # one Wald test per (RD period, comparison period) pair, then their sum
 #> Test of composition stability  [rd_compstable()]
-#>   H0: the share of each type among the units above the cutoff is the same in the RD period and in each comparison period
-#>   Sampling scheme: panel, running variable varies over time (detected from the data)
+#>   H0: the share of each type among the units just above the cutoff is the same in the RD period and in each comparison period
+#>   Sampling scheme: panel, running variable varies over time: some units change side (detected from the data)
 #>   RD period: 3   Comparison periods: 1, 2   Bandwidth: CCT MSE-optimal, chosen per cell
 #> 
 #>   Pair 3::1: chi-squared(3) = 21.982,  p = <0.001
@@ -277,8 +277,8 @@ cs$pairs[["3::1"]]$jumps
 rd_compstable(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3,
               estimand = "atu")
 #> Test of composition stability  [rd_compstable()]
-#>   H0: the share of each type among the units below the cutoff is the same in the RD period and in each comparison period
-#>   Sampling scheme: panel, running variable varies over time (detected from the data)
+#>   H0: the share of each type among the units just below the cutoff is the same in the RD period and in each comparison period
+#>   Sampling scheme: panel, running variable varies over time: some units change side (detected from the data)
 #>   Estimand: ATU (the units below the cutoff are the ones untreated in the RD period, so the test is on their shares (mirrored design))
 #>   RD period: 3   Comparison periods: 1, 2   Bandwidth: CCT MSE-optimal, chosen per cell
 #> 

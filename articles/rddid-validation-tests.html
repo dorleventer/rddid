@@ -120,7 +120,7 @@ every period.</strong></p>
 <span><span class="va">tc</span></span>
 <span><span class="co">#&gt; Test of a continuous type distribution  [rd_typecont()]</span></span>
 <span><span class="co">#&gt;   H0: the share of each type jumps by zero at the cutoff, in every period</span></span>
-<span><span class="co">#&gt;   Sampling scheme: panel, running variable varies over time (detected from the data)</span></span>
+<span><span class="co">#&gt;   Sampling scheme: panel, running variable varies over time: some units change side (detected from the data)</span></span>
 <span><span class="co">#&gt;   Periods: 1, 2, 3   Types: ++, +-, -+, --   Bandwidth: CCT MSE-optimal, chosen per cell</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Joint Wald chi-squared(9) = 4.782,  p = 0.853</span></span>
@@ -148,20 +148,21 @@ a test at the 5% level is designed to make in about one sample in
 twenty.</p>
 <p><strong>If it rejects:</strong> units sort around the cutoff
 according to their side in other periods, so the jump in the outcome
-partly reflects a jump in who the units are. The RD-DID estimate is then
-biased, whatever the other tests say.</p>
+partly reflects a jump in who the units are. The RD-DID estimate can
+then be biased, whatever the other tests say.</p>
 </div>
 <div class="section level2">
 <h2 id="composition-stability-rd_compstable">Composition stability: <code>rd_compstable()</code><a class="anchor" aria-label="anchor" href="#composition-stability-rd_compstable"></a>
 </h2>
-<p><strong>H0: the share of each type among the units above the cutoff
-is the same in the RD period and in each comparison period.</strong></p>
+<p><strong>H0: the share of each type among the units just above the
+cutoff is the same in the RD period and in each comparison
+period.</strong></p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">cs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rd_compstable.html">rd_compstable</a></span><span class="op">(</span><span class="va">rddid_sim_pv</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="va">cs</span></span>
 <span><span class="co">#&gt; Test of composition stability  [rd_compstable()]</span></span>
-<span><span class="co">#&gt;   H0: the share of each type among the units above the cutoff is the same in the RD period and in each comparison period</span></span>
-<span><span class="co">#&gt;   Sampling scheme: panel, running variable varies over time (detected from the data)</span></span>
+<span><span class="co">#&gt;   H0: the share of each type among the units just above the cutoff is the same in the RD period and in each comparison period</span></span>
+<span><span class="co">#&gt;   Sampling scheme: panel, running variable varies over time: some units change side (detected from the data)</span></span>
 <span><span class="co">#&gt;   RD period: 3   Comparison periods: 1, 2   Bandwidth: CCT MSE-optimal, chosen per cell</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Pair 3::1: chi-squared(3) = 21.982,  p = &lt;0.001</span></span>
@@ -185,7 +186,10 @@ RD year, in the comparison year, and in both. Units above the cutoff in
 both years appear on both sides of the stacked regression; the standard
 error accounts for them.</li>
 <li>
-<code>Joint over pairs</code>: the sum of the pair statistics.</li>
+<code>Joint over pairs</code>: the sum of the pair statistics and
+degrees of freedom. It treats the pairs as independent although they
+share the RD-period units, so read it as approximate; the paper’s test
+is per pair.</li>
 </ul>
 <p>Here p &lt; 0.001. Composition stability is false in
 <code>rddid_sim_pv</code> by construction: the units at the year-3
@@ -212,7 +216,7 @@ same for every type.</strong></p>
 <span><span class="va">hg</span></span>
 <span><span class="co">#&gt; Test of homogeneous confounding  [rd_homog()]</span></span>
 <span><span class="co">#&gt;   H0: in each comparison period the confounding jump is the same for every type</span></span>
-<span><span class="co">#&gt;   Sampling scheme: panel, running variable varies over time (detected from the data)</span></span>
+<span><span class="co">#&gt;   Sampling scheme: panel, running variable varies over time: some units change side (detected from the data)</span></span>
 <span><span class="co">#&gt;   Comparison periods: 1, 2</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Wald chi-squared(2) = 0.465,  p = 0.793</span></span>
@@ -252,7 +256,7 @@ every comparison period.</strong></p>
 <span><span class="va">tr</span></span>
 <span><span class="co">#&gt; Test of a constant within-type confounding discontinuity  [rd_trendcell()]</span></span>
 <span><span class="co">#&gt;   H0: within each type, the confounding jump is the same in every comparison period</span></span>
-<span><span class="co">#&gt;   Sampling scheme: panel, running variable varies over time (detected from the data)</span></span>
+<span><span class="co">#&gt;   Sampling scheme: panel, running variable varies over time: some units change side (detected from the data)</span></span>
 <span><span class="co">#&gt;   Comparison periods: 1, 2   Trend: constant</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Wald chi-squared(2) = 0.078,  p = 0.962</span></span>
@@ -301,8 +305,8 @@ ATT design, so the call below only shows the mechanics:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/rd_compstable.html">rd_compstable</a></span><span class="op">(</span><span class="va">rddid_sim_pv</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span>, estimand <span class="op">=</span> <span class="st">"atu"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Test of composition stability  [rd_compstable()]</span></span>
-<span><span class="co">#&gt;   H0: the share of each type among the units below the cutoff is the same in the RD period and in each comparison period</span></span>
-<span><span class="co">#&gt;   Sampling scheme: panel, running variable varies over time (detected from the data)</span></span>
+<span><span class="co">#&gt;   H0: the share of each type among the units just below the cutoff is the same in the RD period and in each comparison period</span></span>
+<span><span class="co">#&gt;   Sampling scheme: panel, running variable varies over time: some units change side (detected from the data)</span></span>
 <span><span class="co">#&gt;   Estimand: ATU (the units below the cutoff are the ones untreated in the RD period, so the test is on their shares (mirrored design))</span></span>
 <span><span class="co">#&gt;   RD period: 3   Comparison periods: 1, 2   Bandwidth: CCT MSE-optimal, chosen per cell</span></span>
 <span><span class="co">#&gt; </span></span>
@@ -347,9 +351,9 @@ estimate is valid:</p>
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/rddid.html">rddid</a></span><span class="op">(</span><span class="va">rddid_sim_pv</span>, y <span class="op">=</span> <span class="st">"Y"</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="co">#&gt; RD-DID estimate of the ATT in period 3</span></span>
 <span><span class="co">#&gt;   Comparison periods: 1, 2   (constant confounding trend; weights 0.5, 0.5)</span></span>
-<span><span class="co">#&gt;   Sampling scheme: panel, running variable varies over time (detected from the data)</span></span>
+<span><span class="co">#&gt;   Sampling scheme: panel, running variable varies over time: some units change side (detected from the data)</span></span>
 <span><span class="co">#&gt;   Bandwidth: common h = 0.2367 (rule "joint", AMSE-optimal for the aggregate)</span></span>
-<span><span class="co">#&gt;   Pilot bandwidth b by period: 0.3933, 0.3889, 0.3847</span></span>
+<span><span class="co">#&gt;   Pilot bandwidth b (period = value): 3 = 0.3933, 1 = 0.3889, 2 = 0.3847</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;                              Estimate  Std. err.       z  p-value   95% CI</span></span>
 <span><span class="co">#&gt;   Conventional                 0.9654     0.1933    4.99   &lt;0.001   [0.5866, 1.3442]</span></span>

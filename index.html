@@ -60,7 +60,7 @@
 </h1></div>
 <!-- badges: start -->
 
-<p>A treatment of interest switches on at a cutoff of a running variable in one period, the <strong>RD period</strong>. A <strong>confounding policy</strong> switches at the same cutoff, in every period, so the jump in the outcome at the cutoff in the RD period mixes the treatment effect with the <strong>confounding jump</strong>. In the <strong>comparison periods</strong> the treatment of interest is uniform at the cutoff (nobody treated, or everybody treated), so the jump there <em>is</em> the confounding jump. <code><a href="reference/rddid.html">rddid()</a></code> estimates the jump in every period by local-linear RD and subtracts a weighted average of the comparison-period jumps from the RD-period jump. How the weights are set is the <strong>confounding-trend assumption</strong>: constant (equal weights) or linear in time.</p>
+<p>A treatment of interest switches on at a cutoff of a running variable in one period, the <strong>RD period</strong>. A <strong>confounding policy</strong> switches at the same cutoff, in every period, so the jump in the outcome at the cutoff in the RD period mixes the treatment effect with the <strong>confounding jump</strong>. In the <strong>comparison periods</strong> the treatment of interest is uniform at the cutoff (nobody treated, or everybody treated), so, provided the treatment of interest has no anticipation or carry-over effects there (which the paper assumes), the jump there <em>is</em> the confounding jump. <code><a href="reference/rddid.html">rddid()</a></code> estimates the jump in every period by local-linear RD and subtracts a weighted average of the comparison-period jumps from the RD-period jump. How the weights are set is the <strong>confounding-trend assumption</strong>: constant (equal weights) or linear in time.</p>
 <p>Leventer, D. and D. Nevo (2024). <em>Correcting Invalid Regression Discontinuity Designs Using Multiple Time-Period Data.</em> <a href="https://arxiv.org/abs/2408.05847" class="external-link">arXiv:2408.05847</a>.</p>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
@@ -79,9 +79,9 @@
 <span><span class="va">fit</span></span>
 <span><span class="co">#&gt; RD-DID estimate of the ATT in period 3</span></span>
 <span><span class="co">#&gt;   Comparison periods: 1, 2   (constant confounding trend; weights 0.5, 0.5)</span></span>
-<span><span class="co">#&gt;   Sampling scheme: panel, running variable fixed over time (detected from the data)</span></span>
+<span><span class="co">#&gt;   Sampling scheme: panel, running variable fixed over time: no unit changes side of the cutoff (detected from the data)</span></span>
 <span><span class="co">#&gt;   Bandwidth: common h = 0.2672 (rule "joint", AMSE-optimal for the aggregate)</span></span>
-<span><span class="co">#&gt;   Pilot bandwidth b by period: 0.3951, 0.4102, 0.3868</span></span>
+<span><span class="co">#&gt;   Pilot bandwidth b (period = value): 3 = 0.3951, 1 = 0.4102, 2 = 0.3868</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;                              Estimate  Std. err.       z  p-value   95% CI</span></span>
 <span><span class="co">#&gt;   Conventional                 1.0927     0.1264    8.64   &lt;0.001   [0.8450, 1.3405]</span></span>
@@ -94,7 +94,7 @@
 <code class="sourceCode R"><span><span class="fu"><a href="reference/rd_typecont.html">rd_typecont</a></span><span class="op">(</span><span class="va">rddid_sim_pv</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Test of a continuous type distribution  [rd_typecont()]</span></span>
 <span><span class="co">#&gt;   H0: the share of each type jumps by zero at the cutoff, in every period</span></span>
-<span><span class="co">#&gt;   Sampling scheme: panel, running variable varies over time (detected from the data)</span></span>
+<span><span class="co">#&gt;   Sampling scheme: panel, running variable varies over time: some units change side (detected from the data)</span></span>
 <span><span class="co">#&gt;   Periods: 1, 2, 3   Types: ++, +-, -+, --   Bandwidth: CCT MSE-optimal, chosen per cell</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Joint Wald chi-squared(9) = 4.782,  p = 0.853</span></span>

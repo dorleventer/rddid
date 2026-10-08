@@ -7,8 +7,10 @@ one period, the **RD period**. A **confounding policy** switches at the
 same cutoff, in every period, so the jump in the outcome at the cutoff
 in the RD period mixes the treatment effect with the **confounding
 jump**. In the **comparison periods** the treatment of interest is
-uniform at the cutoff (nobody treated, or everybody treated), so the
-jump there *is* the confounding jump.
+uniform at the cutoff (nobody treated, or everybody treated), so,
+provided the treatment of interest has no anticipation or carry-over
+effects there (which the paper assumes), the jump there *is* the
+confounding jump.
 [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md)
 estimates the jump in every period by local-linear RD and subtracts a
 weighted average of the comparison-period jumps from the RD-period jump:
@@ -55,9 +57,9 @@ fit <- rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 fit
 #> RD-DID estimate of the ATT in period 3
 #>   Comparison periods: 1, 2   (constant confounding trend; weights 0.5, 0.5)
-#>   Sampling scheme: panel, running variable fixed over time (detected from the data)
+#>   Sampling scheme: panel, running variable fixed over time: no unit changes side of the cutoff (detected from the data)
 #>   Bandwidth: common h = 0.2672 (rule "joint", AMSE-optimal for the aggregate)
-#>   Pilot bandwidth b by period: 0.3951, 0.4102, 0.3868
+#>   Pilot bandwidth b (period = value): 3 = 0.3951, 1 = 0.4102, 2 = 0.3868
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI
 #>   Conventional                 1.0927     0.1264    8.64   <0.001   [0.8450, 1.3405]
@@ -90,8 +92,8 @@ Line by line:
 - **`Bandwidth: common h`**: the default rule, `bwselect = "joint"`,
   uses one main bandwidth `h` in every period, chosen to minimize the
   asymptotic mean squared error of the RD-DID estimate.
-  **`Pilot bandwidth b by period`** gives the bandwidths of the bias
-  correction, one per period.
+  **`Pilot bandwidth b (period = value)`** lists the bandwidth of the
+  bias correction in each period, the RD period first.
 - **The two rows.** `Conventional` is the local-linear estimate with its
   conventional standard error. `Robust (bias-corrected)` is the
   bias-corrected estimate with its robust standard error (Calonico,
@@ -122,9 +124,9 @@ subtracts the average of the year-1 and year-2 jumps, (0.51 + 0.63) / 2
 summary(fit)
 #> RD-DID estimate of the ATT in period 3
 #>   Comparison periods: 1, 2   (constant confounding trend; weights 0.5, 0.5)
-#>   Sampling scheme: panel, running variable fixed over time (detected from the data)
+#>   Sampling scheme: panel, running variable fixed over time: no unit changes side of the cutoff (detected from the data)
 #>   Bandwidth: common h = 0.2672 (rule "joint", AMSE-optimal for the aggregate)
-#>   Pilot bandwidth b by period: 0.3951, 0.4102, 0.3868
+#>   Pilot bandwidth b (period = value): 3 = 0.3951, 1 = 0.4102, 2 = 0.3868
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI
 #>   Conventional                 1.0927     0.1264    8.64   <0.001   [0.8450, 1.3405]
@@ -139,7 +141,7 @@ summary(fit)
 #>   2        comparison    -0.5   1000   0.2672   0.3868     0.6306    0.1686     0.6240    0.2012
 #> 
 #>   Robust s.e. under each sampling scheme:  cross-section 0.2385   panel, fixed R 0.1494   panel, varying R 0.1494
-#>   (the printed s.e. uses "pc"; set scheme= to choose another)
+#>   (the printed s.e. is the one for scheme "pc"; the others are shown for comparison)
 ```
 
 [`summary()`](https://rdrr.io/r/base/summary.html) adds the per-period
@@ -188,9 +190,9 @@ fit_lin <- rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3
 fit_lin
 #> RD-DID estimate of the ATT in period 3
 #>   Comparison periods: 1, 2   (linear confounding trend; weights -1, 2)
-#>   Sampling scheme: panel, running variable fixed over time (detected from the data)
+#>   Sampling scheme: panel, running variable fixed over time: no unit changes side of the cutoff (detected from the data)
 #>   Bandwidth: common h = 0.2672 (rule "joint", AMSE-optimal for the aggregate)
-#>   Pilot bandwidth b by period: 0.3951, 0.4102, 0.3869
+#>   Pilot bandwidth b (period = value): 3 = 0.3951, 1 = 0.4102, 2 = 0.3869
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI
 #>   Conventional                 0.9147     0.2582    3.54   <0.001   [0.4087, 1.4207]
@@ -228,9 +230,9 @@ sim_atu <- transform(rddid_sim, W = ifelse(year < 3, 1, W), Y = Y + (year < 3))
 rddid(sim_atu, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, estimand = "atu")
 #> RD-DID estimate of the ATU in period 3
 #>   Comparison periods: 1, 2   (constant confounding trend; weights 0.5, 0.5)
-#>   Sampling scheme: panel, running variable fixed over time (detected from the data)
+#>   Sampling scheme: panel, running variable fixed over time: no unit changes side of the cutoff (detected from the data)
 #>   Bandwidth: common h = 0.2672 (rule "joint", AMSE-optimal for the aggregate)
-#>   Pilot bandwidth b by period: 0.3951, 0.4102, 0.3868
+#>   Pilot bandwidth b (period = value): 3 = 0.3951, 1 = 0.4102, 2 = 0.3868
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI
 #>   Conventional                 1.0927     0.1264    8.64   <0.001   [0.8450, 1.3405]
@@ -262,8 +264,8 @@ variable that drifts between years.
 **Type continuity.** H0: the share of each type jumps by zero at the
 cutoff, in every period. A rejection means units sort around the cutoff
 by their side in other periods, so the jump in the outcome partly
-reflects who the units are; the estimate is then biased, whatever the
-other tests say.
+reflects who the units are; the estimate can then be biased, whatever
+the other tests say.
 
 ``` r
 
@@ -271,7 +273,7 @@ tc <- rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id")
 tc
 #> Test of a continuous type distribution  [rd_typecont()]
 #>   H0: the share of each type jumps by zero at the cutoff, in every period
-#>   Sampling scheme: panel, running variable varies over time (detected from the data)
+#>   Sampling scheme: panel, running variable varies over time: some units change side (detected from the data)
 #>   Periods: 1, 2, 3   Types: ++, +-, -+, --   Bandwidth: CCT MSE-optimal, chosen per cell
 #> 
 #>   Joint Wald chi-squared(9) = 4.782,  p = 0.853
@@ -285,18 +287,18 @@ other two, in time order: `++` is above the cutoff in both, `+-` above
 in the earlier and below in the later, and so on.
 
 **Composition stability.** H0: the share of each type among the units
-above the cutoff is the same in the RD period and in each comparison
-period. A rejection means the units at the cutoff in the RD period are a
-different mix of types from those in a comparison period; the estimate
-is then valid only if the next test’s null holds.
+just above the cutoff is the same in the RD period and in each
+comparison period. A rejection means the units at the cutoff in the RD
+period are a different mix of types from those in a comparison period;
+the estimate is then valid only if the next test’s null holds.
 
 ``` r
 
 cs <- rd_compstable(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
 cs
 #> Test of composition stability  [rd_compstable()]
-#>   H0: the share of each type among the units above the cutoff is the same in the RD period and in each comparison period
-#>   Sampling scheme: panel, running variable varies over time (detected from the data)
+#>   H0: the share of each type among the units just above the cutoff is the same in the RD period and in each comparison period
+#>   Sampling scheme: panel, running variable varies over time: some units change side (detected from the data)
 #>   RD period: 3   Comparison periods: 1, 2   Bandwidth: CCT MSE-optimal, chosen per cell
 #> 
 #>   Pair 3::1: chi-squared(3) = 21.982,  p = <0.001
@@ -321,7 +323,7 @@ hg <- rd_homog(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 
 hg
 #> Test of homogeneous confounding  [rd_homog()]
 #>   H0: in each comparison period the confounding jump is the same for every type
-#>   Sampling scheme: panel, running variable varies over time (detected from the data)
+#>   Sampling scheme: panel, running variable varies over time: some units change side (detected from the data)
 #>   Comparison periods: 1, 2
 #> 
 #>   Wald chi-squared(2) = 0.465,  p = 0.793
@@ -348,7 +350,7 @@ tr <- rd_trendcell(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_r
 tr
 #> Test of a constant within-type confounding discontinuity  [rd_trendcell()]
 #>   H0: within each type, the confounding jump is the same in every comparison period
-#>   Sampling scheme: panel, running variable varies over time (detected from the data)
+#>   Sampling scheme: panel, running variable varies over time: some units change side (detected from the data)
 #>   Comparison periods: 1, 2   Trend: constant
 #> 
 #>   Wald chi-squared(2) = 0.078,  p = 0.962

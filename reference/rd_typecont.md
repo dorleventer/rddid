@@ -225,7 +225,7 @@ tc <- rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id")
 tc          # the null, the joint Wald test, then each period's own test
 #> Test of a continuous type distribution  [rd_typecont()]
 #>   H0: the share of each type jumps by zero at the cutoff, in every period
-#>   Sampling scheme: panel, running variable varies over time (detected from the data)
+#>   Sampling scheme: panel, running variable varies over time: some units change side (detected from the data)
 #>   Periods: 1, 2, 3   Types: ++, +-, -+, --   Bandwidth: CCT MSE-optimal, chosen per cell
 #> 
 #>   Joint Wald chi-squared(9) = 4.782,  p = 0.853

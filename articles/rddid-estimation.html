@@ -77,10 +77,12 @@ policy</strong> switches at the same cutoff, in every period, so the
 jump in the outcome at the cutoff in the RD period mixes the treatment
 effect with the <strong>confounding jump</strong>. In the
 <strong>comparison periods</strong> the treatment of interest is uniform
-at the cutoff (nobody treated, or everybody treated), so the jump there
-<em>is</em> the confounding jump. <code><a href="../reference/rddid.html">rddid()</a></code> estimates the
-jump in every period by local-linear RD and subtracts a weighted average
-of the comparison-period jumps from the RD-period jump:
+at the cutoff (nobody treated, or everybody treated), so, provided the
+treatment of interest has no anticipation or carry-over effects there
+(which the paper assumes), the jump there <em>is</em> the confounding
+jump. <code><a href="../reference/rddid.html">rddid()</a></code> estimates the jump in every period by
+local-linear RD and subtracts a weighted average of the
+comparison-period jumps from the RD-period jump:
 <math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">A</mi><mi mathvariant="normal">T</mi><mi mathvariant="normal">T</mi></mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>t</mi><mrow><mi mathvariant="normal">R</mi><mi mathvariant="normal">D</mi></mrow></msub><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msub><mi>D</mi><msub><mi>t</mi><mrow><mi mathvariant="normal">R</mi><mi mathvariant="normal">D</mi></mrow></msub></msub><mo>−</mo><munder><mo>∑</mo><mi>t</mi></munder><msub><mi>w</mi><mi>t</mi></msub><msub><mi>D</mi><mi>t</mi></msub><mo>,</mo></mrow><annotation encoding="application/x-tex">
 \mathrm{ATT}(t_{\mathrm{RD}}) = D_{t_{\mathrm{RD}}} - \sum_t w_t D_t ,
 </annotation></semantics></math> where
@@ -130,9 +132,9 @@ comparison periods, and <strong>the true effect is 1</strong>.</p>
 <span><span class="va">fit</span></span>
 <span><span class="co">#&gt; RD-DID estimate of the ATT in period 3</span></span>
 <span><span class="co">#&gt;   Comparison periods: 1, 2   (constant confounding trend; weights 0.5, 0.5)</span></span>
-<span><span class="co">#&gt;   Sampling scheme: panel, running variable fixed over time (detected from the data)</span></span>
+<span><span class="co">#&gt;   Sampling scheme: panel, running variable fixed over time: no unit changes side of the cutoff (detected from the data)</span></span>
 <span><span class="co">#&gt;   Bandwidth: common h = 0.2672 (rule "joint", AMSE-optimal for the aggregate)</span></span>
-<span><span class="co">#&gt;   Pilot bandwidth b by period: 0.3951, 0.4102, 0.3868</span></span>
+<span><span class="co">#&gt;   Pilot bandwidth b (period = value): 3 = 0.3951, 1 = 0.4102, 2 = 0.3868</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;                              Estimate  Std. err.       z  p-value   95% CI</span></span>
 <span><span class="co">#&gt;   Conventional                 1.0927     0.1264    8.64   &lt;0.001   [0.8450, 1.3405]</span></span>
@@ -170,8 +172,9 @@ estimate untouched.</li>
 <code>bwselect = "joint"</code>, uses one main bandwidth <code>h</code>
 in every period, chosen to minimize the asymptotic mean squared error of
 the RD-DID estimate.
-<strong><code>Pilot bandwidth b by period</code></strong> gives the
-bandwidths of the bias correction, one per period.</li>
+<strong><code>Pilot bandwidth b (period = value)</code></strong> lists
+the bandwidth of the bias correction in each period, the RD period
+first.</li>
 <li>
 <strong>The two rows.</strong> <code>Conventional</code> is the
 local-linear estimate with its conventional standard error.
@@ -199,9 +202,9 @@ jumps, (0.51 + 0.63) / 2 = 0.57, its estimate of the confounding jump of
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span>
 <span><span class="co">#&gt; RD-DID estimate of the ATT in period 3</span></span>
 <span><span class="co">#&gt;   Comparison periods: 1, 2   (constant confounding trend; weights 0.5, 0.5)</span></span>
-<span><span class="co">#&gt;   Sampling scheme: panel, running variable fixed over time (detected from the data)</span></span>
+<span><span class="co">#&gt;   Sampling scheme: panel, running variable fixed over time: no unit changes side of the cutoff (detected from the data)</span></span>
 <span><span class="co">#&gt;   Bandwidth: common h = 0.2672 (rule "joint", AMSE-optimal for the aggregate)</span></span>
-<span><span class="co">#&gt;   Pilot bandwidth b by period: 0.3951, 0.4102, 0.3868</span></span>
+<span><span class="co">#&gt;   Pilot bandwidth b (period = value): 3 = 0.3951, 1 = 0.4102, 2 = 0.3868</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;                              Estimate  Std. err.       z  p-value   95% CI</span></span>
 <span><span class="co">#&gt;   Conventional                 1.0927     0.1264    8.64   &lt;0.001   [0.8450, 1.3405]</span></span>
@@ -216,7 +219,7 @@ jumps, (0.51 + 0.63) / 2 = 0.57, its estimate of the confounding jump of
 <span><span class="co">#&gt;   2        comparison    -0.5   1000   0.2672   0.3868     0.6306    0.1686     0.6240    0.2012</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Robust s.e. under each sampling scheme:  cross-section 0.2385   panel, fixed R 0.1494   panel, varying R 0.1494</span></span>
-<span><span class="co">#&gt;   (the printed s.e. uses "pc"; set scheme= to choose another)</span></span></code></pre></div>
+<span><span class="co">#&gt;   (the printed s.e. is the one for scheme "pc"; the others are shown for comparison)</span></span></code></pre></div>
 <p><code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> adds the per-period fits. Each row gives the
 period’s role, its coefficient in the estimate (+1 for the RD period,
 minus its weight for a comparison period), its number of observations,
@@ -257,9 +260,9 @@ makers such as modelsummary work with <code><a href="../reference/rddid.html">rd
 <span><span class="va">fit_lin</span></span>
 <span><span class="co">#&gt; RD-DID estimate of the ATT in period 3</span></span>
 <span><span class="co">#&gt;   Comparison periods: 1, 2   (linear confounding trend; weights -1, 2)</span></span>
-<span><span class="co">#&gt;   Sampling scheme: panel, running variable fixed over time (detected from the data)</span></span>
+<span><span class="co">#&gt;   Sampling scheme: panel, running variable fixed over time: no unit changes side of the cutoff (detected from the data)</span></span>
 <span><span class="co">#&gt;   Bandwidth: common h = 0.2672 (rule "joint", AMSE-optimal for the aggregate)</span></span>
-<span><span class="co">#&gt;   Pilot bandwidth b by period: 0.3951, 0.4102, 0.3869</span></span>
+<span><span class="co">#&gt;   Pilot bandwidth b (period = value): 3 = 0.3951, 1 = 0.4102, 2 = 0.3869</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;                              Estimate  Std. err.       z  p-value   95% CI</span></span>
 <span><span class="co">#&gt;   Conventional                 0.9147     0.2582    3.54   &lt;0.001   [0.4087, 1.4207]</span></span>
@@ -295,9 +298,9 @@ illustration, make everybody treated in years 1 and 2 of
 <span><span class="fu"><a href="../reference/rddid.html">rddid</a></span><span class="op">(</span><span class="va">sim_atu</span>, y <span class="op">=</span> <span class="st">"Y"</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span>, estimand <span class="op">=</span> <span class="st">"atu"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; RD-DID estimate of the ATU in period 3</span></span>
 <span><span class="co">#&gt;   Comparison periods: 1, 2   (constant confounding trend; weights 0.5, 0.5)</span></span>
-<span><span class="co">#&gt;   Sampling scheme: panel, running variable fixed over time (detected from the data)</span></span>
+<span><span class="co">#&gt;   Sampling scheme: panel, running variable fixed over time: no unit changes side of the cutoff (detected from the data)</span></span>
 <span><span class="co">#&gt;   Bandwidth: common h = 0.2672 (rule "joint", AMSE-optimal for the aggregate)</span></span>
-<span><span class="co">#&gt;   Pilot bandwidth b by period: 0.3951, 0.4102, 0.3868</span></span>
+<span><span class="co">#&gt;   Pilot bandwidth b (period = value): 3 = 0.3951, 1 = 0.4102, 2 = 0.3868</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;                              Estimate  Std. err.       z  p-value   95% CI</span></span>
 <span><span class="co">#&gt;   Conventional                 1.0927     0.1264    8.64   &lt;0.001   [0.8450, 1.3405]</span></span>
@@ -327,14 +330,14 @@ design with a running variable that drifts between years.</p>
 <p><strong>Type continuity.</strong> H0: the share of each type jumps by
 zero at the cutoff, in every period. A rejection means units sort around
 the cutoff by their side in other periods, so the jump in the outcome
-partly reflects who the units are; the estimate is then biased, whatever
-the other tests say.</p>
+partly reflects who the units are; the estimate can then be biased,
+whatever the other tests say.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">tc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rd_typecont.html">rd_typecont</a></span><span class="op">(</span><span class="va">rddid_sim_pv</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span><span class="op">)</span></span>
 <span><span class="va">tc</span></span>
 <span><span class="co">#&gt; Test of a continuous type distribution  [rd_typecont()]</span></span>
 <span><span class="co">#&gt;   H0: the share of each type jumps by zero at the cutoff, in every period</span></span>
-<span><span class="co">#&gt;   Sampling scheme: panel, running variable varies over time (detected from the data)</span></span>
+<span><span class="co">#&gt;   Sampling scheme: panel, running variable varies over time: some units change side (detected from the data)</span></span>
 <span><span class="co">#&gt;   Periods: 1, 2, 3   Types: ++, +-, -+, --   Bandwidth: CCT MSE-optimal, chosen per cell</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Joint Wald chi-squared(9) = 4.782,  p = 0.853</span></span>
@@ -346,17 +349,17 @@ the other two, in time order: <code>++</code> is above the cutoff in
 both, <code>+-</code> above in the earlier and below in the later, and
 so on.</p>
 <p><strong>Composition stability.</strong> H0: the share of each type
-among the units above the cutoff is the same in the RD period and in
-each comparison period. A rejection means the units at the cutoff in the
-RD period are a different mix of types from those in a comparison
+among the units just above the cutoff is the same in the RD period and
+in each comparison period. A rejection means the units at the cutoff in
+the RD period are a different mix of types from those in a comparison
 period; the estimate is then valid only if the next test’s null
 holds.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">cs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rd_compstable.html">rd_compstable</a></span><span class="op">(</span><span class="va">rddid_sim_pv</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="va">cs</span></span>
 <span><span class="co">#&gt; Test of composition stability  [rd_compstable()]</span></span>
-<span><span class="co">#&gt;   H0: the share of each type among the units above the cutoff is the same in the RD period and in each comparison period</span></span>
-<span><span class="co">#&gt;   Sampling scheme: panel, running variable varies over time (detected from the data)</span></span>
+<span><span class="co">#&gt;   H0: the share of each type among the units just above the cutoff is the same in the RD period and in each comparison period</span></span>
+<span><span class="co">#&gt;   Sampling scheme: panel, running variable varies over time: some units change side (detected from the data)</span></span>
 <span><span class="co">#&gt;   RD period: 3   Comparison periods: 1, 2   Bandwidth: CCT MSE-optimal, chosen per cell</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Pair 3::1: chi-squared(3) = 21.982,  p = &lt;0.001</span></span>
@@ -378,7 +381,7 @@ is biased.</p>
 <span><span class="va">hg</span></span>
 <span><span class="co">#&gt; Test of homogeneous confounding  [rd_homog()]</span></span>
 <span><span class="co">#&gt;   H0: in each comparison period the confounding jump is the same for every type</span></span>
-<span><span class="co">#&gt;   Sampling scheme: panel, running variable varies over time (detected from the data)</span></span>
+<span><span class="co">#&gt;   Sampling scheme: panel, running variable varies over time: some units change side (detected from the data)</span></span>
 <span><span class="co">#&gt;   Comparison periods: 1, 2</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Wald chi-squared(2) = 0.465,  p = 0.793</span></span>
@@ -402,7 +405,7 @@ linear.</p>
 <span><span class="va">tr</span></span>
 <span><span class="co">#&gt; Test of a constant within-type confounding discontinuity  [rd_trendcell()]</span></span>
 <span><span class="co">#&gt;   H0: within each type, the confounding jump is the same in every comparison period</span></span>
-<span><span class="co">#&gt;   Sampling scheme: panel, running variable varies over time (detected from the data)</span></span>
+<span><span class="co">#&gt;   Sampling scheme: panel, running variable varies over time: some units change side (detected from the data)</span></span>
 <span><span class="co">#&gt;   Comparison periods: 1, 2   Trend: constant</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Wald chi-squared(2) = 0.078,  p = 0.962</span></span>

@@ -290,7 +290,7 @@ tr <- rd_trendcell(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_r
 tr          # the Wald test, then each type's jump in each comparison period
 #> Test of a constant within-type confounding discontinuity  [rd_trendcell()]
 #>   H0: within each type, the confounding jump is the same in every comparison period
-#>   Sampling scheme: panel, running variable varies over time (detected from the data)
+#>   Sampling scheme: panel, running variable varies over time: some units change side (detected from the data)
 #>   Comparison periods: 1, 2   Trend: constant
 #> 
 #>   Wald chi-squared(2) = 0.078,  p = 0.962
@@ -307,7 +307,7 @@ rd_trendcell(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
 #> rd_trendcell: linear trend is not testable -- no cell has 3 or more comparison periods (degrees of freedom = 0). Returning an object with df = 0, statistic = NA, p_value = NA.
 #> Test of a constant within-type confounding discontinuity  [rd_trendcell()]
 #>   H0: within each type, the confounding jump moves linearly across the comparison periods
-#>   Sampling scheme: panel, running variable varies over time (detected from the data)
+#>   Sampling scheme: panel, running variable varies over time: some units change side (detected from the data)
 #>   Comparison periods: 1, 2   Trend: linear
 #> 
 #>   Wald: not testable (df = 0)
