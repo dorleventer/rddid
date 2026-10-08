@@ -27,7 +27,8 @@ fmt <- function(x, d = 3) formatC(x, format = "f", digits = d)
 
 `bwselect` picks the rule. Whatever the rule, `fit$bandwidth$h_by_period` and
 `fit$bandwidth$b_by_period` hold the bandwidths used in each period, named by
-period (the RD period first).
+period (stored with the RD period first; the printout and `summary()` list them in
+time order).
 
 ### The common bandwidth: `bwselect = "joint"` (the default)
 

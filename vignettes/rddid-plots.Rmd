@@ -33,13 +33,15 @@ fit <- rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 plot(fit)
 ```
 
-One panel per period, the RD period first. The points are the outcome averaged within 20
+One panel per period, in time order. The points are the outcome averaged within 20
 equal-width bins of the running variable; the two lines are the local-linear fits on each side
-of the cutoff, drawn over the bandwidth the estimate used (`summary(fit)` lists it). The
-vertical distance between the two lines at the cutoff is the period's jump $D_t$, printed in
-the panel label. The RD-DID estimate in the title is the RD-period jump minus the weighted
-comparison-period jumps: here the confounding jump of about 0.5 shows up in years 1 and 2,
-and the year-3 jump of about 1.5 is the effect plus the confounding jump.
+of the cutoff, drawn over the bandwidth the estimate used (`summary(fit)` lists the bandwidth
+and every jump). The vertical distance between the two lines at the cutoff is the period's
+jump $D_t$. The RD-DID estimate is the RD-period jump minus the weighted comparison-period
+jumps: here the confounding jump of about 0.5 shows up in years 1 and 2, and the year-3 jump
+of about 1.5 is the effect plus the confounding jump. The figures carry no titles or
+statistics by design: the numbers are in the printed objects, and a title is one `+ labs()`
+away (last section).
 
 ## Who switches side: the running variable in two periods
 
@@ -65,10 +67,10 @@ against the comparison-period running variable. Right panel: in the RD period, t
 are above the cutoff in the comparison period. The points are binned shares inside the
 bandwidth; the lines are the local-linear fit on each side of the cutoff, at the bandwidth
 rule the test used. Under the null the two lines of a panel meet at the cutoff: who a unit is
-in the other period does not jump at the cutoff. The panel labels give the jump of each
-share with its standard error; the title gives the test's statistic (with three or more
-periods the test uses the full pattern of a unit's sides in the other periods, so the picture
-is the pairwise version). `plot(tc, comparison = 2)` draws the other pair.
+in the other period does not jump at the cutoff. The test's statistic is in `print(tc)`; with
+three or more periods the test uses the full pattern of a unit's sides in the other periods,
+so the picture is the pairwise version, one pair at a time (`plot(tc, comparison = 2)` draws
+the other pair).
 
 ## Composition stability
 
@@ -83,10 +85,11 @@ $-(R_{t_0} - c)$; the units above the cutoff in the RD period are placed to the 
 $R_{t_{RD}} - c$. The outcome is whether the unit is above the cutoff in the other period of
 the pair; the binned share and the local-linear fit on each side are drawn. Under the null the
 two lines meet at the artificial cutoff: the units just above the cutoff are the same mix in
-both periods. In `rddid_sim_pv` the assumption fails by construction, and the pair's test
-(which, with three periods, also uses the unit's side in the third period) rejects; the binary
-picture shows a smaller gap for this pair. `plot(cs, pair = 2)` draws the next pair; under
-`estimand = "atu"` the same picture is drawn for the units below the cutoff.
+both periods. In `rddid_sim_pv` the assumption fails by construction and the pair's test
+rejects (`print(cs)`); with three periods that test also uses the unit's side in the third
+period, which the binary picture does not show, so the gap here is smaller than the statistic
+suggests. `plot(cs, pair = 2)` draws the next pair; under `estimand = "atu"` the same picture
+is drawn for the units below the cutoff.
 
 ## Homogeneous confounding
 
@@ -96,8 +99,8 @@ plot(hg)
 ```
 
 In a comparison period the jump in the outcome at the cutoff is the confounding jump. The
-plot shows that jump, estimated within each type (by default the unit's side in the RD period,
-`+` above and `-` below), with its 95% interval, for each comparison period. Under the null the
+plot shows that jump, estimated within each type (by default the unit's side in the RD period: "Below in 3"
+and "Above in 3"), with its 95% interval, for each comparison period. Under the null the
 types' points coincide within a period, up to sampling error. In `rddid_sim_pv` the confounding
 jump is 0.5 for every unit, so the two types agree in both years.
 

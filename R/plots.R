@@ -6,8 +6,8 @@
 # ggplot2 is in Suggests: every function stops with a clear message when it is not installed.
 # Nothing here re-estimates anything: the methods read the fits and data stored in the objects.
 
-utils::globalVariables(c("x", "y", "period", "type", "side", "jump", "se", "lo", "hi", "group",
-                         "x_a", "x_b", "status", "yend", "role", "xval", "grp", "panel"))
+utils::globalVariables(c("x", "y", "period", "type", "side", "jump", "se", "lo", "hi",
+                         "x_a", "x_b", "status", "role", "xval", "grp", "panel"))
 
 .need_ggplot2 <- function() {
   if (!requireNamespace("ggplot2", quietly = TRUE))
@@ -48,20 +48,23 @@ utils::globalVariables(c("x", "y", "period", "type", "side", "jump", "se", "lo",
 }
 
 .rddid_theme <- function() {
-  ggplot2::theme_minimal(base_size = 12) +
-    ggplot2::theme(legend.position = "bottom", panel.grid.minor = ggplot2::element_blank(),
-                   plot.title.position = "plot")
+  ggplot2::theme_bw(base_size = 12) +
+    ggplot2::theme(legend.position = "bottom", legend.title = ggplot2::element_blank(),
+                   panel.grid.minor = ggplot2::element_blank(),
+                   strip.background = ggplot2::element_blank(),
+                   strip.text = ggplot2::element_text(size = 11))
 }
 .cutoff_line <- function(cutoff) {
   ggplot2::geom_vline(xintercept = cutoff, linetype = "dashed", colour = "grey40")
 }
-.p_label <- function(p) if (is.na(p)) "p = NA" else if (p < 1e-3) "p < 0.001" else sprintf("p = %.3f", p)
+.pair_colours <- c("Comparison period" = "#1b9e77", "RD period" = "#c2558b")
+.type_colours <- c("#1f78b4", "#e6a100", "#6a3d9a", "#33a02c", "#e31a1c", "#b15928")
 
 # ---- rddid fit: the per-period RD plots --------------------------------------------------
 
 #' Plot the per-period RD fits behind an RD-DID estimate
 #'
-#' One panel per period, the RD period first: the outcome averaged within `bins` equal-width
+#' One panel per period, in time order: the outcome averaged within `bins` equal-width
 #' bins of the running variable, and the two local-linear fits of that period drawn over their
 #' bandwidth on each side of the cutoff. The jump between the two lines at the cutoff is the
 #' period's discontinuity \eqn{D_t}; the RD-DID estimate is the RD-period jump minus the
@@ -80,36 +83,27 @@ utils::globalVariables(c("x", "y", "period", "type", "side", "jump", "se", "lo",
 plot.rddid <- function(x, bins = 20L, ...) {
   .need_ggplot2()
   cutoff  <- x$c
-  periods <- names(x$fits)
-  role_of <- function(k) if (k == as.character(x$t_rd)) "RD period" else "comparison period"
+  periods <- .period_order(names(x$fits))      # panels in time order
+  role_of <- function(k) if (k == as.character(x$t_rd)) "RD period" else "Comparison period"
   pts <- do.call(rbind, lapply(periods, function(k) {
-    d <- x$data[[k]]
-    b <- .bin_means(d$x, d$y, bins = bins)
+    b <- .bin_means(x$data[[k]]$x, x$data[[k]]$y, bins = bins)
     if (nrow(b)) cbind(b, period = k, role = role_of(k)) else NULL
   }))
   lines <- do.call(rbind, lapply(periods, function(k) {
     l <- .fit_lines(x$fits[[k]], cutoff)
     if (!is.null(l)) cbind(l, period = k, role = role_of(k)) else NULL
   }))
-  lab <- stats::setNames(vapply(periods, function(k) {
-    f <- x$fits[[k]]
-    sprintf("%s %s: jump %.3g (s.e. %.2g)", role_of(k), k, f$D, sqrt(f$V_D))
-  }, character(1)), periods)
-  pts$period   <- factor(pts$period, levels = periods, labels = lab[periods])
-  lines$period <- factor(lines$period, levels = periods, labels = lab[periods])
-  est <- x$estimates["Conventional", ]
+  lab <- stats::setNames(paste(vapply(periods, role_of, character(1)), periods), periods)
+  pts$period   <- factor(lab[pts$period],   levels = lab[periods])
+  lines$period <- factor(lab[lines$period], levels = lab[periods])
   ggplot2::ggplot() +
     ggplot2::geom_point(data = pts, ggplot2::aes(x = x, y = y, colour = role), alpha = 0.8) +
     ggplot2::geom_line(data = lines, ggplot2::aes(x = x, y = y, colour = role, group = side),
                        linewidth = 1) +
     .cutoff_line(cutoff) +
     ggplot2::facet_wrap(~ period, nrow = 1) +
-    ggplot2::scale_colour_manual(values = c("RD period" = "#c2558b", "comparison period" = "#1b9e77"),
-                                 name = NULL) +
-    ggplot2::labs(x = "running variable", y = "outcome (binned mean)",
-                  title = sprintf("RD-DID: %s in period %s = %.3g (s.e. %.2g)",
-                                  toupper(x$estimand), x$t_rd, est$est, est$se),
-                  subtitle = "lines: local-linear fits within the bandwidth on each side; the jump at the cutoff is D_t") +
+    ggplot2::scale_colour_manual(values = .pair_colours, guide = "none") +
+    ggplot2::labs(x = "Running variable", y = "Outcome") +
     .rddid_theme()
 }
 
@@ -173,18 +167,18 @@ plot.rd_typecont <- function(x, t_rd = NULL, comparison = NULL, bins = 20L, ...)
     if (is.null(fit)) return(NULL)
     h <- unname(fit$h)
     b <- .bin_means(R, y, bins = bins, range = c(cutoff - h, cutoff + h))
-    lab <- sprintf("%s %s: share above the cutoff in period %s\njump at the cutoff %.3f (s.e. %.3f)",
-                   role, this, other, fit$D, sqrt(fit$V_D))
+    lab <- sprintf("%s %s", role, this)
     list(pts = cbind(b, role = role, panel = lab),
          lines = cbind(.fit_lines(fit, cutoff), role = role, panel = lab))
   }
-  left  <- panel(t0, rd, "comparison period")
+  left  <- panel(t0, rd, "Comparison period")
   right <- panel(rd, t0, "RD period")
   if (is.null(left) || is.null(right)) stop("the local-linear fit failed in one period.")
   pts   <- rbind(left$pts, right$pts)
   lines <- rbind(left$lines, right$lines)
-  pts$panel   <- factor(pts$panel,   levels = c(left$pts$panel[1], right$pts$panel[1]))
-  lines$panel <- factor(lines$panel, levels = levels(pts$panel))
+  lv <- c(left$pts$panel[1], right$pts$panel[1])
+  pts$panel   <- factor(pts$panel,   levels = lv)
+  lines$panel <- factor(lines$panel, levels = lv)
   ggplot2::ggplot() +
     ggplot2::geom_point(data = pts, ggplot2::aes(x = x, y = y, colour = role), alpha = 0.85) +
     ggplot2::geom_line(data = lines, ggplot2::aes(x = x, y = y, colour = role, group = side),
@@ -192,12 +186,8 @@ plot.rd_typecont <- function(x, t_rd = NULL, comparison = NULL, bins = 20L, ...)
     .cutoff_line(cutoff) +
     ggplot2::facet_wrap(~ panel, nrow = 1, scales = "free_x") +
     ggplot2::scale_y_continuous(limits = c(0, 1)) +
-    ggplot2::scale_colour_manual(values = c("comparison period" = "#1b9e77", "RD period" = "#c2558b"),
-                                 name = NULL) +
-    ggplot2::labs(x = "running variable", y = "share above the cutoff in the other period",
-                  title = sprintf("Type continuity, periods %s and %s (test: chi-squared(%d) = %.2f, %s)",
-                                  t0, rd, x$df, x$statistic, .p_label(x$p_value)),
-                  subtitle = "under H0 the two lines of a panel meet at the cutoff") +
+    ggplot2::scale_colour_manual(values = .pair_colours, guide = "none") +
+    ggplot2::labs(x = "Running variable", y = "Pr(above cutoff in other period)") +
     .rddid_theme()
 }
 
@@ -244,10 +234,11 @@ plot.rd_compstable <- function(x, pair = 1L, bins = 20L, ...) {
   fit <- .indicator_fit(yy, xx, 0, x$meta$kernel, x$meta$h, x$meta$bwselect)
   if (is.null(fit)) stop("the local-linear fit on the reflected sample failed.")
   h <- unname(fit$h)
+  roles <- c(sprintf("Comparison period %s (mirrored)", t0), sprintf("RD period %s", t_rd))
   pts <- .bin_means(xx, yy, bins = bins, range = c(-h, h))
-  pts$role <- ifelse(pts$x < 0, "comparison period (mirrored)", "RD period")
+  pts$role <- factor(ifelse(pts$x < 0, roles[1], roles[2]), levels = roles)
   lines <- .fit_lines(fit, 0)
-  lines$role <- ifelse(lines$side == "-", "comparison period (mirrored)", "RD period")
+  lines$role <- factor(ifelse(lines$side == "-", roles[1], roles[2]), levels = roles)
   side_word <- if (identical(x$estimand, "atu")) "below" else "above"
   ggplot2::ggplot() +
     ggplot2::geom_point(data = pts, ggplot2::aes(x = x, y = y, colour = role), alpha = 0.85) +
@@ -255,38 +246,46 @@ plot.rd_compstable <- function(x, pair = 1L, bins = 20L, ...) {
                        linewidth = 1.1) +
     .cutoff_line(0) +
     ggplot2::scale_y_continuous(limits = c(0, 1)) +
-    ggplot2::scale_colour_manual(values = c("comparison period (mirrored)" = "#1b9e77",
-                                            "RD period" = "#c2558b"), name = NULL) +
-    ggplot2::labs(x = sprintf("distance to the cutoff: period %s mirrored on the left, period %s on the right",
-                              t0, t_rd),
-                  y = sprintf("share %s the cutoff in the other period", side_word),
-                  title = sprintf("Composition stability, pair %s: jump at the artificial cutoff %.3f (s.e. %.3f)",
-                                  pair_name, fit$D, sqrt(fit$V_D)),
-                  subtitle = sprintf("units %s the cutoff in each period; under H0 the two lines meet. The pair's test (on the full types): chi-squared(%d) = %.2f, %s",
-                                     side_word, pr$ll_wald$df, pr$ll_wald$stat, .p_label(pr$ll_wald$p))) +
+    ggplot2::scale_colour_manual(values = stats::setNames(unname(.pair_colours), roles)) +
+    ggplot2::labs(x = "Distance to cutoff (comparison period mirrored)",
+                  y = sprintf("Pr(%s cutoff in other period)", side_word)) +
     .rddid_theme()
 }
 
 # ---- rd_homog / rd_trendcell: the within-type confounding jumps ---------------------------
 
-.jump_pointrange <- function(tab, xvar, colour_var, facet_var = NULL, title, subtitle, xlab) {
+.jump_pointrange <- function(tab, xvar, colour_var, facet_var = NULL, xlab) {
   tab$lo <- tab$jump - stats::qnorm(0.975) * tab$se
   tab$hi <- tab$jump + stats::qnorm(0.975) * tab$se
   tab$xval <- factor(tab[[xvar]], levels = unique(tab[[xvar]]))
-  tab$grp  <- tab[[colour_var]]
+  lv <- unique(tab[[colour_var]])
+  lv <- c(lv[startsWith(lv, "Below")], lv[startsWith(lv, "Above")],
+          lv[!startsWith(lv, "Below") & !startsWith(lv, "Above")])
+  tab$grp  <- factor(tab[[colour_var]], levels = lv)
+  cols <- stats::setNames(.type_colours[seq_along(levels(tab$grp))], levels(tab$grp))
   p <- ggplot2::ggplot(tab, ggplot2::aes(x = xval, y = jump, colour = grp, group = grp)) +
     ggplot2::geom_hline(yintercept = 0, colour = "grey60", linewidth = 0.3) +
     ggplot2::geom_errorbar(ggplot2::aes(ymin = lo, ymax = hi), width = 0.15,
                            position = ggplot2::position_dodge(width = 0.35)) +
     ggplot2::geom_line(position = ggplot2::position_dodge(width = 0.35), linewidth = 0.6) +
     ggplot2::geom_point(position = ggplot2::position_dodge(width = 0.35), size = 2.4) +
-    ggplot2::labs(x = xlab, y = "confounding jump (95% CI)", colour = colour_var,
-                  title = title, subtitle = subtitle) +
+    ggplot2::scale_colour_manual(values = cols) +
+    ggplot2::labs(x = xlab, y = "Jump at cutoff (95% CI)") +
     .rddid_theme()
-  if (!is.null(facet_var))
-    p <- p + ggplot2::facet_wrap(stats::as.formula(paste("~", facet_var)),
-                                 labeller = ggplot2::as_labeller(function(v) paste("type", v)))
+  if (!is.null(facet_var)) p <- p + ggplot2::facet_wrap(~ grp) +
+    ggplot2::theme(legend.position = "none")
   p
+}
+
+#' Legend-friendly type names: "+" / "-" (side in the RD period) become "Above in t" / "Below in t"
+#' @keywords internal
+#' @noRd
+.type_names <- function(type, t_rd) {
+  if (is.null(t_rd)) return(type)
+  out <- type
+  out[type == "+"] <- sprintf("Above in %s", t_rd)
+  out[type == "-"] <- sprintf("Below in %s", t_rd)
+  out
 }
 
 #' Plot a homogeneous-confounding test: the confounding jump of each type, by comparison period
@@ -307,11 +306,8 @@ plot.rd_homog <- function(x, ...) {
   .need_ggplot2()
   tab <- x$period_type_jumps
   if (is.null(tab) || !nrow(tab)) stop("no fitted cells to plot.")
-  .jump_pointrange(tab, xvar = "period", colour_var = "type",
-                   title = sprintf("Homogeneous confounding: Wald chi-squared(%d) = %.2f, %s",
-                                   x$df, x$statistic, .p_label(x$p_value)),
-                   subtitle = "within-type jumps in the comparison periods; under H0 the types coincide in each period",
-                   xlab = "comparison period")
+  tab$type <- .type_names(tab$type, x$call$t_rd)
+  .jump_pointrange(tab, xvar = "period", colour_var = "type", xlab = "Comparison period")
 }
 
 #' Plot a constant-within-type-confounding test: each type's confounding jump over time
@@ -333,18 +329,13 @@ plot.rd_trendcell <- function(x, ...) {
   .need_ggplot2()
   tab <- x$cell_period_jumps
   if (is.null(tab) || !nrow(tab)) stop("no fitted cells to plot.")
-  tab$type <- tab$cell
+  tab$type <- .type_names(tab$cell, x$call$t_rd)
   p <- .jump_pointrange(tab, xvar = "period", colour_var = "type", facet_var = "type",
-                        title = sprintf("Constant within-type confounding (%s trend): Wald chi-squared(%d) = %s, %s",
-                                        x$trend, x$df,
-                                        if (is.na(x$statistic)) "NA" else sprintf("%.2f", x$statistic),
-                                        .p_label(x$p_value)),
-                        subtitle = "each type's jump across the comparison periods; dashed: the type's average",
-                        xlab = "comparison period")
+                        xlab = "Comparison period")
   means <- stats::aggregate(jump ~ type, data = tab, FUN = mean)
-  p + ggplot2::geom_hline(data = means, ggplot2::aes(yintercept = jump, colour = type),
-                          linetype = "dashed", show.legend = FALSE) +
-    ggplot2::theme(legend.position = "none")
+  means$grp <- factor(means$type, levels = levels(p$data$grp))
+  p + ggplot2::geom_hline(data = means, ggplot2::aes(yintercept = jump, colour = grp),
+                          linetype = "dashed", show.legend = FALSE)
 }
 
 # ---- switchers ------------------------------------------------------------------------------
@@ -379,19 +370,19 @@ plot_switchers <- function(data, x, time, id, periods = NULL, c = 0, ...) {
   m <- merge(a, b, by = "id")
   m <- m[is.finite(m$x_a) & is.finite(m$x_b), ]
   above_a <- m$x_a >= cutoff; above_b <- m$x_b >= cutoff
-  m$status <- ifelse(above_a == above_b, "stays on its side",
-                     ifelse(above_a, "above, then below", "below, then above"))
-  share <- mean(m$status != "stays on its side")
+  kind <- ifelse(above_a == above_b, "stay", ifelse(above_a, "down", "up"))
+  share <- function(k) 100 * mean(kind == k)
+  lab <- c(stay = sprintf("Stayer (%.0f%%)", share("stay")),
+           down = sprintf("Above, then below (%.1f%%)", share("down")),
+           up   = sprintf("Below, then above (%.1f%%)", share("up")))
+  m$status <- factor(lab[kind], levels = lab)
+  cols <- stats::setNames(c("grey75", "#d95f02", "#7570b3"), lab)
   ggplot2::ggplot(m, ggplot2::aes(x = x_a, y = x_b, colour = status)) +
     ggplot2::geom_point(alpha = 0.6, size = 1.4) +
     ggplot2::geom_hline(yintercept = cutoff, linetype = "dashed", colour = "grey40") +
     ggplot2::geom_vline(xintercept = cutoff, linetype = "dashed", colour = "grey40") +
-    ggplot2::scale_colour_manual(values = c("stays on its side" = "grey70",
-                                            "above, then below" = "#d95f02",
-                                            "below, then above" = "#7570b3"), name = NULL) +
-    ggplot2::labs(x = sprintf("running variable, period %s", periods[1]),
-                  y = sprintf("running variable, period %s", periods[2]),
-                  title = sprintf("Switchers: %.1f%% of %d units change side between periods %s and %s",
-                                  100 * share, nrow(m), periods[1], periods[2])) +
+    ggplot2::scale_colour_manual(values = cols, drop = FALSE) +
+    ggplot2::labs(x = sprintf("Running variable, period %s", periods[1]),
+                  y = sprintf("Running variable, period %s", periods[2])) +
     .rddid_theme()
 }

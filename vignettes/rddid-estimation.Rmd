@@ -81,7 +81,7 @@ Line by line:
 - **`Bandwidth: common h`**: the default rule, `bwselect = "joint"`, uses one
   main bandwidth `h` in every period, chosen to minimize the asymptotic mean
   squared error of the RD-DID estimate. **`Pilot bandwidth b (period = value)`**
-  lists the bandwidth of the bias correction in each period, the RD period first.
+  lists the bandwidth of the bias correction in each period, in time order.
 - **The two rows.** `Conventional` is the local-linear estimate with its
   conventional standard error. `Robust (bias-corrected)` is the bias-corrected
   estimate with its robust standard error (Calonico, Cattaneo and Titiunik,

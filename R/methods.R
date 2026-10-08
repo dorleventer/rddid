@@ -19,7 +19,7 @@
 #' @param x a `"summary.rddid"` object.
 #' @param ... unused.
 #' @return `summary()` returns an object of class `"summary.rddid"`: a list with `fit` (the
-#'   object) and `per_period`, a data frame with one row per period and columns `period`,
+#'   object) and `per_period`, a data frame with one row per period in time order and columns `period`,
 #'   `role` (`"RD"` or `"comparison"`), `coef` (its coefficient in the estimate, 1 for the RD
 #'   period and minus its weight for a comparison period), `n`, `h`, `b`, `jump` and `se` (the
 #'   conventional local-linear jump and its standard error) and `jump_bc`, `se_rb`
@@ -39,7 +39,7 @@ summary.rddid <- function(object, ...) {
 print.summary.rddid <- function(x, digits = 4, ...) {
   fit <- x$fit
   print(fit, digits = digits)
-  cat("\n  Per-period local-linear fits (estimate = sum of coef x jump):\n")
+  cat("\n  Per-period local-linear fits, in time order (estimate = sum of coef x jump):\n")
   tab <- x$per_period
   fmt <- function(v, d = digits) formatC(v, digits = d, format = "f")
   cat(sprintf("  %-8s %-11s %6s %6s %8s %8s %10s %9s %10s %9s\n", "period", "role", "coef",
@@ -60,8 +60,16 @@ print.summary.rddid <- function(x, digits = 4, ...) {
 #' Per-period table behind summary.rddid(): role, coefficient, n, bandwidths, jumps
 #' @keywords internal
 #' @noRd
+#' Period labels in time order (numeric order when every label is a number, else as given)
+#' @keywords internal
+#' @noRd
+.period_order <- function(labels) {
+  num <- suppressWarnings(as.numeric(labels))
+  if (!anyNA(num)) labels[order(num)] else labels
+}
+
 .rddid_period_table <- function(x) {
-  per <- names(x$fits)
+  per <- .period_order(names(x$fits))
   f <- x$fits
   data.frame(
     period  = per,

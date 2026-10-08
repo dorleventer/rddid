@@ -416,8 +416,11 @@ print.rddid <- function(x, digits = 4, ...) {
 #' @keywords internal
 #' @noRd
 .bandwidth_label <- function(bw) {
-  by_t <- function(v) paste(sprintf("%s = %s", names(v), trimws(formatC(v, digits = 4, format = "g"))),
-                            collapse = ", ")
+  by_t <- function(v) {
+    v <- v[.period_order(names(v))]            # time order, not the RD-period-first storage
+    paste(sprintf("%s = %s", names(v), trimws(formatC(v, digits = 4, format = "g"))),
+          collapse = ", ")
+  }
   switch(bw$method,
     fixed = sprintf("h = %.4g in every period (fixed), pilot b = %.4g", bw$h, bw$b),
     joint = sprintf("common h = %.4g (rule \"joint\", AMSE-optimal for the aggregate)\n  Pilot bandwidth b (period = value): %s",

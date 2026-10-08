@@ -18,7 +18,7 @@ running variable's range in each period).}
 A ggplot object (ggplot2 must be installed).
 }
 \description{
-One panel per period, the RD period first: the outcome averaged within \code{bins} equal-width
+One panel per period, in time order: the outcome averaged within \code{bins} equal-width
 bins of the running variable, and the two local-linear fits of that period drawn over their
 bandwidth on each side of the cutoff. The jump between the two lines at the cutoff is the
 period's discontinuity \eqn{D_t}; the RD-DID estimate is the RD-period jump minus the
