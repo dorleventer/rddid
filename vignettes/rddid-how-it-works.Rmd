@@ -70,7 +70,7 @@ pilot bandwidth $b_t$) and `rd_period()` (the local-linear fit with the bias
 correction and robust variance of Calonico, Cattaneo and Titiunik, 2014). At a
 given bandwidth pair, `rd_period()` reproduces the conventional and
 bias-corrected estimates and the conventional and robust standard errors of
-`rdrobust` to machine precision.
+`rdrobust` (with `vce = "hc1"`) to machine precision.
 
 ```{r per-period}
 periods <- 1:3
@@ -461,7 +461,7 @@ ggplot(binned, aes(R, ind)) +
 
 Composition stability requires
 $\pi_{t_{\mathrm{RD}},(+)}(v) = \pi_{t_0,(+)}(v)$, with $t_0$ a comparison
-period: the share of each type among the units above the cutoff is the same in
+period: the share of each type among the units just above the cutoff is the same in
 the RD period and in the comparison period. The test reflects the
 comparison-period above-cutoff units onto a negative axis and stacks them with
 the RD-period above-cutoff units. For S1 (RD period 2, comparison period 1):

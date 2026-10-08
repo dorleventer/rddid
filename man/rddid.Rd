@@ -163,8 +163,9 @@ period, the \strong{RD period}. A \strong{confounding policy} switches at the sa
 cutoff, in every period, so the jump in the outcome at the cutoff in the RD
 period mixes the treatment effect with the \strong{confounding jump}. In the
 \strong{comparison periods} the treatment of interest is uniform at the cutoff
-(nobody treated, or everybody treated), so the jump there \emph{is} the
-confounding jump. \code{rddid()} estimates the jump in every period by
+(nobody treated, or everybody treated), so, provided the
+treatment of interest has no anticipation or carry-over effects there (which the
+paper assumes), the jump there \emph{is} the confounding jump. \code{rddid()} estimates the jump in every period by
 local-linear RD and subtracts a weighted average of the comparison-period
 jumps from the RD-period jump. How the weights are set is the
 \strong{confounding-trend assumption}: constant (equal weights) or linear in time.
@@ -185,16 +186,18 @@ comparison periods; and \eqn{w_t} is the weight of comparison period
 With \code{trend = "constant"} the confounding jump is the same in every period,
 so the comparison periods get equal weights, \eqn{w_t = 1/m} with \eqn{m}
 comparison periods. With \code{trend = "linear"} the confounding jump moves
-linearly in time; the weights then extrapolate the straight line through the
-comparison-period jumps to the RD period. They sum to one and can be
+linearly in time; the weights then extrapolate the least-squares line through the
+comparison-period jumps to the RD period (with two comparison periods, the
+line through them). They sum to one and can be
 negative: with comparison periods 1 and 2 and RD period 3 they are -1 and 2.
 A numeric \code{trend} supplies the weights directly.
 }
 
 \subsection{Sampling schemes}{
 
-The estimate is built from the period jumps alone, so the sampling scheme
-does not enter its formula; it enters the standard error. In a repeated
+The scheme sets the standard error and, under \code{"joint"} and \code{"iter"}, the
+bandwidth (so the estimate); with a fixed \code{h} or \code{"cct"} it changes only the
+standard error. In a repeated
 cross-section (\code{"cs"}) the periods' samples are independent and the variance
 is the weighted sum of the period variances. In a panel the same units
 appear in several periods, so the period jumps are correlated and the
@@ -250,9 +253,10 @@ fitted at its own CCT bandwidths to estimate that period's bias constant and
 variance constant; these are combined, with the coefficients of the sum above
 (and, under \code{"pc"}, the covariances between periods), into the AMSE, which
 is then minimized in closed form. Each period's pilot bandwidth keeps that
-period's CCT ratio \eqn{b/h}{b/h}. Because each period's constants come
-from its own pilot fit, neither this rule nor \code{"iter"} depends on which
-period is labelled \code{t_rd}.
+period's CCT ratio \eqn{b/h}{b/h}. Each period's bias and variance
+constants are estimated at that period's own CCT pilot bandwidths, not at the
+RD period's, so an aggregate of several RD periods gets the same bandwidth
+whichever of them carries the \code{t_rd} label.
 The \code{"iter"} rule minimizes the same objective over one bandwidth per period
 by coordinate descent, starting from \code{start}. With \code{regularize = TRUE} both
 rules add \code{reg_const} times the estimated variance of the bias constants to

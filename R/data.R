@@ -11,8 +11,9 @@
 #'
 #' The running variable does not move between years, so every unit stays on the
 #' same side of the cutoff (sampling scheme "panel, running variable fixed over
-#' time"). The tests of the assumptions are not informative here; use
-#' [rddid_sim_pv] for them.
+#' time"). The tests of the assumptions are degenerate here: every unit keeps
+#' its type, so there is nothing to test (and [rd_typecont()] rejects
+#' mechanically); use [rddid_sim_pv] for them.
 #'
 #' @format A data frame with 3,000 rows (one per unit-year) and 6 columns:
 #' \describe{

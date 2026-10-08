@@ -257,7 +257,7 @@
 #' in one period and below it in another. A unit's **type** is the side of the
 #' cutoff it is on in the other period(s); with two periods, "above in the
 #' other period" or "below in the other period". `rd_compstable()` tests the
-#' null that **the share of each type among the units above the cutoff is the
+#' null that **the share of each type among the units just above the cutoff is the
 #' same in the RD period and in each comparison period**. Composition
 #' stability and homogeneous confounding ([rd_homog()]) are alternatives: the
 #' estimate of [rddid()] needs one of the two (together with type continuity,
@@ -486,7 +486,7 @@ rd_compstable <- function(data, x, time, id, t_rd,
 #' @export
 print.rd_compstable <- function(x, ...) {
   side <- if (identical(x$estimand, "atu")) "below" else "above"
-  h0 <- sprintf(paste0("the share of each type among the units %s the cutoff is the same in ",
+  h0 <- sprintf(paste0("the share of each type among the units just %s the cutoff is the same in ",
                        "the RD period and in each comparison period"), side)
   atu_note <- paste0("the units below the cutoff are the ones untreated in the RD period, ",
                      "so the test is on their shares (mirrored design)")

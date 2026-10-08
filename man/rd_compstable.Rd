@@ -101,7 +101,7 @@ When the running variable moves over time, some units are above the cutoff
 in one period and below it in another. A unit's \strong{type} is the side of the
 cutoff it is on in the other period(s); with two periods, "above in the
 other period" or "below in the other period". \code{rd_compstable()} tests the
-null that \strong{the share of each type among the units above the cutoff is the
+null that \strong{the share of each type among the units just above the cutoff is the
 same in the RD period and in each comparison period}. Composition
 stability and homogeneous confounding (\code{\link[=rd_homog]{rd_homog()}}) are alternatives: the
 estimate of \code{\link[=rddid]{rddid()}} needs one of the two (together with type continuity,

@@ -32,8 +32,9 @@
 \code{tidy()} returns a data frame with one row per estimate (\code{term}, \code{estimate},
 \code{std.error}, \code{statistic}, \code{p.value}, \code{conf.low}, \code{conf.high}) for a fit, and one row per
 test (\code{test}, \code{statistic}, \code{df}, \code{p.value}) for a validation test. \code{glance()} returns a
-one-row data frame describing the fit (\code{nobs}, \code{t_rd}, \code{n_comparisons}, \code{trend},
-\code{bwselect}, \code{scheme}, \code{level}).
+one-row data frame describing the fit (\code{nobs}, \code{t_rd}, \code{comparisons}, \code{trend}, \code{weights},
+\code{bwselect}, \code{h} (the common bandwidth under \code{"joint"}/fixed \code{h}, \code{NA} otherwise),
+\code{scheme}, \code{level}).
 }
 \description{
 \code{tidy()} and \code{glance()} methods following the \code{broom} conventions, so that fits and tests

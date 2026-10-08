@@ -3,7 +3,7 @@
 Shared brief for everyone writing user-facing text (roxygen, vignettes, README, pkgdown). The reader is an applied economist who knows `rdrobust` and wants an RD-DID estimate plus the validation tests. Numbers are never changed by documentation work; **in `R/*.R` files only lines starting with `#'` may be edited** (plus the removal of stale `# Manuscript ref:` header comments).
 
 ## The one-paragraph story (use it, in these words)
-A treatment of interest switches on at a cutoff of a running variable in one period, the **RD period**. A **confounding policy** switches at the same cutoff, in every period, so the jump in the outcome at the cutoff in the RD period mixes the treatment effect with the **confounding jump**. In the **comparison periods** the treatment of interest is uniform at the cutoff (nobody treated, or everybody treated), so the jump there *is* the confounding jump. `rddid()` estimates the jump in every period by local-linear RD and subtracts a weighted average of the comparison-period jumps from the RD-period jump. How the weights are set is the **confounding-trend assumption**: constant (equal weights) or linear in time.
+A treatment of interest switches on at a cutoff of a running variable in one period, the **RD period**. A **confounding policy** switches at the same cutoff, in every period, so the jump in the outcome at the cutoff in the RD period mixes the treatment effect with the **confounding jump**. In the **comparison periods** the treatment of interest is uniform at the cutoff (nobody treated, or everybody treated), so, provided the treatment of interest has no anticipation or carry-over effects there (which the paper assumes), the jump there *is* the confounding jump. `rddid()` estimates the jump in every period by local-linear RD and subtracts a weighted average of the comparison-period jumps from the RD-period jump. How the weights are set is the **confounding-trend assumption**: constant (equal weights) or linear in time.
 
 Display equation (use once per document, define every symbol in words right after it):
 `ATT(t_RD) = D_{t_RD} - sum_t w_t D_t`, where `D_t` is the jump in the outcome at the cutoff in period `t` and `w_t` are the comparison-period weights.
@@ -32,7 +32,7 @@ Display equation (use once per document, define every symbol in words right afte
 
 Nulls of the four tests, in words (the print methods use exactly these):
 - type continuity: the share of each type jumps by zero at the cutoff, in every period;
-- composition stability: the share of each type among the units above the cutoff is the same in the RD period and in each comparison period;
+- composition stability: the share of each type among the units just above the cutoff is the same in the RD period and in each comparison period;
 - homogeneous confounding: in each comparison period the confounding jump is the same for every type;
 - constant within-type confounding: within each type, the confounding jump is the same in every comparison period (`trend = "linear"`: moves linearly).
 

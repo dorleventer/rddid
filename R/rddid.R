@@ -9,8 +9,9 @@
 #' cutoff, in every period, so the jump in the outcome at the cutoff in the RD
 #' period mixes the treatment effect with the **confounding jump**. In the
 #' **comparison periods** the treatment of interest is uniform at the cutoff
-#' (nobody treated, or everybody treated), so the jump there *is* the
-#' confounding jump. `rddid()` estimates the jump in every period by
+#' (nobody treated, or everybody treated), so, provided the
+#' treatment of interest has no anticipation or carry-over effects there (which the
+#' paper assumes), the jump there *is* the confounding jump. `rddid()` estimates the jump in every period by
 #' local-linear RD and subtracts a weighted average of the comparison-period
 #' jumps from the RD-period jump. How the weights are set is the
 #' **confounding-trend assumption**: constant (equal weights) or linear in time.
@@ -30,15 +31,17 @@
 #' With `trend = "constant"` the confounding jump is the same in every period,
 #' so the comparison periods get equal weights, \eqn{w_t = 1/m} with \eqn{m}
 #' comparison periods. With `trend = "linear"` the confounding jump moves
-#' linearly in time; the weights then extrapolate the straight line through the
-#' comparison-period jumps to the RD period. They sum to one and can be
+#' linearly in time; the weights then extrapolate the least-squares line through the
+#' comparison-period jumps to the RD period (with two comparison periods, the
+#' line through them). They sum to one and can be
 #' negative: with comparison periods 1 and 2 and RD period 3 they are -1 and 2.
 #' A numeric `trend` supplies the weights directly.
 #'
 #' ## Sampling schemes
 #'
-#' The estimate is built from the period jumps alone, so the sampling scheme
-#' does not enter its formula; it enters the standard error. In a repeated
+#' The scheme sets the standard error and, under `"joint"` and `"iter"`, the
+#' bandwidth (so the estimate); with a fixed `h` or `"cct"` it changes only the
+#' standard error. In a repeated
 #' cross-section (`"cs"`) the periods' samples are independent and the variance
 #' is the weighted sum of the period variances. In a panel the same units
 #' appear in several periods, so the period jumps are correlated and the
@@ -90,9 +93,10 @@
 #' variance constant; these are combined, with the coefficients of the sum above
 #' (and, under `"pc"`, the covariances between periods), into the AMSE, which
 #' is then minimized in closed form. Each period's pilot bandwidth keeps that
-#' period's CCT ratio \eqn{b/h}{b/h}. Because each period's constants come
-#' from its own pilot fit, neither this rule nor `"iter"` depends on which
-#' period is labelled `t_rd`.
+#' period's CCT ratio \eqn{b/h}{b/h}. Each period's bias and variance
+#' constants are estimated at that period's own CCT pilot bandwidths, not at the
+#' RD period's, so an aggregate of several RD periods gets the same bandwidth
+#' whichever of them carries the `t_rd` label.
 #' The `"iter"` rule minimizes the same objective over one bandwidth per period
 #' by coordinate descent, starting from `start`. With `regularize = TRUE` both
 #' rules add `reg_const` times the estimated variance of the bias constants to
@@ -394,8 +398,8 @@ print.rddid <- function(x, digits = 4, ...) {
 #' @noRd
 .scheme_label <- function(s) {
   labels <- c(cs = "repeated cross-section",
-              pc = "panel, running variable fixed over time",
-              pv = "panel, running variable varies over time")
+              pc = "panel, running variable fixed over time: no unit changes side of the cutoff",
+              pv = "panel, running variable varies over time: some units change side")
   if (s %in% names(labels)) labels[[s]] else s   # e.g. "mixed" (rd_compstable pairs differ)
 }
 #' Confounding-trend assumption in words, for printouts
@@ -409,13 +413,14 @@ print.rddid <- function(x, digits = 4, ...) {
 #' @keywords internal
 #' @noRd
 .bandwidth_label <- function(bw) {
-  by_t <- function(v) paste(trimws(formatC(v, digits = 4, format = "g")), collapse = ", ")
+  by_t <- function(v) paste(sprintf("%s = %s", names(v), trimws(formatC(v, digits = 4, format = "g"))),
+                            collapse = ", ")
   switch(bw$method,
     fixed = sprintf("h = %.4g in every period (fixed), pilot b = %.4g", bw$h, bw$b),
-    joint = sprintf("common h = %.4g (rule \"joint\", AMSE-optimal for the aggregate)\n  Pilot bandwidth b by period: %s",
+    joint = sprintf("common h = %.4g (rule \"joint\", AMSE-optimal for the aggregate)\n  Pilot bandwidth b (period = value): %s",
                     bw$h, by_t(bw$b_by_period)),
-    cct   = sprintf("per-period CCT MSE-optimal (rule \"cct\"): h by period %s", by_t(bw$h_by_period)),
-    iter  = sprintf("period-specific (rule \"iter\", %d iterations): h by period %s", bw$niter,
+    cct   = sprintf("per-period CCT MSE-optimal (rule \"cct\"): h (period = value) %s", by_t(bw$h_by_period)),
+    iter  = sprintf("period-specific (rule \"iter\", %d iterations): h (period = value) %s", bw$niter,
                     by_t(bw$h_by_period)))
 }
 #' The two-row estimate table of print.rddid

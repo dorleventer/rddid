@@ -73,11 +73,11 @@ construction, so a p-value below 0.05 would be a false rejection, which a test a
 
 **If it rejects:** units sort around the cutoff according to their side in other
 periods, so the jump in the outcome partly reflects a jump in who the units are.
-The RD-DID estimate is then biased, whatever the other tests say.
+The RD-DID estimate can then be biased, whatever the other tests say.
 
 ## Composition stability: `rd_compstable()`
 
-**H0: the share of each type among the units above the cutoff is the same in the
+**H0: the share of each type among the units just above the cutoff is the same in the
 RD period and in each comparison period.**
 
 ```{r}
@@ -95,7 +95,9 @@ cs
 - `n above the cutoff`: the units above the cutoff in the RD year, in the
   comparison year, and in both. Units above the cutoff in both years appear on
   both sides of the stacked regression; the standard error accounts for them.
-- `Joint over pairs`: the sum of the pair statistics.
+- `Joint over pairs`: the sum of the pair statistics and degrees of freedom. It treats
+  the pairs as independent although they share the RD-period units, so read it as
+  approximate; the paper's test is per pair.
 
 Here `r pv(cs$p_value)`. Composition stability is false in `rddid_sim_pv`
 by construction: the units at the year-3 cutoff were mostly on the same side in

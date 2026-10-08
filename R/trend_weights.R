@@ -1,5 +1,5 @@
 # trend_weights.R -- comparison-period weights implied by the confounding-trend assumption
-# (constant: equal weights; linear: the line through the comparison jumps extrapolated to the RD
+# (constant: equal weights; linear: the least-squares line through the comparison jumps extrapolated to the RD
 # period; numeric: as given). Used by rddid().
 
 #' Period coefficients from a trend / weighting scheme

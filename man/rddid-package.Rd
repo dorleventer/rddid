@@ -10,8 +10,9 @@ period, the \strong{RD period}. A \strong{confounding policy} switches at the sa
 cutoff, in every period, so the jump in the outcome at the cutoff in the RD
 period mixes the treatment effect with the \strong{confounding jump}. In the
 \strong{comparison periods} the treatment of interest is uniform at the cutoff
-(nobody treated, or everybody treated), so the jump there \emph{is} the
-confounding jump. \code{\link[=rddid]{rddid()}} estimates the jump in every period by
+(nobody treated, or everybody treated), so, provided the
+treatment of interest has no anticipation or carry-over effects there (which the
+paper assumes), the jump there \emph{is} the confounding jump. \code{\link[=rddid]{rddid()}} estimates the jump in every period by
 local-linear RD and subtracts a weighted average of the comparison-period
 jumps from the RD-period jump. How the weights are set is the
 \strong{confounding-trend assumption}: constant (equal weights) or linear in time.

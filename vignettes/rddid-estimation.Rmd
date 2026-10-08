@@ -18,7 +18,7 @@ period, the **RD period**. A **confounding policy** switches at the same cutoff,
 in every period, so the jump in the outcome at the cutoff in the RD period mixes
 the treatment effect with the **confounding jump**. In the **comparison
 periods** the treatment of interest is uniform at the cutoff (nobody treated, or
-everybody treated), so the jump there *is* the confounding jump. `rddid()`
+everybody treated), so, provided the treatment of interest has no anticipation or carry-over effects there (which the paper assumes), the jump there *is* the confounding jump. `rddid()`
 estimates the jump in every period by local-linear RD and subtracts a weighted
 average of the comparison-period jumps from the RD-period jump:
 $$
@@ -80,8 +80,8 @@ Line by line:
   estimate untouched.
 - **`Bandwidth: common h`**: the default rule, `bwselect = "joint"`, uses one
   main bandwidth `h` in every period, chosen to minimize the asymptotic mean
-  squared error of the RD-DID estimate. **`Pilot bandwidth b by period`** gives
-  the bandwidths of the bias correction, one per period.
+  squared error of the RD-DID estimate. **`Pilot bandwidth b (period = value)`**
+  lists the bandwidth of the bias correction in each period, the RD period first.
 - **The two rows.** `Conventional` is the local-linear estimate with its
   conventional standard error. `Robust (bias-corrected)` is the bias-corrected
   estimate with its robust standard error (Calonico, Cattaneo and Titiunik,
@@ -187,7 +187,7 @@ with a running variable that drifts between years.
 **Type continuity.** H0: the share of each type jumps by zero at the cutoff, in
 every period. A rejection means units sort around the cutoff by their side in
 other periods, so the jump in the outcome partly reflects who the units are; the
-estimate is then biased, whatever the other tests say.
+estimate can then be biased, whatever the other tests say.
 
 ```{r}
 tc <- rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id")
@@ -198,8 +198,8 @@ With three years, a unit's type in one year is its pair of sides in the other
 two, in time order: `++` is above the cutoff in both, `+-` above in the earlier
 and below in the later, and so on.
 
-**Composition stability.** H0: the share of each type among the units above the
-cutoff is the same in the RD period and in each comparison period. A rejection
+**Composition stability.** H0: the share of each type among the units just above
+the cutoff is the same in the RD period and in each comparison period. A rejection
 means the units at the cutoff in the RD period are a different mix of types from
 those in a comparison period; the estimate is then valid only if the next test's
 null holds.

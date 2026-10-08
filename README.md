@@ -15,9 +15,11 @@ one period, the **RD period**. A **confounding policy** switches at the
 same cutoff, in every period, so the jump in the outcome at the cutoff
 in the RD period mixes the treatment effect with the **confounding
 jump**. In the **comparison periods** the treatment of interest is
-uniform at the cutoff (nobody treated, or everybody treated), so the
-jump there *is* the confounding jump. `rddid()` estimates the jump in
-every period by local-linear RD and subtracts a weighted average of the
+uniform at the cutoff (nobody treated, or everybody treated), so,
+provided the treatment of interest has no anticipation or carry-over
+effects there (which the paper assumes), the jump there *is* the
+confounding jump. `rddid()` estimates the jump in every period by
+local-linear RD and subtracts a weighted average of the
 comparison-period jumps from the RD-period jump. How the weights are set
 is the **confounding-trend assumption**: constant (equal weights) or
 linear in time.
@@ -45,9 +47,9 @@ fit <- rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 fit
 #> RD-DID estimate of the ATT in period 3
 #>   Comparison periods: 1, 2   (constant confounding trend; weights 0.5, 0.5)
-#>   Sampling scheme: panel, running variable fixed over time (detected from the data)
+#>   Sampling scheme: panel, running variable fixed over time: no unit changes side of the cutoff (detected from the data)
 #>   Bandwidth: common h = 0.2672 (rule "joint", AMSE-optimal for the aggregate)
-#>   Pilot bandwidth b by period: 0.3951, 0.4102, 0.3868
+#>   Pilot bandwidth b (period = value): 3 = 0.3951, 1 = 0.4102, 2 = 0.3868
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI
 #>   Conventional                 1.0927     0.1264    8.64   <0.001   [0.8450, 1.3405]
@@ -70,7 +72,7 @@ adds, for example type continuity:
 rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id")
 #> Test of a continuous type distribution  [rd_typecont()]
 #>   H0: the share of each type jumps by zero at the cutoff, in every period
-#>   Sampling scheme: panel, running variable varies over time (detected from the data)
+#>   Sampling scheme: panel, running variable varies over time: some units change side (detected from the data)
 #>   Periods: 1, 2, 3   Types: ++, +-, -+, --   Bandwidth: CCT MSE-optimal, chosen per cell
 #> 
 #>   Joint Wald chi-squared(9) = 4.782,  p = 0.853
