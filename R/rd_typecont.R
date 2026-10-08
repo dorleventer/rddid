@@ -232,6 +232,13 @@
 #'     \item{`scheme`}{the sampling scheme used; `scheme_requested` is the
 #'       argument as passed.}
 #'     \item{`estimand`}{`"att"` or `"atu"`, as passed.}
+#'     \item{`fits`}{the per-cell [rd_period()] fits, a list-matrix indexed by type and
+#'       period (`NULL` where a cell could not be fitted).}
+#'     \item{`data`}{the typed data by period: for each period a data frame with `id`, `R`
+#'       (the running variable) and `type`.}
+#'     \item{`sides`}{one row per unit with its running variable (`R_<period>`) and side of
+#'       the cutoff (`side_<period>`, `"+"`/`"-"`) in every period; [plot.rd_typecont()]
+#'       reads it.}
 #'     \item{`call`}{the matched call.}
 #'     \item{`per_period`}{a list by period; each element holds `ll_wald`, that
 #'       period's own Wald test (`stat`, `df`, `p`).}
@@ -296,7 +303,8 @@ rd_typecont <- function(data, x, time, id,
   if (is.null(h) && bwselect == "rot") h <- .rot_bandwidth_iqr(data[[x]])
 
   # ----- types, scheme, fits, covariance -----
-  period_types <- .build_types(data, x, time, id, c = cutoff)$period_types
+  types        <- .build_types(data, x, time, id, c = cutoff)
+  period_types <- types$period_types
   # radix: a locale-independent order, so the reference type dropped is the same on every machine
   type_values <- sort(unique(unlist(lapply(period_types, `[[`, "type"))), method = "radix")
   n_types     <- length(type_values)
@@ -323,10 +331,16 @@ rd_typecont <- function(data, x, time, id,
       estimand   = estimand,
       ll_wald    = wald_joint,
       per_period = per_period,
+      fits       = cells$fits,
+      data       = period_types,
+      sides      = types$wide,
       call       = cl,
       meta = list(
         periods      = period_labels,
         type_values  = type_values,
+        c            = cutoff,
+        t_rd         = t_rd,
+        kernel       = kernel,
         h            = if (!is.null(h)) h else NA_real_,
         bwselect     = bwselect,
         scheme       = use_scheme,

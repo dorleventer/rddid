@@ -227,7 +227,10 @@
     scheme      = use_scheme,
     n_trd       = refl$n_trd,
     n_t0        = refl$n_t0,
-    n_both      = refl$n_both
+    n_both      = refl$n_both,
+    # for plot.rd_compstable(): the reflected sample and each type's fit
+    fits        = fit$fits,
+    sample      = refl[c("x_trd", "type_trd", "x_t0", "type_t0")]
   )
 }
 
@@ -365,7 +368,10 @@
 #'       `type_values` (the types present); `scheme` (the scheme used for the
 #'       pair); and `n_trd`, `n_t0`, `n_both` (the number of units above the
 #'       cutoff in the RD period, in the comparison period, and in both; below
-#'       the cutoff under `estimand = "atu"`).}
+#'       the cutoff under `estimand = "atu"`); `fits` (each type's [rd_period()]
+#'       fit on the reflected sample, `NULL` where it failed) and `sample` (the
+#'       reflected sample: `x_trd`, `type_trd`, `x_t0`, `type_t0`), which feed
+#'       [plot.rd_compstable()].}
 #'     \item{`joint`}{the joint test again, as `ll_wald` (`stat`, `df`, `p`).}
 #'     \item{`meta`}{a list with `t_rd`, `comparisons`, `h` (the common
 #'       bandwidth, `NA` with `bwselect = "cct"`), `bwselect`, `c` (the cutoff
@@ -472,6 +478,7 @@ rd_compstable <- function(data, x, time, id, t_rd,
         comparisons = comparisons,
         h           = if (!is.null(h)) h else NA_real_,
         bwselect    = bwselect,
+        kernel      = kernel,
         c           = c_orig,
         bc          = bc,
         estimand    = estimand

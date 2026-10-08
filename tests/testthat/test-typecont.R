@@ -170,7 +170,7 @@ test_that("rd_typecont returns an rd_typecont object with expected fields", {
 
   expect_s3_class(out, "rd_typecont")
   expect_named(out, c("statistic", "df", "p_value", "scheme", "scheme_requested", "estimand",
-                      "ll_wald", "per_period", "call", "meta"))
+                      "ll_wald", "per_period", "fits", "data", "sides", "call", "meta"))
   expect_named(out$ll_wald, c("stat", "df", "p"))
   # per_period: one entry per period, each with its own LL-Wald
   expect_named(out$per_period, out$meta$periods)

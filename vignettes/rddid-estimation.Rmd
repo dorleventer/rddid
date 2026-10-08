@@ -271,6 +271,8 @@ the identification assumptions reads each printout in detail.
   bandwidths, and the standard error under each scheme.
 - [Checking the identification assumptions](rddid-validation-tests.html): the
   four tests one at a time.
+- [Pictures of the checks](rddid-plots.html): `plot()` on a fit and on each test,
+  and the switchers picture.
 
 ## References
 

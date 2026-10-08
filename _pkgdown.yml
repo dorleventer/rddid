@@ -19,6 +19,8 @@ navbar:
           href: articles/rddid-options.html
         - text: Checking the identification assumptions
           href: articles/rddid-validation-tests.html
+        - text: Pictures of the checks
+          href: articles/rddid-plots.html
     news:
       text: Changelog
       href: news/index.html
@@ -34,6 +36,7 @@ articles:
       - rddid-how-it-works
       - rddid-options
       - rddid-validation-tests
+      - rddid-plots
 
 reference:
   - title: Package overview
@@ -44,6 +47,7 @@ reference:
     contents:
       - rddid
       - summary.rddid
+      - plot.rddid
       - rddid-methods
       - rddid-tidiers
   - title: Check the assumptions
@@ -55,6 +59,11 @@ reference:
       - rd_compstable
       - rd_homog
       - rd_trendcell
+      - plot.rd_typecont
+      - plot.rd_compstable
+      - plot.rd_homog
+      - plot.rd_trendcell
+      - plot_switchers
   - title: Building blocks
     desc: The local-linear RD in one period and its CCT bandwidths, for working period by period.
     contents:

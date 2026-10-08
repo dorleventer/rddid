@@ -1,5 +1,19 @@
 # rddid 0.4.0.9000 (development)
 
+## 2026-10-08: plots
+
+* `plot()` methods, mirroring the validation figures of the paper's application: `plot(fit)`
+  draws the per-period RD plots behind an `rddid()` estimate (binned outcome, local-linear
+  fits on each side, the jump at the cutoff); `plot()` of an `rd_typecont` or `rd_compstable`
+  result draws the binned share of each type with its fitted lines on both sides of the
+  (artificial) cutoff; `plot()` of an `rd_homog` or `rd_trendcell` result draws the within-type
+  confounding jumps with 95% intervals by period. `plot_switchers()` draws the running
+  variable in one period against another and counts the units that change side. All return
+  ggplot objects (ggplot2 in Suggests). New article *Pictures of the checks*.
+* To feed the plots, the objects now also carry what the methods read: `rddid()$data` (the
+  per-period data used), `rd_typecont()$fits`/`$data`, each `rd_compstable()` pair's `fits`
+  and `sample`, and `rd_typecont()$meta$c`. Nothing else changed.
+
 ## 2026-10-08: five bug fixes found during the UX sweep
 
 * `rd_homog()` / `rd_trendcell()` with `p > 1`: the per-cell CCT bandwidth is now chosen for

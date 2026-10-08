@@ -89,7 +89,10 @@ other period of the pair last);
 \code{type_values} (the types present); \code{scheme} (the scheme used for the
 pair); and \code{n_trd}, \code{n_t0}, \code{n_both} (the number of units above the
 cutoff in the RD period, in the comparison period, and in both; below
-the cutoff under \code{estimand = "atu"}).}
+the cutoff under \code{estimand = "atu"}); \code{fits} (each type's \code{\link[=rd_period]{rd_period()}}
+fit on the reflected sample, \code{NULL} where it failed) and \code{sample} (the
+reflected sample: \code{x_trd}, \code{type_trd}, \code{x_t0}, \code{type_t0}), which feed
+\code{\link[=plot.rd_compstable]{plot.rd_compstable()}}.}
 \item{\code{joint}}{the joint test again, as \code{ll_wald} (\code{stat}, \code{df}, \code{p}).}
 \item{\code{meta}}{a list with \code{t_rd}, \code{comparisons}, \code{h} (the common
 bandwidth, \code{NA} with \code{bwselect = "cct"}), \code{bwselect}, \code{c} (the cutoff
@@ -193,6 +196,11 @@ confidence intervals for regression-discontinuity designs. \emph{Econometrica}
 \code{tidy()} in \link{rddid-tidiers} for a one-row summary.
 
 Other tests of the assumptions: 
+\code{\link{plot.rd_compstable}()},
+\code{\link{plot.rd_homog}()},
+\code{\link{plot.rd_trendcell}()},
+\code{\link{plot.rd_typecont}()},
+\code{\link{plot_switchers}()},
 \code{\link{rd_homog}()},
 \code{\link{rd_trendcell}()},
 \code{\link{rd_typecont}()}

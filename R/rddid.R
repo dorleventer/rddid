@@ -207,6 +207,8 @@
 #'       period first (index by name).}
 #'     \item{`n_by_period`}{the number of observations in each period.}
 #'     \item{`level`, `c`, `p`, `q`, `kernel`}{as passed.}
+#'     \item{`data`}{the per-period data used (a named list of data frames with
+#'       columns `y`, `x`, `id`), for [plot.rddid()].}
 #'     \item{`call`}{the matched call.}
 #'   }
 #'
@@ -304,6 +306,7 @@ rddid <- function(data, y, x, time, id = NULL, t_rd,
     bandwidth = bw$info, fits = fits, level = level,
     p = p, q = q, kernel = kernel, c = cutoff,
     n_by_period = vapply(fits, function(f) f$n, numeric(1)),
+    data = plist,
     call = cl
   ), class = "rddid")
 }

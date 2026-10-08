@@ -62,6 +62,9 @@ rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id")
 ```
 
 The other three are `rd_compstable()`, `rd_homog()` and `rd_trendcell()`.
+`plot()` draws any fit or test (one RD plot per period; the binned type shares
+with their fitted lines; the within-type jumps), and `plot_switchers()` shows who
+changes side of the cutoff between two periods.
 
 ## Learn more
 

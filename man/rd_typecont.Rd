@@ -70,6 +70,13 @@ periods, its degrees of freedom and its chi-squared p-value.}
 \item{\code{scheme}}{the sampling scheme used; \code{scheme_requested} is the
 argument as passed.}
 \item{\code{estimand}}{\code{"att"} or \code{"atu"}, as passed.}
+\item{\code{fits}}{the per-cell \code{\link[=rd_period]{rd_period()}} fits, a list-matrix indexed by type and
+period (\code{NULL} where a cell could not be fitted).}
+\item{\code{data}}{the typed data by period: for each period a data frame with \code{id}, \code{R}
+(the running variable) and \code{type}.}
+\item{\code{sides}}{one row per unit with its running variable (\verb{R_<period>}) and side of
+the cutoff (\verb{side_<period>}, \code{"+"}/\code{"-"}) in every period; \code{\link[=plot.rd_typecont]{plot.rd_typecont()}}
+reads it.}
 \item{\code{call}}{the matched call.}
 \item{\code{per_period}}{a list by period; each element holds \code{ll_wald}, that
 period's own Wald test (\code{stat}, \code{df}, \code{p}).}
@@ -156,6 +163,11 @@ confidence intervals for regression-discontinuity designs. \emph{Econometrica}
 \code{tidy()} in \link{rddid-tidiers} for a one-row summary.
 
 Other tests of the assumptions: 
+\code{\link{plot.rd_compstable}()},
+\code{\link{plot.rd_homog}()},
+\code{\link{plot.rd_trendcell}()},
+\code{\link{plot.rd_typecont}()},
+\code{\link{plot_switchers}()},
 \code{\link{rd_compstable}()},
 \code{\link{rd_homog}()},
 \code{\link{rd_trendcell}()}

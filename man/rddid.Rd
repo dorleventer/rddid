@@ -154,6 +154,8 @@ intermediate quantities of the rule (\code{bws} for \code{"cct"} and \code{"iter
 period first (index by name).}
 \item{\code{n_by_period}}{the number of observations in each period.}
 \item{\code{level}, \code{c}, \code{p}, \code{q}, \code{kernel}}{as passed.}
+\item{\code{data}}{the per-period data used (a named list of data frames with
+columns \code{y}, \code{x}, \code{id}), for \code{\link[=plot.rddid]{plot.rddid()}}.}
 \item{\code{call}}{the matched call.}
 }
 }
@@ -294,6 +296,7 @@ confidence intervals for regression-discontinuity designs. \emph{Econometrica}
 example data \link{rddid_sim} and \link{rddid_sim_pv}.
 
 Other RD-DID estimation: 
+\code{\link{plot.rddid}()},
 \code{\link{rd_bw_cct}()},
 \code{\link{rd_period}()}
 }

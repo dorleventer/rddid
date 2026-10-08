@@ -99,6 +99,7 @@ confidence intervals for regression-discontinuity designs. \emph{Econometrica}
 }
 \seealso{
 Other RD-DID estimation: 
+\code{\link{plot.rddid}()},
 \code{\link{rd_bw_cct}()},
 \code{\link{rddid}()}
 }

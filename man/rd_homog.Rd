@@ -194,6 +194,11 @@ confidence intervals for regression-discontinuity designs. \emph{Econometrica}
 \code{tidy()} in \link{rddid-tidiers} for a one-row summary.
 
 Other tests of the assumptions: 
+\code{\link{plot.rd_compstable}()},
+\code{\link{plot.rd_homog}()},
+\code{\link{plot.rd_trendcell}()},
+\code{\link{plot.rd_typecont}()},
+\code{\link{plot_switchers}()},
 \code{\link{rd_compstable}()},
 \code{\link{rd_trendcell}()},
 \code{\link{rd_typecont}()}
