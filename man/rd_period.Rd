@@ -2,7 +2,7 @@
 % Please edit documentation in R/rd_period.R
 \name{rd_period}
 \alias{rd_period}
-\title{Single-period local-linear RD discontinuity}
+\title{Local-linear RD in one period (building block)}
 \usage{
 rd_period(
   y,
@@ -17,65 +17,89 @@ rd_period(
 )
 }
 \arguments{
-\item{y}{outcome vector.}
+\item{y}{the outcome (a numeric vector).}
 
-\item{x}{running variable.}
+\item{x}{the running variable (a numeric vector, same length as \code{y}).}
 
-\item{h}{main (point-estimate) bandwidth.}
+\item{h}{the main bandwidth (point estimate).}
 
-\item{b}{pilot (bias-correction) bandwidth; defaults to \code{h}.}
+\item{b}{the pilot bandwidth (bias correction); defaults to \code{h}.}
 
-\item{id}{optional unit identifiers, needed only when this period will be
-combined with others under panel sampling. If \code{NULL}, sequential ids are
-assigned and no cross-period matching is possible.}
+\item{id}{optional unit identifiers (a vector, same length as \code{y}), needed
+only to combine this period with others in a panel. With \code{NULL} (default)
+the observations are numbered \verb{1, 2, ...}, so they cannot be matched
+across periods.}
 
-\item{c}{cutoff (default 0).}
+\item{c}{the cutoff (default 0). A unit with \code{x >= c} is above the cutoff.}
 
-\item{p}{point-estimate polynomial order (default 1, local linear).}
+\item{p}{order of the local polynomial for the point estimate (default 1,
+local linear).}
 
-\item{q}{bias-correction polynomial order (default 2); must exceed \code{p}.}
+\item{q}{order of the local polynomial for the bias correction (default 2);
+must exceed \code{p}.}
 
-\item{kernel}{\code{"triangular"} (default), \code{"epanechnikov"}, or \code{"uniform"}.}
+\item{kernel}{the kernel: \code{"triangular"} (default), \code{"epanechnikov"} or
+\code{"uniform"}.}
 }
 \value{
-An object of class \code{"rd_period"}: a list with the conventional and
-bias-corrected discontinuity (\code{D}, \code{D_bc}) and their variances (\code{V_D},
-\code{V_D_bc}), the per-period plug-in bias and variance constants used for
-joint bandwidth selection (\verb{b_const = (p+1)! (D - D_bc) / h^\{p+1\}} and
-\verb{v_const = n h V_D}, the plug-ins for the constants \code{B_t} and \code{V_t} of
-\code{eq:per-period-orders} in Appendix B.3), the effective
-sample size \code{n}, the bandwidths, and a per-side list \code{sides} holding, for
-each side \code{"+"} and \code{"-"}, the active units' \code{id}, their conventional /
-bias-corrected \code{g} vectors, the conventional intercept at the cutoff
-(\code{beta0}), and the conventional local-linear \code{slope}.  The fitted line on
-a side is \code{beta0 + slope * (x - c)}.
+An object of class \code{"rd_period"}, a list with:
+\describe{
+\item{\code{D}, \code{V_D}}{the conventional jump and its variance.}
+\item{\code{D_bc}, \code{V_D_bc}}{the bias-corrected jump and its robust
+variance.}
+\item{\code{b_const}, \code{v_const}}{plug-in constants used by the bandwidth
+rules (an estimate of the bias constant, from the gap between the
+conventional and bias-corrected jumps, and \code{n * h * V_D}).}
+\item{\code{n}}{the number of observations supplied.}
+\item{\code{h}, \code{b}, \code{c}, \code{p}, \code{q}, \code{kernel}}{as passed.}
+\item{\code{sides}}{a list with one element per side of the cutoff, \code{"+"}
+(above) and \code{"-"} (below), each holding the \code{id} of the observations
+used, their conventional and bias-corrected \code{g} vectors (\code{g}, \code{g_bc})
+and \code{g_diff} (for the variance of the estimated bias), the
+conventional intercept at the cutoff \code{beta0}, its bias-corrected
+version \code{beta0_bc}, and the conventional \code{slope}. The fitted line on a
+side is \code{beta0 + slope * (x - c)}.}
+}
 }
 \description{
-Estimates the period-\eqn{t} outcome discontinuity
-\eqn{D_t = \beta^{(0)}_{(+)} - \beta^{(0)}_{(-)}} by a standard local-linear
-regression discontinuity, conventional and robust-bias-corrected
-(Calonico, Cattaneo and Titiunik 2014). At a given bandwidth pair
-(\code{h}, \code{b}) it reproduces the Conventional and Bias-Corrected estimates and
-the Conventional and Robust standard errors of \pkg{rdrobust} to machine
-precision. This is the per-period engine that \code{\link[=rddid]{rddid()}} aggregates across
-periods.
+The building block that \code{\link[=rddid]{rddid()}} runs in every period: the jump in the
+outcome at the cutoff in one period, estimated by local-linear RD, both
+conventional and bias-corrected, with standard errors. Unlike \code{\link[=rddid]{rddid()}} it
+takes vectors (\code{y}, \code{x}, \code{id}), not a data frame and column names, and the
+bandwidths must be given, for example from \code{\link[=rd_bw_cct]{rd_bw_cct()}}. At a given pair
+(\code{h}, \code{b}) it reproduces the conventional and bias-corrected estimates and
+the conventional and robust standard errors of \code{\link[rdrobust:rdrobust]{rdrobust::rdrobust()}} with
+\code{vce = "hc1"}.
 }
 \details{
-The function returns, for each side of the cutoff, the per-unit influence
-weight on the intercept times its local-linear residual, \code{g}. These \code{g}
-vectors are the single primitive the rest of the package reuses:
-\itemize{
-\item the discontinuity variance is \eqn{V(\hat D_t) = \sum g_{(+)}^2 + \sum g_{(-)}^2};
-\item any cross-period covariance is a merge of two periods' \code{g} vectors on
-shared unit \code{id} (see the internal covariance helpers);
-\item the bandwidth constants are read off \code{V_D} and the conventional /
-bias-corrected gap.
+On each side of the cutoff the function keeps, for every observation within
+the main or pilot bandwidth, its influence on the intercept times its
+residual (\code{g}). These vectors are what the rest of the package reuses: the
+variance of the jump is the sum of the squared \code{g} on both sides, and in a
+panel the covariance between two periods' jumps sums the products of \code{g}
+over the units present in both periods, matched on \code{id}. Variances use the
+HC1 convention of \pkg{rdrobust}: residuals are scaled by
+\eqn{\sqrt{n_s / (n_s - k)}}{sqrt(n_s / (n_s - k))}, with \eqn{n_s} the
+observations used on that side and \eqn{k} the number of fitted
+coefficients; the bias-corrected variance uses the residuals of the order-\code{q}
+pilot fit at \code{b}.
 }
-Variances use the HC1 finite-sample convention of \pkg{rdrobust}
-(\code{vce = "hc1"}): residuals are scaled by \code{sqrt(n_s / (n_s - k))} with \code{n_s}
-the side's active sample and \code{k} the number of fitted coefficients; the BC
-variance uses the residuals of the order-\code{q} pilot fit at \code{b}, as in
-\pkg{rdrobust}. The code follows the matrix form of Appendix B of Leventer
-and Nevo; the object-by-object map is \code{dev/appB_map.md} in the source
-repository.
+\examples{
+# the RD period (year 3) of rddid_sim, where the jump is 0.5 + 1 = 1.5
+d3 <- rddid_sim[rddid_sim$year == 3, ]
+bw <- rd_bw_cct(y = d3$Y, x = d3$R)
+fit <- rd_period(y = d3$Y, x = d3$R, h = bw[["h"]], b = bw[["b"]], id = d3$id)
+fit
+c(jump = fit$D_bc, se = sqrt(fit$V_D_bc))
 }
+\references{
+Calonico, S., M. D. Cattaneo and R. Titiunik (2014). Robust nonparametric
+confidence intervals for regression-discontinuity designs. \emph{Econometrica}
+82(6), 2295-2326.
+}
+\seealso{
+Other RD-DID estimation: 
+\code{\link{rd_bw_cct}()},
+\code{\link{rddid}()}
+}
+\concept{RD-DID estimation}

@@ -351,24 +351,37 @@
        objective = amse(h), amse_fun = amse, pilot_bws = cs$pilot_bws)
 }
 
-#' CCT (MSE-optimal) bandwidth for a single local-linear RD
+#' CCT bandwidths for one period (building block)
 #'
-#' Returns the Calonico–Cattaneo–Titiunik MSE-optimal bandwidths `h` and `b`
-#' for a single local-linear RD using \pkg{rdrobust}. Falls back gracefully when
-#' \pkg{rdrobust} is unavailable, the call fails, or the returned bandwidth is
-#' non-positive/non-finite.
+#' The building block behind `rddid(bwselect = "cct")`, the pilot fits of the
+#' `"joint"` and `"iter"` rules, and the default bandwidths of the four tests
+#' of the assumptions: the MSE-optimal main and pilot bandwidths of Calonico,
+#' Cattaneo and Titiunik (2014) for a local-linear RD in one period, from
+#' [rdrobust::rdbwselect()] with `bwselect = "mserd"`. Like [rd_period()] it
+#' takes vectors, not a data frame and column names.
 #'
-#' @param y Outcome vector.
-#' @param x Running variable vector.
-#' @param c Cutoff (default 0).
-#' @param p Polynomial order (default 1L, local linear).
-#' @param kernel Kernel type: `"triangular"` (default), `"epanechnikov"`, or
-#'   `"uniform"`.
+#' If `rdbwselect()` fails, or returns a main bandwidth that is not a positive
+#' number, `rd_bw_cct()` falls back to `h = b = 0.5 * IQR(x)` (`sd(x)` if the
+#' interquartile range is zero) and says so in a message.
 #'
-#' @return A named numeric vector `c(h = ..., b = ...)` with the main and pilot
-#'   bandwidths.  When the CCT computation is unavailable, both equal
-#'   `0.5 * IQR(x)` (or `sd(x)` if IQR is zero), and a message is emitted
-#'   naming the reason.
+#' @param y the outcome (a numeric vector).
+#' @param x the running variable (a numeric vector, same length as `y`).
+#' @param p order of the local polynomial (default 1, local linear).
+#' @inheritParams rddid
+#'
+#' @return A named numeric vector `c(h = , b = )`: the main bandwidth (point
+#'   estimate) and the pilot bandwidth (bias correction).
+#'
+#' @references
+#' Calonico, S., M. D. Cattaneo and R. Titiunik (2014). Robust nonparametric
+#' confidence intervals for regression-discontinuity designs. *Econometrica*
+#' 82(6), 2295-2326.
+#'
+#' @family RD-DID estimation
+#'
+#' @examples
+#' # each year of rddid_sim gets its own bandwidths (what bwselect = "cct" uses)
+#' sapply(split(rddid_sim, rddid_sim$year), function(d) rd_bw_cct(y = d$Y, x = d$R))
 #' @export
 rd_bw_cct <- function(y, x, c = 0, p = 1L, kernel = "triangular") {
   fallback <- function(reason) {

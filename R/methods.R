@@ -6,8 +6,8 @@
 #' Summary of an RD-DID fit
 #'
 #' `summary()` of an [rddid()] object adds, to what `print()` shows, a per-period table (the
-#' local-linear jump in every period with its bandwidth and sample size, and its coefficient
-#' in the aggregate) and the standard error of the aggregate under each of the three sampling
+#' local-linear jump in every period with its bandwidths and sample size, and its coefficient
+#' in the estimate) and the standard error of the estimate under each of the three sampling
 #' schemes.
 #'
 #' @param object an object of class `"rddid"`.
@@ -16,9 +16,9 @@
 #' @param ... unused.
 #' @return `summary()` returns an object of class `"summary.rddid"`: a list with `fit` (the
 #'   object) and `per_period`, a data frame with one row per period and columns `period`,
-#'   `role` (`"RD"` or `"comparison"`), `coef` (its coefficient in the aggregate, +1 for the RD
+#'   `role` (`"RD"` or `"comparison"`), `coef` (its coefficient in the estimate, 1 for the RD
 #'   period and minus its weight for a comparison period), `n`, `h`, `b`, `jump` and `se` (the
-#'   conventional local-linear discontinuity and its standard error) and `jump_bc`, `se_rb`
+#'   conventional local-linear jump and its standard error) and `jump_bc`, `se_rb`
 #'   (bias-corrected jump, robust standard error).
 #' @examples
 #' fit <- rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
@@ -71,6 +71,10 @@ print.summary.rddid <- function(x, digits = 4, ...) {
 
 #' Coefficients, confidence intervals and sample size of an RD-DID fit
 #'
+#' `coef()` returns the two estimates of an [rddid()] fit, `Conventional` (local-linear) and
+#' `Robust` (bias-corrected); `confint()` their confidence intervals under the fit's sampling
+#' scheme; `nobs()` the number of observations used.
+#'
 #' @param object an object of class `"rddid"`.
 #' @param parm which rows of the estimate table: `"Conventional"` (local-linear estimate,
 #'   conventional standard error), `"Robust"` (bias-corrected estimate, robust standard
@@ -78,7 +82,8 @@ print.summary.rddid <- function(x, digits = 4, ...) {
 #' @param level confidence level; `NULL` (default) returns the interval stored in the object
 #'   (at the `level` given to [rddid()]).
 #' @param ... unused.
-#' @return `coef()` a named numeric vector; `confint()` a matrix with one row per `parm` and
+#' @return `coef()` a named numeric vector, the `Conventional` and `Robust` estimates;
+#'   `confint()` a matrix with one row per `parm` and
 #'   columns giving the lower and upper limits; `nobs()` the number of unit-period rows used
 #'   across all periods.
 #' @examples

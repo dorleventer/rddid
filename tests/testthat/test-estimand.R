@@ -245,7 +245,7 @@ test_that("print methods label ATU designs and stay silent on 'estimand' for att
                            comparisons = 1, bwselect = "cct")
   cs_atu <- rd_compstable(d, x = "R", time = "t", id = "id", t_rd = 2,
                            comparisons = 1, bwselect = "cct", estimand = "atu")
-  expect_output(print(cs_atu), "below-cutoff shares")
+  expect_output(print(cs_atu), "below the cutoff")
   expect_false(grepl("estimand", paste(capture.output(print(cs_att)), collapse = "\n")))
 
   tc_att <- rd_typecont(d, x = "R", time = "t", id = "id", bwselect = "cct")

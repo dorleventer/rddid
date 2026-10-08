@@ -21,15 +21,15 @@
 \value{
 \code{summary()} returns an object of class \code{"summary.rddid"}: a list with \code{fit} (the
 object) and \code{per_period}, a data frame with one row per period and columns \code{period},
-\code{role} (\code{"RD"} or \code{"comparison"}), \code{coef} (its coefficient in the aggregate, +1 for the RD
+\code{role} (\code{"RD"} or \code{"comparison"}), \code{coef} (its coefficient in the estimate, 1 for the RD
 period and minus its weight for a comparison period), \code{n}, \code{h}, \code{b}, \code{jump} and \code{se} (the
-conventional local-linear discontinuity and its standard error) and \code{jump_bc}, \code{se_rb}
+conventional local-linear jump and its standard error) and \code{jump_bc}, \code{se_rb}
 (bias-corrected jump, robust standard error).
 }
 \description{
 \code{summary()} of an \code{\link[=rddid]{rddid()}} object adds, to what \code{print()} shows, a per-period table (the
-local-linear jump in every period with its bandwidth and sample size, and its coefficient
-in the aggregate) and the standard error of the aggregate under each of the three sampling
+local-linear jump in every period with its bandwidths and sample size, and its coefficient
+in the estimate) and the standard error of the estimate under each of the three sampling
 schemes.
 }
 \examples{

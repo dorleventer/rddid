@@ -26,12 +26,15 @@ error), or both (default).}
 (at the \code{level} given to \code{\link[=rddid]{rddid()}}).}
 }
 \value{
-\code{coef()} a named numeric vector; \code{confint()} a matrix with one row per \code{parm} and
+\code{coef()} a named numeric vector, the \code{Conventional} and \code{Robust} estimates;
+\code{confint()} a matrix with one row per \code{parm} and
 columns giving the lower and upper limits; \code{nobs()} the number of unit-period rows used
 across all periods.
 }
 \description{
-Coefficients, confidence intervals and sample size of an RD-DID fit
+\code{coef()} returns the two estimates of an \code{\link[=rddid]{rddid()}} fit, \code{Conventional} (local-linear) and
+\code{Robust} (bias-corrected); \code{confint()} their confidence intervals under the fit's sampling
+scheme; \code{nobs()} the number of observations used.
 }
 \examples{
 fit <- rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)

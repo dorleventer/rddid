@@ -2,31 +2,51 @@
 % Please edit documentation in R/bandwidth.R
 \name{rd_bw_cct}
 \alias{rd_bw_cct}
-\title{CCT (MSE-optimal) bandwidth for a single local-linear RD}
+\title{CCT bandwidths for one period (building block)}
 \usage{
 rd_bw_cct(y, x, c = 0, p = 1L, kernel = "triangular")
 }
 \arguments{
-\item{y}{Outcome vector.}
+\item{y}{the outcome (a numeric vector).}
 
-\item{x}{Running variable vector.}
+\item{x}{the running variable (a numeric vector, same length as \code{y}).}
 
-\item{c}{Cutoff (default 0).}
+\item{c}{the cutoff (default 0). A unit with \code{x >= c} is above the cutoff.}
 
-\item{p}{Polynomial order (default 1L, local linear).}
+\item{p}{order of the local polynomial (default 1, local linear).}
 
-\item{kernel}{Kernel type: \code{"triangular"} (default), \code{"epanechnikov"}, or
+\item{kernel}{the kernel: \code{"triangular"} (default), \code{"epanechnikov"} or
 \code{"uniform"}.}
 }
 \value{
-A named numeric vector \code{c(h = ..., b = ...)} with the main and pilot
-bandwidths.  When the CCT computation is unavailable, both equal
-\code{0.5 * IQR(x)} (or \code{sd(x)} if IQR is zero), and a message is emitted
-naming the reason.
+A named numeric vector \code{c(h = , b = )}: the main bandwidth (point
+estimate) and the pilot bandwidth (bias correction).
 }
 \description{
-Returns the Calonico–Cattaneo–Titiunik MSE-optimal bandwidths \code{h} and \code{b}
-for a single local-linear RD using \pkg{rdrobust}. Falls back gracefully when
-\pkg{rdrobust} is unavailable, the call fails, or the returned bandwidth is
-non-positive/non-finite.
+The building block behind \code{rddid(bwselect = "cct")}, the pilot fits of the
+\code{"joint"} and \code{"iter"} rules, and the default bandwidths of the four tests
+of the assumptions: the MSE-optimal main and pilot bandwidths of Calonico,
+Cattaneo and Titiunik (2014) for a local-linear RD in one period, from
+\code{\link[rdrobust:rdbwselect]{rdrobust::rdbwselect()}} with \code{bwselect = "mserd"}. Like \code{\link[=rd_period]{rd_period()}} it
+takes vectors, not a data frame and column names.
 }
+\details{
+If \code{rdbwselect()} fails, or returns a main bandwidth that is not a positive
+number, \code{rd_bw_cct()} falls back to \code{h = b = 0.5 * IQR(x)} (\code{sd(x)} if the
+interquartile range is zero) and says so in a message.
+}
+\examples{
+# each year of rddid_sim gets its own bandwidths (what bwselect = "cct" uses)
+sapply(split(rddid_sim, rddid_sim$year), function(d) rd_bw_cct(y = d$Y, x = d$R))
+}
+\references{
+Calonico, S., M. D. Cattaneo and R. Titiunik (2014). Robust nonparametric
+confidence intervals for regression-discontinuity designs. \emph{Econometrica}
+82(6), 2295-2326.
+}
+\seealso{
+Other RD-DID estimation: 
+\code{\link{rd_period}()},
+\code{\link{rddid}()}
+}
+\concept{RD-DID estimation}

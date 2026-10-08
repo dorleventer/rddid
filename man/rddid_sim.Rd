@@ -8,7 +8,7 @@
 A data frame with 3,000 rows (one per unit-year) and 6 columns:
 \describe{
 \item{id}{unit identifier, 1 to 1000.}
-\item{year}{1, 2 (comparison years) or 3 (the RD year).}
+\item{year}{1, 2 (the comparison periods) or 3 (the RD period).}
 \item{R}{running variable, uniform on [-1, 1]; the cutoff is 0.}
 \item{V}{confounding policy, 1 if \code{R >= 0} (every year).}
 \item{W}{treatment of interest, 1 if \code{R >= 0} and \code{year == 3}.}
@@ -26,14 +26,17 @@ rddid_sim
 A simulated panel in the setting of Leventer and Nevo: 1,000 units observed in
 three years. A confounding policy \code{V} switches on above the cutoff (\code{R >= 0})
 in \strong{every} year and raises the outcome by 0.5; the treatment of interest \code{W}
-switches on above the cutoff only in year 3, the RD year, and raises the
-outcome by 1. Years 1 and 2 are comparison years (nobody is treated), so the
-jump in \code{Y} at the cutoff there is the confounding jump alone. The RD-DID
-target is ATT(year 3) = 1; a plain RD in year 3 would recover 1.5.
+switches on above the cutoff only in year 3, the RD period, and raises the
+outcome by 1. Years 1 and 2 are the comparison periods (nobody is treated),
+so the jump in \code{Y} at the cutoff there is the confounding jump alone. The
+target of \code{\link[=rddid]{rddid()}} is the ATT in year 3, which is 1; a plain RD in year 3
+would recover 1.5, the effect plus the confounding jump.
 }
 \details{
 The running variable does not move between years, so every unit stays on the
-same side of the cutoff ("panel, time-constant running variable").
+same side of the cutoff (sampling scheme "panel, running variable fixed over
+time"). The tests of the assumptions are not informative here; use
+\link{rddid_sim_pv} for them.
 }
 \examples{
 head(rddid_sim)

@@ -25,10 +25,10 @@ check_rddid_invariance <- function(cfg, bwselect, weights = "constant") {
 
   orig <- rddid(cfg$data, y = "Y", x = "R", time = "t", id = "id",
                 t_rd = cfg$t_rd, comparisons = cfg$comparisons,
-                scheme = cfg$scheme, bwselect = bwselect, weights = weights)
+                scheme = cfg$scheme, bwselect = bwselect, trend = weights)
   mir  <- rddid(mirror_x(cfg$data), y = "Y", x = "R", time = "t", id = "id",
                 t_rd = cfg$t_rd, comparisons = cfg$comparisons,
-                scheme = cfg$scheme, bwselect = bwselect, weights = weights)
+                scheme = cfg$scheme, bwselect = bwselect, trend = weights)
 
   for (row in c("Conventional", "Robust")) {
     expect_equal(orig$estimates[row, "est"], -mir$estimates[row, "est"],

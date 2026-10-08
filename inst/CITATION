@@ -1,0 +1,17 @@
+bibentry(
+  bibtype  = "Misc",
+  key      = "LeventerNevo2024",
+  header   = "To cite rddid in publications, please cite the paper:",
+  title    = "Correcting Invalid Regression Discontinuity Designs Using Multiple Time-Period Data",
+  author   = c(person("Dor", "Leventer"), person("Daniel", "Nevo")),
+  year     = "2024",
+  note     = "arXiv:2408.05847",
+  eprint   = "2408.05847",
+  archivePrefix = "arXiv",
+  url      = "https://arxiv.org/abs/2408.05847",
+  textVersion = paste(
+    "Leventer, D. and D. Nevo (2024).",
+    "Correcting Invalid Regression Discontinuity Designs Using Multiple Time-Period Data.",
+    "arXiv:2408.05847. https://arxiv.org/abs/2408.05847"
+  )
+)

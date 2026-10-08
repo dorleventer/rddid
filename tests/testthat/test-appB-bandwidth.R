@@ -108,9 +108,9 @@ test_that("B.4 joint selectors do not depend on which period carries the t_rd la
   }
   # through rddid(): relabelling t_rd with the matching comparison weights
   ra <- rddid(d, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, comparisons = c(2, 1),
-              weights = c(-1, 2), bwselect = "joint", scheme = "pc")
+              trend = c(-1, 2), bwselect = "joint", scheme = "pc")
   rb <- rddid(d, y = "Y", x = "R", time = "year", id = "id", t_rd = 2, comparisons = c(3, 1),
-              weights = c(-1, 2), bwselect = "joint", scheme = "pc")
+              trend = c(-1, 2), bwselect = "joint", scheme = "pc")
   cols <- c("est", "se_cs", "se_pc", "se_pv")
   expect_equal(ra$estimates[, cols], rb$estimates[, cols], tolerance = 1e-10)
   expect_equal(ra$bandwidth$h, rb$bandwidth$h, tolerance = 1e-12)

@@ -1,6 +1,4 @@
 # Test of the constant-within-type-confounding assumption.
-# Manuscript ref: Leventer and Nevo, "Correcting Invalid RD Designs",
-# paragraph "Constant confounding discontinuity within types" of Section 4.4.
 #
 # The test is run in COMPARISON PERIODS ONLY.  In comparison period t0 the
 # outcome RD jump equals the pure confounding:
@@ -27,156 +25,158 @@
 # Main exported function
 # ---------------------------------------------------------------------------
 
-#' Test of a constant within-type confounding discontinuity
+#' Test of constant within-type confounding
 #'
-#' Pre-trends check for the constant within-type confounding assumption
-#' (Section 4.4 of Leventer and Nevo), in the difference-in-differences sense:
-#' the assumption concerns the RD period, where the confounding is not
-#' separately observed, so the test asks whether the per-cell outcome RD
-#' discontinuity is constant (or linear) **across the comparison periods**. In
-#' a comparison period \eqn{t_0} the discontinuity equals the confounding,
-#' \eqn{D_{t_0}(k) = \alpha_{t_0,0}(k)}, where \eqn{k} is the unit's cell
-#' (its side of the cutoff in \eqn{t_{\mathrm{RD}}} under the default
-#' \code{type_by = "rd_side"}). The function estimates the jump per cell via
-#' [rd_period()], then forms a joint Wald test that the within-cell jumps
-#' conform to the hypothesised trend \eqn{g_0} across comparison periods.
+#' When the running variable moves over time, some units are above the cutoff
+#' in one period and below it in another. A unit's **type** is the side of the
+#' cutoff it is on in the other period(s); by default here, its side in the RD
+#' period, which stays fixed across the comparison periods. The
+#' confounding-trend assumption of [rddid()] must then hold within each type.
+#' It concerns the RD period, where the confounding jump is not observed
+#' separately, so, like a pre-trends check in difference-in-differences,
+#' `rd_trendcell()` tests it across the comparison periods: the null is that
+#' **within each type, the confounding jump is the same in every comparison
+#' period** (with `trend = "linear"`: moves linearly in time). A rejection
+#' means the comparison periods do not support the trend assumption, and the
+#' estimate of [rddid()] under that assumption can be biased; if the jumps
+#' move linearly, consider `rddid(trend = "linear")`. With a running variable
+#' fixed over time (as in [rddid_sim]) the types are degenerate and the test is
+#' not informative.
 #'
-#' ## Null hypothesis
+#' @details
+#' ## What is estimated
 #'
-#' \deqn{H_0 : D_{t_0}(k) \text{ is } g_0 \text{ in } t_0,
-#'   \text{ jointly for all cells } k,}
-#' where \eqn{g_0} is `trend = "constant"` (equal jumps across all comparison
-#' periods) or `trend = "linear"` (jumps lie on a line in \eqn{t_0}).
+#' Each unit gets one type, fixed across the comparison periods. In each
+#' comparison period and for each type, a local-linear RD of the outcome on the
+#' running variable gives that type's confounding jump. Under
+#' `trend = "constant"` each type's jump in every comparison period is compared
+#' with its jump in the first one (one difference fewer than the number of
+#' comparison periods, per type). Under `trend = "linear"` the test uses the
+#' second differences of the time-ordered jumps (two fewer per type), so it
+#' needs at least three comparison periods; if no type has jumps in three, the
+#' function returns `statistic = NA` and `df = 0`, with a message. All
+#' differences are tested jointly by a Wald statistic. Their covariance is
+#' estimated and can be numerically indefinite, so the statistic uses only its
+#' positive directions, and `df` counts them.
 #'
-#' Under `trend = "constant"`, the contrasts for cell \eqn{k} with
-#' \eqn{|T_0|} comparison periods are
-#' \eqn{D_{t_0}(k) - D_{t_1}(k)} for \eqn{t_0 \neq t_1} (reference =
-#' first comparison period), yielding \eqn{|T_0| - 1} contrasts per cell.
+#' ## Shared units and the sampling scheme
 #'
-#' Under `trend = "linear"`, the testable contrasts are the **second differences**
-#' of the time-ordered per-cell jumps:
-#' \eqn{D_{t_{j+1}}(k) - 2 D_{t_j}(k) + D_{t_{j-1}}(k)},
-#' yielding \eqn{|T_0| - 2} contrasts per cell.  **This requires at least 3
-#' comparison periods per cell**; if no cell reaches this threshold the
-#' function returns an object with `df = 0`, `statistic = NA`, and a message.
+#' A unit's type is fixed, so different types are different units and their
+#' jumps are independent. Within a type the same units can appear in several
+#' comparison periods, and the covariance follows `scheme`, matching units on
+#' `id`: none under `"cs"`; from the units on the same side of the cutoff in
+#' both periods under `"pc"`; under `"pv"` also from the units that change
+#' side, with the opposite sign. `"auto"` reads the scheme off the comparison
+#' periods, by the rule of [rddid()].
 #'
-#' @param data a long data frame, one row per unit-period. A unit's type in
-#'   period \eqn{t} is read from its running variable in the other period(s);
-#'   units unobserved there are dropped from period \eqn{t}, so the panel need
-#'   not be balanced.
-#' @param y,x,time Column names (character strings) for the outcome, running
-#'   variable, and period indicator.
-#' @param id Column name for the unit identifier.  Required (the test needs a
-#'   panel to define a fixed cell per unit).
-#' @param comparisons Values of `time` to use as comparison periods.  Defaults
-#'   to all periods except `t_rd` (if `t_rd` is supplied) or all periods (if
-#'   `t_rd = NULL`).
-#' @param t_rd Value of `time` for the RD period.  Required for
-#'   `type_by = "rd_side"`.  Under `type_by = "pattern"`, if supplied, the
-#'   cell is the sign pattern of all comparison periods from \eqn{t_{\mathrm{RD}}}'s
-#'   perspective; if `NULL`, the pattern is taken from the first comparison
-#'   period's perspective.
-#' @param estimand `"att"` (default) or `"atu"`. Label only: under `"atu"` the
-#'   within-type comparison-period discontinuities are the confounding
-#'   discontinuities among TREATED units, \eqn{\alpha_{t_0,1}(v)}; the
-#'   estimates and test are numerically identical to the `"att"` call.
-#' @param c Cutoff value for the running variable (default 0).
-#' @param h Main bandwidth.  If `NULL` (default), bandwidth is chosen
-#'   according to `bwselect`.  An explicit numeric value overrides `bwselect`
-#'   and is used directly for every (cell, period) combination.
-#' @param bwselect Bandwidth selection when `h = NULL`:
-#'   `"cct"` (default) computes a per-(cell, period) CCT MSE-optimal bandwidth
-#'   via [rd_bw_cct()] on that cell's outcome and running variable;
-#'   `"rot"` uses the 0.2 × range rule of thumb (the original behavior).
-#'   Ignored when `h` is supplied.
-#' @param kernel Kernel for the local-linear RD: `"triangular"` (default),
-#'   `"epanechnikov"`, or `"uniform"`.
-#' @param scheme Sampling scheme for the cross-period covariance:
-#'   `"auto"` (detect from the id/side structure, default), `"cs"` (repeated
-#'   cross-section, no cross-period terms), `"pc"` (panel, time-constant
-#'   running variable), or `"pv"` (panel, time-varying running variable).
-#' @param min_n Minimum number of observations per cell-side before a
-#'   (cell, period) pair is included.  Pairs with fewer than `min_n` obs on
-#'   either side are silently dropped (default 10).
-#' @param bc Use robust bias-corrected per-cell jumps and variances
-#'   (Calonico, Cattaneo and Titiunik 2014). `TRUE` (default) aligns the test
-#'   with the bias-corrected [rddid()] estimator; `FALSE` uses the conventional
-#'   local-linear jumps and variances.
-#' @param type_by How a unit's type is defined. `"rd_side"` (default) = the
-#'   unit's side of the cutoff in the RD period, the partition of the paper's
-#'   Section 4.4. `"pattern"` = the sign pattern of the other periods' running
-#'   variables. The cell is **fixed** across comparison periods for both
-#'   choices.
-#' @param trend Trend form for the null hypothesis.  `"constant"` (default)
-#'   tests equal per-cell jumps across all comparison periods; `"linear"` tests
-#'   that the per-cell jumps lie on a line in time, using second-difference
-#'   contrasts (requires \eqn{\geq 3} comparison periods per cell).
-#' @param p,q polynomial orders of the per-cell local-polynomial fits (point estimate and
-#'   bias correction; default 1 and 2). The per-cell CCT bandwidth is always selected at
-#'   p = 1.
+#' ## Options
+#'
+#' `type_by = "rd_side"` (default) types each unit by its side of the cutoff in
+#' the RD period, so `t_rd` is required; units not observed in the RD period
+#' are left out. `type_by = "pattern"` types units by their sides in all
+#' periods in `data` other than the RD period (other than the first comparison
+#' period if `t_rd` is `NULL`). A (type, period) cell with fewer than `min_n`
+#' observations on either side of the cutoff is dropped, and a message lists
+#' the dropped cells. `bc = TRUE` (default) tests the bias-corrected jumps with
+#' their robust variance, as in the `Robust` row of [rddid()]; `bc = FALSE`
+#' uses the conventional jumps and variances. With `bwselect = "cct"` (default)
+#' each cell gets its own CCT bandwidths from [rd_bw_cct()], computed on that
+#' cell's outcome and running variable. With `bwselect = "rot"` the rule of
+#' thumb is `h = b = 0.2` times the range of the running variable within each
+#' cell. A numeric `h` is used as both bandwidths in every cell.
+#'
+#' ## ATU designs
+#'
+#' When the comparison periods are uniformly treated, the comparison-period
+#' jumps are the confounding jumps among treated units. The computation is the
+#' same, so `estimand` only labels the output.
+#'
+#' @param data a data frame in long format, one row per unit and period, from a
+#'   panel (it need not be balanced). A unit's type is read from the periods in
+#'   which it is observed; a unit missing from a period that its type needs is
+#'   left out of the cells that use that type.
+#' @param id name of the unit-identifier column (a string). Required: types are
+#'   read across periods.
+#' @param t_rd the RD period. Required with `type_by = "rd_side"` (the
+#'   default), where a unit's side of the cutoff in the RD period is its type.
+#'   The test does not use the RD period's outcomes.
+#' @param comparisons the comparison periods in which the test runs, taken in
+#'   time order. `NULL` (default) uses every period other than `t_rd` (every
+#'   period if `t_rd` is `NULL`).
+#' @param estimand `"att"` (default) or `"atu"`, as in [rddid()]. Label only:
+#'   the test is the same either way.
+#' @param trend the trend assumption tested within each type: `"constant"`
+#'   (default; the confounding jump is the same in every comparison period) or
+#'   `"linear"` (it moves linearly in time; needs at least three comparison
+#'   periods). Use the `trend` of the [rddid()] call being checked.
+#' @param h a bandwidth to use, as both main and pilot bandwidth, in every cell.
+#'   If given, `bwselect` is ignored.
+#' @param bwselect the bandwidth rule when `h` is not given: `"cct"` (default;
+#'   each cell's own CCT bandwidths from [rd_bw_cct()]) or `"rot"` (the rule of
+#'   thumb `0.2` times the range of the running variable within the cell).
+#' @param min_n the minimum number of observations on each side of the cutoff
+#'   for a (type, period) cell to enter the test (default 10). Smaller cells
+#'   are dropped, with a message listing them.
+#' @param scheme the sampling scheme, which sets the covariance across
+#'   comparison periods in the test: `"cs"`, `"pc"` or `"pv"` (as in
+#'   [rddid()]), or `"auto"` (default), which reads it off the comparison
+#'   periods by the rule of [rddid()]. See Details.
+#' @param bc logical. `TRUE` (default): test the bias-corrected jumps with their
+#'   robust variance, as in the `Robust` row of [rddid()]; `FALSE`: the
+#'   conventional jumps and variances.
+#' @param type_by how types are defined: `"rd_side"` (default; the unit's side
+#'   of the cutoff in the RD period, which needs `t_rd`) or `"pattern"` (its
+#'   sides in all periods other than the RD period). Either way the type is
+#'   fixed across the comparison periods.
+#' @param p,q orders of the local polynomials in every cell, for the point
+#'   estimate and the bias correction (defaults 1 and 2; `q` must exceed `p`).
+#'   The CCT bandwidths are always chosen for a local-linear fit.
+#' @inheritParams rddid
 #'
 #' @return An object of class `"rd_trendcell"`, a list with:
 #'   \describe{
-#'     \item{`statistic`}{Joint Wald chi-squared statistic (`NA` when `df = 0`).}
-#'     \item{`df`}{Degrees of freedom (number of positive eigenvalues used).
-#'       `0` when `trend = "linear"` and no cell has \eqn{\geq 3} comparison
-#'       periods.}
-#'     \item{`p_value`}{p-value from the chi-squared distribution (`NA` when
-#'       `df = 0`).}
-#'     \item{`cell_period_jumps`}{Data frame with one row per (cell, comparison
-#'       period): cell, period, jump estimate, SE, number of observations, and
-#'       a flag indicating whether this is the reference period for that cell
-#'       (under `trend = "constant"` only).}
-#'     \item{`contrasts`}{Named numeric vector of jump contrasts stacked across
-#'       cells.}
-#'     \item{`cov_matrix`}{Estimated covariance matrix of the contrasts;
-#'       block-diagonal by cell.}
-#'     \item{`scheme`}{Sampling scheme used.}
-#'     \item{`bc`}{Whether bias-corrected jumps were used.}
+#'     \item{`statistic`, `df`, `p_value`}{the Wald statistic, its degrees of
+#'       freedom (the number of positive directions of the covariance used) and
+#'       its chi-squared p-value; `NA`, `0`, `NA` when `trend = "linear"` and
+#'       no type has jumps in three comparison periods.}
+#'     \item{`scheme`}{the sampling scheme used.}
 #'     \item{`estimand`}{`"att"` or `"atu"`, as passed.}
-#'     \item{`trend`}{Trend form used (`"constant"` or `"linear"`).}
-#'     \item{`comparisons`}{Comparison periods actually used (character).}
-#'     \item{`call`}{The matched call.}
+#'     \item{`call`}{the matched call.}
+#'     \item{`cell_period_jumps`}{a data frame with one row per (type, comparison
+#'       period) cell that was fitted: `cell` (the type: the unit's side(s),
+#'       `"+"` above and `"-"` below the cutoff), `period`, `jump` (the cell's
+#'       confounding jump,
+#'       bias-corrected when `bc = TRUE`), `se`, `n` (observations in the cell)
+#'       and `reference` (`TRUE` for each type's first comparison period under
+#'       `trend = "constant"`).}
+#'     \item{`contrasts`}{named numeric vector of the tested differences,
+#'       stacked across types.}
+#'     \item{`cov_matrix`}{the estimated covariance matrix of `contrasts`
+#'       (block-diagonal by type).}
+#'     \item{`bc`, `trend`}{as passed.}
+#'     \item{`comparisons`}{the comparison periods, in time order.}
 #'   }
 #'
-#' **`trend = "linear"`** requires at least 3 comparison periods per cell to
-#' be informative.  With only 2 comparison periods the within-cell linear trend
-#' is just-identified (any two points define a line), so no second-difference
-#' contrast exists and the test returns `df = 0`.
-#'
-#' @seealso [rd_homog()], [rd_period()], [rddid()]
-#'
 #' @references
-#' Leventer, D. and Nevo, D. "Correcting Invalid Regression Discontinuity
-#' Designs." Working paper.
+#' Leventer, D. and D. Nevo (2024). *Correcting Invalid Regression Discontinuity
+#' Designs Using Multiple Time-Period Data.* arXiv:2408.05847.
+#' \url{https://arxiv.org/abs/2408.05847}
 #'
-#' Calonico, S., Cattaneo, M. D., and Titiunik, R. (2014). Robust
-#' nonparametric confidence intervals for regression-discontinuity designs.
-#' *Econometrica*, 82(6), 2295-2326.
+#' Calonico, S., M. D. Cattaneo and R. Titiunik (2014). Robust nonparametric
+#' confidence intervals for regression-discontinuity designs. *Econometrica*
+#' 82(6), 2295-2326.
+#'
+#' @seealso [rddid()] for the estimate; [rddid_sim_pv] for example data;
+#'   `tidy()` in [rddid-tidiers] for a one-row summary.
+#' @family tests of the assumptions
 #'
 #' @examples
-#' \dontrun{
-#' # Three-period panel: period 3 is RD, periods 1 and 2 are comparison.
-#' # Constant within-cell confounding across periods 1 and 2 (H0 holds).
-#' set.seed(1)
-#' n <- 600
-#' r_rd   <- runif(n, -1, 1)
-#' r_comp <- runif(n, -1, 1)   # same running variable both comparison periods
-#' cell   <- ifelse(r_rd >= 0, "+", "-")
-#' # constant confounding: same jump in both comparison periods within each cell
-#' alpha  <- ifelse(cell == "+", 0.5, 0.3)
-#' y1 <- 0.3 * r_comp + alpha * (r_comp >= 0) + rnorm(n, 0, 0.3)
-#' y2 <- 0.3 * r_comp + alpha * (r_comp >= 0) + rnorm(n, 0, 0.3)
-#' y3 <- 0.3 * r_rd + 1.0 * (r_rd >= 0) + rnorm(n, 0, 0.3)  # RD period
-#' dat <- data.frame(
-#'   id   = rep(seq_len(n), 3),
-#'   time = rep(1:3, each = n),
-#'   x    = c(r_comp, r_comp, r_rd),
-#'   y    = c(y1, y2, y3)
-#' )
-#' rd_trendcell(dat, y = "y", x = "x", time = "time", id = "id",
-#'              comparisons = 1:2, t_rd = 3, h = 0.3)
-#' }
+#' # rddid_sim_pv: the running variable moves, so some units change side
+#' tr <- rd_trendcell(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
+#' tr          # the Wald test, then each type's jump in each comparison period
+#' # trend = "linear" needs three comparison periods; with two it is not testable
+#' rd_trendcell(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
+#'              trend = "linear")
 #' @export
 rd_trendcell <- function(data, y, x, time, id,
                          t_rd = NULL, comparisons = NULL,

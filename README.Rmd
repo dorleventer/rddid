@@ -15,21 +15,19 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 <!-- badges: end -->
 
-Estimation and inference for regression-discontinuity
-difference-in-discontinuities (RD-DID) designs, where a confounding policy
-switches at the same cutoff as the treatment of interest. Implements the
-framework of Leventer and Nevo.
+A treatment of interest switches on at a cutoff of a running variable in one
+period, the **RD period**. A **confounding policy** switches at the same cutoff,
+in every period, so the jump in the outcome at the cutoff in the RD period mixes
+the treatment effect with the **confounding jump**. In the **comparison
+periods** the treatment of interest is uniform at the cutoff (nobody treated, or
+everybody treated), so the jump there *is* the confounding jump. `rddid()`
+estimates the jump in every period by local-linear RD and subtracts a weighted
+average of the comparison-period jumps from the RD-period jump. How the weights
+are set is the **confounding-trend assumption**: constant (equal weights) or
+linear in time.
 
-Paper: <https://arxiv.org/abs/2408.05847>
-
-The data are long, one row per unit-period, with an outcome, a running
-variable, a period and (for a panel) a unit id. Periods are of two kinds: in
-the RD period the treatment of interest switches at the cutoff; in a
-comparison period it does not, while the confounding policy switches in every
-period. `rddid()` nets the comparison-period discontinuities out of the
-RD-period one. When the running variable varies over time within a unit, four
-validation tests (`rd_typecont()`, `rd_compstable()`, `rd_homog()`,
-`rd_trendcell()`) check the identifying assumptions of Section 4 of the paper.
+Leventer, D. and D. Nevo (2024). *Correcting Invalid Regression Discontinuity
+Designs Using Multiple Time-Period Data.* [arXiv:2408.05847](https://arxiv.org/abs/2408.05847).
 
 ## Installation
 
@@ -40,31 +38,34 @@ devtools::install_github("dorleventer/rddid")
 
 ## Quick start
 
-Below, periods 1 and 2 are comparison periods (the confounding discontinuity
-is 1 in both) and period 3 is the RD period, where the treatment of interest
-adds 1 at the cutoff.
+`rddid_sim` is a simulated panel: 1,000 units in three years, a confounding
+jump of 0.5 in every year, and a treatment effect of 1 in year 3, the RD period.
 
 ```{r quick-start}
 library(rddid)
-
-set.seed(1)
-n <- 2000
-R <- runif(n, -1, 1)                 # time-invariant running variable, cutoff at 0
-u <- rnorm(n, 0, 0.5)                # unit effect
-dat <- do.call(rbind, lapply(1:3, function(t) {
-  V <- as.integer(R >= 0)            # confounding treatment: sharp RD in every period
-  W <- V * (t == 3)                  # treatment of interest: sharp RD in period 3 only
-  data.frame(id = seq_len(n), t = t, R = R,
-             Y = R + R^2 * (R >= 0) + 1 * V + 1 * W + u + rnorm(n, 0, 0.5))
-}))
-
-rddid(dat, y = "Y", x = "R", time = "t", id = "id",
-      t_rd = 3, comparisons = c(1, 2), trend = "constant")
+fit <- rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
+fit
 ```
 
-Set `estimand = "atu"` when the comparison periods are uniformly treated
-instead of uniformly untreated (paper, Section 6).
+Years 1 and 2 are the comparison periods, with equal weights. `Conventional` is
+the local-linear estimate with its conventional standard error;
+`Robust (bias-corrected)` is the bias-corrected estimate with its robust
+standard error. A plain RD in year 3 would target 1.5, the effect plus the
+confounding jump.
 
-Three vignettes: the estimator (Get started), its bandwidth rules and
-sampling schemes, and, for a time-varying running variable, the composition
-validation tests: <https://dorleventer.github.io/rddid/articles/index.html>.
+When the running variable moves over time, so that units can change side of the
+cutoff between periods, four tests check the assumptions this adds, for example
+type continuity:
+
+```{r tests}
+rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id")
+```
+
+The other three are `rd_compstable()`, `rd_homog()` and `rd_trendcell()`.
+
+## Learn more
+
+- [Get started](https://dorleventer.github.io/rddid/articles/rddid-estimation.html):
+  the estimate, its printout, and the four tests.
+- [Reference](https://dorleventer.github.io/rddid/reference/index.html): every
+  function, with examples.

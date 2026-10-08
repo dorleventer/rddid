@@ -2,7 +2,7 @@
 % Please edit documentation in R/test_typecont.R
 \name{rd_typecont}
 \alias{rd_typecont}
-\title{Test the continuity of the type distribution}
+\title{Test of type continuity}
 \usage{
 rd_typecont(
   data,
@@ -21,72 +21,143 @@ rd_typecont(
 )
 }
 \arguments{
-\item{data}{a long data frame, one row per unit-period. A unit's type in
-period \eqn{t} is read from its running variable in the other period(s);
-units unobserved there are dropped from period \eqn{t}, so the panel need
-not be balanced.}
+\item{data}{a data frame in long format, one row per unit and period, from a
+panel (it need not be balanced). A unit's type is read from the periods in
+which it is observed; a unit missing from a period that its type needs is
+left out of the cells that use that type.}
 
-\item{x}{column name (string) for the running variable.}
+\item{x}{name of the running-variable column (a string).}
 
-\item{time}{column name (string) for the period.}
+\item{time}{name of the period column (a string).}
 
-\item{id}{column name (string) for the unit identifier.}
+\item{id}{name of the unit-identifier column (a string). Required: types are
+read across periods.}
 
-\item{t_rd, comparisons}{optional: the RD period and the comparison periods to use.
-With both \code{NULL} (default) every period in \code{data} enters the test; the test itself
-treats all periods alike, so \code{t_rd} alone changes nothing and only serves to write
-the same call as for \code{\link[=rddid]{rddid()}}.}
+\item{t_rd, comparisons}{optional: the RD period and the comparison periods,
+to restrict the test to these periods. With \code{comparisons = NULL} (default)
+every period in \code{data} enters, whatever \code{t_rd}; since the test treats all
+periods alike, \code{t_rd} alone changes nothing and only lets you write the
+same call as for \code{\link[=rddid]{rddid()}}.}
 
-\item{estimand}{\code{"att"} (default) or \code{"atu"}. Label only: the test is
-identical under either estimand, because the continuous-type-distribution
-assumption is symmetric in the two sides of the cutoff.}
+\item{estimand}{\code{"att"} (default) or \code{"atu"}, as in \code{\link[=rddid]{rddid()}}. Label only:
+the test is the same either way.}
 
-\item{c}{cutoff (default 0).}
+\item{c}{the cutoff (default 0). A unit with \code{x >= c} is above the cutoff.}
 
-\item{h}{bandwidth.  If \code{NULL}, the bandwidth is determined by \code{bwselect};
-an explicit numeric value overrides \code{bwselect} and is used directly.}
+\item{h}{a bandwidth to use, as both main and pilot bandwidth, in every
+regression of the test. If given, \code{bwselect} is ignored.}
 
-\item{bwselect}{bandwidth selection rule when \code{h = NULL}: \code{"cct"} (default)
-computes a per-cell CCT MSE-optimal bandwidth via \code{\link[=rd_bw_cct]{rd_bw_cct()}} for each
-(period, type) RD; \code{"rot"} uses the \code{0.5 * IQR(x)} rule of thumb applied
-to the full sample (the previous default behaviour).  Ignored when \code{h} is
-supplied explicitly.}
+\item{bwselect}{the bandwidth rule when \code{h} is not given: \code{"cct"} (default;
+each regression's own CCT bandwidths from \code{\link[=rd_bw_cct]{rd_bw_cct()}}) or \code{"rot"} (the
+rule of thumb \code{0.5 * IQR(x)}, the same in every regression).}
 
-\item{kernel}{kernel for the local-linear RD: \code{"triangular"} (default),
-\code{"epanechnikov"}, or \code{"uniform"}.}
+\item{kernel}{the kernel: \code{"triangular"} (default), \code{"epanechnikov"} or
+\code{"uniform"}.}
 
-\item{scheme}{covariance scheme for the joint Wald: \code{"auto"} detects from
-the data (same logic as \code{\link[=rddid]{rddid()}}), or one of \code{"cs"}, \code{"pc"}, \code{"pv"}.}
+\item{scheme}{the sampling scheme, which sets the covariance across periods
+in the test: \code{"cs"}, \code{"pc"} or \code{"pv"} (as in \code{\link[=rddid]{rddid()}}), or \code{"auto"}
+(default), which reads it off the data as \code{\link[=rddid]{rddid()}} does. See Details.}
 
-\item{bc}{use robust bias-corrected jumps and variances in the LL-Wald
-(Calonico, Cattaneo and Titiunik 2014). \code{TRUE} (default) aligns the test
-with the bias-corrected \code{\link[=rddid]{rddid()}} estimator; \code{FALSE} uses the conventional
-local-linear jumps and variances.}
+\item{bc}{logical. \code{TRUE} (default): test the bias-corrected jumps with their
+robust variance, as in the \code{Robust} row of \code{\link[=rddid]{rddid()}}; \code{FALSE}: the
+conventional jumps and variances.}
 }
 \value{
-An object of class \code{"rd_typecont"}, a named list with:
-\item{ll_wald}{list with \code{stat} (chi-square), \code{df}, \code{p}.}
-\item{per_period}{named list (by period) of the per-period components the
-joint test aggregates; each entry has \code{ll_wald} (that period's own
-LL-Wald \code{stat}/\code{df}/\code{p}, restricted to its kept contrasts).}
-\item{meta}{list with \code{periods}, \code{type_values}, \code{h} (NA when
-\code{bwselect = "cct"}), \code{bwselect}, \code{scheme}, \code{bc}, \code{estimand}.}
+An object of class \code{"rd_typecont"}, a list with:
+\describe{
+\item{\code{statistic}, \code{df}, \code{p_value}}{the joint Wald statistic over all
+periods, its degrees of freedom and its chi-squared p-value.}
+\item{\code{scheme}}{the sampling scheme used; \code{scheme_requested} is the
+argument as passed.}
+\item{\code{estimand}}{\code{"att"} or \code{"atu"}, as passed.}
+\item{\code{call}}{the matched call.}
+\item{\code{per_period}}{a list by period; each element holds \code{ll_wald}, that
+period's own Wald test (\code{stat}, \code{df}, \code{p}).}
+\item{\code{ll_wald}}{the joint test again, as a list (\code{stat}, \code{df}, \code{p}).}
+\item{\code{meta}}{a list with \code{periods}, \code{type_values} (the types, written
+as the sides in the other periods in time order, e.g. \code{"+-"}), \code{h}
+(the common bandwidth, \code{NA} with \code{bwselect = "cct"}), \code{bwselect},
+\code{scheme}, \code{bc} and \code{estimand}.}
+}
 }
 \description{
-Wald test of the continuous-type-distribution assumption (Section 4.4 of
-Leventer and Nevo). The "type" of unit
-\eqn{i} in period \eqn{t} is the sign pattern of its running variables in
-the OTHER periods, \eqn{\mathbf{V}_{i,-t} = (1\{R_{i,s} \ge c\})_{s \ne t}}.
+When the running variable moves over time, some units are above the cutoff
+in one period and below it in another. A unit's \strong{type} is the side of the
+cutoff it is on in the other period(s); with two periods, "above in the
+other period" or "below in the other period". \code{rd_typecont()} tests the
+null that \strong{the share of each type jumps by zero at the cutoff, in every
+period}. A rejection means that units sort across the cutoff by type, so
+the jump in the outcome at the cutoff can reflect who is on each side as
+well as the policies, and the estimate of \code{\link[=rddid]{rddid()}} can be biased. With a
+running variable fixed over time (as in \link{rddid_sim}) every unit's type is
+its own side, the shares jump from 0 to 1 by construction, and the test is
+not informative.
 }
 \details{
-For each period \eqn{t} and each type value \eqn{v}, estimate the
-local-linear RD jump of the type indicator \eqn{1\{\mathbf{V}_{i,-t} = v\}}
-on the running variable \eqn{R_{i,t}}.  The jump
-\eqn{\hat\pi_{t,(+)}(v) - \hat\pi_{t,(-)}(v)} is the output of \code{\link[=rd_period]{rd_period()}}
-with a binary outcome.  The joint Wald statistic across all (period, type)
-pairs drops one reference type per period, because within each period the
-type indicators sum to 1 (the full block is singular); df = number of kept
-contrasts.  The covariance is built from the per-unit influence vectors
-returned by \code{\link[=rd_period]{rd_period()}}, using the same within-period and cross-period
-id-matching as the main estimator, scheme-aware.
+\subsection{What is estimated}{
+
+In each period and for each type, a local-linear RD of the indicator "the
+unit is of this type" on the running variable estimates the jump in that
+type's share at the cutoff. The shares sum to one within a period, so one
+reference type per period is dropped (the type below the cutoff in every
+other period), and the remaining jumps are tested jointly by a Wald
+statistic, chi-squared with as many degrees of freedom as independent jumps
+tested. Each period's own Wald test is reported as well. A unit's type in a
+period needs its side in every other period, so a unit missing from some
+period is left out of the regressions of the other periods. The test treats
+all periods alike: \code{t_rd} and \code{comparisons} only select which periods enter.
 }
+
+\subsection{Shared units and the sampling scheme}{
+
+Within a period the type-indicator regressions use the same units, so their
+covariance always enters. Across periods it follows \code{scheme}, matching units
+on \code{id}: none under \code{"cs"}; from the units on the same side of the cutoff in
+both periods under \code{"pc"}; under \code{"pv"} also from the units that change
+side, with the opposite sign. \code{"auto"} reads the scheme off the data as
+\code{\link[=rddid]{rddid()}} does.
+}
+
+\subsection{Options}{
+
+\code{bc = TRUE} (default) tests the bias-corrected jumps with their robust
+variance, as in the \code{Robust} row of \code{\link[=rddid]{rddid()}}; \code{bc = FALSE} uses the
+conventional jumps and variances. With \code{bwselect = "cct"} (default) each
+(period, type) regression gets its own CCT bandwidths from \code{\link[=rd_bw_cct]{rd_bw_cct()}}.
+With \code{bwselect = "rot"} the rule of thumb is \code{h = b = 0.5 * IQR(x)}, the
+interquartile range of the running variable over all periods used (\code{sd(x)}
+if that is zero), the same in every regression. A numeric \code{h} is used as
+both bandwidths in every regression.
+}
+
+\subsection{ATU designs}{
+
+The null treats the two sides of the cutoff alike, so the test is the same
+under \code{estimand = "att"} and \code{"atu"}; \code{estimand} only labels the output.
+}
+}
+\examples{
+# rddid_sim_pv: the running variable moves, so some units change side
+tc <- rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id")
+tc          # the null, the joint Wald test, then each period's own test
+tc$p_value
+}
+\references{
+Leventer, D. and D. Nevo (2024). \emph{Correcting Invalid Regression Discontinuity
+Designs Using Multiple Time-Period Data.} arXiv:2408.05847.
+\url{https://arxiv.org/abs/2408.05847}
+
+Calonico, S., M. D. Cattaneo and R. Titiunik (2014). Robust nonparametric
+confidence intervals for regression-discontinuity designs. \emph{Econometrica}
+82(6), 2295-2326.
+}
+\seealso{
+\code{\link[=rddid]{rddid()}} for the estimate; \link{rddid_sim_pv} for example data;
+\code{tidy()} in \link{rddid-tidiers} for a one-row summary.
+
+Other tests of the assumptions: 
+\code{\link{rd_compstable}()},
+\code{\link{rd_homog}()},
+\code{\link{rd_trendcell}()}
+}
+\concept{tests of the assumptions}

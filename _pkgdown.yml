@@ -13,32 +13,55 @@ navbar:
     articles:
       text: Articles
       menu:
-        - text: Estimating the ATT or ATU with rddid()
-          href: articles/rddid-estimation.html
+        - text: How rddid() computes the estimate
+          href: articles/rddid-how-it-works.html
         - text: Bandwidth rules and sampling schemes
           href: articles/rddid-options.html
-        - text: Composition validation tests
+        - text: Checking the identification assumptions
           href: articles/rddid-validation-tests.html
+    news:
+      text: Changelog
+      href: news/index.html
 
 articles:
-  - title: Using the package
+  - title: Get started
     navbar: ~
     contents:
       - rddid-estimation
+  - title: Articles
+    navbar: ~
+    contents:
+      - rddid-how-it-works
       - rddid-options
       - rddid-validation-tests
 
 reference:
-  - title: Estimation
-    desc: The RD-DID estimator, its per-period local-linear RD engine, and the single-period CCT bandwidth.
+  - title: Package overview
+    contents:
+      - rddid-package
+  - title: Estimate
+    desc: The RD-DID estimator and what to do with a fit.
     contents:
       - rddid
-      - rd_period
-      - rd_bw_cct
-  - title: Validation tests
-    desc: Tests of the identification assumptions for a time-varying running variable (Section 4.4 of the paper).
+      - summary.rddid
+      - rddid-methods
+      - rddid-tidiers
+  - title: Check the assumptions
+    desc: >
+      Tests of the identification assumptions when the running variable moves
+      over time, so that units can change side of the cutoff between periods.
     contents:
       - rd_typecont
       - rd_compstable
       - rd_homog
       - rd_trendcell
+  - title: Building blocks
+    desc: The local-linear RD in one period and its CCT bandwidths, for working period by period.
+    contents:
+      - rd_period
+      - rd_bw_cct
+  - title: Data
+    desc: Simulated panels for trying things out.
+    contents:
+      - rddid_sim
+      - rddid_sim_pv

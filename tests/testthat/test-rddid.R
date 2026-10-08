@@ -15,7 +15,7 @@ make_panel <- function(n = 4000, alpha = 0.3, att = 0.5, curv = 0,
 test_that("rddid recovers the ATT within sampling error", {
   dat <- make_panel(curv = 0)                 # linear mean -> unbiased
   fit <- rddid(dat, y = "y", x = "x", time = "time", id = "id", t_rd = 3,
-               weights = "constant", bwselect = "joint")
+               trend = "constant", bwselect = "joint")
   est <- fit$estimates["Robust", "est"]
   se  <- fit$estimates["Robust", "se"]
   expect_lt(abs(est - 0.5), 3 * se)
@@ -35,11 +35,11 @@ test_that("sampling scheme is auto-detected", {
 test_that("constant and linear weights are admissible and correct", {
   dat <- make_panel()
   fc <- rddid(dat, "y", "x", "time", "id", t_rd = 3, comparisons = c(1, 2),
-              weights = "constant")
+              trend = "constant")
   expect_equal(unname(fc$weights), c(0.5, 0.5))
   expect_equal(sum(fc$weights), 1)
   fl <- rddid(dat, "y", "x", "time", "id", t_rd = 3, comparisons = c(1, 2),
-              weights = "linear")
+              trend = "linear")
   expect_equal(unname(fl$weights), c(-1, 2))      # line through t=1,2 to t=3
   expect_equal(sum(fl$weights), 1)
 })

@@ -26,142 +26,175 @@ rd_homog(
 )
 }
 \arguments{
-\item{data}{a long data frame, one row per unit-period. A unit's type in
-period \eqn{t} is read from its running variable in the other period(s);
-units unobserved there are dropped from period \eqn{t}, so the panel need
-not be balanced.}
+\item{data}{a data frame in long format, one row per unit and period, from a
+panel (it need not be balanced). A unit's type is read from the periods in
+which it is observed; a unit missing from a period that its type needs is
+left out of the cells that use that type.}
 
-\item{y, x, time}{Column names (character strings) for the outcome, running
-variable, and period indicator.}
+\item{y}{name of the outcome column (a string).}
 
-\item{id}{Column name for the unit identifier.  Required (the test uses the
-other periods' running variables to assign types, which needs a panel).}
+\item{x}{name of the running-variable column (a string).}
 
-\item{t_rd}{Value of \code{time} for the RD period.  Used only to exclude it from
-comparison periods when \code{comparisons = NULL}; the RD period is \strong{not}
-used in the test itself.}
+\item{time}{name of the period column (a string).}
 
-\item{comparisons}{Values of \code{time} to use as comparison periods.  Defaults
-to all periods except \code{t_rd} (if \code{t_rd} is supplied) or all periods (if
-\code{t_rd = NULL}).}
+\item{id}{name of the unit-identifier column (a string). Required: types are
+read across periods.}
 
-\item{estimand}{\code{"att"} (default) or \code{"atu"}. Label only: under \code{"atu"} the
-within-type comparison-period discontinuities are the confounding
-discontinuities among TREATED units, \eqn{\alpha_{t_0,1}(v)}; the
-estimates and test are numerically identical to the \code{"att"} call.}
+\item{t_rd}{the RD period. Required with \code{type_by = "rd_side"} (the
+default), where a unit's side of the cutoff in the RD period is its type.
+The test does not use the RD period's outcomes.}
 
-\item{c}{Cutoff value for the running variable (default 0).}
+\item{comparisons}{the comparison periods in which the test runs. \code{NULL}
+(default) uses every period other than \code{t_rd} (every period if \code{t_rd} is
+\code{NULL}).}
 
-\item{h}{Main bandwidth.  If \code{NULL} (default), bandwidth is chosen
-according to \code{bwselect}.  An explicit numeric value overrides \code{bwselect}
-and is used directly for every cell.}
+\item{estimand}{\code{"att"} (default) or \code{"atu"}, as in \code{\link[=rddid]{rddid()}}. Label only:
+the test is the same either way.}
 
-\item{bwselect}{Bandwidth selection when \code{h = NULL}:
-\code{"cct"} (default) computes a per-cell CCT MSE-optimal bandwidth via
-\code{\link[=rd_bw_cct]{rd_bw_cct()}} on that cell's outcome and running variable;
-\code{"rot"} uses the 0.2 × range rule of thumb (the original behavior).
-Ignored when \code{h} is supplied.}
+\item{c}{the cutoff (default 0). A unit with \code{x >= c} is above the cutoff.}
 
-\item{kernel}{Kernel for the local-linear RD: \code{"triangular"} (default),
-\code{"epanechnikov"}, or \code{"uniform"}.}
+\item{h}{a bandwidth to use, as both main and pilot bandwidth, in every cell.
+If given, \code{bwselect} is ignored.}
 
-\item{scheme}{Sampling scheme for the cross-period covariance:
-\code{"auto"} (detect from the id/side structure, default), \code{"cs"} (repeated
-cross-section, no cross-period terms), \code{"pc"} (panel, time-constant
-running variable), or \code{"pv"} (panel, time-varying running variable).}
+\item{bwselect}{the bandwidth rule when \code{h} is not given: \code{"cct"} (default;
+each cell's own CCT bandwidths from \code{\link[=rd_bw_cct]{rd_bw_cct()}}) or \code{"rot"} (the rule of
+thumb \code{0.2} times the range of the running variable within the cell).}
 
-\item{min_n}{Minimum number of observations per type-side before that type
-is included.  Types with fewer than \code{min_n} obs on either side in a given
-period are silently dropped (default 10).}
+\item{kernel}{the kernel: \code{"triangular"} (default), \code{"epanechnikov"} or
+\code{"uniform"}.}
 
-\item{bc}{Use robust bias-corrected per-type jumps and variances
-(Calonico, Cattaneo and Titiunik 2014). \code{TRUE} (default) aligns the test
-with the bias-corrected \code{\link[=rddid]{rddid()}} estimator; \code{FALSE} uses the conventional
-local-linear jumps and variances.}
+\item{scheme}{the sampling scheme, which sets the covariance across
+comparison periods in the test: \code{"cs"}, \code{"pc"} or \code{"pv"} (as in
+\code{\link[=rddid]{rddid()}}), or \code{"auto"} (default), which reads it off the comparison
+periods by the rule of \code{\link[=rddid]{rddid()}}. See Details.}
 
-\item{type_by}{How a unit's type is defined. \code{"rd_side"} (default) = the
-unit's side of the cutoff in the RD period, the partition of the paper's
-Section 4.4. \code{"pattern"} = the sign pattern of the other periods' running
-variables.}
+\item{min_n}{the minimum number of observations on each side of the cutoff
+for a (period, type) cell to enter the test (default 10). Smaller cells
+are dropped, with a message listing them.}
 
-\item{p, q}{polynomial orders of the per-cell local-polynomial fits (point estimate and
-bias correction; default 1 and 2). The per-cell CCT bandwidth is always selected at
-p = 1.}
+\item{bc}{logical. \code{TRUE} (default): test the bias-corrected jumps with their
+robust variance, as in the \code{Robust} row of \code{\link[=rddid]{rddid()}}; \code{FALSE}: the
+conventional jumps and variances.}
+
+\item{type_by}{how types are defined: \code{"rd_side"} (default; the unit's side
+of the cutoff in the RD period, which needs \code{t_rd}) or \code{"pattern"} (its
+sides in all other periods in \code{data}).}
+
+\item{p, q}{orders of the local polynomials in every cell, for the point
+estimate and the bias correction (defaults 1 and 2; \code{q} must exceed \code{p}).
+The CCT bandwidths are always chosen for a local-linear fit.}
 }
 \value{
 An object of class \code{"rd_homog"}, a list with:
 \describe{
-\item{\code{statistic}}{Joint Wald chi-squared statistic.}
-\item{\code{df}}{Degrees of freedom (total contrasts used).}
-\item{\code{p_value}}{p-value from the chi-squared distribution.}
-\item{\code{period_type_jumps}}{Data frame with one row per (comparison
-period, type) cell: period, type, jump estimate, SE, number of
-observations, and whether it was the reference type.}
-\item{\code{contrasts}}{Named numeric vector of jump contrasts
-(non-reference minus reference), stacked across periods.}
-\item{\code{cov_matrix}}{Estimated covariance matrix of the contrasts.}
-\item{\code{scheme}}{Sampling scheme used.}
+\item{\code{statistic}, \code{df}, \code{p_value}}{the Wald statistic, its degrees of
+freedom (the number of positive directions of the covariance used) and
+its chi-squared p-value.}
+\item{\code{scheme}}{the sampling scheme used.}
 \item{\code{estimand}}{\code{"att"} or \code{"atu"}, as passed.}
-\item{\code{comparisons}}{Comparison periods actually used.}
-\item{\code{call}}{The matched call.}
+\item{\code{call}}{the matched call.}
+\item{\code{period_type_jumps}}{a data frame with one row per (comparison
+period, type) cell that was fitted: \code{period}, \code{type} (the unit's
+side(s), \code{"+"} above and \code{"-"} below the cutoff), \code{jump} (the cell's
+confounding jump,
+bias-corrected when \code{bc = TRUE}), \code{se}, \code{n} (observations in the cell)
+and \code{reference} (\code{TRUE} for the reference type).}
+\item{\code{contrasts}}{named numeric vector of the tested differences (type
+minus reference), stacked across periods.}
+\item{\code{cov_matrix}}{the estimated covariance matrix of \code{contrasts}.}
+\item{\code{bc}}{as passed.}
+\item{\code{comparisons}}{the comparison periods that contributed a
+difference.}
 }
 }
 \description{
-Wald test of the homogeneous-confounding assumption (Section 4.4 of
-Leventer and Nevo): in the comparison periods, the outcome RD discontinuity
-is the same across types. In a comparison period \eqn{t_0} the
-discontinuity equals the confounding,
-\eqn{D_{t_0}(v) = \alpha_{t_0,0}(v)}, with \eqn{v} the unit's type (by
-default its side of the cutoff in the RD period). The function estimates the
-jump by type via \code{\link[=rd_period]{rd_period()}}, then forms a joint Wald test that the jumps
-are equal across types and comparison periods.
+When the running variable moves over time, some units are above the cutoff
+in one period and below it in another. A unit's \strong{type} is the side of the
+cutoff it is on in the other period(s); by default here, its side in the RD
+period. \code{rd_homog()} tests the null that \strong{in each comparison period the
+confounding jump is the same for every type}, using the comparison periods
+only, where the jump in the outcome is the confounding jump. Homogeneous
+confounding and composition stability (\code{\link[=rd_compstable]{rd_compstable()}}) are alternatives:
+the estimate of \code{\link[=rddid]{rddid()}} needs one of the two (together with type
+continuity, \code{\link[=rd_typecont]{rd_typecont()}}). A rejection here alone therefore does not
+invalidate the estimate; if composition stability is rejected as well, the
+comparison periods mix the types differently from the RD period and the
+estimate can be biased. With a running variable fixed over time (as in
+\link{rddid_sim}) the types are degenerate and the test is not informative.
 }
 \details{
-\subsection{Null hypothesis}{
+\subsection{What is estimated}{
 
-\eqn{H_0 :} the outcome RD jump is equal across all type cells
-\eqn{\mathbf{v}_{-t_0}}, jointly across all comparison periods:
-\eqn{D_{t_0}(\mathbf{v}) = D_{t_0}(\mathbf{v}') \; \forall \, \mathbf{v}, \mathbf{v}', t_0}.
+In each comparison period the units are split by type, and a local-linear
+RD of the outcome on the running variable within each type gives that
+type's confounding jump. Within each period every type's jump is compared
+with the jump of a reference type (the type below the cutoff in the other
+period(s)), and these differences are tested jointly across the comparison
+periods by a Wald statistic. The null is equality across types within each
+period, not equality across periods (that is \code{\link[=rd_trendcell]{rd_trendcell()}}). The
+covariance of the differences is estimated and can be numerically
+indefinite, so the Wald statistic uses only its positive directions, and
+\code{df} counts them.
+}
 
-The Wald statistic is formed from the per-type jump contrasts
-\eqn{\Delta = D_{t_0,v} - D_{t_0,\mathrm{ref}}}, stacked across comparison
-periods, with covariance estimated from the \code{\link[=rd_period]{rd_period()}} influence vectors.
-Within a period, cross-type covariance is zero (types partition the sample).
-Across periods, id-matched covariance is used under the detected/requested
-sampling scheme (see \code{scheme}).
+\subsection{Shared units and the sampling scheme}{
+
+Within a period the types are different units, so their jumps are
+independent. Across comparison periods the same units can appear in both,
+and the covariance follows \code{scheme}, matching units on \code{id}: none under
+\code{"cs"}; from the units on the same side of the cutoff in both periods under
+\code{"pc"}; under \code{"pv"} also from the units that change side, with the opposite
+sign. \code{"auto"} reads the scheme off the comparison periods, by the rule of
+\code{\link[=rddid]{rddid()}}.
+}
+
+\subsection{Options}{
+
+\code{type_by = "rd_side"} (default) types each unit by its side of the cutoff in
+the RD period, so \code{t_rd} is required and each comparison period gives one
+difference; units not observed in the RD period are left out.
+\code{type_by = "pattern"} types units by their sides in all other periods in
+\code{data}. A (period, type) cell with fewer than \code{min_n} observations on either
+side of the cutoff is dropped, and a message lists the dropped cells; a
+period with fewer than two types is skipped. \code{bc = TRUE} (default) tests the
+bias-corrected jumps with their robust variance, as in the \code{Robust} row of
+\code{\link[=rddid]{rddid()}}; \code{bc = FALSE} uses the conventional jumps and variances. With
+\code{bwselect = "cct"} (default) each cell gets its own CCT bandwidths from
+\code{\link[=rd_bw_cct]{rd_bw_cct()}}, computed on that cell's outcome and running variable. With
+\code{bwselect = "rot"} the rule of thumb is \code{h = b = 0.2} times the range of the
+running variable within each cell. A numeric \code{h} is used as both bandwidths
+in every cell.
+}
+
+\subsection{ATU designs}{
+
+When the comparison periods are uniformly treated, the comparison-period
+jumps are the confounding jumps among treated units. The computation is the
+same, so \code{estimand} only labels the output.
 }
 }
 \examples{
-\dontrun{
-# Two-period panel: period 1 is RD, period 2 is comparison.
-# Type in period 2 = sign of R_{i,1} (the running variable of the other period).
-set.seed(1)
-n <- 500
-r1 <- runif(n, -1, 1)
-r2 <- runif(n, -1, 1)
-# homogeneous confounding in comparison period (period 2)
-y2 <- 0.3 * r2 + 0.4 * (r2 >= 0) + rnorm(n, 0, 0.3)
-dat <- data.frame(
-  id   = rep(seq_len(n), 2),
-  time = rep(1:2, each = n),
-  x    = c(r1, r2),
-  y    = c(rnorm(n), y2)
-)
-rd_homog(dat, y = "y", x = "x", time = "time", id = "id",
-         comparisons = 2, t_rd = 1, h = 0.3)
-}
+# rddid_sim_pv: the running variable moves, so some units change side
+hc <- rd_homog(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
+hc          # the Wald test, then each type's jump in each comparison period
+hc$period_type_jumps
 }
 \references{
-Leventer, D. and Nevo, D. "Correcting Invalid Regression Discontinuity
-Designs." Working paper.
+Leventer, D. and D. Nevo (2024). \emph{Correcting Invalid Regression Discontinuity
+Designs Using Multiple Time-Period Data.} arXiv:2408.05847.
+\url{https://arxiv.org/abs/2408.05847}
 
-Imbens, G. W. and Lemieux, T. (2008). Regression discontinuity designs:
-A guide to practice. \emph{Journal of Econometrics}, 142(2), 615-635.
-
-Calonico, S., Cattaneo, M. D., and Titiunik, R. (2014). Robust
-nonparametric confidence intervals for regression-discontinuity designs.
-\emph{Econometrica}, 82(6), 2295-2326.
+Calonico, S., M. D. Cattaneo and R. Titiunik (2014). Robust nonparametric
+confidence intervals for regression-discontinuity designs. \emph{Econometrica}
+82(6), 2295-2326.
 }
 \seealso{
-\code{\link[=rd_period]{rd_period()}}, \code{\link[=rddid]{rddid()}}
+\code{\link[=rddid]{rddid()}} for the estimate; \link{rddid_sim_pv} for example data;
+\code{tidy()} in \link{rddid-tidiers} for a one-row summary.
+
+Other tests of the assumptions: 
+\code{\link{rd_compstable}()},
+\code{\link{rd_trendcell}()},
+\code{\link{rd_typecont}()}
 }
+\concept{tests of the assumptions}
