@@ -134,20 +134,16 @@
 #' @keywords internal
 #' @noRd
 .cell_bandwidth <- function(y, x, c, kernel,
-                            h = NULL, bwselect = "cct",
-                            rot_val = NULL) {
+                            h = NULL, bwselect = "cct", p = 1L) {
   if (!is.null(h)) return(c(h = h, b = h))
   if (bwselect == "rot") {
-    hw <- if (!is.null(rot_val)) {
-      rot_val
-    } else {
-      rng <- diff(range(x[is.finite(x)], na.rm = TRUE))
-      0.2 * rng
-    }
+    rng <- diff(range(x[is.finite(x)], na.rm = TRUE))
+    hw  <- 0.2 * rng
     return(c(h = hw, b = hw))
   }
-  # bwselect = "cct"
-  bw <- rd_bw_cct(y, x, c = c, kernel = kernel)
+  # bwselect = "cct": MSE-optimal for the order-p fit the cell will run (2026-10-08 fix:
+  # the bandwidth used to be chosen at p = 1 whatever p the fit used)
+  bw <- rd_bw_cct(y, x, c = c, p = p, kernel = kernel)
   c(h = bw[["h"]], b = bw[["b"]])
 }
 
@@ -175,8 +171,15 @@
 #'   Returns `list(stat = NA_real_, df = 0L, p = NA_real_)` when `df = 0`.
 #' @keywords internal
 #' @noRd
-.wald_eigen <- function(Delta, Sigma) {
+.wald_eigen <- function(Delta, Sigma, scale = NULL) {
   K   <- length(Delta)
+  # A covariance that is zero to working precision (no residual variation in the cells, e.g. a
+  # constant outcome) has eigenvalues made of rounding noise; the relative tolerance below
+  # would keep them and turn noise into a chi-squared statistic. Compare the standard errors
+  # with the outcome's scale first (2026-10-08 fix).
+  if (!is.null(scale) && is.finite(scale) &&
+      max(sqrt(pmax(diag(Sigma), 0))) <= sqrt(.Machine$double.eps) * scale)
+    return(list(stat = NA_real_, df = 0L, p = NA_real_, degenerate = TRUE))
   ev  <- eigen(Sigma, symmetric = TRUE)
   tol <- max(abs(ev$values)) * K * .Machine$double.eps^0.5
   pos <- ev$values > tol

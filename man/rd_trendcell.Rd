@@ -55,7 +55,9 @@ the test is the same either way.}
 \item{trend}{the trend assumption tested within each type: \code{"constant"}
 (default; the confounding jump is the same in every comparison period) or
 \code{"linear"} (it moves linearly in time; needs at least three comparison
-periods). Use the \code{trend} of the \code{\link[=rddid]{rddid()}} call being checked.}
+periods). Use the \code{trend} of the \code{\link[=rddid]{rddid()}} call being checked.
+With \code{"linear"} the second differences are taken in time (the period values), so
+unequally spaced comparison periods are handled.}
 
 \item{c}{the cutoff (default 0). A unit with \code{x >= c} is above the cutoff.}
 
@@ -89,7 +91,7 @@ fixed across the comparison periods.}
 
 \item{p, q}{orders of the local polynomials in every cell, for the point
 estimate and the bias correction (defaults 1 and 2; \code{q} must exceed \code{p}).
-The CCT bandwidths are always chosen for a local-linear fit.}
+The per-cell CCT bandwidths are chosen for the order-\code{p} fit.}
 }
 \value{
 An object of class \code{"rd_trendcell"}, a list with:

@@ -1,5 +1,28 @@
 # rddid 0.4.0.9000 (development)
 
+## 2026-10-08: five bug fixes found during the UX sweep
+
+* `rd_homog()` / `rd_trendcell()` with `p > 1`: the per-cell CCT bandwidth is now chosen for
+  the order-`p` fit (it used to be chosen at `p = 1` whatever `p` the fit used). Default calls
+  (`p = 1`) are unchanged.
+* `rd_trendcell(trend = "linear")`: the second differences are now taken in time, using the
+  period values, so a jump that is linear in time is annihilated whatever the spacing of the
+  comparison periods (the rows used to be index-based and could reject a true linear trend with
+  unequally spaced periods). Equally spaced periods give exactly the same contrasts as before.
+  Non-numeric period values now error under `"linear"`.
+* `rd_compstable()`: a type whose local-linear fit fails is skipped as documented; when the
+  last type (in radix order) failed, the function used to stop with "subscript out of bounds".
+* `rd_homog()` / `rd_trendcell()`: when the contrasts' covariance is zero to working precision
+  (no residual variation within the cells, e.g. a constant outcome) the functions now stop with
+  a clear message instead of reporting a chi-squared statistic made of rounding noise.
+* `rd_homog()`: the `reference` column of `period_type_jumps` marks the type actually used as
+  the reference in each period (the all-below type when its cell was fitted, else the next
+  type in order); it used to flag the all-below type only, leaving some periods with no
+  reference row.
+* Golden master re-recorded as `dev/snapshots/baseline_bugfix.rds`: the only cells that moved
+  are the `rd_homog(p = 2)` ones (first fix); every other value is identical to the step-1
+  baseline.
+
 ## 2026-10-08: UX sweep, step 4 — the source, for people who read it
 
 * **Files are named after what they hold.** The four assumption tests live in `rd_typecont.R`,

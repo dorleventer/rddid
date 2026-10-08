@@ -82,7 +82,7 @@ sides in all other periods in \code{data}).}
 
 \item{p, q}{orders of the local polynomials in every cell, for the point
 estimate and the bias correction (defaults 1 and 2; \code{q} must exceed \code{p}).
-The CCT bandwidths are always chosen for a local-linear fit.}
+The per-cell CCT bandwidths are chosen for the order-\code{p} fit.}
 }
 \value{
 An object of class \code{"rd_homog"}, a list with:
@@ -98,7 +98,8 @@ period, type) cell that was fitted: \code{period}, \code{type} (the unit's
 side(s), \code{"+"} above and \code{"-"} below the cutoff), \code{jump} (the cell's
 confounding jump,
 bias-corrected when \code{bc = TRUE}), \code{se}, \code{n} (observations in the cell)
-and \code{reference} (\code{TRUE} for the reference type).}
+and \code{reference} (\code{TRUE} for the type used as the reference in that
+period: the all-below type when its cell was fitted, else the next type).}
 \item{\code{contrasts}}{named numeric vector of the tested differences (type
 minus reference), stacked across periods.}
 \item{\code{cov_matrix}}{the estimated covariance matrix of \code{contrasts}.}

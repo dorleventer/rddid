@@ -124,10 +124,9 @@
                 c = 0, p = 1L, q = 2L, kernel = kernel),
       error = function(e) NULL
     )
-    # FIXME: `fits[[i]] <- NULL` deletes element i instead of storing NULL. A later successful
-    # fit restores the alignment, but when the LAST type's fit fails `fits` is left short and
-    # .compstable_sigma() stops with "subscript out of bounds" instead of skipping the type.
-    fits[[idx_v]] <- fit
+    # `fits[i] <- list(NULL)` keeps a NULL in place; `fits[[i]] <- NULL` would delete the
+    # element and misalign the types (2026-10-08 fix: the last type's failure then crashed)
+    fits[idx_v]   <- list(fit)
     theta[idx_v]  <- if (is.null(fit)) NA_real_ else if (bc) fit$D_bc else fit$D
   }
   list(theta = theta, fits = fits)

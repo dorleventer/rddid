@@ -64,7 +64,7 @@
 
       # the bandwidth comes before the min_n check, so a CCT fallback message can come from a
       # cell that is then skipped
-      bw   <- .cell_bandwidth(y_cell, x_cell, cutoff, kernel, h, bwselect)
+      bw   <- .cell_bandwidth(y_cell, x_cell, cutoff, kernel, h, bwselect, p = p)
       bw_h <- bw[["h"]]
       bw_b <- bw[["b"]]
 
@@ -98,7 +98,11 @@
     }
 
     keys_tp <- .homog_contrast_keys(tp, valid_types, fits)
-    if (!is.null(keys_tp)) contrast_keys[[tp]] <- keys_tp
+    if (!is.null(keys_tp)) {
+      contrast_keys[[tp]] <- keys_tp
+      for (key in c(keys_tp$ref, keys_tp$non_ref))   # flag the reference actually used
+        meta[[key]]$ref <- identical(key, keys_tp$ref)
+    }
   }
 
   list(fits = fits, meta = meta, contrast_keys = contrast_keys, skipped = skipped)
@@ -113,10 +117,10 @@
   }, logical(1))
   fitted_types <- valid_types[is_fitted]
   if (length(fitted_types) < 2L) return(NULL)
-  # The reference is the first FITTED type: if the all-below cell was skipped, the next type
-  # stands in, while the jump table's `reference` column marks only the all-below type.
+  # The reference is the first FITTED type (radix-decreasing order): the all-below type when
+  # its cell was fitted, otherwise the next type stands in. .homog_fit_cells() marks it in the
+  # jump table (2026-10-08 fix: the table used to flag the all-below type only).
   ref_fitted <- paste0(tp, "::", fitted_types[1L])
-  if (!ref_fitted %in% names(fits)) return(NULL)
   non_ref <- fitted_types[-1L]
   list(
     ref = ref_fitted,
@@ -295,7 +299,7 @@
 #'   sides in all other periods in `data`).
 #' @param p,q orders of the local polynomials in every cell, for the point
 #'   estimate and the bias correction (defaults 1 and 2; `q` must exceed `p`).
-#'   The CCT bandwidths are always chosen for a local-linear fit.
+#'   The per-cell CCT bandwidths are chosen for the order-`p` fit.
 #' @inheritParams rddid
 #'
 #' @return An object of class `"rd_homog"`, a list with:
@@ -311,7 +315,8 @@
 #'       side(s), `"+"` above and `"-"` below the cutoff), `jump` (the cell's
 #'       confounding jump,
 #'       bias-corrected when `bc = TRUE`), `se`, `n` (observations in the cell)
-#'       and `reference` (`TRUE` for the reference type).}
+#'       and `reference` (`TRUE` for the type used as the reference in that
+#'       period: the all-below type when its cell was fitted, else the next type).}
 #'     \item{`contrasts`}{named numeric vector of the tested differences (type
 #'       minus reference), stacked across periods.}
 #'     \item{`cov_matrix`}{the estimated covariance matrix of `contrasts`.}
@@ -398,7 +403,10 @@ rd_homog <- function(data, y, x, time, id,
   # Deliberately not .joint_wald(): Sigma is a difference of estimated covariances and can
   # come back numerically indefinite, so .wald_eigen() keeps only its positive directions
   # (eigenvalues above its relative tolerance); df = 0 means none is left.
-  wald <- .wald_eigen(Delta, Sigma)
+  wald <- .wald_eigen(Delta, Sigma, scale = max(abs(data[[y]]), na.rm = TRUE))
+  if (isTRUE(wald$degenerate))
+    stop("rd_homog: the covariance of the contrasts is zero to working precision (the outcome ",
+         "has no residual variation within the cells); the test is undefined.")
   if (wald$df == 0L) stop("rd_homog: estimated covariance matrix is numerically zero.")
   wald_stat <- wald$stat
   wald_df   <- wald$df

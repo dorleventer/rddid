@@ -52,7 +52,7 @@
       id_k <- d_tp[[id]][keep]
 
       # the bandwidth comes before the min_n check, so CCT also runs on cells skipped below
-      bw   <- .cell_bandwidth(y_k, x_k, cutoff, kernel, h, bwselect)
+      bw   <- .cell_bandwidth(y_k, x_k, cutoff, kernel, h, bwselect, p = p)
       bw_h <- bw[["h"]]
       bw_b <- bw[["b"]]
 
@@ -127,12 +127,21 @@
                               character(1)),
                        "-", ref_period)
   } else {
-    # second differences of the time-ordered jumps: rows e_i - 2 e_{i+1} + e_{i+2}
+    # Second differences IN TIME of the period-ordered jumps: for consecutive periods
+    # (t0, t1, t2) the weights (t2 - t1, -(t2 - t0), t1 - t0) annihilate any jump that is
+    # linear in t, whatever the spacing; scaled by 2 / (t2 - t0) they are exactly (1, -2, 1)
+    # for equally spaced periods (2026-10-08 fix: the rows used to be index-based, which rejects
+    # a true linear trend when the comparison periods are unequally spaced).
+    tv <- suppressWarnings(as.numeric(vapply(cell_keys, function(key) all_meta[[key]]$period,
+                                             character(1))))
+    if (anyNA(tv))
+      stop("rd_trendcell: trend = \"linear\" needs numeric period values.")
     C_k <- matrix(0, nrow = n_contrasts_k, ncol = m_k)
     for (i in seq_len(n_contrasts_k)) {
-      C_k[i, i]       <-  1
-      C_k[i, i + 1L]  <- -2
-      C_k[i, i + 2L]  <-  1
+      t0 <- tv[i]; t1 <- tv[i + 1L]; t2 <- tv[i + 2L]
+      C_k[i, i]       <-  2 * (t2 - t1) / (t2 - t0)
+      C_k[i, i + 1L]  <- -2 * (t2 - t0) / (t2 - t0)
+      C_k[i, i + 2L]  <-  2 * (t1 - t0) / (t2 - t0)
     }
     labels_k <- paste0(cell_k, "::2nd_diff_", seq_len(n_contrasts_k))
   }
@@ -338,6 +347,8 @@
 #'   (default; the confounding jump is the same in every comparison period) or
 #'   `"linear"` (it moves linearly in time; needs at least three comparison
 #'   periods). Use the `trend` of the [rddid()] call being checked.
+#'   With `"linear"` the second differences are taken in time (the period values), so
+#'   unequally spaced comparison periods are handled.
 #' @param h a bandwidth to use, as both main and pilot bandwidth, in every cell.
 #'   If given, `bwselect` is ignored.
 #' @param bwselect the bandwidth rule when `h` is not given: `"cct"` (default;
@@ -359,7 +370,7 @@
 #'   fixed across the comparison periods.
 #' @param p,q orders of the local polynomials in every cell, for the point
 #'   estimate and the bias correction (defaults 1 and 2; `q` must exceed `p`).
-#'   The CCT bandwidths are always chosen for a local-linear fit.
+#'   The per-cell CCT bandwidths are chosen for the order-`p` fit.
 #' @inheritParams rddid
 #'
 #' @return An object of class `"rd_trendcell"`, a list with:
@@ -464,7 +475,10 @@ rd_trendcell <- function(data, y, x, time, id,
 
   # Sigma_all is built from estimated covariances and can be numerically indefinite, so the Wald
   # statistic uses only its positive eigen-directions (.wald_eigen(), assumption_tests_helpers.R)
-  wald <- .wald_eigen(Delta_all, Sigma_all)
+  wald <- .wald_eigen(Delta_all, Sigma_all, scale = max(abs(data[[y]]), na.rm = TRUE))
+  if (isTRUE(wald$degenerate))
+    stop("rd_trendcell: the covariance of the contrasts is zero to working precision (the ",
+         "outcome has no residual variation within the cells); the test is undefined.")
   if (wald$df == 0L)
     stop("rd_trendcell: estimated covariance matrix is numerically zero.")
 
