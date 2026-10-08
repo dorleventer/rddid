@@ -246,103 +246,132 @@ rddid <- function(data, y, x, time, id = NULL, t_rd,
   scheme   <- match.arg(scheme)
   estimand <- match.arg(estimand)
   kernel   <- match.arg(kernel, c("triangular", "epanechnikov", "uniform"))
+  cutoff   <- c                            # `c` stays the argument name, as in rdrobust
   if (!is.null(weights)) {                 # `weights` is the old name of `trend`
     if (!missing(trend))
       stop("supply either `trend` or its old name `weights`, not both.")
     message("rddid(): `weights` is now called `trend`; the old name still works.")
     trend <- weights
   }
+
+  # ---- periods and data -------------------------------------------------------------------
   for (nm in c(y, x, time, id)) if (!nm %in% names(data))
     stop("column '", nm, "' not found in `data`.")
-
-  tt <- data[[time]]
-  if (!t_rd %in% tt) stop("t_rd = ", t_rd, " not present in `", time, "`.")
-  if (is.null(comparisons)) comparisons <- sort(setdiff(unique(tt), t_rd))
+  time_col <- data[[time]]
+  if (!t_rd %in% time_col) stop("t_rd = ", t_rd, " not present in `", time, "`.")
+  if (is.null(comparisons)) comparisons <- sort(setdiff(unique(time_col), t_rd))
   if (length(comparisons) < 1L) stop("need at least one comparison period.")
   if (t_rd %in% comparisons) stop("`t_rd` must not be one of the `comparisons`.")
   if (is.null(id) && scheme == "auto")
     message("rddid(): no `id` given, so every row is treated as a different unit ",
             "(repeated cross-section standard errors).")
-  periods <- c(t_rd, comparisons)
+  periods <- c(t_rd, comparisons)          # the RD period first, then the comparisons
+  plist   <- .rddid_period_frames(data, y, x, id, time_col, periods)
 
-  ii <- if (is.null(id)) seq_len(nrow(data)) else data[[id]]
-  plist <- stats::setNames(lapply(periods, function(tv) {
-    rows <- which(tt == tv)
-    data.frame(y = data[[y]][rows], x = data[[x]][rows], id = ii[rows])
-  }), as.character(periods))
+  # ---- the estimator's coefficients: +1 on the RD period, minus the weight on each comparison
+  comp_weights <- .rddid_weights(trend, comparisons, t_rd)
+  period_coef  <- c(stats::setNames(1, as.character(t_rd)), -comp_weights)
 
-  w    <- .rddid_weights(trend, comparisons, t_rd)
-  coef <- c(stats::setNames(1, as.character(t_rd)), -w)
-
-  detected <- .detect_scheme(plist, c = c)
+  # ---- sampling scheme (sets the standard error and, for the joint rules, the bandwidth) --
+  detected   <- .detect_scheme(plist, c = cutoff)
   use_scheme <- if (scheme == "auto") detected else scheme
   if (scheme %in% c("pc", "pv") && detected == "cs")
     warning("scheme = \"", scheme, "\" requested but no unit id repeats across periods; ",
             "all cross-period covariances are zero, so the reported SE equals the CS one.")
 
-  # ---- bandwidth ----
-  if (!is.null(h)) {
-    if (is.null(b)) b <- h
-    bws <- stats::setNames(rep(list(c(h = h, b = b)), length(periods)),
-                           as.character(periods))
-    bw_info <- list(method = "fixed", h = h, b = b)
-  } else if (bwselect == "cct") {
-    bws <- .bw_cct(plist, c = c, p = p, kernel = kernel)
-    bw_info <- list(method = "cct", bws = bws)
-  } else if (bwselect == "iter") {
-    ib <- .bw_joint_iter(plist, coef, as.character(t_rd), scheme = use_scheme,
-                         start = start,
-                         c = c, p = p, q = q, kernel = kernel,
-                         regularize = regularize, reg_const = reg_const)
-    bws <- ib$bws
-    bw_info <- list(method = "iter", bws = bws, niter = ib$niter)
-  } else {
-    jb <- .bw_joint(plist, coef, as.character(t_rd), scheme = use_scheme,
-                    c = c, p = p, q = q, kernel = kernel,
-                    regularize = regularize, reg_const = reg_const)
-    # one common h*; the pilot b keeps each period's own CCT ratio (B.4)
-    bws <- stats::setNames(lapply(as.character(periods), function(k)
-      c(h = jb$h, b = unname(jb$b[[k]]))), as.character(periods))
-    bw_info <- list(method = "joint", h = jb$h, b = jb$b, B = jb$B,
-                    Veff = jb$Veff, reg = jb$reg, pilot_bws = jb$pilot_bws)
-  }
-  # the bandwidth actually used in each period, whatever the rule
-  bw_info$h_by_period <- vapply(bws, function(v) unname(v[["h"]]), numeric(1))
-  bw_info$b_by_period <- vapply(bws, function(v) unname(v[["b"]]), numeric(1))
-
-  # ---- per-period fits at chosen bandwidth(s) ----
+  # ---- bandwidths, then one local-linear fit per period at those bandwidths ---------------
+  bw <- .rddid_bandwidths(plist, period_coef, t_rd, periods, use_scheme, h, b, bwselect, start,
+                          cutoff, p, q, kernel, regularize, reg_const)
   fits <- stats::setNames(lapply(as.character(periods), function(k)
-    rd_period(plist[[k]]$y, plist[[k]]$x, h = bws[[k]]["h"], b = bws[[k]]["b"],
-              id = plist[[k]]$id, c = c, p = p, q = q, kernel = kernel)),
+    rd_period(plist[[k]]$y, plist[[k]]$x, h = bw$bws[[k]]["h"], b = bw$bws[[k]]["b"],
+              id = plist[[k]]$id, c = cutoff, p = p, q = q, kernel = kernel)),
     as.character(periods))
 
-  ac  <- .aggregate_fits(fits, coef, bc = FALSE)
-  abc <- .aggregate_fits(fits, coef, bc = TRUE)
+  # ---- aggregate: estimate and variance under every scheme, conventional and bias-corrected
+  agg_conv <- .aggregate_fits(fits, period_coef, bc = FALSE)
+  agg_bc   <- .aggregate_fits(fits, period_coef, bc = TRUE)
 
-  sefld <- c(cs = "V_cs", pc = "V_pc", pv = "V_pv")
-  zc <- stats::qnorm(1 - (1 - level) / 2)
-  mkrow <- function(agg) {
-    se <- unname(sqrt(agg[sefld[use_scheme]]))
+  structure(list(
+    estimates = .rddid_estimate_table(agg_conv, agg_bc, use_scheme, level),
+    coef = period_coef, weights = comp_weights,
+    weights_type = if (is.numeric(trend)) "custom" else trend,
+    estimand = estimand,
+    t_rd = t_rd, comparisons = comparisons,
+    scheme = use_scheme, scheme_detected = detected, scheme_requested = scheme,
+    bandwidth = bw$info, fits = fits, level = level,
+    p = p, q = q, kernel = kernel, c = cutoff,
+    n_by_period = vapply(fits, function(f) f$n, numeric(1)),
+    call = cl
+  ), class = "rddid")
+}
+
+#' One (y, x, id) data frame per period, the RD period first
+#' @keywords internal
+#' @noRd
+.rddid_period_frames <- function(data, y, x, id, time_col, periods) {
+  unit_id <- if (is.null(id)) seq_len(nrow(data)) else data[[id]]
+  stats::setNames(lapply(periods, function(tv) {
+    rows <- which(time_col == tv)
+    data.frame(y = data[[y]][rows], x = data[[x]][rows], id = unit_id[rows])
+  }), as.character(periods))
+}
+
+#' Bandwidth pair (h, b) for every period under the requested rule
+#'
+#' @return list with `bws` (named list of `c(h, b)` per period, used for the fits) and `info`
+#'   (the `bandwidth` element of the returned object: method, rule-specific details, and the
+#'   per-period `h_by_period` / `b_by_period`).
+#' @keywords internal
+#' @noRd
+.rddid_bandwidths <- function(plist, period_coef, t_rd, periods, use_scheme, h, b, bwselect,
+                              start, cutoff, p, q, kernel, regularize, reg_const) {
+  labels <- as.character(periods)
+  if (!is.null(h)) {
+    if (is.null(b)) b <- h
+    bws  <- stats::setNames(rep(list(c(h = h, b = b)), length(periods)), labels)
+    info <- list(method = "fixed", h = h, b = b)
+  } else if (bwselect == "cct") {
+    bws  <- .bw_cct(plist, c = cutoff, p = p, kernel = kernel)
+    info <- list(method = "cct", bws = bws)
+  } else if (bwselect == "iter") {
+    ib <- .bw_joint_iter(plist, period_coef, as.character(t_rd), scheme = use_scheme,
+                         start = start,
+                         c = cutoff, p = p, q = q, kernel = kernel,
+                         regularize = regularize, reg_const = reg_const)
+    bws  <- ib$bws
+    info <- list(method = "iter", bws = bws, niter = ib$niter)
+  } else {
+    jb <- .bw_joint(plist, period_coef, as.character(t_rd), scheme = use_scheme,
+                    c = cutoff, p = p, q = q, kernel = kernel,
+                    regularize = regularize, reg_const = reg_const)
+    # one common h; each period's pilot b keeps its own CCT ratio b/h
+    bws  <- stats::setNames(lapply(labels, function(k)
+      c(h = jb$h, b = unname(jb$b[[k]]))), labels)
+    info <- list(method = "joint", h = jb$h, b = jb$b, B = jb$B,
+                 Veff = jb$Veff, reg = jb$reg, pilot_bws = jb$pilot_bws)
+  }
+  # the bandwidths actually used in each period, whatever the rule
+  info$h_by_period <- vapply(bws, function(v) unname(v[["h"]]), numeric(1))
+  info$b_by_period <- vapply(bws, function(v) unname(v[["b"]]), numeric(1))
+  list(bws = bws, info = info)
+}
+
+#' The two-row estimate table (Conventional, Robust) at the scheme's standard error
+#' @keywords internal
+#' @noRd
+.rddid_estimate_table <- function(agg_conv, agg_bc, use_scheme, level) {
+  var_field <- c(cs = "V_cs", pc = "V_pc", pv = "V_pv")
+  z_crit    <- stats::qnorm(1 - (1 - level) / 2)
+  make_row  <- function(agg) {
+    se <- unname(sqrt(agg[var_field[use_scheme]]))
     z  <- agg[["est"]] / se
     c(est = agg[["est"]],
       se = se,
       se_cs = sqrt(agg[["V_cs"]]), se_pc = sqrt(agg[["V_pc"]]), se_pv = sqrt(agg[["V_pv"]]),
-      ci_l = agg[["est"]] - zc * se, ci_u = agg[["est"]] + zc * se,
+      ci_l = agg[["est"]] - z_crit * se, ci_u = agg[["est"]] + z_crit * se,
       z = z, p = 2 * stats::pnorm(-abs(z)))
   }
-  est_tab <- rbind(Conventional = mkrow(ac), Robust = mkrow(abc))
-
-  structure(list(
-    estimates = as.data.frame(est_tab),
-    coef = coef, weights = w, weights_type = if (is.numeric(trend)) "custom" else trend,
-    estimand = estimand,
-    t_rd = t_rd, comparisons = comparisons,
-    scheme = use_scheme, scheme_detected = detected, scheme_requested = scheme,
-    bandwidth = bw_info, fits = fits, level = level,
-    p = p, q = q, kernel = kernel, c = c,
-    n_by_period = vapply(fits, function(f) f$n, numeric(1)),
-    call = cl
-  ), class = "rddid")
+  as.data.frame(rbind(Conventional = make_row(agg_conv), Robust = make_row(agg_bc)))
 }
 
 #' @export

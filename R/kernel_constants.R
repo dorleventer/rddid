@@ -1,3 +1,8 @@
+# kernel_constants.R -- the kernel constants of the paper's asymptotic appendix (Gamma, Psi, theta,
+# Omega and the bias/variance/covariance constants b, v, c(rho)) by memoised quadrature. Reached only
+# from bandwidth_joint.R, and only under scheme = "pc" (the same-side cross-period term).
+# Labels such as eq:... in the notes below point into the paper's Appendix B; see dev/appB_map.md.
+
 # Kernel constants of Appendix B.3 ("Single-period asymptotics" and
 # "Additional definitions") of the paper (Leventer & Nevo, RD-DID).
 #

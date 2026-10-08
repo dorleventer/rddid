@@ -1,3 +1,7 @@
+# methods.R -- standard methods for the objects the package returns: summary(), coef(), confint(),
+# nobs(), broom-style tidy()/glance() (registered for the generics package), and the print helpers
+# shared by the four assumption tests. Nothing here re-estimates anything.
+
 # Standard methods for the objects the package returns: summary(), coef(), confint(), nobs(),
 # and broom-style tidy()/glance() (registered for the `generics` package when it is loaded).
 # Everything here is computed from fields that rddid()/the tests already store; nothing is

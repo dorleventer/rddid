@@ -1,6 +1,7 @@
 # assumption_tests_helpers.R -- internals shared by the four assumption tests: .build_types()
 # (a unit's type = its sides of the cutoff in the other periods), .cell_bandwidth() (CCT or rule of
 # thumb per cell), .joint_wald() and .wald_eigen() (two Wald statistics; see the notes on each).
+# The code-to-paper map for the tests is dev/tests_map.md (developer material, not shipped).
 
 # ---------------------------------------------------------------------------
 # .build_types

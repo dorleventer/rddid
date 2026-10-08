@@ -3,6 +3,8 @@
 # .bw_joint() minimises the aggregate AMSE over one common h (bwselect = "joint", the default);
 # .bw_joint_iter() minimises it over one h per period by coordinate descent (bwselect = "iter").
 # The kernel constants for the PC cross-period term come from kernel_constants.R.
+# Labels such as eq:common_h_opt, lem:agg-var or "B.4 P3" in the internal notes below point into the
+# paper's Appendix B; the code-to-paper map is dev/appB_map.md (developer material, not shipped).
 
 # Original file header:
 # Bandwidth selection for the aggregate RD-DID estimator.
@@ -35,71 +37,73 @@
 #' cross-period covariance (`lem:cov-pc`; see the `.bw_joint_iter` header for the
 #' construction). Nothing here depends on which period is the RD period, so the
 #' selectors built on it are invariant to that label; this matters when the
-#' estimator aggregates several RD periods (drafts/agg_att_note.tex, 2026-09-10).
+#' estimator aggregates several RD periods.
 #'
 #' @param plist named per-period data list; `coef` named period coefficients.
 #' @param scheme one of `"cs"`, `"pc"`, `"pv"`.
 #' @param pilot_bws optional named list of per-period `c(h, b)`; defaults to CCT.
-#' @return list with `keys`, `cf` (coefficients in `keys` order), `bt`, `vt`, `nt`,
-#'   `var_b`, `h0v`, `ratio`, `kap_p`, `kap_m`, `fitp` (the pilot fits), `pilot_bws`.
+#' @return list with `keys`, `coef` (in `keys` order), `bias_const`, `var_const`, `n_obs`,
+#'   `var_bias_const`, `h_pilot`, `ratio`, `kappa_plus`, `kappa_minus`, `pilot_fits`,
+#'   `pilot_bws`.
 #' @keywords internal
 #' @noRd
 .bw_constants <- function(plist, coef, scheme = "cs", pilot_bws = NULL,
                           c = 0, p = 1L, q = 2L, kernel = "triangular") {
+  cutoff <- c
   keys <- names(coef)
-  fp1 <- factorial(p + 1)
+  fp1  <- factorial(p + 1)
   if (is.null(pilot_bws))
-    pilot_bws <- .bw_cct(plist, c = c, p = p, kernel = kernel)
+    pilot_bws <- .bw_cct(plist, c = cutoff, p = p, kernel = kernel)
   missing_k <- setdiff(keys, names(pilot_bws))
   if (length(missing_k) > 0L)
     stop("`pilot_bws` is missing entries for period(s): ",
          paste(missing_k, collapse = ", "), ".")
 
-  # per-period asymptotic constants from a pilot fit: B-hat_t (curvature, via the
-  # conventional/BC gap) and V-hat_t (variance constant); rd_period returns both
-  # (eq:per-period-orders).
-  fitp <- lapply(keys, function(k)
+  # one pilot fit per period at its own CCT pair; rd_period() returns the plug-in constants
+  # B-hat_t (bias, via the conventional / bias-corrected gap) and V-hat_t (variance)
+  pilot_fits <- lapply(keys, function(k)
     rd_period(plist[[k]]$y, plist[[k]]$x, h = pilot_bws[[k]][["h"]],
               b = pilot_bws[[k]][["b"]], id = plist[[k]]$id,
-              c = c, p = p, q = q, kernel = kernel))
-  names(fitp) <- keys
-  cf <- unname(vapply(keys, function(k) coef[[k]], numeric(1)))
-  bt <- vapply(keys, function(k) fitp[[k]]$b_const, numeric(1))
-  vt <- vapply(keys, function(k) fitp[[k]]$v_const, numeric(1))
-  nt <- vapply(keys, function(k) fitp[[k]]$n,       numeric(1))
-  ratio <- vapply(keys, function(k)
+              c = cutoff, p = p, q = q, kernel = kernel))
+  names(pilot_fits) <- keys
+  period_coef <- unname(vapply(keys, function(k) coef[[k]], numeric(1)))
+  bias_const  <- vapply(keys, function(k) pilot_fits[[k]]$b_const, numeric(1))
+  var_const   <- vapply(keys, function(k) pilot_fits[[k]]$v_const, numeric(1))
+  n_obs       <- vapply(keys, function(k) pilot_fits[[k]]$n,       numeric(1))
+  ratio       <- vapply(keys, function(k)
     unname(pilot_bws[[k]][["b"]] / pilot_bws[[k]][["h"]]), numeric(1))
-  h0v <- vapply(keys, function(k) unname(pilot_bws[[k]][["h"]]), numeric(1))
+  h_pilot     <- vapply(keys, function(k) unname(pilot_bws[[k]][["h"]]), numeric(1))
 
-  # per-period variance of the bias-constant estimate, Var(B-hat_t) =
-  # ((p+1)!/h0^{p+1})^2 Var(D - D_bc), for the B.4 regularization term.
-  var_b <- vapply(keys, function(k) {
-    s <- fitp[[k]]$sides
-    (fp1 / h0v[[k]]^(p + 1))^2 * (sum(s[["+"]]$g_diff^2) + sum(s[["-"]]$g_diff^2))
+  # Var(B-hat_t) = ((p+1)! / h0^{p+1})^2 Var(D - D_bc), from the g_diff influence vectors;
+  # this is what the regularization term adds to the squared bias
+  var_bias_const <- vapply(keys, function(k) {
+    s <- pilot_fits[[k]]$sides
+    (fp1 / h_pilot[[k]]^(p + 1))^2 * (sum(s[["+"]]$g_diff^2) + sum(s[["-"]]$g_diff^2))
   }, numeric(1))
 
-  # PC covariance precomputation (see the .bw_joint_iter header): per side,
-  # kappa_side[i, j] = pilot same-side covariance * h0_j / c_side(p, h0_i / h0_j).
-  # Only under scheme "pc".
+  # Same-side cross-period covariance under scheme "pc", precomputed per side so the objective
+  # can rescale it to any pair of bandwidths: kappa_side[i, j] = pilot covariance x h0_j /
+  # c_side(p, h0_i / h0_j), where c_side is the kernel constant of kernel_constants.R.
   K <- length(keys)
-  kap_p <- matrix(0, K, K)
-  kap_m <- matrix(0, K, K)
+  kappa_plus  <- matrix(0, K, K)
+  kappa_minus <- matrix(0, K, K)
   if (scheme == "pc" && K >= 2L) {
     for (i in seq_len(K - 1L)) {
       for (j in (i + 1L):K) {
-        cc   <- .cross_cov(fitp[[keys[i]]], fitp[[keys[j]]], bc = FALSE)
-        rho0 <- h0v[i] / h0v[j]
-        kap_p[i, j] <- cc$pc_p * h0v[j] / .kc_c(p, "+", rho0, kernel)
-        kap_m[i, j] <- cc$pc_m * h0v[j] / .kc_c(p, "-", rho0, kernel)
+        cc   <- .cross_cov(pilot_fits[[keys[i]]], pilot_fits[[keys[j]]], bc = FALSE)
+        rho0 <- h_pilot[i] / h_pilot[j]
+        kappa_plus[i, j]  <- cc$pc_p * h_pilot[j] / .kc_c(p, "+", rho0, kernel)
+        kappa_minus[i, j] <- cc$pc_m * h_pilot[j] / .kc_c(p, "-", rho0, kernel)
       }
     }
-    if (all(kap_p == 0) && all(kap_m == 0))
+    if (all(kappa_plus == 0) && all(kappa_minus == 0))
       warning("scheme = \"pc\" but no unit is active in two periods' windows: ",
               "the cross-period term is identically zero (same as scheme = \"cs\").")
   }
-  list(keys = keys, cf = cf, bt = bt, vt = vt, nt = nt, var_b = var_b,
-       h0v = h0v, ratio = ratio, kap_p = kap_p, kap_m = kap_m,
-       fitp = fitp, pilot_bws = pilot_bws)
+  list(keys = keys, coef = period_coef, bias_const = bias_const, var_const = var_const,
+       n_obs = n_obs, var_bias_const = var_bias_const, h_pilot = h_pilot, ratio = ratio,
+       kappa_plus = kappa_plus, kappa_minus = kappa_minus,
+       pilot_fits = pilot_fits, pilot_bws = pilot_bws)
 }
 
 #' Joint AMSE-optimal common bandwidth for the aggregate estimator
@@ -120,9 +124,6 @@
 #' bandwidth keeps each period's CCT ratio, `b_t = h* b_t^CCT / h_t^CCT` (B.4 after
 #' eq:common_h_opt; consistent with Assumption R(f)).
 #'
-#' Before 2026-09-10 every period was fitted at the RD period's CCT pilot; the
-#' selector then depended on which period carried the `t_rd` label, which is
-#' arbitrary for an aggregate over several RD periods. The label no longer enters.
 #'
 #' @param plist named per-period data list; `coef` named period coefficients
 #'   (RD period = +1, comparisons = -w_t); `t_rd` the RD-period label (kept for
@@ -148,32 +149,32 @@
 .bw_joint <- function(plist, coef, t_rd = NULL, scheme = "cs", pilot_bws = NULL,
                       c = 0, p = 1L, q = 2L, kernel = "triangular",
                       regularize = TRUE, reg_const = 3, constants = NULL) {
+  cutoff <- c
   if (is.null(constants))
     constants <- .bw_constants(plist, coef, scheme = scheme, pilot_bws = pilot_bws,
-                               c = c, p = p, q = q, kernel = kernel)
-  cs <- constants
-  fp1 <- factorial(p + 1)
-  K <- length(cs$keys)
+                               c = cutoff, p = p, q = q, kernel = kernel)
+  const <- constants
+  fp1   <- factorial(p + 1)
+  K     <- length(const$keys)
 
-  # estimated aggregate bias constant B(t_RD) = sum_tau coef_tau B-hat_tau (B.4 P3)
-  B <- sum(cs$cf * cs$bt)
-  # variance scale: own-period terms sum_tau coef_tau^2 V-hat_tau / n_tau (lem:agg-var)
-  Veff <- sum(cs$cf^2 * cs$vt / cs$nt)
-  # PC same-side cross-period term at a common h (rho = 1), lem:agg-var / B.4 P3
+  # aggregate bias constant: sum_t coef_t B-hat_t
+  B_agg <- sum(const$coef * const$bias_const)
+  # variance scale: own-period terms sum_t coef_t^2 V-hat_t / n_t ...
+  Veff <- sum(const$coef^2 * const$var_const / const$n_obs)
+  # ... plus, under "pc", the same-side cross-period terms at a common bandwidth (rho = 1)
   if (scheme == "pc" && K >= 2L) {
     for (i in seq_len(K - 1L)) {
       for (j in (i + 1L):K) {
-        Veff <- Veff + 2 * cs$cf[i] * cs$cf[j] *
-          (cs$kap_p[i, j] * .kc_c(p, "+", 1, kernel) +
-           cs$kap_m[i, j] * .kc_c(p, "-", 1, kernel))
+        Veff <- Veff + 2 * const$coef[i] * const$coef[j] *
+          (const$kappa_plus[i, j]  * .kc_c(p, "+", 1, kernel) +
+           const$kappa_minus[i, j] * .kc_c(p, "-", 1, kernel))
       }
     }
   }
-  # Regularization (B.4): lambda * sum_tau coef_tau^2 (h^{p+1}/(p+1)!)^2 Var(B-hat_tau).
-  # At a common h this carries the same h^{2(p+1)} factor as B^2, so it enters the
-  # denominator of h*.
-  reg <- if (regularize) reg_const * sum(cs$cf^2 * cs$var_b) else 0
-  denom <- B^2 + reg
+  # regularization: reg_const x sum_t coef_t^2 Var(B-hat_t). At a common h it carries the same
+  # h^{2(p+1)} factor as B_agg^2, so it simply joins B_agg^2 in the denominator of h*.
+  reg   <- if (regularize) reg_const * sum(const$coef^2 * const$var_bias_const) else 0
+  denom <- B_agg^2 + reg
 
   if (!is.finite(denom) || denom <= 0)
     stop("aggregate bias constant B is ~0 and regularization is off: the ",
@@ -181,17 +182,17 @@
   if (!is.finite(Veff) || Veff <= 0)
     stop("aggregate variance scale is not positive; check the sampling scheme and ",
          "the per-period fits.")
-  # eq:common_h_opt; for p = 1 the leading constant is ((2)!)^2/(2*2) = 1 and the
-  # exponent 1/5.
+  # the closed-form minimiser of the AMSE in h: for p = 1 the leading constant is 1 and the
+  # exponent 1/5
   h_star <- (fp1^2 / (2 * (p + 1)) * Veff / denom)^(1 / (2 * p + 3))
-  radius <- max(vapply(plist, function(d) max(abs(d$x - c), na.rm = TRUE), numeric(1)))
+  radius <- max(vapply(plist, function(d) max(abs(d$x - cutoff), na.rm = TRUE), numeric(1)))
   if (is.finite(radius) && h_star > radius)
     warning("joint AMSE-optimal bandwidth h* = ", signif(h_star, 4),
             " exceeds the running-variable radius ", signif(radius, 4),
             " (the period biases nearly cancel); consider bwselect = \"cct\" or a fixed h.")
-  b <- stats::setNames(h_star * cs$ratio, cs$keys)
-  list(h = h_star, b = b, B = B, Veff = Veff, reg = reg,
-       pilot_bws = cs$pilot_bws, constants = cs)
+  b <- stats::setNames(h_star * const$ratio, const$keys)
+  list(h = h_star, b = b, B = B_agg, Veff = Veff, reg = reg,
+       pilot_bws = const$pilot_bws, constants = const)
 }
 
 #' Period-specific joint AMSE bandwidths by coordinate descent
@@ -252,75 +253,23 @@
                            c = 0, p = 1L, q = 2L, kernel = "triangular",
                            regularize = TRUE, reg_const = 3,
                            hmax = NULL, maxit = 50L, tol = 1e-4) {
-  cs <- .bw_constants(plist, coef, scheme = scheme, pilot_bws = pilot_bws,
-                      c = c, p = p, q = q, kernel = kernel)
-  keys <- cs$keys
-  fp1 <- factorial(p + 1)
-  cf <- cs$cf; bt <- cs$bt; vt <- cs$vt; nt <- cs$nt
-  ratio <- cs$ratio; h0v <- cs$h0v; var_b <- cs$var_b
-  kap_p <- cs$kap_p; kap_m <- cs$kap_m
-  K <- length(keys)
+  cutoff <- c
+  const <- .bw_constants(plist, coef, scheme = scheme, pilot_bws = pilot_bws,
+                         c = cutoff, p = p, q = q, kernel = kernel)
+  keys <- const$keys
   if (is.null(hmax))
-    hmax <- max(vapply(plist, function(d) max(abs(d$x - c), na.rm = TRUE), numeric(1)))
+    hmax <- max(vapply(plist, function(d) max(abs(d$x - cutoff), na.rm = TRUE), numeric(1)))
+  amse <- .bw_iter_objective(const, scheme, p, kernel, regularize, reg_const)
 
-  amse <- function(hv) {
-    # leading bias of the aggregate, B.4 P2: sum_t w~_t h_t^{p+1} B_t / (p+1)!
-    Bbar <- sum(cf * hv^(p + 1) * bt) / fp1
-    # regularization: lambda * sum_t w~_t^2 (h_t^{p+1}/(p+1)!)^2 Var(B-hat_t)
-    pen <- if (regularize) reg_const * sum(cf^2 * (hv^(p + 1) / fp1)^2 * var_b) else 0
-    # own-period variances, lem:agg-var: sum_t w~_t^2 V_t / (n_t h_t)
-    var_term <- sum(cf^2 * vt / (nt * hv))
-    # PC same-side cross-period term, lem:agg-var / B.4 P4 (ordered double sum =
-    # 2 x the unordered sum, by c(1/rho) = rho c(rho))
-    cov_term <- 0
-    if (scheme == "pc" && K >= 2L) {
-      for (i in seq_len(K - 1L)) {
-        for (j in (i + 1L):K) {
-          rho <- hv[i] / hv[j]
-          cov_term <- cov_term + 2 * cf[i] * cf[j] *
-            (kap_p[i, j] * .kc_c(p, "+", rho, kernel) +
-             kap_m[i, j] * .kc_c(p, "-", rho, kernel)) / hv[j]
-        }
-      }
-    }
-    unname(Bbar^2 + pen + var_term + cov_term)
-  }
-  # Seed coordinate descent -- mode controlled by `start`.
+  # search box for every period: from 3% of the running-variable radius to the radius (a
+  # package choice; the paper's update step is unconstrained, see the boundary warning below)
   lo <- 0.03 * hmax
-  if (is.character(start) && length(start) == 1L) {
-    start <- match.arg(start, c("hstar", "cct"))
-    if (start == "hstar") {
-      # Default: start all periods at the common joint-optimal h*, from the same
-      # constants (no refit).
-      jb <- .bw_joint(plist, coef, t_rd, scheme = scheme, c = c, p = p, q = q,
-                      kernel = kernel, regularize = regularize,
-                      reg_const = reg_const, constants = cs)
-      h0 <- rep(jb$h, length(keys))
-    } else {
-      # "cct": start each period at its own CCT pilot h.
-      h0 <- h0v
-    }
-  } else {
-    # Manual: numeric vector or named list supplied by the user.
-    if (is.list(start)) start <- unlist(start)
-    if (!is.numeric(start))
-      stop("`start` must be \"hstar\", \"cct\", or a numeric vector/list of per-period bandwidths.")
-    if (!is.null(names(start))) {
-      missing_k <- setdiff(keys, names(start))
-      if (length(missing_k) > 0L)
-        stop("`start` is missing entries for period(s): ",
-             paste(missing_k, collapse = ", "), ".")
-      h0 <- unname(start[keys])
-    } else {
-      if (length(start) != length(keys))
-        stop("`start` has length ", length(start), " but there are ", length(keys),
-             " periods; supply a named vector/list or one value per period in order.")
-      h0 <- unname(start)
-    }
-    if (any(!is.finite(h0) | h0 <= 0))
-      stop("all values in `start` must be finite and positive.")
-  }
-  h <- pmin(pmax(h0, lo), hmax)
+  h0 <- .bw_iter_start(start, const, plist, coef, t_rd, scheme, cutoff, p, q, kernel,
+                       regularize, reg_const)
+  h  <- pmin(pmax(h0, lo), hmax)
+
+  # coordinate descent: sweep the periods, minimising the objective in each bandwidth with the
+  # others fixed; stop when no bandwidth moved by more than tol x radius, or after maxit sweeps
   it <- 0L
   repeat {
     it <- it + 1L
@@ -331,10 +280,8 @@
     }
     if (max(abs(h - h_old)) < tol * hmax || it >= maxit) break
   }
-  # eq:update is an unconstrained argmin; the search box [lo, hmax] is the package's.
-  # A boundary solution means the objective has no interior minimizer (e.g. the
-  # period biases nearly cancel with regularize = FALSE): say so rather than
-  # return the box edge silently.
+  # a boundary solution means the objective has no interior minimizer (e.g. the period biases
+  # nearly cancel with regularize = FALSE): say so rather than return the box edge silently
   at_edge <- h <= lo * (1 + 1e-8) | h >= hmax * (1 - 1e-8)
   if (any(at_edge))
     warning("period-specific bandwidth for period(s) ",
@@ -343,7 +290,88 @@
             "]; the AMSE has no interior minimizer there. Consider regularize = TRUE, ",
             "bwselect = \"cct\", or a fixed h.")
   bws <- stats::setNames(lapply(seq_along(keys), function(j)
-    c(h = unname(h[j]), b = unname(h[j] * ratio[j]))), keys)
-  list(bws = bws, b_const = bt, v_const = vt, niter = it,
-       objective = amse(h), amse_fun = amse, pilot_bws = cs$pilot_bws)
+    c(h = unname(h[j]), b = unname(h[j] * const$ratio[j]))), keys)
+  list(bws = bws, b_const = const$bias_const, v_const = const$var_const, niter = it,
+       objective = amse(h), amse_fun = amse, pilot_bws = const$pilot_bws)
 }
+
+#' The aggregate AMSE as a function of one bandwidth per period
+#'
+#' Returns a closure `amse(hv)` over the pilot constants: squared leading bias of the aggregate,
+#' the regularization term, the own-period variances, and (under "pc") the same-side
+#' cross-period covariances rescaled to the bandwidth pair (hv[i], hv[j]).
+#' @keywords internal
+#' @noRd
+.bw_iter_objective <- function(const, scheme, p, kernel, regularize, reg_const) {
+  fp1  <- factorial(p + 1)
+  cf   <- const$coef
+  bias <- const$bias_const
+  vari <- const$var_const
+  nobs <- const$n_obs
+  var_bias    <- const$var_bias_const
+  kappa_plus  <- const$kappa_plus
+  kappa_minus <- const$kappa_minus
+  K <- length(const$keys)
+  function(hv) {
+    # leading bias of the aggregate: sum_t coef_t h_t^{p+1} B_t / (p+1)!
+    Bbar <- sum(cf * hv^(p + 1) * bias) / fp1
+    # regularization: reg_const x sum_t coef_t^2 (h_t^{p+1}/(p+1)!)^2 Var(B-hat_t)
+    pen <- if (regularize) reg_const * sum(cf^2 * (hv^(p + 1) / fp1)^2 * var_bias) else 0
+    # own-period variances: sum_t coef_t^2 V_t / (n_t h_t)
+    var_term <- sum(cf^2 * vari / (nobs * hv))
+    # same-side cross-period term under "pc" (each unordered pair once, factor 2; the kernel
+    # constant c_side(rho) rescales the pilot covariance to the pair (h_i, h_j))
+    cov_term <- 0
+    if (scheme == "pc" && K >= 2L) {
+      for (i in seq_len(K - 1L)) {
+        for (j in (i + 1L):K) {
+          rho <- hv[i] / hv[j]
+          cov_term <- cov_term + 2 * cf[i] * cf[j] *
+            (kappa_plus[i, j]  * .kc_c(p, "+", rho, kernel) +
+             kappa_minus[i, j] * .kc_c(p, "-", rho, kernel)) / hv[j]
+        }
+      }
+    }
+    unname(Bbar^2 + pen + var_term + cov_term)
+  }
+}
+
+#' Starting bandwidths of the coordinate descent, from `start`
+#'
+#' `"hstar"`: the common AMSE-optimal h in every period (from the same constants, no refit);
+#' `"cct"`: each period's own CCT pilot h; or a numeric vector / named list, one per period.
+#' @keywords internal
+#' @noRd
+.bw_iter_start <- function(start, const, plist, coef, t_rd, scheme, cutoff, p, q, kernel,
+                           regularize, reg_const) {
+  keys <- const$keys
+  if (is.character(start) && length(start) == 1L) {
+    start <- match.arg(start, c("hstar", "cct"))
+    if (start == "hstar") {
+      jb <- .bw_joint(plist, coef, t_rd, scheme = scheme, c = cutoff, p = p, q = q,
+                      kernel = kernel, regularize = regularize,
+                      reg_const = reg_const, constants = const)
+      return(rep(jb$h, length(keys)))
+    }
+    return(const$h_pilot)
+  }
+  if (is.list(start)) start <- unlist(start)
+  if (!is.numeric(start))
+    stop("`start` must be \"hstar\", \"cct\", or a numeric vector/list of per-period bandwidths.")
+  if (!is.null(names(start))) {
+    missing_k <- setdiff(keys, names(start))
+    if (length(missing_k) > 0L)
+      stop("`start` is missing entries for period(s): ",
+           paste(missing_k, collapse = ", "), ".")
+    h0 <- unname(start[keys])
+  } else {
+    if (length(start) != length(keys))
+      stop("`start` has length ", length(start), " but there are ", length(keys),
+           " periods; supply a named vector/list or one value per period in order.")
+    h0 <- unname(start)
+  }
+  if (any(!is.finite(h0) | h0 <= 0))
+    stop("all values in `start` must be finite and positive.")
+  h0
+}
+

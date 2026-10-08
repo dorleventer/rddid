@@ -21,7 +21,7 @@
 #'   paper's C^same), `pv` = Cov(b+_t,b-_s)+Cov(b-_t,b+_s) (opposite-side,
 #'   C^opp), and the two same-side parts `pc_p` = Cov(b+_t,b+_s) and
 #'   `pc_m` = Cov(b-_t,b-_s), which the period-specific bandwidth rule scales
-#'   separately by side (lem:cov-pc).
+#'   separately by side.
 #' @keywords internal
 #' @noRd
 .cross_cov <- function(ft, fs, bc = FALSE) {
@@ -29,8 +29,10 @@
   gt_m <- if (bc) ft$sides$`-`$g_bc else ft$sides$`-`$g
   gs_p <- if (bc) fs$sides$`+`$g_bc else fs$sides$`+`$g
   gs_m <- if (bc) fs$sides$`-`$g_bc else fs$sides$`-`$g
-  it_p <- ft$sides$`+`$id; it_m <- ft$sides$`-`$id
-  is_p <- fs$sides$`+`$id; is_m <- fs$sides$`-`$id
+  it_p <- ft$sides$`+`$id
+  it_m <- ft$sides$`-`$id
+  is_p <- fs$sides$`+`$id
+  is_m <- fs$sides$`-`$id
   pc_p <- .match_sum(it_p, gt_p, is_p, gs_p)      # Cov(b+_t, b+_s)
   pc_m <- .match_sum(it_m, gt_m, is_m, gs_m)      # Cov(b-_t, b-_s)
   list(
@@ -44,7 +46,7 @@
 #'
 #' Collapses `.cross_cov()` to a single number under a sampling scheme:
 #' `cs` → 0 (independent), `pc` → same-side only, `pv` → same-side minus
-#' opposite-side (`C^same - C^opp`, eq:cross-decomp). Used wherever a pair of
+#' opposite-side (`C^same - C^opp`). Used wherever a pair of
 #' `rd_period` fits in different periods needs its scalar covariance.
 #'
 #' @param ft,fs `rd_period` fits for two distinct periods.
@@ -61,8 +63,7 @@
 #' Aggregate per-period fits into the RD-DID estimator and its variances
 #'
 #' Forms ATT-hat = sum_tau coef_tau * D-hat_tau and the variance under the three
-#' sampling schemes (eq:var-cs, eq:var-pc, eq:var-pv). With
-#' Cov(D_t,D_s) = C^same - C^opp (eq:cross-decomp), the general quadratic form
+#' sampling schemes. With Cov(D_t,D_s) = C^same - C^opp, the general quadratic form
 #' specialises to: CS drops all cross terms, PC keeps same-side (C^same) only, PV
 #' keeps both (C^same - C^opp).
 #'
@@ -80,6 +81,9 @@
   est   <- sum(coef * vapply(keys, Dget, numeric(1)))
   Vdiag <- sum(coef^2 * vapply(keys, Vget, numeric(1)))
 
+  # cross-period terms: each unordered pair once, with the factor 2 of the quadratic form.
+  # The pc / pv combinations are the same as in .cov_scheme(); keep the two in step.
+  # (Summation order is part of the result at the last bit: do not vectorise.)
   add_pc <- 0
   add_pv <- 0
   if (length(keys) >= 2L) {

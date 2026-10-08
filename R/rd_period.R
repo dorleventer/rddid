@@ -74,89 +74,119 @@
 rd_period <- function(y, x, h, b = h, id = NULL, c = 0, p = 1L, q = 2L,
                       kernel = "triangular") {
   stopifnot(length(y) == length(x), h > 0, b > 0, q > p, p >= 1L)
+  cutoff <- c                              # `c` stays the argument name, as in rdrobust
   y <- as.numeric(y)
   x <- as.numeric(x)
+  # n is the number of rows passed in, BEFORE incomplete rows are dropped: it is the n_t that
+  # the bandwidth constants below are scaled by (v_const = n h V_D). Changing it would move
+  # every joint/iter bandwidth, so it is kept as it is.
   n <- length(y)
   if (is.null(id)) id <- seq_len(n)
   ok <- stats::complete.cases(y, x, id)
-  y <- y[ok]; x <- x[ok]; id <- id[ok]
+  y  <- y[ok]
+  x  <- x[ok]
+  id <- id[ok]
 
-  side_fit <- function(keep) {
-    xs <- x[keep]; ys <- y[keep]; ids <- id[keep]
-    u_h <- (xs - c) / h
-    u_b <- (xs - c) / b
-    w_h <- .rd_kweight(u_h, kernel)        # main-bandwidth kernel weights
-    w_b <- .rd_kweight(u_b, kernel)        # pilot-bandwidth kernel weights
-    active <- (w_h > 0) | (w_b > 0)        # active set = main and pilot windows
-    if (sum(active) <= q + 1L)
-      stop("too few observations in the bias-correction window on one side; ",
-           "widen the bandwidth.")
-    xs <- xs[active]; ys <- ys[active]; ids <- ids[active]
-    w_h <- w_h[active]; w_b <- w_b[active]
-
-    # design matrices: order q (for bias), order p nested inside
-    Rq <- outer(xs - c, 0:q, `^`)          # n_s x (q+1)
-    Rp <- Rq[, 1:(p + 1L), drop = FALSE]
-
-    invG_p <- .qrXXinv(sqrt(w_h) * Rp)     # (X' A(h) X)^{-1}
-    invG_q <- .qrXXinv(sqrt(w_b) * Rq)     # (X' A(b) X)^{-1}, order q
-
-    # bias-correction weight matrix of eq:bc_Q (without the 1/h, 1/n scalings,
-    # which cancel): Q = X'A(h) - h^{p+1} * theta * e_{p+1,q}' Gq^{-1} X'A(b)
-    e_p1 <- numeric(q + 1L); e_p1[p + 2L] <- 1            # e_{p+1,q}
-    theta <- crossprod(Rp * w_h, ((xs - c) / h)^(p + 1L)) # X' A(h) S_{p+1}
-    Aq_b <- t(Rq * w_b)                                   # X' A(b)
-    Qmat <- t(Rp * w_h) - h^(p + 1L) * (theta %*% (t(e_p1) %*% invG_q %*% Aq_b))
-
-    # coefficients
-    beta_p <- invG_p %*% crossprod(Rp * w_h, ys)         # conventional
-    beta_q <- invG_q %*% crossprod(Rq * w_b, ys)         # order-q (for bc residuals)
-    beta_bc <- invG_p %*% (Qmat %*% ys)                  # bias-corrected
-
-    # intercept influence rows (e_0' M), then g = influence * residual
-    a_c  <- as.numeric(invG_p[1, ] %*% t(Rp * w_h))      # conventional intercept
-    a_bc <- as.numeric(invG_p[1, ] %*% Qmat)             # bias-corrected intercept
-    res_c <- sqrt(length(ys) / (length(ys) - (p + 1L))) * (ys - Rp %*% beta_p)
-    res_b <- sqrt(length(ys) / (length(ys) - (q + 1L))) * (ys - Rq %*% beta_q)
-
-    list(
-      beta0    = beta_p[1L],
-      beta0_bc = beta_bc[1L],
-      slope    = as.numeric(beta_p[2L]),
-      id       = ids,
-      g        = a_c * as.numeric(res_c),
-      g_bc     = a_bc * as.numeric(res_b),
-      # influence on (conventional - bias-corrected): both are linear in the same
-      # Y, so the difference has per-unit weight (a_c - a_bc), supported on the
-      # pilot window like the BC weights; paired with the pilot-fit residuals
-      # res_b (same convention as g_bc). Used to estimate Var(B-hat) for the
-      # bandwidth regularization (App. B.4). Decision D4, dev/appB_map.md.
-      g_diff   = (a_c - a_bc) * as.numeric(res_b)
-    )
-  }
-
-  R_side <- side_fit(x >= c)   # (+)
-  L_side <- side_fit(x <  c)   # (-)
+  # one weighted local-polynomial fit per side of the cutoff
+  above <- x >= cutoff
+  R_side <- .rd_side_fit(y[above],  x[above],  id[above],  cutoff, h, b, p, q, kernel)   # (+)
+  L_side <- .rd_side_fit(y[!above], x[!above], id[!above], cutoff, h, b, p, q, kernel)   # (-)
 
   D    <- R_side$beta0    - L_side$beta0
   D_bc <- R_side$beta0_bc - L_side$beta0_bc
   V_D    <- sum(R_side$g^2)    + sum(L_side$g^2)
   V_D_bc <- sum(R_side$g_bc^2) + sum(L_side$g_bc^2)
 
-  # plug-in asymptotic constants (Appendix B.3, eq:per-period-orders):
-  #   V(D_t(h)) = V_t / (n_t h)               ->  V-hat_t = n h V_D
-  #   B_t(h)    = h^{p+1}/(p+1)! * B_t         ->  B-hat_t = (p+1)! (D - D_bc) / h^{p+1},
-  # since D - D_bc is the estimated bias B-hat_t(h, b) of Appendix B.1 (with the
-  # finite-sample B_{t,(side),p}(h) in place of the kernel constant nu_{(side),p}).
+  # plug-in constants for the bandwidth rules, from the asymptotic orders
+  #   Var(D_t(h)) = V_t / (n_t h)            ->  V-hat_t = n h V_D
+  #   Bias(D_t(h)) = h^{p+1}/(p+1)! * B_t    ->  B-hat_t = (p+1)! (D - D_bc) / h^{p+1},
+  # since D - D_bc is the estimated bias of the conventional estimator at (h, b).
   v_const <- n * h * V_D
   b_const <- factorial(p + 1L) * (D - D_bc) / h^(p + 1L)
 
   structure(
     list(D = D, D_bc = D_bc, V_D = V_D, V_D_bc = V_D_bc,
          b_const = b_const, v_const = v_const,
-         n = n, h = h, b = b, c = c, p = p, q = q, kernel = kernel,
+         n = n, h = h, b = b, c = cutoff, p = p, q = q, kernel = kernel,
          sides = list(`+` = R_side, `-` = L_side)),
     class = "rd_period")
+}
+
+#' Local-polynomial fit on one side of the cutoff: conventional and bias-corrected
+#' intercept, and the per-unit influence vectors behind every variance in the package
+#'
+#' Follows Calonico, Cattaneo and Titiunik (2014): the order-p fit at bandwidth h gives the
+#' conventional intercept; an order-q fit at the pilot bandwidth b estimates the (p+1)-th
+#' derivative, whose contribution is subtracted to give the bias-corrected intercept. Both
+#' estimators are linear in y, so each has a per-unit weight (its "influence"), and
+#' g = weight x residual is what the variances and cross-period covariances sum.
+#'
+#' @return list: `beta0`, `beta0_bc` (intercepts), `slope`, `id` (units in the active set),
+#'   `g`, `g_bc` (influence x residual, conventional and bias-corrected), `g_diff` (influence of
+#'   conventional minus bias-corrected, paired with the pilot residuals; feeds Var(B-hat) in the
+#'   bandwidth regularization).
+#' @keywords internal
+#' @noRd
+.rd_side_fit <- function(ys, xs, ids, cutoff, h, b, p, q, kernel) {
+  u_h <- (xs - cutoff) / h
+  u_b <- (xs - cutoff) / b
+  w_h <- .rd_kweight(u_h, kernel)
+  w_b <- .rd_kweight(u_b, kernel)
+  # the active set is the union of the two windows; units outside both have zero weight in
+  # every quantity below, and the pilot window (b >= h usually) is the larger one
+  active <- (w_h > 0) | (w_b > 0)
+  # the order-q fit needs more than q + 1 points, or its HC1 factor n_s / (n_s - (q + 1)) is
+  # infinite
+  if (sum(active) <= q + 1L)
+    stop("too few observations in the bias-correction window on one side; ",
+         "widen the bandwidth.")
+  xs  <- xs[active]
+  ys  <- ys[active]
+  ids <- ids[active]
+  w_h <- w_h[active]
+  w_b <- w_b[active]
+
+  # design matrices: order q (pilot fit), with the order-p design as its first p + 1 columns
+  Rq <- outer(xs - cutoff, 0:q, `^`)
+  Rp <- Rq[, 1:(p + 1L), drop = FALSE]
+  invG_p <- .qrXXinv(sqrt(w_h) * Rp)     # (X' A(h) X)^{-1}
+  invG_q <- .qrXXinv(sqrt(w_b) * Rq)     # (X' A(b) X)^{-1}, order q
+
+  # bias-correction weight matrix (CCT eq. for the bias-corrected estimator, without the 1/h
+  # and 1/n scalings, which cancel): Q = X'A(h) - h^{p+1} * theta * e_{p+1}' Gq^{-1} X'A(b).
+  # e_p1 picks the (p+1)-th power, which sits at position p + 2 of the length-(q+1) vector.
+  # Keep the grouping of the matrix products exactly as written: a regrouping changes the last
+  # bits of every bias-corrected number.
+  e_p1 <- numeric(q + 1L)
+  e_p1[p + 2L] <- 1
+  theta <- crossprod(Rp * w_h, ((xs - cutoff) / h)^(p + 1L))  # X' A(h) S_{p+1}
+  Aq_b  <- t(Rq * w_b)                                        # X' A(b)
+  Qmat  <- t(Rp * w_h) - h^(p + 1L) * (theta %*% (t(e_p1) %*% invG_q %*% Aq_b))
+
+  beta_p  <- invG_p %*% crossprod(Rp * w_h, ys)   # conventional coefficients
+  beta_q  <- invG_q %*% crossprod(Rq * w_b, ys)   # order-q coefficients (pilot residuals)
+  beta_bc <- invG_p %*% (Qmat %*% ys)             # bias-corrected coefficients
+
+  # influence of each unit on the intercept (first row of the hat-type matrix), then
+  # g = influence x residual, with rdrobust's HC1 factor sqrt(n_s / (n_s - k)) on the residuals
+  # of the fit they come from: order p for the conventional, order q for the bias-corrected
+  a_c   <- as.numeric(invG_p[1, ] %*% t(Rp * w_h))
+  a_bc  <- as.numeric(invG_p[1, ] %*% Qmat)
+  res_c <- sqrt(length(ys) / (length(ys) - (p + 1L))) * (ys - Rp %*% beta_p)
+  res_b <- sqrt(length(ys) / (length(ys) - (q + 1L))) * (ys - Rq %*% beta_q)
+
+  list(
+    beta0    = beta_p[1L],
+    beta0_bc = beta_bc[1L],
+    slope    = as.numeric(beta_p[2L]),
+    id       = ids,
+    g        = a_c * as.numeric(res_c),
+    g_bc     = a_bc * as.numeric(res_b),
+    # influence on (conventional - bias-corrected): both are linear in the same y, so the
+    # difference has per-unit weight (a_c - a_bc), paired with the pilot residuals like g_bc.
+    # Used for Var(B-hat) in the bandwidth regularization.
+    g_diff   = (a_c - a_bc) * as.numeric(res_b)
+  )
 }
 
 #' @export
@@ -168,7 +198,9 @@ print.rd_period <- function(x, ...) {
   invisible(x)
 }
 
-# ---- Cholesky inverse of a Gram matrix (used only by rd_period) -----------------------------
+# ---- Cholesky inverse of a Gram matrix (used only by .rd_side_fit) --------------------------
+# Columns are rescaled to unit norm before the Cholesky factorisation and the inverse is scaled
+# back, which keeps the inverse accurate when the polynomial columns differ in magnitude.
 #' Inverse of a weighted Gram matrix via Cholesky, given the square-root design
 #'
 #' The columns of `x` are powers of the centred running variable, so
