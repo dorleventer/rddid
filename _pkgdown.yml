@@ -4,7 +4,7 @@ template:
 
 navbar:
   structure:
-    left: [intro, articles, reference, news]
+    left: [intro, articles, reference]
     right: [search, github]
   components:
     intro:
@@ -21,9 +21,6 @@ navbar:
           href: articles/rddid-options.html
         - text: How rddid() computes the estimate (for referees)
           href: articles/rddid-how-it-works.html
-    news:
-      text: Changelog
-      href: news/index.html
 
 articles:
   - title: Get started
