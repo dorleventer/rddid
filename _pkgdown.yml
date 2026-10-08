@@ -47,6 +47,7 @@ reference:
       - plot.rddid
       - rddid-methods
       - rddid-tidiers
+      - reexports
   - title: Check the assumptions
     desc: >
       Tests of the identification assumptions when the running variable moves

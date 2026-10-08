@@ -157,16 +157,22 @@ nobs.rddid <- function(object, ...) as.integer(sum(object$n_by_period))
 #'   `scheme`, `level`).
 #' @examples
 #' fit <- rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
-#' if (requireNamespace("generics", quietly = TRUE)) {
-#'   generics::tidy(fit)
-#'   generics::glance(fit)
-#'   generics::tidy(rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3))
-#' }
+#' tidy(fit)
+#' glance(fit)
+#' tidy(rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3))
 #' @name rddid-tidiers
 NULL
 
+#' @importFrom generics tidy
+#' @export
+generics::tidy
+
+#' @importFrom generics glance
+#' @export
+generics::glance
+
 #' @rdname rddid-tidiers
-#' @exportS3Method generics::tidy
+#' @export
 tidy.rddid <- function(x, conf.int = TRUE, conf.level = NULL, ...) {
   e <- x$estimates
   out <- data.frame(term = rownames(e), estimate = e$est, std.error = e$se, statistic = e$z,
@@ -185,7 +191,7 @@ tidy.rddid <- function(x, conf.int = TRUE, conf.level = NULL, ...) {
 }
 
 #' @rdname rddid-tidiers
-#' @exportS3Method generics::glance
+#' @export
 glance.rddid <- function(x, ...) {
   data.frame(nobs = nobs.rddid(x), t_rd = x$t_rd,
              comparisons = paste(x$comparisons, collapse = ", "),
@@ -203,16 +209,16 @@ glance.rddid <- function(x, ...) {
              row.names = NULL, stringsAsFactors = FALSE)
 }
 #' @rdname rddid-tidiers
-#' @exportS3Method generics::tidy
+#' @export
 tidy.rd_typecont <- function(x, ...) .tidy_test(x, "type continuity")
 #' @rdname rddid-tidiers
-#' @exportS3Method generics::tidy
+#' @export
 tidy.rd_compstable <- function(x, ...) .tidy_test(x, "composition stability")
 #' @rdname rddid-tidiers
-#' @exportS3Method generics::tidy
+#' @export
 tidy.rd_homog <- function(x, ...) .tidy_test(x, "homogeneous confounding")
 #' @rdname rddid-tidiers
-#' @exportS3Method generics::tidy
+#' @export
 tidy.rd_trendcell <- function(x, ...) .tidy_test(x, "constant within-type confounding")
 
 # ---- shared print helpers for the validation tests ------------------------------------------

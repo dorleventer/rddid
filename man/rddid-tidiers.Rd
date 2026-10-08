@@ -50,9 +50,7 @@ can be passed to table makers such as \code{modelsummary}. The generics come fro
 }
 \examples{
 fit <- rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
-if (requireNamespace("generics", quietly = TRUE)) {
-  generics::tidy(fit)
-  generics::glance(fit)
-  generics::tidy(rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3))
-}
+tidy(fit)
+glance(fit)
+tidy(rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3))
 }

@@ -205,10 +205,10 @@ tests <- list(
   rd_homog(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3),
   rd_trendcell(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 )
-do.call(rbind, lapply(tests, generics::tidy))
+do.call(rbind, lapply(tests, tidy))
 ```
 
-`tidy()` (from the generics package) returns one row per test, so the four stack
+`tidy()` returns one row per test, so the four stack
 into one table for a paper or a table maker such as modelsummary. The
 composition-stability row is the joint-over-pairs statistic, whose p-value is
 approximate.

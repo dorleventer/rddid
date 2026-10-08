@@ -1,5 +1,14 @@
 # rddid 0.4.0.9000 (development)
 
+## 2026-10-08: `tidy()`/`glance()` always available; a no-Suggests check
+
+* `generics` moved from Suggests to Imports and its `tidy()`/`glance()` are re-exported:
+  `tidy(fit)` works after `library(rddid)` without `generics::` and without installing anything
+  else. No numerical change.
+* New workflow `check-no-suggests.yaml`: R CMD check with only the hard dependencies installed
+  (plus testthat, knitr, rmarkdown), so every use of ggplot2, modelsummary or broom stays
+  guarded. `broom` added to Suggests (the Get-started modelsummary chunk needs it).
+
 ## 2026-10-08: second bug-hunt round (input handling; no numerical change on valid input)
 
 * `rddid()` now works on complete (outcome, running variable, id) rows only and says how many

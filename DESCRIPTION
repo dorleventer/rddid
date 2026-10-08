@@ -23,11 +23,11 @@ RoxygenNote: 7.3.3
 Depends:
     R (>= 3.6)
 Imports:
+    generics,
     rdrobust,
     stats
 Suggests:
     broom,
-    generics,
     ggplot2,
     knitr,
     modelsummary,
