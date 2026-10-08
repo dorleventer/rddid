@@ -14,7 +14,7 @@ rddid(
   comparisons = NULL,
   weights = "constant",
   estimand = c("att", "atu"),
-  bwselect = c("iter", "joint", "cct"),
+  bwselect = c("joint", "iter", "cct"),
   h = NULL,
   b = NULL,
   start = "hstar",
@@ -53,11 +53,13 @@ period pass \code{comparisons} explicitly.}
 uniformly ZERO in the comparison periods (targets the ATT), \code{"atu"} when
 it is uniformly ONE (targets the ATU). See "Targeting the ATU" below.}
 
-\item{bwselect}{\code{"iter"} (default; period-specific bandwidths chosen jointly
-by coordinate descent on the aggregate AMSE, started at the common
-joint-optimal bandwidth), \code{"joint"} (a single common AMSE-optimal
-bandwidth for the aggregate estimator), or \code{"cct"} (per-period CCT
-MSE-optimal bandwidths, \code{\link[=rd_bw_cct]{rd_bw_cct()}}). Ignored if \code{h} is supplied.
+\item{bwselect}{\code{"joint"} (default; one common bandwidth for every period,
+chosen to minimise the asymptotic MSE of the aggregate estimator — the
+paper's common rule), \code{"cct"} (a separate CCT MSE-optimal bandwidth per
+period, \code{\link[=rd_bw_cct]{rd_bw_cct()}}), or \code{"iter"} (period-specific bandwidths found by
+coordinate descent on the aggregate AMSE, started at the common
+bandwidth; not used in the paper, kept for the simulations). Ignored if
+\code{h} is supplied.
 Both joint rules estimate each period's bias and variance constants at
 that period's own CCT pilot, so neither depends on which period is
 labelled \code{t_rd}; under \code{"joint"} the pilot \code{b_t} keeps each period's CCT

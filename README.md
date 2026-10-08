@@ -59,14 +59,14 @@ rddid(dat, y = "Y", x = "R", time = "t", id = "id",
 #> RD-DID estimate of ATT(t_RD)
 #>   RD period: 3   comparison periods: 1, 2
 #>   weights: constant [0.5, 0.5]
-#>   bwselect: iter  (5 iterations)
+#>   bwselect: joint  h=0.3025 (common), b=0.4415/0.452/0.4691 (per period)
 #>   scheme: pc (auto-detected)
 #> 
 #>                    Estimate   Std.Err.   95% CI
-#>   Conventional      1.09414    0.09745   [  0.90313,   1.28514]
-#>   Robust            1.12177    0.11715   [  0.89215,   1.35138]
+#>   Conventional      1.08745    0.10080   [  0.88988,   1.28502]
+#>   Robust            1.11523    0.12133   [  0.87743,   1.35303]
 #> 
-#>   Robust SE by scheme: cs=0.18902  pc=0.11715  pv=0.11715
+#>   Robust SE by scheme: cs=0.19120  pc=0.12133  pv=0.12133
 ```
 
 Set `estimand = "atu"` when the comparison periods are uniformly treated

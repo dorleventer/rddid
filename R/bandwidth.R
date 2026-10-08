@@ -378,8 +378,6 @@ rd_bw_cct <- function(y, x, c = 0, p = 1L, kernel = "triangular") {
             "); falling back to 0.5*IQR h=", round(h0, 4))
     c(h = h0, b = h0)
   }
-  if (!requireNamespace("rdrobust", quietly = TRUE))
-    return(fallback("rdrobust not installed"))
   bw <- tryCatch(
     rdrobust::rdbwselect(y = y, x = x, c = c, p = p, kernel = kernel,
                          bwselect = "mserd"),

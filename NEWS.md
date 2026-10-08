@@ -1,5 +1,18 @@
 # rddid 0.4.0.9000 (development)
 
+## 2026-10-08: UX sweep, step 1
+
+* **The default bandwidth rule is now the common bandwidth, `bwselect = "joint"`** (one `h` for
+  every period, minimising the asymptotic MSE of the aggregate estimator). The iterative
+  period-specific rule `"iter"` remains available but is no longer the default and is not used in
+  the paper. Calls that pass `bwselect` explicitly are unaffected.
+* **`rdrobust` moved from Suggests to Imports.** `rd_bw_cct()` no longer falls back to
+  `0.5 * IQR(x)` when rdrobust is not installed (the fallback on an `rdbwselect()` error is
+  unchanged), so the default path gives the same numbers on every machine.
+* **The composition-adjusted family is removed**: `rd_att()`, `rd_sadjust()`, `rd_c()`,
+  `rd_adjust()` and their tests. They belong to a companion paper, not to the RD-DID paper, and are
+  recoverable at the git tag `v0.4.0.9000-composition`.
+
 * **`bwselect = "joint"` no longer depends on which period is labelled `t_rd`.** The common
   AMSE-optimal bandwidth used to fit *every* period at the RD period's CCT pilot pair to estimate
   the aggregate bias and variance constants, so an estimator that aggregates several RD periods

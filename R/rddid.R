@@ -91,11 +91,13 @@
 #' @param estimand `"att"` (default) when the treatment of interest is
 #'   uniformly ZERO in the comparison periods (targets the ATT), `"atu"` when
 #'   it is uniformly ONE (targets the ATU). See "Targeting the ATU" below.
-#' @param bwselect `"iter"` (default; period-specific bandwidths chosen jointly
-#'   by coordinate descent on the aggregate AMSE, started at the common
-#'   joint-optimal bandwidth), `"joint"` (a single common AMSE-optimal
-#'   bandwidth for the aggregate estimator), or `"cct"` (per-period CCT
-#'   MSE-optimal bandwidths, [rd_bw_cct()]). Ignored if `h` is supplied.
+#' @param bwselect `"joint"` (default; one common bandwidth for every period,
+#'   chosen to minimise the asymptotic MSE of the aggregate estimator — the
+#'   paper's common rule), `"cct"` (a separate CCT MSE-optimal bandwidth per
+#'   period, [rd_bw_cct()]), or `"iter"` (period-specific bandwidths found by
+#'   coordinate descent on the aggregate AMSE, started at the common
+#'   bandwidth; not used in the paper, kept for the simulations). Ignored if
+#'   `h` is supplied.
 #'   Both joint rules estimate each period's bias and variance constants at
 #'   that period's own CCT pilot, so neither depends on which period is
 #'   labelled `t_rd`; under `"joint"` the pilot `b_t` keeps each period's CCT
@@ -145,7 +147,7 @@
 rddid <- function(data, y, x, time, id = NULL, t_rd,
                   comparisons = NULL, weights = "constant",
                   estimand = c("att", "atu"),
-                  bwselect = c("iter", "joint", "cct"), h = NULL, b = NULL,
+                  bwselect = c("joint", "iter", "cct"), h = NULL, b = NULL,
                   start = "hstar",
                   scheme = c("auto", "cs", "pc", "pv"),
                   regularize = TRUE, reg_const = 3,
