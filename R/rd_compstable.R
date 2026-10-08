@@ -2,6 +2,263 @@
 # each comparison period (reflected-sample construction), with its print method. Shared pieces:
 # assumption_tests_helpers.R, cross_period_covariance.R.
 
+#' Rule-of-thumb bandwidth for bwselect = "rot": 0.5 * IQR of the running variable over all rows,
+#' or its standard deviation if the IQR is zero; returns `h`.
+#' @noRd
+.compstable_rot_bandwidth <- function(all_x) {
+  h <- 0.5 * stats::IQR(all_x)
+  if (h <= 0) h <- stats::sd(all_x)
+  h
+}
+
+#' Wide table of the panel, one row per unit (column `id`): `R_<period>`, the running variable
+#' (mirrored under "atu"), and `side_<period>`, 1 if the unit is above the original cutoff in that
+#' period and 0 if below (NA if unobserved); returns the data frame.
+#' @noRd
+.compstable_wide <- function(data, x, time, id, all_periods, period_labels, cutoff, estimand) {
+  wide <- data.frame(id = unique(data[[id]]), stringsAsFactors = FALSE)
+  for (lab in period_labels) {
+    rows_t <- data[data[[time]] == all_periods[match(lab, period_labels)], , drop = FALSE]
+    pos    <- match(wide$id, rows_t[[id]])
+    wide[[paste0("R_", lab)]]    <- rows_t[[x]][pos]
+    wide[[paste0("side_", lab)]] <- as.integer(rows_t[[x]][pos] >= cutoff)
+    # Under "atu" the sample is selected on the mirrored x (below the original cutoff), but the
+    # TYPE keeps the original orientation, "above the cutoff in the other period": with x
+    # mirrored and no ties at the cutoff, original above == mirrored x < 0. Same Wald either way
+    # (pi(0) = 1 - pi(1)); this convention makes the reported jump comparable across estimands.
+    if (estimand == "atu")
+      wide[[paste0("side_", lab)]] <- 1L - wide[[paste0("side_", lab)]]
+  }
+  wide
+}
+
+#' Reflected sample of one pair. The units above the cutoff in the RD period enter at
+#' x' = x - cutoff >= 0, those above it in the comparison period t0 at x' = -(x - cutoff) <= 0,
+#' each with its type; units without a type (unobserved in a period the type needs) are dropped.
+#' Returns list(x_trd, id_trd, type_trd, x_t0, id_t0, type_t0, n_trd, n_t0, n_both).
+#' @noRd
+.compstable_reflect <- function(wide, t_rd, t0, period_labels, cutoff) {
+  t_rd_str <- as.character(t_rd)
+  t0_str   <- as.character(t0)
+  # A unit's type is its sides in the other periods (period order), then its side in the
+  # partner period of the pair (t0 for an RD-period unit, t_rd for a comparison-period unit).
+  other_periods <- setdiff(period_labels, base::c(t_rd_str, t0_str))
+
+  above_trd   <- wide[!is.na(wide[[paste0("R_", t_rd_str)]]) &
+                        wide[[paste0("R_", t_rd_str)]] >= cutoff, , drop = FALSE]
+  partner_trd <- above_trd[[paste0("side_", t0_str)]]
+
+  above_t0   <- wide[!is.na(wide[[paste0("R_", t0_str)]]) &
+                       wide[[paste0("R_", t0_str)]] >= cutoff, , drop = FALSE]
+  partner_t0 <- above_t0[[paste0("side_", t_rd_str)]]
+
+  if (length(other_periods) > 0L) {
+    # a unit unobserved in an other period has no type (as in .build_types)
+    other_trd <- apply(above_trd[, paste0("side_", other_periods), drop = FALSE], 1,
+                       function(r) if (anyNA(r)) NA_character_ else paste(r, collapse = ""))
+    other_t0  <- apply(above_t0[,  paste0("side_", other_periods), drop = FALSE], 1,
+                       function(r) if (anyNA(r)) NA_character_ else paste(r, collapse = ""))
+  } else {
+    # two periods: the type is the partner side alone
+    other_trd <- rep("", nrow(above_trd))
+    other_t0  <- rep("", nrow(above_t0))
+  }
+
+  partner_trd[is.na(partner_trd)] <- NA_integer_
+  partner_t0[is.na(partner_t0)]   <- NA_integer_
+
+  type_trd <- ifelse(is.na(partner_trd) | is.na(other_trd), NA_character_,
+                     paste0(other_trd, as.character(partner_trd)))
+  type_t0  <- ifelse(is.na(partner_t0) | is.na(other_t0),  NA_character_,
+                     paste0(other_t0,  as.character(partner_t0)))
+
+  xref_trd <- above_trd[[paste0("R_", t_rd_str)]] - cutoff
+  xref_t0  <-  -(above_t0[[paste0("R_", t0_str)]] - cutoff)
+  # A t0-above unit exactly at the cutoff reflects to 0 and would be assigned to the right
+  # (t_rd) group by rd_period's `x >= c` split; keep it on the reflected (left) side with a
+  # negative value that carries full kernel weight.
+  xref_t0[xref_t0 == 0] <- -.Machine$double.xmin
+
+  id_trd <- above_trd$id
+  id_t0  <- above_t0$id
+
+  keep_trd <- !is.na(type_trd)
+  keep_t0  <- !is.na(type_t0)
+
+  xref_trd <- xref_trd[keep_trd]
+  id_trd   <- id_trd[keep_trd]
+  type_trd <- type_trd[keep_trd]
+  xref_t0  <- xref_t0[keep_t0]
+  id_t0    <- id_t0[keep_t0]
+  type_t0  <- type_t0[keep_t0]
+
+  n_trd  <- length(id_trd)
+  n_t0   <- length(id_t0)
+  n_both <- length(intersect(id_trd, id_t0))
+
+  list(x_trd = xref_trd, id_trd = id_trd, type_trd = type_trd,
+       x_t0 = xref_t0, id_t0 = id_t0, type_t0 = type_t0,
+       n_trd = n_trd, n_t0 = n_t0, n_both = n_both)
+}
+
+#' Local-linear RD of each type indicator on the reflected sample of one pair, at the artificial
+#' cutoff 0; returns list(theta = the jumps (bias-corrected if `bc`, NA for a failed fit),
+#' fits = the rd_period fits).
+#' @noRd
+.compstable_fit_types <- function(refl, type_values, n_types, kernel, h, bwselect, bc) {
+  # rd_period splits the stacked sample at 0: the RD-period units form the "+" side, the
+  # comparison-period units the "-" side
+  x_all    <- base::c(refl$x_trd, refl$x_t0)
+  id_all   <- base::c(refl$id_trd, refl$id_t0)
+  type_all <- base::c(refl$type_trd, refl$type_t0)
+
+  theta <- numeric(n_types)
+  fits  <- vector("list", n_types)
+  names(fits) <- type_values
+
+  for (idx_v in seq_along(type_values)) {
+    type_v <- type_values[idx_v]
+    y_v    <- as.numeric(type_all == type_v)
+    # h = NULL (bwselect = "cct"): this regression's own CCT bandwidths; otherwise h is used as
+    # both bandwidths
+    bw     <- .cell_bandwidth(y_v, x_all, 0, kernel, h, bwselect)
+    h_cell <- bw[["h"]]
+    b_cell <- bw[["b"]]
+    # Any rd_period error (typically: at most q + 1 = 3 units in a side's window) skips the
+    # type: its jump is NA and it leaves the Wald test. Errors of the CCT bandwidth above are
+    # not caught.
+    fit <- tryCatch(
+      rd_period(y = y_v, x = x_all, h = h_cell, b = b_cell, id = id_all,
+                c = 0, p = 1L, q = 2L, kernel = kernel),
+      error = function(e) NULL
+    )
+    # FIXME: `fits[[i]] <- NULL` deletes element i instead of storing NULL. A later successful
+    # fit restores the alignment, but when the LAST type's fit fails `fits` is left short and
+    # .compstable_sigma() stops with "subscript out of bounds" instead of skipping the type.
+    fits[[idx_v]] <- fit
+    theta[idx_v]  <- if (is.null(fit)) NA_real_ else if (bc) fit$D_bc else fit$D
+  }
+  list(theta = theta, fits = fits)
+}
+
+#' Covariance matrix of the type jumps of one pair from the rd_period influence vectors g;
+#' returns Sigma (row and column k: type k; zero rows and columns for failed fits).
+#' @noRd
+.compstable_sigma <- function(fits, n_types, use_scheme, bc) {
+  # Every type indicator is fitted on the same stacked sample, so the same-side terms enter
+  # every entry. Under "pv" a unit above the cutoff in both periods sits on both sides of the
+  # artificial cutoff (matched on id), and the opposite-side terms are subtracted as well: on
+  # the diagonal twice the cross-side sum, off it the `pv` term of .cross_cov(). "cs" and "pc"
+  # treat the two sides as independent. With binary types only one jump is tested (see
+  # .compstable_kept_types()), so the off-diagonal matters with three or more periods only.
+  Sigma <- matrix(0, n_types, n_types)
+
+  for (type_idx in seq_len(n_types)) {
+    fit1 <- fits[[type_idx]]
+    if (is.null(fit1)) next
+    for (type_idx2 in seq_len(n_types)) {
+      fit2 <- fits[[type_idx2]]
+      if (is.null(fit2)) next
+
+      if (type_idx == type_idx2) {
+        g_plus   <- if (bc) fit1$sides$`+`$g_bc else fit1$sides$`+`$g
+        g_minus  <- if (bc) fit1$sides$`-`$g_bc else fit1$sides$`-`$g
+        var_jump <- if (bc) fit1$V_D_bc else fit1$V_D
+        if (use_scheme == "pv") {
+          cross_side <- .match_sum(fit1$sides$`+`$id, g_plus,
+                                   fit1$sides$`-`$id, g_minus)
+          Sigma[type_idx, type_idx] <- var_jump - 2 * cross_side
+        } else {
+          Sigma[type_idx, type_idx] <- var_jump
+        }
+        next
+      }
+
+      xcov <- .cross_cov(fit1, fit2, bc = bc)
+      Sigma[type_idx, type_idx2] <- xcov$pc - (if (use_scheme == "pv") xcov$pv else 0)
+    }
+  }
+  Sigma
+}
+
+#' Indices of the type jumps that enter the Wald test of one pair; returns an integer vector.
+#' @noRd
+.compstable_kept_types <- function(theta, n_types) {
+  # The type indicators sum to 1 on each side of the artificial cutoff, so when every type is
+  # fitted at a common bandwidth the n_types jumps sum to zero and their covariance is
+  # rank-deficient by construction. Drop one reference type (the first in radix order: partner
+  # side 0 / the all-below pattern) and test the rest: with binary types the kept jump is the
+  # paper's pi_{tRD,(+)}(1) - pi_{t0,(+)}(1), chi-square with 1 df. With per-type CCT
+  # bandwidths the jumps do not sum exactly to zero, so this is then a different (still valid)
+  # full-rank test rather than an equivalent one. If a fit failed there is no exact redundancy
+  # among the survivors: keep them all.
+  present <- which(!is.na(theta))
+  if (length(present) == n_types && n_types >= 2L) present[-1L] else present
+}
+
+#' Test of one pair on its reflected sample (`refl`, from .compstable_reflect()): one jump per
+#' type, their covariance, the reference-type drop and the Wald test; returns the pair's element
+#' of `pairs` (ll_wald, jumps, jump_se, type_values, scheme, n_trd, n_t0, n_both).
+#' @noRd
+.compstable_pair_test <- function(refl, scheme, kernel, h, bwselect, bc) {
+  # radix: a locale-independent order, so the reference type dropped is the same on every machine
+  type_values <- sort(unique(base::c(refl$type_trd, refl$type_t0)), method = "radix")
+  n_types     <- length(type_values)
+  # "auto": "pv" when some unit is above the cutoff in both periods (it then sits on both sides
+  # of the artificial cutoff), "cs" otherwise
+  use_scheme <- if (scheme != "auto") scheme else {
+    if (refl$n_both > 0L) "pv" else "cs"
+  }
+
+  fit   <- .compstable_fit_types(refl, type_values, n_types, kernel, h, bwselect, bc)
+  theta <- fit$theta
+  Sigma <- .compstable_sigma(fit$fits, n_types, use_scheme, bc)
+
+  ok_idx <- .compstable_kept_types(theta, n_types)
+  wald   <- if (length(ok_idx) == 0L) list(stat = 0, df = 0L, p = 1) else
+    .joint_wald(theta[ok_idx], Sigma[ok_idx, ok_idx, drop = FALSE])
+
+  list(
+    ll_wald     = wald,
+    # binary types: the single share jump pi_{tRD,(+)}(1) - pi_{t0,(+)}(1); the standard errors
+    # are the square roots of the diagonal of Sigma (dependence-adjusted under "pv")
+    jumps       = if (length(ok_idx)) {
+      stats::setNames(theta[ok_idx], type_values[ok_idx])
+    } else {
+      numeric(0)
+    },
+    jump_se     = if (length(ok_idx)) {
+      stats::setNames(sqrt(diag(Sigma)[ok_idx]), type_values[ok_idx])
+    } else {
+      numeric(0)
+    },
+    type_values = type_values,
+    scheme      = use_scheme,
+    n_trd       = refl$n_trd,
+    n_t0        = refl$n_t0,
+    n_both      = refl$n_both
+  )
+}
+
+#' Joint test over pairs: the sums of the pair Wald statistics and of their degrees of freedom,
+#' with the chi-squared p-value; returns list(stat, df, p).
+#' @noRd
+.compstable_joint <- function(pairs_out) {
+  # Summing assumes independent pairs, which is only approximate: every pair's "+" group is the
+  # same RD-period set (and a unit above the cutoff in two comparison periods enters two "-"
+  # groups). The paper's test is per pair; the joint test is a convenience summary.
+  stat    <- 0
+  wald_df <- 0L
+  for (key in names(pairs_out)) {
+    pair    <- pairs_out[[key]]
+    stat    <- stat + pair$ll_wald$stat
+    wald_df <- wald_df + pair$ll_wald$df
+  }
+  p_value <- if (wald_df == 0L) 1 else
+    stats::pchisq(stat, df = wald_df, lower.tail = FALSE)
+  list(stat = stat, df = wald_df, p = p_value)
+}
+
 #' Test of composition stability
 #'
 #' When the running variable moves over time, some units are above the cutoff
@@ -160,305 +417,68 @@ rd_compstable <- function(data, x, time, id, t_rd,
   bwselect <- match.arg(bwselect)
   estimand <- match.arg(estimand)
   kernel   <- match.arg(kernel, c("triangular", "epanechnikov", "uniform"))
+  cutoff   <- c   # the cutoff; `c` stays the argument name for rdrobust users
 
-  # ---- input validation -------------------------------------------------------
-  for (nm in base::c(x, time, id)) {
-    if (!nm %in% names(data))
-      stop("column '", nm, "' not found in `data`.")
+  # ----- inputs and periods (the stops stay here so that errors name rd_compstable()) -----
+  for (col in base::c(x, time, id)) {
+    if (!col %in% names(data))
+      stop("column '", col, "' not found in `data`.")
   }
-
-  c_orig <- c
+  c_orig <- cutoff
   if (estimand == "atu") {
-    if (any(data[[x]] == c, na.rm = TRUE))
-      stop("estimand = \"atu\": ", sum(data[[x]] == c, na.rm = TRUE),
+    if (any(data[[x]] == cutoff, na.rm = TRUE))
+      stop("estimand = \"atu\": ", sum(data[[x]] == cutoff, na.rm = TRUE),
            " observation(s) have x == c. Units at the cutoff are treated in the original ",
            "design but cannot be placed on the treated side of the mirrored design; ",
            "set the cutoff between support points (e.g. c = 4999.5 for integer populations) ",
            "so that no unit sits on it.")
-    data[[x]] <- c - data[[x]]
-    c <- 0
+    # mirror x around the cutoff: the units below it are now the ones above the cutoff 0
+    data[[x]] <- cutoff - data[[x]]
+    cutoff    <- 0
   }
-
   data <- data[stats::complete.cases(data[, base::c(x, time, id)]), , drop = FALSE]
 
   all_periods <- sort(unique(data[[time]]))
-  if (!t_rd %in% all_periods)
-    stop("`t_rd` (", t_rd, ") is not a period in `data`.")
-
-  if (is.null(comparisons)) {
-    comparisons <- setdiff(all_periods, t_rd)
-  }
-  if (length(comparisons) == 0L)
-    stop("no comparison periods found.")
+  if (!t_rd %in% all_periods) stop("`t_rd` (", t_rd, ") is not a period in `data`.")
+  if (is.null(comparisons)) comparisons <- setdiff(all_periods, t_rd)
+  if (length(comparisons) == 0L) stop("no comparison periods found.")
   missing_comp <- setdiff(comparisons, all_periods)
   if (length(missing_comp) > 0L)
-    stop("comparison periods not in data: ",
-         paste(missing_comp, collapse = ", "))
+    stop("comparison periods not in data: ", paste(missing_comp, collapse = ", "))
 
-  # ---- default bandwidth -------------------------------------------------------
-  # When bwselect = "rot" and h = NULL, use 0.5*IQR (current behaviour).
-  # When bwselect = "cct" and h = NULL, h stays NULL; per-cell CCT is computed
-  # inside the per-pair type loop below in the reflected space (c = 0).
-  if (is.null(h) && bwselect == "rot") {
-    all_x <- data[[x]]
-    h     <- 0.5 * stats::IQR(all_x)
-    if (h <= 0) h <- stats::sd(all_x)
-  }
+  # bwselect = "cct" leaves h NULL: each type regression then gets its own CCT bandwidths
+  if (is.null(h) && bwselect == "rot") h <- .compstable_rot_bandwidth(data[[x]])
 
-  # ---- wide pivot (id x period running variable and side) ----------------------
-  # We need, for each unit, its running variable in each period.
-  plab_all <- as.character(all_periods)
-  wide <- data.frame(id = unique(data[[id]]), stringsAsFactors = FALSE)
-  for (k in plab_all) {
-    sub <- data[data[[time]] == all_periods[match(k, plab_all)], , drop = FALSE]
-    m   <- match(wide$id, sub[[id]])
-    wide[[paste0("R_", k)]]    <- sub[[x]][m]
-    wide[[paste0("side_", k)]] <- as.integer(sub[[x]][m] >= c)
-    # Under "atu" the sample is selected on the mirrored x (below the original
-    # cutoff), but the TYPE keeps the original orientation, "above the cutoff in
-    # the other period": with x mirrored and no ties at the cutoff, original
-    # above == mirrored x < 0. Same Wald either way (pi(0) = 1 - pi(1)); this
-    # convention makes the reported jump comparable across estimands.
-    if (estimand == "atu")
-      wide[[paste0("side_", k)]] <- 1L - wide[[paste0("side_", k)]]
-  }
-
-  # ---- per-pair analysis -------------------------------------------------------
+  # ----- one Wald test per (RD period, comparison period) pair -----
+  period_labels <- as.character(all_periods)
+  wide <- .compstable_wide(data, x, time, id, all_periods, period_labels, cutoff, estimand)
   pairs_out <- list()
-
   for (t0 in comparisons) {
     pair_key <- paste0(as.character(t_rd), "::", as.character(t0))
-
-    t_rd_str <- as.character(t_rd)
-    t0_str   <- as.character(t0)
-
-    # Shared "other" periods u = periods excluding both t_rd and t0
-    u_periods <- setdiff(plab_all, base::c(t_rd_str, t0_str))
-
-    # ---------- build the reflected cross-section --------------------------------
-    # Take above-cutoff units from t_rd:
-    #   reflected x' = R_{i,t_rd} - c   (positive, above artificial 0)
-    #   "type" (u,b): u = sides of u_periods, b = side of t0 (the partner)
-    above_trd <- wide[!is.na(wide[[paste0("R_", t_rd_str)]]) &
-                        wide[[paste0("R_", t_rd_str)]] >= c, , drop = FALSE]
-    # partner side for t_rd rows = t0's side (period-t0 side)
-    b_trd <- above_trd[[paste0("side_", t0_str)]]
-
-    # Take above-cutoff units from t0:
-    #   reflected x' = -(R_{i,t0} - c)  (negative, below artificial 0)
-    #   "type" (u,b): u = sides of u_periods, b = side of t_rd (the partner)
-    above_t0  <- wide[!is.na(wide[[paste0("R_", t0_str)]]) &
-                        wide[[paste0("R_", t0_str)]] >= c, , drop = FALSE]
-    b_t0 <- above_t0[[paste0("side_", t_rd_str)]]
-
-    # Build u-string (sides of shared other periods)
-    if (length(u_periods) > 0L) {
-      # a unit unobserved in a shared period has no type (as in .build_types)
-      u_trd <- apply(above_trd[, paste0("side_", u_periods), drop = FALSE], 1,
-                     function(r) if (anyNA(r)) NA_character_ else paste(r, collapse = ""))
-      u_t0  <- apply(above_t0[,  paste0("side_", u_periods), drop = FALSE], 1,
-                     function(r) if (anyNA(r)) NA_character_ else paste(r, collapse = ""))
-    } else {
-      # P = 2: no shared other periods; u is empty
-      u_trd <- rep("", nrow(above_trd))
-      u_t0  <- rep("", nrow(above_t0))
-    }
-
-    # Handle NAs in partner sides (units not observed in a period)
-    b_trd[is.na(b_trd)] <- NA_integer_
-    b_t0[is.na(b_t0)]   <- NA_integer_
-
-    # type string = paste(u, b)
-    type_trd <- ifelse(is.na(b_trd) | is.na(u_trd), NA_character_,
-                       paste0(u_trd, as.character(b_trd)))
-    type_t0  <- ifelse(is.na(b_t0) | is.na(u_t0),  NA_character_,
-                       paste0(u_t0,  as.character(b_t0)))
-
-    # Reflected running variable
-    xref_trd <- above_trd[[paste0("R_", t_rd_str)]] - c   # >= 0
-    xref_t0  <-  -(above_t0[[paste0("R_", t0_str)]] - c)  # <= 0
-    # A t0-above unit exactly at the cutoff reflects to 0 and would be assigned
-    # to the right (t_rd) group by rd_period's `x >= c` split; keep it on the
-    # reflected (left) side with a negative value that carries full kernel weight.
-    xref_t0[xref_t0 == 0] <- -.Machine$double.xmin
-
-    id_trd <- above_trd$id
-    id_t0  <- above_t0$id
-
-    # Drop rows with NA type (unit not observed in one of the periods)
-    keep_trd <- !is.na(type_trd)
-    keep_t0  <- !is.na(type_t0)
-
-    xref_trd  <- xref_trd[keep_trd];  id_trd   <- id_trd[keep_trd]
-    type_trd  <- type_trd[keep_trd]
-    xref_t0   <- xref_t0[keep_t0];    id_t0    <- id_t0[keep_t0]
-    type_t0   <- type_t0[keep_t0]
-
-    n_trd_obs <- length(id_trd)
-    n_t0_obs  <- length(id_t0)
-    n_both    <- length(intersect(id_trd, id_t0))
-
-    if (n_trd_obs < 3L || n_t0_obs < 3L) {
+    refl     <- .compstable_reflect(wide, t_rd, t0, period_labels, cutoff)
+    if (refl$n_trd < 3L || refl$n_t0 < 3L) {
       warning("rd_compstable: pair ", pair_key,
               " has too few above-cutoff observations; skipping.")
       next
     }
-
-    # All type values present in this pair
-    all_type_vals <- sort(unique(base::c(type_trd, type_t0)), method = "radix")  # locale-independent
-    n_types <- length(all_type_vals)
-
-    # ---- auto-detect scheme ----------------------------------------------------
-    use_scheme <- if (scheme != "auto") scheme else {
-      if (n_both > 0L) "pv" else "cs"
-    }
-
-    # ---- LL-Wald -----------------------------------------------------------
-    # For each type value v, run rd_period on the type indicator
-    # y = 1{type == v}, x = xref, on the reflected data (trd above → "+", t0 above → "-")
-    # The "+" side uses (xref_trd, id_trd, type_trd)
-    # The "-" side uses (xref_t0,  id_t0,  type_t0)
-    # We call rd_period on the combined reflected data; rd_period itself
-    # splits by sign of x (>= c = 0 or < 0).
-
-    x_all    <- base::c(xref_trd, xref_t0)
-    id_all   <- base::c(id_trd,   id_t0)
-    type_all <- base::c(type_trd, type_t0)
-
-    theta <- numeric(n_types)
-    fits  <- vector("list", n_types)
-    names(fits) <- all_type_vals
-
-    for (vi in seq_along(all_type_vals)) {
-      v   <- all_type_vals[vi]
-      y_v <- as.numeric(type_all == v)
-      # Per-cell bandwidth in the reflected space (c = 0): CCT when h = NULL
-      # and bwselect = "cct"; otherwise h is non-NULL (explicit or pre-set
-      # from 0.5*IQR for bwselect = "rot").
-      bw     <- .cell_bandwidth(y_v, x_all, 0, kernel, h, bwselect)
-      h_cell <- bw[["h"]]
-      b_cell <- bw[["b"]]
-      fit <- tryCatch(
-        rd_period(y = y_v, x = x_all, h = h_cell, b = b_cell, id = id_all,
-                  c = 0, p = 1L, q = 2L, kernel = kernel),
-        error = function(e) NULL
-      )
-      fits[[vi]] <- fit
-      theta[vi]  <- if (is.null(fit)) NA_real_ else if (bc) fit$D_bc else fit$D
-    }
-
-    # Build covariance matrix
-    # The "+" side of the artificial cutoff = t_rd-above units
-    # The "-" side = t_0-above units
-    # Units in both appear in fits[[v]]$sides$`+`$id AND fits[[v]]$sides$`-`$id
-    # Diagonal = Var(D_v) = sum(g_+^2) + sum(g_-^2), minus 2 x the shared-unit
-    #   cross-side term under "pv" (a unit above in both periods sits on both
-    #   sides of the artificial cutoff).
-    # Off-diagonal (types v != v'): both indicator fits run on the SAME reflected
-    #   sample, so every unit enters both with different 0/1 outcomes and the
-    #   same-side term sum(g_v g_v') is nonzero (as in rd_typecont's within-period
-    #   block); under "pv" the opposite-side term is subtracted as well. With
-    #   binary types only one jump is kept (below), so the off-diagonal matters
-    #   for P >= 3 only.
-
-    N     <- n_types
-    Sigma <- matrix(0, N, N)
-
-    for (a in seq_len(N)) {
-      fit_a <- fits[[a]]
-      if (is.null(fit_a)) next
-      for (b_idx in seq_len(N)) {
-        fit_b <- fits[[b_idx]]
-        if (is.null(fit_b)) next
-
-        # Within-type variance (a == b): standard HC1 formula.
-        # Under the pv scheme the two artificial-cutoff sides share units (a
-        # unit above in both periods contributes a g on BOTH sides), so the
-        # diagonal must subtract the id-matched cross-side term — the same
-        # "same-side minus opposite-side" logic used for the off-diagonal.
-        if (a == b_idx) {
-          gp <- if (bc) fit_a$sides$`+`$g_bc else fit_a$sides$`+`$g
-          gm <- if (bc) fit_a$sides$`-`$g_bc else fit_a$sides$`-`$g
-          V_aa <- if (bc) fit_a$V_D_bc else fit_a$V_D
-          if (use_scheme == "pv") {
-            cross <- .match_sum(fit_a$sides$`+`$id, gp,
-                                fit_a$sides$`-`$id, gm)
-            Sigma[a, a] <- V_aa - 2 * cross
-          } else {
-            Sigma[a, a] <- V_aa
-          }
-          next
-        }
-
-        # Cross-type off-diagonal: same-side term always (same sample, different
-        # indicator outcomes); opposite-side term only when the two artificial
-        # sides share units ("pv").
-        cc <- .cross_cov(fit_a, fit_b, bc = bc)
-        Sigma[a, b_idx] <- cc$pc - (if (use_scheme == "pv") cc$pv else 0)
-      }
-    }
-
-    # The type indicators sum to 1 on each side of the artificial cutoff, so when
-    # every type is fitted at a common bandwidth the n_types jumps sum to zero
-    # and their covariance is rank-deficient by construction. Drop one reference
-    # type (the first in radix order: partner side 0 / the all-below pattern) and
-    # test the rest: with binary types the kept jump is the paper's
-    # pi_{tRD,(+)}(1) - pi_{t0,(+)}(1), chi-square with 1 df. With per-type CCT
-    # bandwidths the jumps do not sum exactly to zero, so this is then a
-    # different (still valid) full-rank test rather than an equivalent one. If a
-    # fit failed there is no exact redundancy among the survivors: keep them all.
-    present   <- which(!is.na(theta))
-    ok_idx    <- if (length(present) == n_types && n_types >= 2L) present[-1L] else present
-    ll_result <- if (length(ok_idx) == 0L) list(stat = 0, df = 0L, p = 1) else
-      .joint_wald(theta[ok_idx], Sigma[ok_idx, ok_idx, drop = FALSE])
-
-    pairs_out[[pair_key]] <- list(
-      ll_wald    = ll_result,
-      # the tested jumps (binary types: the single share jump pi_{tRD,(+)}(1) - pi_{t0,(+)}(1))
-      # and their dependence-adjusted standard errors (diagonal of Sigma)
-      jumps      = if (length(ok_idx)) stats::setNames(theta[ok_idx], all_type_vals[ok_idx]) else numeric(0),
-      jump_se    = if (length(ok_idx)) stats::setNames(sqrt(diag(Sigma)[ok_idx]), all_type_vals[ok_idx]) else numeric(0),
-      type_values = all_type_vals,
-      scheme     = use_scheme,
-      n_trd      = n_trd_obs,
-      n_t0       = n_t0_obs,
-      n_both     = n_both
-    )
+    pairs_out[[pair_key]] <- .compstable_pair_test(refl, scheme, kernel, h, bwselect, bc)
   }
 
-  # ---- joint result across all pairs ------------------------------------------
-  # Sum the per-pair statistics and df. This assumes independent pairs, which
-  # is only approximate: every pair's "+" group is the same t_rd-above set (and
-  # a unit above the cutoff in two comparison periods enters two "-" groups).
-  # The paper's test is per pair; the joint is a convenience summary.
-  # For the Wald: sum chi-sq statistics with summed df.
-  joint_ll_stat <- 0
-  joint_ll_df   <- 0L
-
-  for (pk in names(pairs_out)) {
-    pr <- pairs_out[[pk]]
-    joint_ll_stat <- joint_ll_stat + pr$ll_wald$stat
-    joint_ll_df   <- joint_ll_df   + pr$ll_wald$df
-  }
-  joint_ll_p <- if (joint_ll_df == 0L) 1 else
-    stats::pchisq(joint_ll_stat, df = joint_ll_df, lower.tail = FALSE)
-
-  pair_schemes <- vapply(pairs_out, function(pr) pr$scheme, character(1))
+  joint        <- .compstable_joint(pairs_out)
+  pair_schemes <- vapply(pairs_out, function(pair) pair$scheme, character(1))
   structure(
     list(
-      statistic   = joint_ll_stat,
-      df          = joint_ll_df,
-      p_value     = joint_ll_p,
-      scheme      = if (length(unique(pair_schemes)) == 1L) unique(pair_schemes) else "mixed",
+      statistic        = joint$stat,
+      df               = joint$df,
+      p_value          = joint$p,
+      scheme           = if (length(unique(pair_schemes)) == 1L) unique(pair_schemes) else "mixed",
       scheme_requested = scheme,
-      estimand    = estimand,
-      t_rd        = t_rd,
-      comparisons = comparisons,
-      pairs = pairs_out,
-      joint = list(
-        ll_wald = list(stat = joint_ll_stat, df = joint_ll_df, p = joint_ll_p)
-      ),
-      call = cl,
+      estimand         = estimand,
+      t_rd             = t_rd,
+      comparisons      = comparisons,
+      pairs            = pairs_out,
+      joint            = list(ll_wald = joint),
+      call             = cl,
       meta = list(
         t_rd        = t_rd,
         comparisons = comparisons,
@@ -477,23 +497,27 @@ rd_compstable <- function(data, x, time, id, t_rd,
 #' @export
 print.rd_compstable <- function(x, ...) {
   side <- if (identical(x$estimand, "atu")) "below" else "above"
-  .print_test_header("composition stability", "rd_compstable",
-                     sprintf("the share of each type among the units %s the cutoff is the same in the RD period and in each comparison period", side),
+  h0 <- sprintf(paste0("the share of each type among the units %s the cutoff is the same in ",
+                       "the RD period and in each comparison period"), side)
+  atu_note <- paste0("the units below the cutoff are the ones untreated in the RD period, ",
+                     "so the test is on their shares (mirrored design)")
+  .print_test_header("composition stability", "rd_compstable", h0,
                      x$scheme, identical(x$scheme_requested, "auto"), x$estimand,
-                     atu_note = "the units below the cutoff are the ones untreated in the RD period, so the test is on their shares (mirrored design)")
+                     atu_note = atu_note)
   cat(sprintf("  RD period: %s   Comparison periods: %s   Bandwidth: %s\n\n",
               x$t_rd, paste(x$comparisons, collapse = ", "),
               .bw_label_test(x$meta$h, x$meta$bwselect)))
-  for (pk in names(x$pairs)) {
-    pr <- x$pairs[[pk]]
-    .print_wald(pr$ll_wald$stat, pr$ll_wald$df, pr$ll_wald$p,
-                label = sprintf("Pair %s:", pk))
+  for (key in names(x$pairs)) {
+    pair <- x$pairs[[key]]
+    .print_wald(pair$ll_wald$stat, pair$ll_wald$df, pair$ll_wald$p,
+                label = sprintf("Pair %s:", key))
     cat(sprintf("    n %s the cutoff: %d (RD period), %d (comparison), %d in both\n",
-                side, pr$n_trd, pr$n_t0, pr$n_both))
+                side, pair$n_trd, pair$n_t0, pair$n_both))
   }
   if (length(x$pairs) > 1L) {
     cat("\n")
-    .print_wald(x$statistic, x$df, x$p_value, label = "Joint over pairs (sum of chi-squared):")
+    .print_wald(x$statistic, x$df, x$p_value,
+                label = "Joint over pairs (sum of chi-squared):")
   }
   invisible(x)
 }

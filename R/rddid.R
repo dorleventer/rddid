@@ -391,9 +391,10 @@ print.rddid <- function(x, digits = 4, ...) {
 
 # ---- print helpers shared by print.rddid / summary.rddid ------------------------------------
 .scheme_label <- function(s) {
-  c(cs = "repeated cross-section",
-    pc = "panel, running variable fixed over time",
-    pv = "panel, running variable varies over time")[[s]]
+  labels <- c(cs = "repeated cross-section",
+              pc = "panel, running variable fixed over time",
+              pv = "panel, running variable varies over time")
+  if (s %in% names(labels)) labels[[s]] else s   # e.g. "mixed" (rd_compstable pairs differ)
 }
 .trend_label <- function(wt) {
   switch(wt, constant = "constant confounding trend", linear = "linear confounding trend",

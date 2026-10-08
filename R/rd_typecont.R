@@ -1,6 +1,157 @@
 # rd_typecont.R -- rd_typecont(): test of a continuous type distribution at the cutoff, with its
-# print method. Shared pieces: assumption_tests_helpers.R (types, Wald, per-cell bandwidth),
-# sampling_scheme.R, cross_period_covariance.R.
+# print method and its internal steps .typecont_*(). Shared pieces: assumption_tests_helpers.R
+# (types, Wald, per-cell bandwidth), sampling_scheme.R, cross_period_covariance.R.
+#
+# Layout of the stacked jumps: cell (type idx_v, period idx_t) is entry
+# (idx_t - 1) * n_types + idx_v of `theta` and row/column of `Sigma` (the type index runs fastest).
+
+#' Rule-of-thumb bandwidth for `bwselect = "rot"`: 0.5 * IQR(x), or sd(x) if the IQR is zero.
+#' @noRd
+.typecont_rot_bandwidth <- function(all_x) {
+  h <- 0.5 * stats::IQR(all_x)
+  if (h <= 0) h <- stats::sd(all_x)
+  h
+}
+
+#' The sampling scheme used: `scheme` itself, or under "auto" the one ("cs", "pc" or "pv") read
+#' off the units that have a type in each period.
+#' @noRd
+.typecont_scheme <- function(scheme, period_types, period_labels, cutoff) {
+  if (scheme != "auto") return(scheme)
+  # The scheme is a property of the design (repeated ids, side switching), so it is read from
+  # every unit with a type, not from a bandwidth window: a window misses the switchers outside
+  # it, and per-cell CCT bandwidths can reach beyond any common window. Only units with a type
+  # enter (observed in every period), unlike rddid(), which uses every row. A unit on the
+  # cutoff counts as above it.
+  long <- do.call(rbind, lapply(period_labels, function(k) {
+    units_k <- period_types[[k]]
+    data.frame(period = k,
+               id     = units_k$id,
+               side   = as.integer(units_k$R >= cutoff))
+  }))
+  .scheme_from_long(long)
+}
+
+#' Fits of every (period, type) cell: list(fits = type x period list-matrix of rd_period fits,
+#' NULL where the fit failed; theta = the stacked jumps, NA where it failed).
+#' @noRd
+.typecont_fit_cells <- function(period_types, period_labels, type_values, n_periods, n_types,
+                                cutoff, kernel, h, bwselect, bc) {
+  fits <- vector("list", n_periods * n_types)
+  dim(fits) <- c(n_types, n_periods)
+  dimnames(fits) <- list(type   = as.character(type_values),
+                         period = period_labels)
+
+  theta <- numeric(n_periods * n_types)
+  idx   <- 0L
+
+  for (idx_t in seq_along(period_labels)) {
+    units_t <- period_types[[period_labels[idx_t]]]
+    for (idx_v in seq_along(type_values)) {
+      idx    <- idx + 1L
+      type_v <- type_values[idx_v]
+      y_v    <- as.numeric(units_t$type == type_v)   # the RD outcome: "the unit is of type v"
+      # h is NULL only under bwselect = "cct", where each cell gets its own CCT bandwidths;
+      # otherwise it is the user's h or the rule of thumb, the same in every cell
+      bw     <- .cell_bandwidth(y_v, units_t$R, cutoff, kernel, h, bwselect)
+      h_cell <- bw[["h"]]
+      b_cell <- bw[["b"]]
+      # A cell whose fit fails is left out of the tests (NULL fit, NA jump). The usual cause is
+      # too few units on one side within the bandwidths (a type that is rare near the cutoff);
+      # any other rd_period error in the cell is hidden the same way.
+      fit <- tryCatch(
+        rd_period(y = y_v, x = units_t$R, h = h_cell, b = b_cell, id = units_t$id,
+                  c = cutoff, p = 1L, q = 2L, kernel = kernel),
+        error = function(e) NULL
+      )
+      fits[idx_v, idx_t] <- list(fit)   # `[<-` with list() can store a NULL fit; `[[<-` cannot
+      theta[idx] <- if (is.null(fit)) NA_real_ else if (bc) fit$D_bc else fit$D
+    }
+  }
+  list(fits = fits, theta = theta)
+}
+
+#' Covariance matrix of the stacked jumps theta, (n_periods * n_types) square, with zero rows
+#' and columns for the cells whose fit failed.
+#' @noRd
+.typecont_sigma <- function(fits, period_labels, type_values, n_periods, n_types, scheme, bc) {
+  n_cells <- n_periods * n_types
+  Sigma   <- matrix(0, n_cells, n_cells)
+
+  for (idx_t1 in seq_along(period_labels)) {
+    for (idx_v1 in seq_along(type_values)) {
+      row_idx <- (idx_t1 - 1L) * n_types + idx_v1
+      fit_row <- fits[[idx_v1, idx_t1]]
+      if (is.null(fit_row)) next
+
+      for (idx_t2 in seq_along(period_labels)) {
+        for (idx_v2 in seq_along(type_values)) {
+          col_idx <- (idx_t2 - 1L) * n_types + idx_v2
+          fit_col <- fits[[idx_v2, idx_t2]]
+          if (is.null(fit_col)) next
+
+          if (idx_t1 == idx_t2) {
+            # Same period: both regressions use the same units, each on one side of the
+            # cutoff, so only the same-side term enters, whatever the scheme.
+            Sigma[row_idx, col_idx] <- .cross_cov(fit_row, fit_col, bc = bc)$pc
+          } else {
+            # Across periods the scheme decides: "cs" none; "pc" the units on the same side in
+            # both periods; "pv" also the units that change side, with the opposite sign.
+            Sigma[row_idx, col_idx] <- .cov_scheme(fit_row, fit_col, scheme, bc = bc)
+          }
+        }
+      }
+    }
+  }
+  Sigma
+}
+
+#' Logical vector over the entries of theta: TRUE for the jumps the tests use (in each period,
+#' every present type but the last, the reference).
+#' @noRd
+.typecont_keep_rows <- function(theta, period_labels, n_types) {
+  # The type indicators sum to one within a period, so their jumps sum to zero and Sigma is
+  # singular by construction. A pseudo-inverse of it is fragile (a structural-zero singular
+  # value survives the cut on some LAPACK builds and its 1/sv inflates the statistic), so one
+  # reference type per period is dropped instead and the other k - 1 present types are kept.
+  # At a common bandwidth this is the same test, the dropped jump being minus the sum of the
+  # rest; with per-cell CCT bandwidths the jumps do not sum exactly to zero, so it is a
+  # different, still valid, test. Types are in radix order, so the dropped (last present) type
+  # is the all-below pattern when present, and with two periods the kept contrast is the
+  # paper's jump in the indicator 1{V_is = 1}.
+  keep <- logical(length(theta))
+  for (idx_t in seq_along(period_labels)) {
+    rows_t  <- (idx_t - 1L) * n_types + seq_len(n_types)
+    present <- rows_t[!is.na(theta[rows_t])]
+    if (length(present) >= 2L) keep[present[-length(present)]] <- TRUE
+  }
+  keep
+}
+
+#' Wald test of the jumps in `rows` of theta: list(stat, df, p); stat 0, df 0, p 1 if none.
+#' @noRd
+.typecont_wald <- function(theta, Sigma, rows) {
+  if (length(rows) == 0L) {
+    return(list(stat = 0, df = 0L, p = 1))
+  }
+  .joint_wald(theta[rows], Sigma[rows, rows, drop = FALSE])
+}
+
+#' Each period's own Wald test on its kept jumps: a list by period of list(ll_wald = ...).
+#' @noRd
+.typecont_per_period <- function(theta, Sigma, keep, period_labels, n_types) {
+  # With two types this is the single type-share jump of the period, chi^2(1). The joint test
+  # is not the sum of these: it also carries the covariance across periods.
+  per_period_wald <- stats::setNames(vector("list", length(period_labels)), period_labels)
+  for (idx_t in seq_along(period_labels)) {
+    rows_t <- (idx_t - 1L) * n_types + seq_len(n_types)
+    keep_t <- rows_t[keep[rows_t]]
+    per_period_wald[[idx_t]] <- .typecont_wald(theta, Sigma, keep_t)
+  }
+  stats::setNames(lapply(seq_along(period_labels), function(idx_t) {
+    list(ll_wald = per_period_wald[[idx_t]])
+  }), period_labels)
+}
 
 #' Test of type continuity
 #'
@@ -131,187 +282,61 @@ rd_typecont <- function(data, x, time, id,
   bwselect <- match.arg(bwselect)
   estimand <- match.arg(estimand)
   kernel   <- match.arg(kernel, c("triangular", "epanechnikov", "uniform"))
+  cutoff   <- c   # the cutoff; `c` stays the argument name for rdrobust users
 
-  # ----- input checks -------------------------------------------------------
+  # ----- inputs and periods (the stops stay here so that errors name rd_typecont()) -----
   for (nm in c(x, time, id)) {
     if (!nm %in% names(data))
       stop("column '", nm, "' not found in `data`.")
   }
-  # `t_rd`/`comparisons` only select which periods enter (the test treats every period
-  # alike); with both NULL every period in `data` is used
+  # `t_rd`/`comparisons` only select which periods enter: the test treats every period alike
   if (!is.null(comparisons)) {
     use_periods <- c(t_rd, comparisons)
     if (!all(use_periods %in% data[[time]]))
       stop("periods not in `data`: ", paste(setdiff(use_periods, data[[time]]), collapse = ", "))
     data <- data[data[[time]] %in% use_periods, , drop = FALSE]
   }
-  data  <- data[stats::complete.cases(data[, c(x, time, id)]), , drop = FALSE]
-  periods <- sort(unique(data[[time]]))
-  plab    <- as.character(periods)
-  P       <- length(periods)
-  if (P < 2L) stop("need at least 2 periods to define a type.")
+  data          <- data[stats::complete.cases(data[, c(x, time, id)]), , drop = FALSE]
+  periods       <- sort(unique(data[[time]]))
+  period_labels <- as.character(periods)
+  n_periods     <- length(periods)
+  if (n_periods < 2L) stop("need at least 2 periods to define a type.")
 
-  # ----- default bandwidth --------------------------------------------------
-  # When bwselect = "rot" and h = NULL, h is set to the IQR-based pilot
-  # 0.5*IQR(x) (current behaviour).
-  # When bwselect = "cct" and h = NULL, h stays NULL; per-cell CCT is computed
-  # inside the LL-Wald loop below.
-  if (is.null(h) && bwselect == "rot") {
-    all_x <- data[[x]]
-    h     <- 0.5 * stats::IQR(all_x)
-    if (h <= 0) h <- stats::sd(all_x)
-  }
+  # bwselect = "cct" leaves h NULL: each cell then gets its own CCT bandwidths
+  if (is.null(h) && bwselect == "rot") h <- .typecont_rot_bandwidth(data[[x]])
 
-  # ----- build types --------------------------------------------------------
-  # Per-period frames (id, R, type) from the shared canonical builder in
-  # R/test_helpers.R.  `type` is the "+"/"-" sign-pattern string of the other
-  # periods; units at the cutoff are treated as above it.
-  pt <- .build_types(data, x, time, id, c = c)$period_types
+  # ----- types, scheme, fits, covariance -----
+  period_types <- .build_types(data, x, time, id, c = cutoff)$period_types
+  # radix: a locale-independent order, so the reference type dropped is the same on every machine
+  type_values <- sort(unique(unlist(lapply(period_types, `[[`, "type"))), method = "radix")
+  n_types     <- length(type_values)
+  use_scheme  <- .typecont_scheme(scheme, period_types, period_labels, cutoff)
 
-  # All type values that appear anywhere across all periods
-  all_type_values <- sort(unique(unlist(lapply(pt, `[[`, "type"))), method = "radix")  # locale-independent
-  n_types <- length(all_type_values)
+  cells <- .typecont_fit_cells(period_types, period_labels, type_values, n_periods, n_types,
+                               cutoff, kernel, h, bwselect, bc)
+  theta <- cells$theta
+  Sigma <- .typecont_sigma(cells$fits, period_labels, type_values, n_periods, n_types,
+                           use_scheme, bc)
 
-  # ----- detect scheme -----------------------------------------------------
-  # Classify from every unit with a defined type in each period via the shared
-  # primitive (side = 1{R >= c}, treated at the cutoff). The scheme is a
-  # property of the design (repeated ids, side switching), not of a window;
-  # restricting to a rule-of-thumb window under-detected switching whenever the
-  # per-cell CCT bandwidths reached beyond it.
-  if (scheme == "auto") {
-    long <- do.call(rbind, lapply(plab, function(k) {
-      df_k  <- pt[[k]]
-      data.frame(period = k,
-                 id     = df_k$id,
-                 side   = as.integer(df_k$R >= c))
-    }))
-    use_scheme <- .scheme_from_long(long)
-  } else {
-    use_scheme <- scheme
-  }
+  # ----- Wald tests: joint over all periods, then each period's own -----
+  keep       <- .typecont_keep_rows(theta, period_labels, n_types)
+  wald_joint <- .typecont_wald(theta, Sigma, which(keep))
+  per_period <- .typecont_per_period(theta, Sigma, keep, period_labels, n_types)
 
-  # ----- (1) LL-Wald -------------------------------------------------------
-  # For each (period t, type value v): run rd_period on the type indicator
-  # index: (t-1)*n_types + v_rank
-  type_rank <- stats::setNames(seq_along(all_type_values), all_type_values)
-  fits_by_pt <- vector("list", P * n_types)   # row-major: period varies fast
-  dim(fits_by_pt) <- c(n_types, P)
-  dimnames(fits_by_pt) <- list(type  = as.character(all_type_values),
-                                period = plab)
-
-  theta <- numeric(P * n_types)   # jump estimates (stacked)
-  idx   <- 0L
-
-  for (ki in seq_along(plab)) {
-    df_k   <- pt[[plab[ki]]]
-    for (vi in seq_along(all_type_values)) {
-      idx <- idx + 1L
-      v   <- all_type_values[vi]
-      y_v <- as.numeric(df_k$type == v)
-      # Per-cell bandwidth: CCT when h = NULL and bwselect = "cct"; otherwise
-      # h is non-NULL (explicit or pre-set from 0.5*IQR for bwselect = "rot").
-      bw     <- .cell_bandwidth(y_v, df_k$R, c, kernel, h, bwselect)
-      h_cell <- bw[["h"]]
-      b_cell <- bw[["b"]]
-      fit <- tryCatch(
-        rd_period(y = y_v, x = df_k$R, h = h_cell, b = b_cell, id = df_k$id,
-                  c = c, p = 1L, q = 2L, kernel = kernel),
-        error = function(e) NULL
-      )
-      fits_by_pt[vi, ki] <- list(fit)  # use [ to allow NULL without error
-      theta[idx] <- if (is.null(fit)) NA_real_ else if (bc) fit$D_bc else fit$D
-    }
-  }
-
-  # Build the covariance matrix Sigma (P*n_types x P*n_types)
-  N <- P * n_types
-  Sigma <- matrix(0, N, N)
-
-  for (a_t in seq_along(plab)) {
-    for (a_v in seq_along(all_type_values)) {
-      row_a <- (a_t - 1L) * n_types + a_v
-      fit_a <- fits_by_pt[[a_v, a_t]]
-      if (is.null(fit_a)) next
-
-      for (b_t in seq_along(plab)) {
-        for (b_v in seq_along(all_type_values)) {
-          row_b <- (b_t - 1L) * n_types + b_v
-          fit_b <- fits_by_pt[[b_v, b_t]]
-          if (is.null(fit_b)) next
-
-          if (a_t == b_t) {
-            # Within-period covariance: units share the same running variable,
-            # so the same unit contributes to both type-indicator RDs on the
-            # same side — the same-side ("pc") component, scheme-independent.
-            Sigma[row_a, row_b] <- .cross_cov(fit_a, fit_b, bc = bc)$pc
-          } else {
-            # Cross-period covariance: scheme-dependent.
-            Sigma[row_a, row_b] <- .cov_scheme(fit_a, fit_b, use_scheme, bc = bc)
-          }
-        }
-      }
-    }
-  }
-
-  # The n_types type-indicator jumps sum to zero within each period (the
-  # indicators sum to 1), so the full P*n_types covariance is rank-deficient by
-  # construction. Testing all of them through a pseudo-inverse is numerically
-  # fragile — a structural-zero singular value is kept on some LAPACK builds and
-  # its 1/sv inflates the statistic (platform-dependent p-values). Instead drop
-  # one (reference) type per period: with k present types we keep k-1, an
-  # equivalent full-rank test at a common bandwidth (the dropped jump is minus
-  # the sum of the rest; with per-cell CCT bandwidths the jumps do not sum
-  # exactly to zero, so it is then a different, still valid, test). Types are
-  # in radix order, so the dropped type is the all-below pattern and the kept
-  # contrast at P = 2 is the paper's jump for the indicator 1{V_is = 1}.
-  keep <- logical(length(theta))
-  for (ki in seq_along(plab)) {
-    rows_k  <- (ki - 1L) * n_types + seq_len(n_types)
-    present <- rows_k[!is.na(theta[rows_k])]
-    if (length(present) >= 2L) keep[present[-length(present)]] <- TRUE
-  }
-  ok_idx <- which(keep)
-  if (length(ok_idx) == 0L) {
-    ll_result <- list(stat = 0, df = 0L, p = 1)
-  } else {
-    ll_result <- .joint_wald(theta[ok_idx], Sigma[ok_idx, ok_idx, drop = FALSE])
-  }
-
-  # Per-period LL-Wald: restrict the kept (full-rank) contrasts to each period's
-  # own rows. With binary types this is the single type-share jump in that period
-  # => chi^2(1); these are the components the joint test aggregates (the joint is
-  # not their sum, since it also carries the cross-period covariance).
-  per_period_wald <- stats::setNames(vector("list", length(plab)), plab)
-  for (ki in seq_along(plab)) {
-    rows_k <- (ki - 1L) * n_types + seq_len(n_types)
-    keep_k <- rows_k[keep[rows_k]]
-    per_period_wald[[ki]] <- if (length(keep_k) == 0L)
-      list(stat = 0, df = 0L, p = 1)
-    else
-      .joint_wald(theta[keep_k], Sigma[keep_k, keep_k, drop = FALSE])
-  }
-
-  # Per-period components (the building blocks behind the joint test): each
-  # period's own LL-Wald (chi^2 with its kept contrasts).
-  per_period <- stats::setNames(lapply(seq_along(plab), function(ki) {
-    list(ll_wald = per_period_wald[[ki]])
-  }), plab)
-
-  # ----- assemble output ---------------------------------------------------
   structure(
     list(
-      statistic  = ll_result$stat,
-      df         = ll_result$df,
-      p_value    = ll_result$p,
+      statistic  = wald_joint$stat,
+      df         = wald_joint$df,
+      p_value    = wald_joint$p,
       scheme     = use_scheme,
       scheme_requested = scheme,
       estimand   = estimand,
-      ll_wald    = ll_result,
+      ll_wald    = wald_joint,
       per_period = per_period,
       call       = cl,
       meta = list(
-        periods      = plab,
-        type_values  = all_type_values,
+        periods      = period_labels,
+        type_values  = type_values,
         h            = if (!is.null(h)) h else NA_real_,
         bwselect     = bwselect,
         scheme       = use_scheme,
@@ -330,12 +355,16 @@ print.rd_typecont <- function(x, ...) {
                      "the share of each type jumps by zero at the cutoff, in every period",
                      x$scheme, identical(x$scheme_requested, "auto"), x$estimand)
   cat(sprintf("  Periods: %s   Types: %s   Bandwidth: %s\n\n",
-              paste(x$meta$periods, collapse = ", "), paste(x$meta$type_values, collapse = ", "),
+              paste(x$meta$periods, collapse = ", "),
+              paste(x$meta$type_values, collapse = ", "),
               .bw_label_test(x$meta$h, x$meta$bwselect)))
   .print_wald(x$statistic, x$df, x$p_value, label = "Joint Wald")
   for (k in names(x$per_period)) {
-    pp <- x$per_period[[k]]$ll_wald
-    if (!is.null(pp)) .print_wald(pp$stat, pp$df, pp$p, label = sprintf("Period %s:", k), indent = "    ")
+    period_wald <- x$per_period[[k]]$ll_wald
+    if (!is.null(period_wald)) {
+      .print_wald(period_wald$stat, period_wald$df, period_wald$p,
+                  label = sprintf("Period %s:", k), indent = "    ")
+    }
   }
   invisible(x)
 }
