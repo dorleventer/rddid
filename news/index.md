@@ -2,6 +2,38 @@
 
 ## rddid 0.4.0.9000 (development)
 
+### 2026-10-08: UX sweep, step 4 — the source, for people who read it
+
+- **Files are named after what they hold.** The four assumption tests
+  live in `rd_typecont.R`, `rd_compstable.R`, `rd_homog.R`,
+  `rd_trendcell.R` (they used to be `test_*.R`, which read as unit
+  tests); their shared internals in `assumption_tests_helpers.R`; the
+  covariance and aggregation in `cross_period_covariance.R`; the
+  bandwidth rules in `bandwidth_cct.R` and `bandwidth_joint.R`; the
+  trend weights and scheme detection in `trend_weights.R` and
+  `sampling_scheme.R`. Every file opens with a header saying what it
+  holds and who calls it.
+- **Functions read as pipelines.**
+  [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md)
+  and the four tests are short sequences of named steps (validate,
+  periods, types, scheme, fit cells, covariance, Wald, output), each a
+  small helper with a one-line note; the side-of-the-cutoff fit of
+  [`rd_period()`](https://dorleventer.github.io/rddid/reference/rd_period.md)
+  is `.rd_side_fit()`; the coordinate-descent bandwidth rule is split
+  into objective, start and descent.
+- **Names and comments.** The cutoff is `cutoff` inside every function
+  (`c` stays the argument name, as in rdrobust); locals that collided
+  with the scheme codes or base functions were renamed; comments say
+  *why* at the numerically sensitive lines (the active-set floor, the
+  bias-correction matrix grouping, the HC1 factors, the radix sorts, the
+  reference-type drop, the summation order of the pair loops) and dated
+  history moved here.
+- **Nothing numerical changed.** Every statement that touches a number
+  is the same, in the same order; the golden master
+  (`dev/snapshot_all.R`, 134 calls, 7,763 values) is identical before
+  and after every commit of the sweep. Column-check errors no longer
+  carry an `Error in <fn>` prefix (the message is unchanged).
+
 ### 2026-10-08: UX sweep, step 2 — the API
 
 - **Methods.** [`summary()`](https://rdrr.io/r/base/summary.html),
