@@ -12,20 +12,21 @@ rddid(
   id = NULL,
   t_rd,
   comparisons = NULL,
-  weights = "constant",
+  trend = "constant",
   estimand = c("att", "atu"),
   bwselect = c("joint", "iter", "cct"),
   h = NULL,
   b = NULL,
-  start = "hstar",
   scheme = c("auto", "cs", "pc", "pv"),
-  regularize = TRUE,
-  reg_const = 3,
   c = 0,
   p = 1L,
   q = 2L,
   kernel = "triangular",
-  level = 0.95
+  level = 0.95,
+  start = "hstar",
+  regularize = TRUE,
+  reg_const = 3,
+  weights = NULL
 )
 }
 \arguments{
@@ -45,9 +46,13 @@ in which the treatment of interest does not switch at the cutoff. \code{NULL}
 (default) uses every other period present, so with more than one RD
 period pass \code{comparisons} explicitly.}
 
-\item{weights}{\code{"constant"} (equal weights; constant confounding trend),
-\code{"linear"} (line through the comparison discontinuities extrapolated to
-\code{t_rd}), or a numeric vector over \code{comparisons}.}
+\item{trend}{how the confounding jump is assumed to move over time, which
+fixes the comparison-period weights: \code{"constant"} (default; the jump is
+the same in every period, so the comparison discontinuities get equal
+weights), \code{"linear"} (the jump moves linearly in time; a line through the
+comparison discontinuities is extrapolated to \code{t_rd}, which needs at least
+two comparison periods), or a numeric vector of weights, one per entry of
+\code{comparisons} in the order given.}
 
 \item{estimand}{\code{"att"} (default) when the treatment of interest is
 uniformly ZERO in the comparison periods (targets the ATT), \code{"atu"} when
@@ -68,12 +73,6 @@ ratio \code{b_t^CCT / h_t^CCT} (Appendix B.4 of the paper).}
 \item{h, b}{optional common point / pilot bandwidths; if \code{h} is given it is
 used for every period (with \code{b} defaulting to \code{h}).}
 
-\item{start}{starting point of the iterative (\code{bwselect = "iter"}) coordinate
-descent. \code{"hstar"} (default) starts all periods at the common joint-optimal
-h*; \code{"cct"} starts each period at its own CCT h; or supply a named
-numeric vector/list with one entry per period. Ignored unless
-\code{bwselect = "iter"}.}
-
 \item{scheme}{sampling scheme: \code{"cs"} (repeated cross-section), \code{"pc"}
 (panel, time-constant running variable), \code{"pv"} (panel, time-varying
 running variable), or \code{"auto"} (default), which reads it off the data: no
@@ -81,6 +80,20 @@ running variable), or \code{"auto"} (default), which reads it off the data: no
 same side of the cutoff in every period, give \code{"pc"}; any unit on
 different sides in different periods gives \code{"pv"}. The scheme selects
 which standard error and CI are printed; all three are always returned.}
+
+\item{c}{cutoff (default 0).}
+
+\item{p, q}{point / bias-correction polynomial orders (default 1, 2).}
+
+\item{kernel}{\code{"triangular"} (default), \code{"epanechnikov"}, or \code{"uniform"}.}
+
+\item{level}{confidence level (default 0.95).}
+
+\item{start}{starting point of the iterative (\code{bwselect = "iter"}) coordinate
+descent. \code{"hstar"} (default) starts all periods at the common joint-optimal
+h*; \code{"cct"} starts each period at its own CCT h; or supply a named
+numeric vector/list with one entry per period. Ignored unless
+\code{bwselect = "iter"}.}
 
 \item{regularize}{logical; if \code{TRUE} (default) the joint AMSE-optimal
 bandwidth adds an \code{rdrobust}-style regularization term to the squared bias
@@ -90,30 +103,33 @@ if \code{h} is supplied.}
 \item{reg_const}{regularization constant for \code{regularize} (default 3,
 matching the CCT convention).}
 
-\item{c}{cutoff (default 0).}
-
-\item{p, q}{point / bias-correction polynomial orders (default 1, 2).}
-
-\item{kernel}{\code{"triangular"} (default), \code{"epanechnikov"}, or \code{"uniform"}.}
-
-\item{level}{confidence level (default 0.95).}
+\item{weights}{the old name of \code{trend}; still accepted, with a message.}
 }
 \value{
 An object of class \code{"rddid"}, a list with:
 \describe{
-\item{\code{estimates}}{matrix with rows \code{Conventional} and \code{Robust} (the
-bias-corrected estimate with its robust variance) and columns \code{est},
-\code{se}, \code{ci_l}, \code{ci_u} (at \code{scheme}), and \code{se_cs}, \code{se_pc}, \code{se_pv}.}
+\item{\code{estimates}}{data frame with rows \code{Conventional} (the local-linear
+estimate with its conventional standard error) and \code{Robust} (the
+bias-corrected estimate with its robust standard error) and columns
+\code{est}, \code{se}, \code{ci_l}, \code{ci_u}, \code{z}, \code{p} (at \code{scheme}), and \code{se_cs},
+\code{se_pc}, \code{se_pv} (the robust standard error under each scheme).}
 \item{\code{scheme}}{the sampling scheme used; \code{scheme_requested} is the
 argument as passed.}
 \item{\code{weights}, \code{weights_type}}{the comparison-period weights and
 their kind.}
 \item{\code{estimand}}{\code{"att"} or \code{"atu"}, as passed.}
 \item{\code{bandwidth}}{list with \code{method} (the \code{bwselect} value, or
-\code{"fixed"}), \code{h}, \code{b}, and \code{niter} for \code{"iter"}.}
+\code{"fixed"}), \code{h_by_period} and \code{b_by_period} (named numeric vectors: the
+main and pilot bandwidth used in each period, whatever the rule),
+\code{niter} for \code{"iter"}, and, when the rule produces one common value,
+\code{h} and \code{b} (\code{"fixed"}, \code{"joint"}).}
 \item{\code{fits}}{named list of \code{\link[=rd_period]{rd_period()}} objects by period, the RD
 period first (index by name).}
-\item{\code{t_rd}, \code{comparisons}, \code{level}, \code{call}}{as passed.}
+\item{\code{t_rd}, \code{comparisons}, \code{level}, \code{c}, \code{p}, \code{q}, \code{kernel}, \code{call}}{as passed.}
+\item{\code{coef}}{the coefficient of each period's discontinuity in the
+aggregate: +1 for \code{t_rd}, minus the weight for each comparison period.}
+\item{\code{n_by_period}}{rows used in each period.}
+\item{\code{scheme_detected}}{the scheme read off the data, whatever was requested.}
 }
 }
 \description{

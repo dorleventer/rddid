@@ -85,9 +85,14 @@
 #'   in which the treatment of interest does not switch at the cutoff. `NULL`
 #'   (default) uses every other period present, so with more than one RD
 #'   period pass `comparisons` explicitly.
-#' @param weights `"constant"` (equal weights; constant confounding trend),
-#'   `"linear"` (line through the comparison discontinuities extrapolated to
-#'   `t_rd`), or a numeric vector over `comparisons`.
+#' @param trend how the confounding jump is assumed to move over time, which
+#'   fixes the comparison-period weights: `"constant"` (default; the jump is
+#'   the same in every period, so the comparison discontinuities get equal
+#'   weights), `"linear"` (the jump moves linearly in time; a line through the
+#'   comparison discontinuities is extrapolated to `t_rd`, which needs at least
+#'   two comparison periods), or a numeric vector of weights, one per entry of
+#'   `comparisons` in the order given.
+#' @param weights the old name of `trend`; still accepted, with a message.
 #' @param estimand `"att"` (default) when the treatment of interest is
 #'   uniformly ZERO in the comparison periods (targets the ATT), `"atu"` when
 #'   it is uniformly ONE (targets the ATU). See "Targeting the ATU" below.
@@ -129,39 +134,60 @@
 #'
 #' @return An object of class `"rddid"`, a list with:
 #'   \describe{
-#'     \item{`estimates`}{matrix with rows `Conventional` and `Robust` (the
-#'       bias-corrected estimate with its robust variance) and columns `est`,
-#'       `se`, `ci_l`, `ci_u` (at `scheme`), and `se_cs`, `se_pc`, `se_pv`.}
+#'     \item{`estimates`}{data frame with rows `Conventional` (the local-linear
+#'       estimate with its conventional standard error) and `Robust` (the
+#'       bias-corrected estimate with its robust standard error) and columns
+#'       `est`, `se`, `ci_l`, `ci_u`, `z`, `p` (at `scheme`), and `se_cs`,
+#'       `se_pc`, `se_pv` (the robust standard error under each scheme).}
 #'     \item{`scheme`}{the sampling scheme used; `scheme_requested` is the
 #'       argument as passed.}
 #'     \item{`weights`, `weights_type`}{the comparison-period weights and
 #'       their kind.}
 #'     \item{`estimand`}{`"att"` or `"atu"`, as passed.}
 #'     \item{`bandwidth`}{list with `method` (the `bwselect` value, or
-#'       `"fixed"`), `h`, `b`, and `niter` for `"iter"`.}
+#'       `"fixed"`), `h_by_period` and `b_by_period` (named numeric vectors: the
+#'       main and pilot bandwidth used in each period, whatever the rule),
+#'       `niter` for `"iter"`, and, when the rule produces one common value,
+#'       `h` and `b` (`"fixed"`, `"joint"`).}
 #'     \item{`fits`}{named list of [rd_period()] objects by period, the RD
 #'       period first (index by name).}
-#'     \item{`t_rd`, `comparisons`, `level`, `call`}{as passed.}
+#'     \item{`t_rd`, `comparisons`, `level`, `c`, `p`, `q`, `kernel`, `call`}{as passed.}
+#'     \item{`coef`}{the coefficient of each period's discontinuity in the
+#'       aggregate: +1 for `t_rd`, minus the weight for each comparison period.}
+#'     \item{`n_by_period`}{rows used in each period.}
+#'     \item{`scheme_detected`}{the scheme read off the data, whatever was requested.}
 #'   }
 #' @export
 rddid <- function(data, y, x, time, id = NULL, t_rd,
-                  comparisons = NULL, weights = "constant",
+                  comparisons = NULL, trend = "constant",
                   estimand = c("att", "atu"),
                   bwselect = c("joint", "iter", "cct"), h = NULL, b = NULL,
-                  start = "hstar",
                   scheme = c("auto", "cs", "pc", "pv"),
-                  regularize = TRUE, reg_const = 3,
-                  c = 0, p = 1L, q = 2L, kernel = "triangular", level = 0.95) {
+                  c = 0, p = 1L, q = 2L, kernel = "triangular", level = 0.95,
+                  start = "hstar", regularize = TRUE, reg_const = 3,
+                  weights = NULL) {
+  cl       <- match.call()
   bwselect <- match.arg(bwselect)
   scheme   <- match.arg(scheme)
   estimand <- match.arg(estimand)
-  for (nm in c(y, x, time)) if (!nm %in% names(data))
+  kernel   <- match.arg(kernel, c("triangular", "epanechnikov", "uniform"))
+  if (!is.null(weights)) {                 # `weights` is the old name of `trend`
+    if (!missing(trend))
+      stop("supply either `trend` or its old name `weights`, not both.")
+    message("rddid(): `weights` is now called `trend`; the old name still works.")
+    trend <- weights
+  }
+  for (nm in c(y, x, time, id)) if (!nm %in% names(data))
     stop("column '", nm, "' not found in `data`.")
 
   tt <- data[[time]]
   if (!t_rd %in% tt) stop("t_rd = ", t_rd, " not present in `", time, "`.")
   if (is.null(comparisons)) comparisons <- sort(setdiff(unique(tt), t_rd))
   if (length(comparisons) < 1L) stop("need at least one comparison period.")
+  if (t_rd %in% comparisons) stop("`t_rd` must not be one of the `comparisons`.")
+  if (is.null(id) && scheme == "auto")
+    message("rddid(): no `id` given, so every row is treated as a different unit ",
+            "(repeated cross-section standard errors).")
   periods <- c(t_rd, comparisons)
 
   ii <- if (is.null(id)) seq_len(nrow(data)) else data[[id]]
@@ -170,7 +196,7 @@ rddid <- function(data, y, x, time, id = NULL, t_rd,
     data.frame(y = data[[y]][rows], x = data[[x]][rows], id = ii[rows])
   }), as.character(periods))
 
-  w    <- .rddid_weights(weights, comparisons, t_rd)
+  w    <- .rddid_weights(trend, comparisons, t_rd)
   coef <- c(stats::setNames(1, as.character(t_rd)), -w)
 
   detected <- .detect_scheme(plist, c = c)
@@ -205,6 +231,9 @@ rddid <- function(data, y, x, time, id = NULL, t_rd,
     bw_info <- list(method = "joint", h = jb$h, b = jb$b, B = jb$B,
                     Veff = jb$Veff, reg = jb$reg, pilot_bws = jb$pilot_bws)
   }
+  # the bandwidth actually used in each period, whatever the rule
+  bw_info$h_by_period <- vapply(bws, function(v) unname(v[["h"]]), numeric(1))
+  bw_info$b_by_period <- vapply(bws, function(v) unname(v[["b"]]), numeric(1))
 
   # ---- per-period fits at chosen bandwidth(s) ----
   fits <- stats::setNames(lapply(as.character(periods), function(k)
@@ -218,53 +247,72 @@ rddid <- function(data, y, x, time, id = NULL, t_rd,
   sefld <- c(cs = "V_cs", pc = "V_pc", pv = "V_pv")
   zc <- stats::qnorm(1 - (1 - level) / 2)
   mkrow <- function(agg) {
-    se <- sqrt(agg[sefld[use_scheme]])
+    se <- unname(sqrt(agg[sefld[use_scheme]]))
+    z  <- agg[["est"]] / se
     c(est = agg[["est"]],
-      se = unname(se),
+      se = se,
       se_cs = sqrt(agg[["V_cs"]]), se_pc = sqrt(agg[["V_pc"]]), se_pv = sqrt(agg[["V_pv"]]),
-      ci_l = agg[["est"]] - zc * unname(se), ci_u = agg[["est"]] + zc * unname(se))
+      ci_l = agg[["est"]] - zc * se, ci_u = agg[["est"]] + zc * se,
+      z = z, p = 2 * stats::pnorm(-abs(z)))
   }
   est_tab <- rbind(Conventional = mkrow(ac), Robust = mkrow(abc))
 
   structure(list(
     estimates = as.data.frame(est_tab),
-    coef = coef, weights = w, weights_type = if (is.numeric(weights)) "custom" else weights,
+    coef = coef, weights = w, weights_type = if (is.numeric(trend)) "custom" else trend,
     estimand = estimand,
     t_rd = t_rd, comparisons = comparisons,
     scheme = use_scheme, scheme_detected = detected, scheme_requested = scheme,
     bandwidth = bw_info, fits = fits, level = level,
     p = p, q = q, kernel = kernel, c = c,
-    n_by_period = vapply(fits, function(f) f$n, numeric(1))
+    n_by_period = vapply(fits, function(f) f$n, numeric(1)),
+    call = cl
   ), class = "rddid")
 }
 
 #' @export
-print.rddid <- function(x, ...) {
+print.rddid <- function(x, digits = 4, ...) {
   est <- if (is.null(x$estimand)) "att" else x$estimand
-  cat(sprintf("RD-DID estimate of %s(t_RD)\n", toupper(est)))
-  cat(sprintf("  RD period: %s   comparison periods: %s\n",
-              x$t_rd, paste(x$comparisons, collapse = ", ")))
-  cat(sprintf("  weights: %s [%s]\n", x$weights_type,
-              paste(sprintf("%g", x$weights), collapse = ", ")))
-  bw <- x$bandwidth
-  bwtxt <- switch(bw$method,
-    fixed = sprintf("fixed  h=%.4g, b=%.4g", bw$h, bw$b),
-    joint = sprintf("joint  h=%.4g (common), b=%s (per period)", bw$h,
-                    paste(sprintf("%.4g", bw$b), collapse = "/")),
-    cct   = "cct  (per-period)",
-    iter  = sprintf("iter  (%d iterations)", bw$niter))
-  cat(sprintf("  bwselect: %s\n", bwtxt))
-  cat(sprintf("  scheme: %s%s\n", x$scheme,
-              if (x$scheme_requested == "auto") " (auto-detected)" else ""))
-  if (est == "atu")
-    cat("  estimand: ATU (comparison periods uniformly treated)\n")
-  e <- x$estimates
-  cat(sprintf("\n  %-14s %10s %10s   %s%% CI\n", "", "Estimate", "Std.Err.",
-              format(100 * x$level)))
-  for (r in rownames(e))
-    cat(sprintf("  %-14s %10.5f %10.5f   [%9.5f, %9.5f]\n",
-                r, e[r, "est"], e[r, "se"], e[r, "ci_l"], e[r, "ci_u"]))
-  cat(sprintf("\n  Robust SE by scheme: cs=%.5f  pc=%.5f  pv=%.5f\n",
-              e["Robust", "se_cs"], e["Robust", "se_pc"], e["Robust", "se_pv"]))
+  cat(sprintf("RD-DID estimate of the %s in period %s\n", toupper(est), x$t_rd))
+  cat(sprintf("  Comparison periods: %s   (%s; weights %s)\n",
+              paste(x$comparisons, collapse = ", "), .trend_label(x$weights_type),
+              paste(trimws(formatC(x$weights, digits = 3, format = "g")), collapse = ", ")))
+  cat(sprintf("  Sampling scheme: %s%s\n", .scheme_label(x$scheme),
+              if (identical(x$scheme_requested, "auto")) " (detected from the data)" else ""))
+  cat(sprintf("  Bandwidth: %s\n\n", .bandwidth_label(x$bandwidth)))
+  .print_estimates(x, digits = digits)
+  cat("\n  summary() shows the per-period fits and the s.e. under every sampling scheme.\n")
   invisible(x)
+}
+
+# ---- print helpers shared by print.rddid / summary.rddid ------------------------------------
+.scheme_label <- function(s) {
+  c(cs = "repeated cross-section",
+    pc = "panel, running variable fixed over time",
+    pv = "panel, running variable varies over time")[[s]]
+}
+.trend_label <- function(wt) {
+  switch(wt, constant = "constant confounding trend", linear = "linear confounding trend",
+         custom = "user-supplied weights", wt)
+}
+.bandwidth_label <- function(bw) {
+  by_t <- function(v) paste(trimws(formatC(v, digits = 4, format = "g")), collapse = ", ")
+  switch(bw$method,
+    fixed = sprintf("h = %.4g in every period (fixed), pilot b = %.4g", bw$h, bw$b),
+    joint = sprintf("common h = %.4g (rule \"joint\", AMSE-optimal for the aggregate)\n  Pilot bandwidth b by period: %s",
+                    bw$h, by_t(bw$b_by_period)),
+    cct   = sprintf("per-period CCT MSE-optimal (rule \"cct\"): h by period %s", by_t(bw$h_by_period)),
+    iter  = sprintf("period-specific (rule \"iter\", %d iterations): h by period %s", bw$niter,
+                    by_t(bw$h_by_period)))
+}
+.print_estimates <- function(x, digits = 4) {
+  e <- x$estimates
+  lab <- c(Conventional = "Conventional", Robust = "Robust (bias-corrected)")
+  fmt <- function(v) formatC(v, digits = digits, format = "f")
+  pfmt <- function(p) ifelse(p < 1e-3, "<0.001", formatC(p, digits = 3, format = "f"))
+  cat(sprintf("  %-24s %10s %10s %7s %8s   %s%% CI\n", "", "Estimate", "Std. err.", "z",
+              "p-value", format(100 * x$level)))
+  for (r in rownames(e))
+    cat(sprintf("  %-24s %10s %10s %7.2f %8s   [%s, %s]\n", lab[[r]], fmt(e[r, "est"]),
+                fmt(e[r, "se"]), e[r, "z"], pfmt(e[r, "p"]), fmt(e[r, "ci_l"]), fmt(e[r, "ci_u"])))
 }

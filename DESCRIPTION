@@ -18,14 +18,16 @@ Description: Estimation and inference for the regression-discontinuity
     asymptotic MSE of the aggregate estimator.
 License: MIT + file LICENSE
 Encoding: UTF-8
+LazyData: true
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
 Depends:
-    R (>= 3.5)
+    R (>= 3.6)
 Imports:
     rdrobust,
     stats
 Suggests:
+    generics,
     ggplot2,
     knitr,
     rmarkdown,

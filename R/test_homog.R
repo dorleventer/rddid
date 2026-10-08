@@ -87,7 +87,9 @@
 #'   unit's side of the cutoff in the RD period, the partition of the paper's
 #'   Section 4.4. `"pattern"` = the sign pattern of the other periods' running
 #'   variables.
-#' @param ... Further arguments passed to [rd_period()] (e.g. `p`, `q`, `b`).
+#' @param p,q polynomial orders of the per-cell local-polynomial fits (point estimate and
+#'   bias correction; default 1 and 2). The per-cell CCT bandwidth is always selected at
+#'   p = 1.
 #'
 #' @return An object of class `"rd_homog"`, a list with:
 #'   \describe{
@@ -140,7 +142,7 @@
 #' }
 #' @export
 rd_homog <- function(data, y, x, time, id,
-                     comparisons = NULL, t_rd = NULL,
+                     t_rd = NULL, comparisons = NULL,
                      estimand = c("att", "atu"),
                      c = 0, h = NULL,
                      bwselect = c("cct", "rot"),
@@ -149,12 +151,13 @@ rd_homog <- function(data, y, x, time, id,
                      min_n = 10L,
                      bc = TRUE,
                      type_by = c("rd_side", "pattern"),
-                     ...) {
+                     p = 1L, q = 2L) {
   cl       <- match.call()
   scheme   <- match.arg(scheme)
   type_by  <- match.arg(type_by)
   bwselect <- match.arg(bwselect)
   estimand <- match.arg(estimand)
+  kernel   <- match.arg(kernel, c("triangular", "epanechnikov", "uniform"))
 
   # ---- validate columns ----
   for (nm in base::c(y, x, time, id))
@@ -202,7 +205,8 @@ rd_homog <- function(data, y, x, time, id,
   #   subset the data to period t0 AND units whose type label is v,
   #   run rd_period() on that subset.
 
-  dots <- list(...)
+  dots     <- list(p = p, q = q)   # polynomial orders of the per-cell fits
+  skipped  <- character()
 
   # Determine the sampling scheme for the cross-period covariance from the
   # id/side structure ACROSS the comparison periods, using the package-canonical
@@ -258,14 +262,20 @@ rd_homog <- function(data, y, x, time, id,
       # skip if too few obs on either side
       n_pos <- sum(x_vt >= c, na.rm = TRUE)
       n_neg <- sum(x_vt <  c, na.rm = TRUE)
-      if (n_pos < min_n || n_neg < min_n) next
+      if (n_pos < min_n || n_neg < min_n) {
+        skipped <- c(skipped, sprintf("period %s, type %s (n = %d below, %d above)", tp, vt, n_neg, n_pos))
+        next
+      }
 
       fit <- tryCatch({
         call_args <- base::c(list(y = y_vt, x = x_vt, h = bw_h, b = bw_b,
                                    id = id_vt, c = c, kernel = kernel), dots)
         do.call(rd_period, call_args)
       }, error = function(e) NULL)
-      if (is.null(fit)) next
+      if (is.null(fit)) {
+        skipped <- c(skipped, sprintf("period %s, type %s (local-linear fit failed)", tp, vt))
+        next
+      }
 
       key <- paste0(tp, "::", vt)
       all_fits[[key]] <- fit
@@ -376,6 +386,10 @@ rd_homog <- function(data, y, x, time, id,
   }))
   rownames(jump_df) <- NULL
 
+  if (length(skipped))
+    message("rd_homog: skipped ", length(skipped), " cell(s) with fewer than min_n = ", min_n,
+            " observations on a side or a failed fit: ", paste(skipped, collapse = "; "))
+
   # ---- output ----
   structure(
     list(
@@ -397,25 +411,11 @@ rd_homog <- function(data, y, x, time, id,
 
 #' @export
 print.rd_homog <- function(x, ...) {
-  cat("Homogeneous-confounding test\n")
-  cat(sprintf("  Comparison periods: %s\n",
-              paste(x$comparisons, collapse = ", ")))
-  cat(sprintf("  Sampling scheme: %s\n", x$scheme))
-  est <- if (is.null(x$estimand)) "att" else x$estimand
-  if (est == "atu")
-    cat("  estimand: atu (test is unchanged; see ?rd_homog)\n")
-  cat(sprintf("  Wald statistic: %.4f   df: %d   p-value: %.4f\n",
-              x$statistic, x$df, x$p_value))
-  if (nrow(x$period_type_jumps) > 0L) {
-    cat("\n  Per-type jumps (comparison periods):\n")
-    df <- x$period_type_jumps
-    df$ref_marker <- ifelse(df$reference, "[ref]", "")
-    cat(sprintf("  %-10s  %-12s  %8s  %8s  %6s  %s\n",
-                "Period", "Type", "Jump", "SE", "n", ""))
-    for (k in seq_len(nrow(df)))
-      cat(sprintf("  %-10s  %-12s  %8.4f  %8.4f  %6d  %s\n",
-                  df$period[k], df$type[k], df$jump[k], df$se[k],
-                  df$n[k], df$ref_marker[k]))
-  }
+  .print_test_header("homogeneous confounding", "rd_homog",
+                     "in each comparison period the confounding jump is the same for every type",
+                     x$scheme, TRUE, x$estimand)
+  cat(sprintf("  Comparison periods: %s\n\n", paste(x$comparisons, collapse = ", ")))
+  .print_wald(x$statistic, x$df, x$p_value, label = "Wald")
+  .print_jump_table(x$period_type_jumps, c("period", "type"), c("Period", "Type"))
   invisible(x)
 }

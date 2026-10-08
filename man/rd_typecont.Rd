@@ -9,14 +9,15 @@ rd_typecont(
   x,
   time,
   id,
+  t_rd = NULL,
+  comparisons = NULL,
   estimand = c("att", "atu"),
   c = 0,
   h = NULL,
   bwselect = c("cct", "rot"),
   kernel = "triangular",
   scheme = c("auto", "cs", "pc", "pv"),
-  bc = TRUE,
-  ...
+  bc = TRUE
 )
 }
 \arguments{
@@ -30,6 +31,11 @@ not be balanced.}
 \item{time}{column name (string) for the period.}
 
 \item{id}{column name (string) for the unit identifier.}
+
+\item{t_rd, comparisons}{optional: the RD period and the comparison periods to use.
+With both \code{NULL} (default) every period in \code{data} enters the test; the test itself
+treats all periods alike, so \code{t_rd} alone changes nothing and only serves to write
+the same call as for \code{\link[=rddid]{rddid()}}.}
 
 \item{estimand}{\code{"att"} (default) or \code{"atu"}. Label only: the test is
 identical under either estimand, because the continuous-type-distribution
@@ -56,8 +62,6 @@ the data (same logic as \code{\link[=rddid]{rddid()}}), or one of \code{"cs"}, \
 (Calonico, Cattaneo and Titiunik 2014). \code{TRUE} (default) aligns the test
 with the bias-corrected \code{\link[=rddid]{rddid()}} estimator; \code{FALSE} uses the conventional
 local-linear jumps and variances.}
-
-\item{...}{currently unused.}
 }
 \value{
 An object of class \code{"rd_typecont"}, a named list with:

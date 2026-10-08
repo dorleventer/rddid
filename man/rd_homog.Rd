@@ -10,8 +10,8 @@ rd_homog(
   x,
   time,
   id,
-  comparisons = NULL,
   t_rd = NULL,
+  comparisons = NULL,
   estimand = c("att", "atu"),
   c = 0,
   h = NULL,
@@ -21,7 +21,8 @@ rd_homog(
   min_n = 10L,
   bc = TRUE,
   type_by = c("rd_side", "pattern"),
-  ...
+  p = 1L,
+  q = 2L
 )
 }
 \arguments{
@@ -36,13 +37,13 @@ variable, and period indicator.}
 \item{id}{Column name for the unit identifier.  Required (the test uses the
 other periods' running variables to assign types, which needs a panel).}
 
-\item{comparisons}{Values of \code{time} to use as comparison periods.  Defaults
-to all periods except \code{t_rd} (if \code{t_rd} is supplied) or all periods (if
-\code{t_rd = NULL}).}
-
 \item{t_rd}{Value of \code{time} for the RD period.  Used only to exclude it from
 comparison periods when \code{comparisons = NULL}; the RD period is \strong{not}
 used in the test itself.}
+
+\item{comparisons}{Values of \code{time} to use as comparison periods.  Defaults
+to all periods except \code{t_rd} (if \code{t_rd} is supplied) or all periods (if
+\code{t_rd = NULL}).}
 
 \item{estimand}{\code{"att"} (default) or \code{"atu"}. Label only: under \code{"atu"} the
 within-type comparison-period discontinuities are the confounding
@@ -83,7 +84,9 @@ unit's side of the cutoff in the RD period, the partition of the paper's
 Section 4.4. \code{"pattern"} = the sign pattern of the other periods' running
 variables.}
 
-\item{...}{Further arguments passed to \code{\link[=rd_period]{rd_period()}} (e.g. \code{p}, \code{q}, \code{b}).}
+\item{p, q}{polynomial orders of the per-cell local-polynomial fits (point estimate and
+bias correction; default 1 and 2). The per-cell CCT bandwidth is always selected at
+p = 1.}
 }
 \value{
 An object of class \code{"rd_homog"}, a list with:

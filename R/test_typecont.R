@@ -23,6 +23,10 @@
 #' @param x column name (string) for the running variable.
 #' @param time column name (string) for the period.
 #' @param id column name (string) for the unit identifier.
+#' @param t_rd,comparisons optional: the RD period and the comparison periods to use.
+#'   With both `NULL` (default) every period in `data` enters the test; the test itself
+#'   treats all periods alike, so `t_rd` alone changes nothing and only serves to write
+#'   the same call as for [rddid()].
 #' @param estimand `"att"` (default) or `"atu"`. Label only: the test is
 #'   identical under either estimand, because the continuous-type-distribution
 #'   assumption is symmetric in the two sides of the cutoff.
@@ -42,7 +46,6 @@
 #'   (Calonico, Cattaneo and Titiunik 2014). `TRUE` (default) aligns the test
 #'   with the bias-corrected [rddid()] estimator; `FALSE` uses the conventional
 #'   local-linear jumps and variances.
-#' @param ... currently unused.
 #'
 #' @return An object of class `"rd_typecont"`, a named list with:
 #'   \item{ll_wald}{list with `stat` (chi-square), `df`, `p`.}
@@ -53,22 +56,32 @@
 #'     `bwselect = "cct"`), `bwselect`, `scheme`, `bc`, `estimand`.}
 #' @export
 rd_typecont <- function(data, x, time, id,
+                        t_rd = NULL, comparisons = NULL,
                         estimand = c("att", "atu"),
                         c = 0,
                         h = NULL,
                         bwselect = c("cct", "rot"),
                         kernel = "triangular",
                         scheme = c("auto", "cs", "pc", "pv"),
-                        bc = TRUE,
-                        ...) {
+                        bc = TRUE) {
+  cl       <- match.call()
   scheme   <- match.arg(scheme)
   bwselect <- match.arg(bwselect)
   estimand <- match.arg(estimand)
+  kernel   <- match.arg(kernel, c("triangular", "epanechnikov", "uniform"))
 
   # ----- input checks -------------------------------------------------------
   for (nm in c(x, time, id)) {
     if (!nm %in% names(data))
       stop("column '", nm, "' not found in `data`.")
+  }
+  # `t_rd`/`comparisons` only select which periods enter (the test treats every period
+  # alike); with both NULL every period in `data` is used
+  if (!is.null(comparisons)) {
+    use_periods <- c(t_rd, comparisons)
+    if (!all(use_periods %in% data[[time]]))
+      stop("periods not in `data`: ", paste(setdiff(use_periods, data[[time]]), collapse = ", "))
+    data <- data[data[[time]] %in% use_periods, , drop = FALSE]
   }
   data  <- data[stats::complete.cases(data[, c(x, time, id)]), , drop = FALSE]
   periods <- sort(unique(data[[time]]))
@@ -225,8 +238,15 @@ rd_typecont <- function(data, x, time, id,
   # ----- assemble output ---------------------------------------------------
   structure(
     list(
+      statistic  = ll_result$stat,
+      df         = ll_result$df,
+      p_value    = ll_result$p,
+      scheme     = use_scheme,
+      scheme_requested = scheme,
+      estimand   = estimand,
       ll_wald    = ll_result,
       per_period = per_period,
+      call       = cl,
       meta = list(
         periods      = plab,
         type_values  = all_type_values,
@@ -244,18 +264,16 @@ rd_typecont <- function(data, x, time, id,
 
 #' @export
 print.rd_typecont <- function(x, ...) {
-  cat("Type-continuity test\n")
-  h_str <- if (is.na(x$meta$h)) paste0("per-cell ", toupper(x$meta$bwselect)) else sprintf("%.4g", x$meta$h)
-  cat(sprintf("  Periods: %s   Types: %s   h=%s   bwselect=%s   scheme=%s\n\n",
-              paste(x$meta$periods, collapse = ", "),
-              paste(x$meta$type_values, collapse = ", "),
-              h_str, x$meta$bwselect, x$meta$scheme))
-  est <- if (is.null(x$meta$estimand)) "att" else x$meta$estimand
-  if (est == "atu")
-    cat("  estimand: atu (test is unchanged; see ?rd_typecont)\n")
-
-  cat("LL-Wald:\n")
-  cat(sprintf("    chi2(%.0f) = %.4f   p = %.4f\n",
-              x$ll_wald$df, x$ll_wald$stat, x$ll_wald$p))
+  .print_test_header("a continuous type distribution", "rd_typecont",
+                     "the share of each type jumps by zero at the cutoff, in every period",
+                     x$scheme, identical(x$scheme_requested, "auto"), x$estimand)
+  cat(sprintf("  Periods: %s   Types: %s   Bandwidth: %s\n\n",
+              paste(x$meta$periods, collapse = ", "), paste(x$meta$type_values, collapse = ", "),
+              .bw_label_test(x$meta$h, x$meta$bwselect)))
+  .print_wald(x$statistic, x$df, x$p_value, label = "Joint Wald")
+  for (k in names(x$per_period)) {
+    pp <- x$per_period[[k]]$ll_wald
+    if (!is.null(pp)) .print_wald(pp$stat, pp$df, pp$p, label = sprintf("Period %s:", k), indent = "    ")
+  }
   invisible(x)
 }

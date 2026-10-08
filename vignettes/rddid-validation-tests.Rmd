@@ -271,7 +271,7 @@ h3 <- rd_homog(S3, y = "Y", x = "R", time = "t", id = "id", comparisons = 1, t_r
 rid <- function(dat, ...) rddid(dat, y = "Y", x = "R", time = "t", id = "id", t_rd = max(dat$t), bwselect = "cct", ...)
 estfmt <- function(r) sprintf("%s (%s)", fmt(r$estimates["Conventional", "est"]), fmt(r$estimates["Conventional", "se"]))
 r0 <- rid(S0); r1 <- rid(S1); r2 <- rid(S2); r3 <- rid(S3)
-r0_3 <- rid(S0_3); r4c <- rid(S4); r0_3l <- rid(S0_3, weights = "linear"); r4l <- rid(S4, weights = "linear")
+r0_3 <- rid(S0_3); r4c <- rid(S4); r0_3l <- rid(S0_3, trend = "linear"); r4l <- rid(S4, trend = "linear")
 
 tab1 <- data.frame(
   scenario = c("S0", "S1", "S2", "S3"),

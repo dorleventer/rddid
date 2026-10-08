@@ -55,18 +55,18 @@ dat <- do.call(rbind, lapply(1:3, function(t) {
 }))
 
 rddid(dat, y = "Y", x = "R", time = "t", id = "id",
-      t_rd = 3, comparisons = c(1, 2), weights = "constant")
-#> RD-DID estimate of ATT(t_RD)
-#>   RD period: 3   comparison periods: 1, 2
-#>   weights: constant [0.5, 0.5]
-#>   bwselect: joint  h=0.3025 (common), b=0.4415/0.452/0.4691 (per period)
-#>   scheme: pc (auto-detected)
+      t_rd = 3, comparisons = c(1, 2), trend = "constant")
+#> RD-DID estimate of the ATT in period 3
+#>   Comparison periods: 1, 2   (constant confounding trend; weights 0.5, 0.5)
+#>   Sampling scheme: panel, running variable fixed over time (detected from the data)
+#>   Bandwidth: common h = 0.3025 (rule "joint", AMSE-optimal for the aggregate)
+#>   Pilot bandwidth b by period: 0.4415, 0.452, 0.4691
 #> 
-#>                    Estimate   Std.Err.   95% CI
-#>   Conventional      1.08745    0.10080   [  0.88988,   1.28502]
-#>   Robust            1.11523    0.12133   [  0.87743,   1.35303]
+#>                              Estimate  Std. err.       z  p-value   95% CI
+#>   Conventional                 1.0874     0.1008   10.79   <0.001   [0.8899, 1.2850]
+#>   Robust (bias-corrected)      1.1152     0.1213    9.19   <0.001   [0.8774, 1.3530]
 #> 
-#>   Robust SE by scheme: cs=0.19120  pc=0.12133  pv=0.12133
+#>   summary() shows the per-period fits and the s.e. under every sampling scheme.
 ```
 
 Set `estimand = "atu"` when the comparison periods are uniformly treated

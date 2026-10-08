@@ -97,7 +97,6 @@
 #'   (Calonico, Cattaneo and Titiunik 2014). `TRUE` (default) aligns the test
 #'   with the bias-corrected [rddid()] estimator; `FALSE` uses the conventional
 #'   local-linear jumps and variances.
-#' @param ... Currently unused.
 #'
 #' @return An object of class `"rd_compstable"`, a named list with:
 #'   \describe{
@@ -160,11 +159,12 @@ rd_compstable <- function(data, x, time, id, t_rd,
                           bwselect = c("cct", "rot"),
                           kernel = "triangular",
                           scheme = c("auto", "cs", "pc", "pv"),
-                          bc = TRUE,
-                          ...) {
+                          bc = TRUE) {
+  cl       <- match.call()
   scheme   <- match.arg(scheme)
   bwselect <- match.arg(bwselect)
   estimand <- match.arg(estimand)
+  kernel   <- match.arg(kernel, c("triangular", "epanechnikov", "uniform"))
 
   # ---- input validation -------------------------------------------------------
   for (nm in base::c(x, time, id)) {
@@ -448,12 +448,22 @@ rd_compstable <- function(data, x, time, id, t_rd,
   joint_ll_p <- if (joint_ll_df == 0L) 1 else
     stats::pchisq(joint_ll_stat, df = joint_ll_df, lower.tail = FALSE)
 
+  pair_schemes <- vapply(pairs_out, function(pr) pr$scheme, character(1))
   structure(
     list(
+      statistic   = joint_ll_stat,
+      df          = joint_ll_df,
+      p_value     = joint_ll_p,
+      scheme      = if (length(unique(pair_schemes)) == 1L) unique(pair_schemes) else "mixed",
+      scheme_requested = scheme,
+      estimand    = estimand,
+      t_rd        = t_rd,
+      comparisons = comparisons,
       pairs = pairs_out,
       joint = list(
         ll_wald = list(stat = joint_ll_stat, df = joint_ll_df, p = joint_ll_p)
       ),
+      call = cl,
       meta = list(
         t_rd        = t_rd,
         comparisons = comparisons,
@@ -471,28 +481,23 @@ rd_compstable <- function(data, x, time, id, t_rd,
 
 #' @export
 print.rd_compstable <- function(x, ...) {
-  est <- if (is.null(x$meta$estimand)) "att" else x$meta$estimand
-  cat("Composition-stability test\n")
-  if (est == "atu")
-    cat("  estimand: atu -- test is on the below-cutoff shares (mirrored design)\n")
-  cat(sprintf("  RD period: %s   Comparison periods: %s\n",
-              x$meta$t_rd,
-              paste(x$meta$comparisons, collapse = ", ")))
-  h_str <- if (is.na(x$meta$h)) paste0("per-cell ", toupper(x$meta$bwselect)) else sprintf("%.4g", x$meta$h)
-  cat(sprintf("  h=%s   bwselect=%s\n\n", h_str, x$meta$bwselect))
-
+  .print_test_header("composition stability", "rd_compstable",
+                     "the share of each type among the units above the cutoff is the same in the RD period and in each comparison period",
+                     x$scheme, identical(x$scheme_requested, "auto"), x$estimand,
+                     atu_note = "tested on the below-cutoff shares, mirrored design")
+  cat(sprintf("  RD period: %s   Comparison periods: %s   Bandwidth: %s\n\n",
+              x$t_rd, paste(x$comparisons, collapse = ", "),
+              .bw_label_test(x$meta$h, x$meta$bwselect)))
   for (pk in names(x$pairs)) {
     pr <- x$pairs[[pk]]
-    cat(sprintf("Pair %s  [scheme=%s  n_trd=%d  n_t0=%d  n_both=%d]\n",
-                pk, pr$scheme, pr$n_trd, pr$n_t0, pr$n_both))
-    cat(sprintf("  LL-Wald:  chi2(%.0f) = %.4f   p = %.4f\n\n",
-                pr$ll_wald$df, pr$ll_wald$stat, pr$ll_wald$p))
+    .print_wald(pr$ll_wald$stat, pr$ll_wald$df, pr$ll_wald$p,
+                label = sprintf("Pair %s:", pk))
+    cat(sprintf("    n above the cutoff: %d (RD period), %d (comparison), %d in both\n",
+                pr$n_trd, pr$n_t0, pr$n_both))
   }
-
   if (length(x$pairs) > 1L) {
-    cat("Joint (across all pairs):\n")
-    cat(sprintf("  LL-Wald:  chi2(%.0f) = %.4f   p = %.4f\n",
-                x$joint$ll_wald$df, x$joint$ll_wald$stat, x$joint$ll_wald$p))
+    cat("\n")
+    .print_wald(x$statistic, x$df, x$p_value, label = "Joint over pairs (sum of chi-squared):")
   }
   invisible(x)
 }

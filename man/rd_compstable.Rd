@@ -17,8 +17,7 @@ rd_compstable(
   bwselect = c("cct", "rot"),
   kernel = "triangular",
   scheme = c("auto", "cs", "pc", "pv"),
-  bc = TRUE,
-  ...
+  bc = TRUE
 )
 }
 \arguments{
@@ -74,8 +73,6 @@ same-side minus opposite-side cross-period covariance.}
 (Calonico, Cattaneo and Titiunik 2014). \code{TRUE} (default) aligns the test
 with the bias-corrected \code{\link[=rddid]{rddid()}} estimator; \code{FALSE} uses the conventional
 local-linear jumps and variances.}
-
-\item{...}{Currently unused.}
 }
 \value{
 An object of class \code{"rd_compstable"}, a named list with:

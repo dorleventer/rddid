@@ -52,10 +52,10 @@ test_that("bwselect='cct' and 'rot' produce different statistics (rd_typecont)",
 
   out_cct <- rd_typecont(dat, x = "R", time = "time", id = "id",
                          c = 0, h = NULL, bwselect = "cct",
-                         q = 30L, S = 49L, kernel = "triangular")
+                         kernel = "triangular")
   out_rot <- rd_typecont(dat, x = "R", time = "time", id = "id",
                          c = 0, h = NULL, bwselect = "rot",
-                         q = 30L, S = 49L, kernel = "triangular")
+                         kernel = "triangular")
 
   # Different bandwidth paths should yield different LL-Wald statistics.
   expect_false(isTRUE(all.equal(out_cct$ll_wald$stat, out_rot$ll_wald$stat,

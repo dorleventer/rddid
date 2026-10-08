@@ -114,7 +114,8 @@ test_that("rd_compstable returns expected structure", {
   expect_s3_class(out, "rd_compstable")
 
   # Top-level names
-  expect_named(out, c("pairs", "joint", "meta"))
+  expect_named(out, c("statistic", "df", "p_value", "scheme", "scheme_requested", "estimand",
+                      "t_rd", "comparisons", "pairs", "joint", "call", "meta"))
 
   # Pair result
   pr <- out$pairs[["2::1"]]
@@ -181,8 +182,8 @@ test_that("print.rd_compstable runs without error", {
   out <- rd_compstable(dat, x = "R", time = "time", id = "id",
                        t_rd = 2L, comparisons = 1L,
                        c = 0, h = 0.5)
-  expect_output(print(out), "Composition-stability")
-  expect_output(print(out), "Composition-stability test")
+  expect_output(print(out), "Test of composition stability")
+  expect_output(print(out), "rd_compstable")
 })
 
 test_that("rd_compstable scheme = 'cs' overrides auto", {

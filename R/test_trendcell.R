@@ -111,7 +111,9 @@
 #'   tests equal per-cell jumps across all comparison periods; `"linear"` tests
 #'   that the per-cell jumps lie on a line in time, using second-difference
 #'   contrasts (requires \eqn{\geq 3} comparison periods per cell).
-#' @param ... Further arguments passed to [rd_period()] (e.g. `p`, `q`, `b`).
+#' @param p,q polynomial orders of the per-cell local-polynomial fits (point estimate and
+#'   bias correction; default 1 and 2). The per-cell CCT bandwidth is always selected at
+#'   p = 1.
 #'
 #' @return An object of class `"rd_trendcell"`, a list with:
 #'   \describe{
@@ -177,8 +179,9 @@
 #' }
 #' @export
 rd_trendcell <- function(data, y, x, time, id,
-                         comparisons = NULL, t_rd = NULL,
+                         t_rd = NULL, comparisons = NULL,
                          estimand = c("att", "atu"),
+                         trend   = c("constant", "linear"),
                          c = 0, h = NULL,
                          bwselect = c("cct", "rot"),
                          kernel = "triangular",
@@ -186,14 +189,14 @@ rd_trendcell <- function(data, y, x, time, id,
                          min_n = 10L,
                          bc = TRUE,
                          type_by = c("rd_side", "pattern"),
-                         trend   = c("constant", "linear"),
-                         ...) {
+                         p = 1L, q = 2L) {
   cl       <- match.call()
   scheme   <- match.arg(scheme)
   type_by  <- match.arg(type_by)
   trend    <- match.arg(trend)
   bwselect <- match.arg(bwselect)
   estimand <- match.arg(estimand)
+  kernel   <- match.arg(kernel, c("triangular", "epanechnikov", "uniform"))
 
   # ---- validate columns ----
   for (nm in base::c(y, x, time, id))
@@ -244,7 +247,8 @@ rd_trendcell <- function(data, y, x, time, id,
 
   # ---- per-(cell, comparison-period) fits ----
   # key format: "cell::period"
-  dots     <- list(...)
+  dots     <- list(p = p, q = q)   # polynomial orders of the per-cell fits
+  skipped  <- character()
   all_fits <- list()
   all_meta <- list()
 
@@ -267,7 +271,10 @@ rd_trendcell <- function(data, y, x, time, id,
 
       n_pos <- sum(x_ck >= c, na.rm = TRUE)
       n_neg <- sum(x_ck <  c, na.rm = TRUE)
-      if (n_pos < min_n || n_neg < min_n) next
+      if (n_pos < min_n || n_neg < min_n) {
+        skipped <- c(skipped, sprintf("cell %s, period %s (n = %d below, %d above)", ck, tp, n_neg, n_pos))
+        next
+      }
 
       fit <- tryCatch({
         call_args <- base::c(
@@ -276,7 +283,10 @@ rd_trendcell <- function(data, y, x, time, id,
           dots)
         do.call(rd_period, call_args)
       }, error = function(e) NULL)
-      if (is.null(fit)) next
+      if (is.null(fit)) {
+        skipped <- c(skipped, sprintf("cell %s, period %s (local-linear fit failed)", ck, tp))
+        next
+      }
 
       key            <- paste0(ck, "::", tp)
       all_fits[[key]] <- fit
@@ -415,6 +425,10 @@ rd_trendcell <- function(data, y, x, time, id,
                stringsAsFactors = FALSE)
   }
 
+  if (length(skipped))
+    message("rd_trendcell: skipped ", length(skipped), " cell(s) with fewer than min_n = ", min_n,
+            " observations on a side or a failed fit: ", paste(skipped, collapse = "; "))
+
   # ---- handle no-contrast case ----
   if (length(Delta_all) == 0L) {
     if (trend == "linear") {
@@ -473,32 +487,16 @@ rd_trendcell <- function(data, y, x, time, id,
 
 #' @export
 print.rd_trendcell <- function(x, ...) {
-  cat("Within-type confounding pre-trends test\n")
-  cat(sprintf("  Trend form: %s\n", x$trend))
-  cat(sprintf("  Comparison periods: %s\n",
-              paste(x$comparisons, collapse = ", ")))
-  cat(sprintf("  Sampling scheme: %s\n", x$scheme))
-  est <- if (is.null(x$estimand)) "att" else x$estimand
-  if (est == "atu")
-    cat("  estimand: atu (test is unchanged; see ?rd_trendcell)\n")
-  if (is.na(x$statistic)) {
-    cat(sprintf("  Wald statistic: NA   df: %d   p-value: NA\n", x$df))
-    cat("\n  NOTE: df = 0; the linear within-cell trend is just-identified\n")
-    cat("  with fewer than 3 comparison periods (no second-difference contrasts).\n")
-  } else {
-    cat(sprintf("  Wald statistic: %.4f   df: %d   p-value: %.4f\n",
-                x$statistic, x$df, x$p_value))
-  }
-  if (!is.null(x$cell_period_jumps) && nrow(x$cell_period_jumps) > 0L) {
-    cat("\n  Per-cell jumps (comparison periods):\n")
-    df <- x$cell_period_jumps
-    df$ref_marker <- ifelse(df$reference, "[ref]", "")
-    cat(sprintf("  %-10s  %-12s  %8s  %8s  %6s  %s\n",
-                "Cell", "Period", "Jump", "SE", "n", ""))
-    for (k in seq_len(nrow(df)))
-      cat(sprintf("  %-10s  %-12s  %8.4f  %8.4f  %6d  %s\n",
-                  df$cell[k], df$period[k], df$jump[k], df$se[k],
-                  df$n[k], df$ref_marker[k]))
-  }
+  .print_test_header("a constant within-type confounding discontinuity", "rd_trendcell",
+                     if (x$trend == "linear")
+                       "within each type, the confounding jump moves linearly across the comparison periods"
+                     else "within each type, the confounding jump is the same in every comparison period",
+                     x$scheme, TRUE, x$estimand)
+  cat(sprintf("  Comparison periods: %s   Trend: %s\n\n", paste(x$comparisons, collapse = ", "),
+              x$trend))
+  .print_wald(x$statistic, x$df, x$p_value, label = "Wald")
+  if (is.na(x$statistic))
+    cat("    (a linear within-type trend needs at least 3 comparison periods to be testable)\n")
+  .print_jump_table(x$cell_period_jumps, c("cell", "period"), c("Type", "Period"))
   invisible(x)
 }

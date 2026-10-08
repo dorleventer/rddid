@@ -169,7 +169,8 @@ test_that("rd_typecont returns an rd_typecont object with expected fields", {
                      c = 0, h = 0.5)
 
   expect_s3_class(out, "rd_typecont")
-  expect_named(out, c("ll_wald", "per_period", "meta"))
+  expect_named(out, c("statistic", "df", "p_value", "scheme", "scheme_requested", "estimand",
+                      "ll_wald", "per_period", "call", "meta"))
   expect_named(out$ll_wald, c("stat", "df", "p"))
   # per_period: one entry per period, each with its own LL-Wald
   expect_named(out$per_period, out$meta$periods)
@@ -189,7 +190,7 @@ test_that("print.rd_typecont runs without error", {
   panel <- xsec_to_panel(d)
   out   <- rd_typecont(panel, x = "R", time = "time", id = "id",
                        c = 0, h = 0.5)
-  expect_output(print(out), "LL-Wald")
+  expect_output(print(out), "Wald chi-squared")
 })
 
 test_that("rd_typecont works with 3 periods", {

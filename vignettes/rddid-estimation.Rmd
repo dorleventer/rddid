@@ -133,7 +133,7 @@ from $\hat D_3 = `r fmt(tab$D[3])`$ gives
 
 ```{r rddid-call}
 res <- rddid(dat, y = "Y", x = "R", time = "t", id = "id", t_rd = 3,
-             comparisons = c(1, 2), weights = "constant", bwselect = "cct")
+             comparisons = c(1, 2), trend = "constant", bwselect = "cct")
 res
 ```
 
@@ -166,7 +166,7 @@ and CI then correspond to it:
 
 ```{r scheme-explicit}
 res_pc <- rddid(dat, y = "Y", x = "R", time = "t", id = "id", t_rd = 3,
-                comparisons = c(1, 2), weights = "constant", bwselect = "cct", scheme = "pc")
+                comparisons = c(1, 2), trend = "constant", bwselect = "cct", scheme = "pc")
 res_pc$estimates["Conventional", c("est", "se", "ci_l", "ci_u")]
 ```
 
@@ -176,7 +176,7 @@ res_pc$estimates["Conventional", c("est", "se", "ci_l", "ci_u")]
 alpha_lin <- 0.5 + 0.5 * (1:3)
 dat_lin <- dgp_a(alpha = alpha_lin, tau = tau_true)
 res_const <- rddid(dat_lin, y = "Y", x = "R", time = "t", id = "id", t_rd = 3,
-                    comparisons = c(1, 2), weights = "constant", bwselect = "cct")
+                    comparisons = c(1, 2), trend = "constant", bwselect = "cct")
 res_const$estimates[, c("est", "se")]
 bias_truth <- alpha_lin[3] - mean(alpha_lin[1:2])
 ```
@@ -188,12 +188,12 @@ against $\tau = `r fmt(tau_true, 0)`$: the Conventional estimate,
 `r fmt(res_const$estimates["Conventional", "est"])`, sits near
 $\tau + `r fmt(bias_truth)` = `r fmt(tau_true + bias_truth)`$.
 
-For a linear confounding trend, set `weights = "linear"`: it extrapolates the
+For a linear confounding trend, set `trend = "linear"`: it extrapolates the
 line through the comparison-period $\hat D_t$'s to `t_rd`.
 
 ```{r linear-weights}
 res_lin <- rddid(dat_lin, y = "Y", x = "R", time = "t", id = "id", t_rd = 3,
-                  comparisons = c(1, 2), weights = "linear", bwselect = "cct")
+                  comparisons = c(1, 2), trend = "linear", bwselect = "cct")
 res_lin$weights
 res_lin$estimates[, c("est", "se")]
 ```
@@ -219,7 +219,7 @@ constant-trend data:
 
 ```{r custom-weights}
 res_custom <- rddid(dat, y = "Y", x = "R", time = "t", id = "id", t_rd = 3,
-                    comparisons = c(1, 2), weights = c(0.3, 0.7), bwselect = "cct")
+                    comparisons = c(1, 2), trend = c(0.3, 0.7), bwselect = "cct")
 res_custom$estimates[, c("est", "se")]
 ```
 
@@ -276,7 +276,7 @@ discontinuity among treated units.
 
 ```{r rddid-atu-call}
 res_atu <- rddid(dat_atu, y = "Y", x = "R", time = "t", id = "id", t_rd = 3,
-                  comparisons = c(1, 2), weights = "constant", bwselect = "iter",
+                  comparisons = c(1, 2), trend = "constant", bwselect = "iter",
                   scheme = "pc", estimand = "atu")
 res_atu
 tau0

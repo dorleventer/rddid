@@ -237,8 +237,8 @@ test_that("print methods label ATU designs and stay silent on 'estimand' for att
                  comparisons = 1, bwselect = "cct", scheme = "pv")
   r_atu <- rddid(d, y = "Y", x = "R", time = "t", id = "id", t_rd = 2,
                  comparisons = 1, bwselect = "cct", scheme = "pv", estimand = "atu")
-  expect_output(print(r_atu), "ATU\\(t_RD\\)")
-  expect_output(print(r_atu), "estimand: ATU")
+  expect_output(print(r_atu), "estimate of the ATU")
+  expect_output(print(r_atu), "ATU in period")
   expect_false(grepl("estimand", paste(capture.output(print(r_att)), collapse = "\n")))
 
   cs_att <- rd_compstable(d, x = "R", time = "t", id = "id", t_rd = 2,

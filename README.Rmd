@@ -59,7 +59,7 @@ dat <- do.call(rbind, lapply(1:3, function(t) {
 }))
 
 rddid(dat, y = "Y", x = "R", time = "t", id = "id",
-      t_rd = 3, comparisons = c(1, 2), weights = "constant")
+      t_rd = 3, comparisons = c(1, 2), trend = "constant")
 ```
 
 Set `estimand = "atu"` when the comparison periods are uniformly treated
