@@ -213,7 +213,7 @@ res_const <- rddid(dat_lin, y = "Y", x = "R", time = "t", id = "id", t_rd = 3,
 res_const$estimates[, c("est", "se")]
 #>                   est         se
 #> Conventional 1.828770 0.08880653
-#> Robust       1.859708 0.10639325
+#> Robust       1.859708 0.10639326
 bias_truth <- alpha_lin[3] - mean(alpha_lin[1:2])
 ```
 
@@ -255,7 +255,7 @@ res_custom <- rddid(dat, y = "Y", x = "R", time = "t", id = "id", t_rd = 3,
 res_custom$estimates[, c("est", "se")]
 #>                   est         se
 #> Conventional 1.106545 0.09013533
-#> Robust       1.142396 0.10725730
+#> Robust       1.142396 0.10725731
 ```
 
 ## Comparison periods that are uniformly treated

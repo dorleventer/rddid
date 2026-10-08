@@ -86,7 +86,7 @@ The per-period $`h_t`$ sit in `r_cct$fits[[k]]$h`: $`h_1 =
 0.390`$, $`h_2 = 0.328`$, $`h_3 = 0.398`$; the narrowest is period 2,
 the most curved.
 
-### `bwselect = "joint"`
+### `bwselect = "joint"` (the default)
 
 A single common $`h^\ast`$ minimizes the asymptotic MSE of the aggregate
 $`\widehat{\mathrm{ATT}}(t_{\mathrm{RD}})`$, using one bandwidth for
@@ -107,7 +107,7 @@ peek(r_joint)
 `r_joint$bandwidth$h` is the common $`h^\ast = 0.305`$, applied to every
 period’s `fits[[k]]$h`.
 
-### `bwselect = "iter"` (the default)
+### `bwselect = "iter"`
 
 Period-specific bandwidths targeting the same aggregate MSE as
 `"joint"`, but with one $`h_t`$ per period, found by coordinate descent

@@ -2,6 +2,26 @@
 
 ## rddid 0.4.0.9000 (development)
 
+### 2026-10-08: UX sweep, step 1
+
+- **The default bandwidth rule is now the common bandwidth,
+  `bwselect = "joint"`** (one `h` for every period, minimising the
+  asymptotic MSE of the aggregate estimator). The iterative
+  period-specific rule `"iter"` remains available but is no longer the
+  default and is not used in the paper. Calls that pass `bwselect`
+  explicitly are unaffected.
+
+- **`rdrobust` moved from Suggests to Imports.**
+  [`rd_bw_cct()`](https://dorleventer.github.io/rddid/reference/rd_bw_cct.md)
+  no longer falls back to `0.5 * IQR(x)` when rdrobust is not installed
+  (the fallback on an `rdbwselect()` error is unchanged), so the default
+  path gives the same numbers on every machine.
+
+- **The composition-adjusted family is removed**: `rd_att()`,
+  `rd_sadjust()`, `rd_c()`, `rd_adjust()` and their tests. They belong
+  to a companion paper, not to the RD-DID paper, and are recoverable at
+  the git tag `v0.4.0.9000-composition`.
+
 - **`bwselect = "joint"` no longer depends on which period is labelled
   `t_rd`.** The common AMSE-optimal bandwidth used to fit *every* period
   at the RD period’s CCT pilot pair to estimate the aggregate bias and
@@ -111,14 +131,10 @@
   `_pkgdown.yml` groups the reference into *Estimation* and *Validation
   tests*; README gains a quick start (now generated from `README.Rmd`).
 
-- The composition-adjusted estimators
-  ([`rd_adjust()`](https://dorleventer.github.io/rddid/reference/rd_adjust.md),
-  [`rd_sadjust()`](https://dorleventer.github.io/rddid/reference/rd_sadjust.md),
-  [`rd_c()`](https://dorleventer.github.io/rddid/reference/rd_c.md),
-  [`rd_att()`](https://dorleventer.github.io/rddid/reference/rd_att.md))
-  are tagged `@keywords internal`: still exported and tested, but no
-  longer listed on the site. They belong to a companion paper and are
-  not part of the current manuscript.
+- The composition-adjusted estimators (`rd_adjust()`, `rd_sadjust()`,
+  `rd_c()`, `rd_att()`) are tagged `@keywords internal`: still exported
+  and tested, but no longer listed on the site. They belong to a
+  companion paper and are not part of the current manuscript.
 
 - `Suggests` gains `knitr`, `rmarkdown`, `ggplot2`;
   `VignetteBuilder: knitr`.

@@ -83,7 +83,7 @@ ATT, or the ATU when the comparison periods are uniformly treated
 <span>  comparisons <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  weights <span class="op">=</span> <span class="st">"constant"</span>,</span>
 <span>  estimand <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"att"</span>, <span class="st">"atu"</span><span class="op">)</span>,</span>
-<span>  bwselect <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"iter"</span>, <span class="st">"joint"</span>, <span class="st">"cct"</span><span class="op">)</span>,</span>
+<span>  bwselect <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"joint"</span>, <span class="st">"iter"</span>, <span class="st">"cct"</span><span class="op">)</span>,</span>
 <span>  h <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  b <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  start <span class="op">=</span> <span class="st">"hstar"</span>,</span>
@@ -141,11 +141,13 @@ it is uniformly ONE (targets the ATU). See "Targeting the ATU" below.</p></dd>
 
 
 <dt id="arg-bwselect">bwselect<a class="anchor" aria-label="anchor" href="#arg-bwselect"></a></dt>
-<dd><p><code>"iter"</code> (default; period-specific bandwidths chosen jointly
-by coordinate descent on the aggregate AMSE, started at the common
-joint-optimal bandwidth), <code>"joint"</code> (a single common AMSE-optimal
-bandwidth for the aggregate estimator), or <code>"cct"</code> (per-period CCT
-MSE-optimal bandwidths, <code><a href="rd_bw_cct.html">rd_bw_cct()</a></code>). Ignored if <code>h</code> is supplied.
+<dd><p><code>"joint"</code> (default; one common bandwidth for every period,
+chosen to minimise the asymptotic MSE of the aggregate estimator — the
+paper's common rule), <code>"cct"</code> (a separate CCT MSE-optimal bandwidth per
+period, <code><a href="rd_bw_cct.html">rd_bw_cct()</a></code>), or <code>"iter"</code> (period-specific bandwidths found by
+coordinate descent on the aggregate AMSE, started at the common
+bandwidth; not used in the paper, kept for the simulations). Ignored if
+<code>h</code> is supplied.
 Both joint rules estimate each period's bias and variance constants at
 that period's own CCT pilot, so neither depends on which period is
 labelled <code>t_rd</code>; under <code>"joint"</code> the pilot <code>b_t</code> keeps each period's CCT
