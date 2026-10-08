@@ -1,5 +1,37 @@
 # rddid 0.4.0.9000 (development)
 
+## 2026-10-08: second bug-hunt round (input handling; no numerical change on valid input)
+
+* `rddid()` now works on complete (outcome, running variable, id) rows only and says how many
+  it dropped: an NA running variable used to read as a side switch, turning a "no unit changes
+  side" panel into "some units change side" and moving the common bandwidth and the estimate;
+  `n_by_period` and `nobs()` now count the rows actually used.
+* Errors instead of silent misuse: a unit appearing twice in a period (`rddid()` and the four
+  tests), a period repeated in `comparisons`, `comparisons` that include `t_rd` or periods not in
+  the data (all four tests), `b` without `h`, an `h` that is not a single positive number, a
+  `t_rd` not in the data (`rd_typecont()`), `type_by = "pattern"` in `rd_trendcell()` (a cell
+  fixed across the comparison periods cannot use a comparison period's own side).
+* Named numeric `trend` weights are matched to the comparison periods by name; `q` now reaches
+  `rd_bw_cct()` (the pilot bandwidth used to be chosen for `q = p + 1` whatever `q` was);
+  `kernel` accepts any case; a factor `t_rd` works.
+* Untestable results (no testable contrast, or a type share whose jump has a zero standard
+  error) are reported as `statistic = NA`, `df = 0`, `p = NA` instead of a chi-squared of 0
+  with p = 1 or a rounding-noise rejection; the joint composition-stability test skips
+  untestable pairs.
+* The no-switcher guard looks only at the periods a test uses, and names a repeated
+  cross-section for what it is.
+* `plot()` of `rd_homog`/`rd_trendcell` works when `t_rd` was passed as a variable (the objects
+  now carry `t_rd`); `plot(cs, pair = )` checks its index; `plot_switchers()` errors on a
+  cross-section; more than five types get distinct colours.
+* `rd_homog()`/`rd_trendcell()` choose a cell's bandwidth only after the `min_n` check (no
+  fallback noise from skipped cells); `rd_homog()` prints the skipped cells before it stops
+  for lack of contrasts; its `reference` flag is set only in periods that contributed a
+  contrast; comparison periods print in time order.
+* Tests: console snapshots (`tests/testthat/_snaps/`) and one regression test per fix.
+* Also: `tidy()` of a fit honours `conf.int` and `conf.level`; DESCRIPTION cites the paper and has
+  a shorter Title; `CITATION.cff`; lifecycle badge; the How-it-works article is guarded on
+  ggplot2; rdrobust skips removed from the tests.
+
 ## 2026-10-08: review round on the plots, the console and the site
 
 * **Figures** (after a review against the paper's own figures): no titles, subtitles or

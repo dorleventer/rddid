@@ -1,0 +1,25 @@
+cff-version: 1.2.0
+message: "If you use rddid, please cite the paper it implements."
+type: software
+title: "rddid: Regression Discontinuity with a Confounding Policy (RD-DID)"
+authors:
+  - family-names: Leventer
+    given-names: Dor
+  - family-names: Nevo
+    given-names: Daniel
+repository-code: "https://github.com/dorleventer/rddid"
+url: "https://dorleventer.github.io/rddid/"
+license: MIT
+preferred-citation:
+  type: article
+  title: "Correcting Invalid Regression Discontinuity Designs Using Multiple Time-Period Data"
+  authors:
+    - family-names: Leventer
+      given-names: Dor
+    - family-names: Nevo
+      given-names: Daniel
+  year: 2024
+  url: "https://arxiv.org/abs/2408.05847"
+  identifiers:
+    - type: other
+      value: "arXiv:2408.05847"

@@ -251,7 +251,6 @@ make_panel3_sort <- function(n, seed, p_sort = 0.6) {
 
 
 test_that("rd_typecont bwselect = 'cct' runs end-to-end and returns finite stat", {
-  skip_if_not_installed("rdrobust")
   set.seed(42L)
   d     <- dgp_s3_local(1500, "null", seed = 42L)
   panel <- xsec_to_panel(d)

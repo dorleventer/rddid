@@ -8,6 +8,8 @@
 [![R-CMD-check](https://github.com/dorleventer/rddid/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/dorleventer/rddid/actions/workflows/R-CMD-check.yaml)
 [![License:
 MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Lifecycle:
+experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 <!-- badges: end -->
 
 A treatment of interest switches on at a cutoff of a running variable in
@@ -28,6 +30,13 @@ Leventer, D. and D. Nevo (2024). *Correcting Invalid Regression
 Discontinuity Designs Using Multiple Time-Period Data.*
 [arXiv:2408.05847](https://arxiv.org/abs/2408.05847).
 `citation("rddid")` returns this reference, with a BibTeX entry.
+
+Compared with a single `rdrobust` fit, `rddid()` runs one local-linear
+RD per period with the same conventions (`rd_period()` reproduces
+`rdrobust` at a given bandwidth) and then nets the comparison-period
+jumps out of the RD-period jump, with standard errors that account for
+the same units appearing in several periods and bandwidth rules chosen
+for the combined estimate.
 
 ## Installation
 

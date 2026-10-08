@@ -64,9 +64,6 @@
 
       # the bandwidth comes before the min_n check, so a CCT fallback message can come from a
       # cell that is then skipped
-      bw   <- .cell_bandwidth(y_cell, x_cell, cutoff, kernel, h, bwselect, p = p)
-      bw_h <- bw[["h"]]
-      bw_b <- bw[["b"]]
 
       n_above <- sum(x_cell >= cutoff, na.rm = TRUE)
       n_below <- sum(x_cell <  cutoff, na.rm = TRUE)
@@ -75,6 +72,10 @@
                                       tp, type_v, n_below, n_above))
         next
       }
+
+      bw   <- .cell_bandwidth(y_cell, x_cell, cutoff, kernel, h, bwselect, p = p)
+      bw_h <- bw[["h"]]
+      bw_b <- bw[["b"]]
 
       # Any error in the fit (too few points in a bandwidth window, a singular local design, an
       # unusable bandwidth) skips the cell instead of stopping the test; the cell is then listed
@@ -98,10 +99,11 @@
     }
 
     keys_tp <- .homog_contrast_keys(tp, valid_types, fits)
+    tp_keys <- names(meta)[startsWith(names(meta), paste0(tp, "::"))]
+    for (key in tp_keys) meta[[key]]$ref <- FALSE
     if (!is.null(keys_tp)) {
       contrast_keys[[tp]] <- keys_tp
-      for (key in c(keys_tp$ref, keys_tp$non_ref))   # flag the reference actually used
-        meta[[key]]$ref <- identical(key, keys_tp$ref)
+      meta[[keys_tp$ref]]$ref <- TRUE            # flag the reference actually used
     }
   }
 
@@ -369,13 +371,21 @@ rd_homog <- function(data, y, x, time, id,
   if (is.null(comparisons)) {
     comparisons <- if (!is.null(t_rd)) setdiff(times_all, t_rd) else times_all
   }
+  if (!is.null(t_rd) && !t_rd %in% times_all)
+    stop("rd_homog: `t_rd` (", t_rd, ") is not a period in `data`.")
+  if (!is.null(t_rd) && t_rd %in% comparisons)
+    stop("rd_homog: `t_rd` must not be one of the `comparisons`.")
+  if (!all(comparisons %in% times_all))
+    stop("rd_homog: comparison period(s) not in `data`: ",
+         paste(setdiff(comparisons, times_all), collapse = ", "))
+  if (anyDuplicated(comparisons)) stop("rd_homog: `comparisons` contains a period more than once.")
   if (length(comparisons) < 1L)
     stop("need at least one comparison period.")
 
   # types are "+"/"-" sign-pattern strings (a unit at the cutoff counts as above); a unit
   # unobserved in a period its type needs is dropped from that period
   types     <- .build_types(data, x = x, time = time, id = id, c = cutoff)
-  .stop_if_no_switchers(types$wide, as.character(sort(unique(data[[time]]))), "rd_homog")
+  .stop_if_no_switchers(types$wide, as.character(c(t_rd, comparisons)), "rd_homog")
   type_list <- types$period_types
   if (type_by == "rd_side") {
     if (is.null(t_rd))
@@ -392,8 +402,13 @@ rd_homog <- function(data, y, x, time, id,
   use_scheme <- if (scheme == "auto") detected_scheme else scheme
 
   contrast_entries <- .homog_contrast_entries(cells$contrast_keys)
+  if (length(cells$skipped))
+    message("rd_homog: skipped ", length(cells$skipped), " cell(s) with fewer than min_n = ",
+            min_n, " observations on a side or a failed fit: ",
+            paste(cells$skipped, collapse = "; "))
   if (length(contrast_entries) == 0L)
-    stop("rd_homog: no usable type contrasts found; check data, bandwidth, or min_n.")
+    stop("rd_homog: no usable type contrasts found (see the skipped cells above); a smaller ",
+         "min_n or a wider h may help.")
   ref_map <- .homog_ref_map(cells$contrast_keys)
   # meta$D is already the bias-corrected jump when bc = TRUE
   Delta <- vapply(contrast_entries, function(key) {
@@ -415,10 +430,6 @@ rd_homog <- function(data, y, x, time, id,
 
   jump_df <- .homog_jump_table(cells$meta)
 
-  if (length(cells$skipped))
-    message("rd_homog: skipped ", length(cells$skipped), " cell(s) with fewer than min_n = ",
-            min_n, " observations on a side or a failed fit: ",
-            paste(cells$skipped, collapse = "; "))
 
   structure(
     list(
@@ -430,6 +441,7 @@ rd_homog <- function(data, y, x, time, id,
       cov_matrix        = Sigma,
       scheme            = use_scheme,
       scheme_requested  = scheme,
+      t_rd              = t_rd,
       bc                = bc,
       estimand          = estimand,
       comparisons       = names(cells$contrast_keys),
@@ -444,7 +456,7 @@ print.rd_homog <- function(x, ...) {
   .print_test_header("homogeneous confounding", "rd_homog",
                      "in each comparison period the confounding jump is the same for every type",
                      x$scheme, identical(x$scheme_requested, "auto"), x$estimand)
-  cat(sprintf("  Comparison periods: %s\n\n", paste(x$comparisons, collapse = ", ")))
+  cat(sprintf("  Comparison periods: %s\n\n", paste(.period_order(as.character(x$comparisons)), collapse = ", ")))
   .print_wald(x$statistic, x$df, x$p_value, label = "Wald")
   .print_jump_table(x$period_type_jumps, c("period", "type"), c("Period", "Type"))
   invisible(x)

@@ -51,11 +51,6 @@
       x_k  <- d_tp[[x]][keep]
       id_k <- d_tp[[id]][keep]
 
-      # the bandwidth comes before the min_n check, so CCT also runs on cells skipped below
-      bw   <- .cell_bandwidth(y_k, x_k, cutoff, kernel, h, bwselect, p = p)
-      bw_h <- bw[["h"]]
-      bw_b <- bw[["b"]]
-
       n_pos <- sum(x_k >= cutoff, na.rm = TRUE)
       n_neg <- sum(x_k <  cutoff, na.rm = TRUE)
       if (n_pos < min_n || n_neg < min_n) {
@@ -63,6 +58,10 @@
                                       cell_k, tp, n_neg, n_pos))
         next
       }
+      # the bandwidth is chosen only for cells that pass min_n (no fallback noise from skipped cells)
+      bw   <- .cell_bandwidth(y_k, x_k, cutoff, kernel, h, bwselect, p = p)
+      bw_h <- bw[["h"]]
+      bw_b <- bw[["b"]]
 
       # rd_period() stops when a side has too few observations in the pilot window or a
       # singular design; such a cell is skipped and listed, not fatal to the test
@@ -242,7 +241,8 @@
 
 #' The result when no type has three comparison periods under `trend = "linear"`: NA, df 0, NA.
 #' @noRd
-.trendcell_untestable <- function(jump_df, use_scheme, scheme, bc, estimand, trend, comparisons, cl) {
+.trendcell_untestable <- function(jump_df, use_scheme, scheme, bc, estimand, trend, comparisons, cl,
+                                  t_rd = NULL) {
   message("rd_trendcell: linear trend is not testable -- no cell has ",
           "3 or more comparison periods (degrees of freedom = 0). ",
           "Returning an object with df = 0, statistic = NA, p_value = NA.")
@@ -255,6 +255,7 @@
          cov_matrix        = matrix(numeric(0), 0L, 0L),
          scheme            = use_scheme,
          scheme_requested  = scheme,
+         t_rd              = t_rd,
          bc                = bc,
          estimand          = estimand,
          trend             = trend,
@@ -447,13 +448,25 @@ rd_trendcell <- function(data, y, x, time, id,
   times_all <- sort(unique(data[[time]]))
   if (is.null(comparisons))
     comparisons <- if (!is.null(t_rd)) setdiff(times_all, t_rd) else times_all
+  if (!is.null(t_rd) && !t_rd %in% times_all)
+    stop("rd_trendcell: `t_rd` (", t_rd, ") is not a period in `data`.")
+  if (!is.null(t_rd) && t_rd %in% comparisons)
+    stop("rd_trendcell: `t_rd` must not be one of the `comparisons`.")
+  if (!all(comparisons %in% times_all))
+    stop("rd_trendcell: comparison period(s) not in `data`: ",
+         paste(setdiff(comparisons, times_all), collapse = ", "))
+  if (anyDuplicated(comparisons)) stop("rd_trendcell: `comparisons` contains a period more than once.")
   comparisons <- sort(comparisons)   # the contrasts below are in time order
   if (length(comparisons) < 1L)
     stop("need at least one comparison period.")
 
   types    <- .build_types(data, x = x, time = time, id = id, c = cutoff)
 
-  .stop_if_no_switchers(types$wide, as.character(sort(unique(data[[time]]))), "rd_trendcell")
+  .stop_if_no_switchers(types$wide, as.character(c(t_rd, comparisons)), "rd_trendcell")
+  if (type_by == "pattern")
+    stop("rd_trendcell: type_by = \"pattern\" is not defined here: a cell that is fixed across ",
+         "the comparison periods cannot use a comparison period's own side of the cutoff, so ",
+         "every cell would lie on one side only. Use the default type_by = \"rd_side\".")
   cell_map <- .trendcell_cell_map(types, type_by, t_rd, comparisons)
 
   detected_scheme <- .detect_scheme_comparisons(data, x, time, id, comparisons, cutoff)
@@ -473,7 +486,8 @@ rd_trendcell <- function(data, y, x, time, id,
 
   if (length(Delta_all) == 0L) {
     if (trend == "linear")
-      return(.trendcell_untestable(jump_df, use_scheme, scheme, bc, estimand, trend, comparisons, cl))
+      return(.trendcell_untestable(jump_df, use_scheme, scheme, bc, estimand, trend, comparisons, cl,
+                                   t_rd = t_rd))
     stop("rd_trendcell: no usable within-cell cross-period contrasts found; ",
          "check data, bandwidth, min_n, or number of comparison periods.")
   }
@@ -496,6 +510,7 @@ rd_trendcell <- function(data, y, x, time, id,
          cov_matrix        = Sigma_all,
          scheme            = use_scheme,
          scheme_requested  = scheme,
+         t_rd              = t_rd,
          bc                = bc,
          estimand          = estimand,
          trend             = trend,
@@ -513,7 +528,7 @@ print.rd_trendcell <- function(x, ...) {
     "within each type, the confounding jump is the same in every comparison period"
   .print_test_header("a constant within-type confounding discontinuity", "rd_trendcell",
                      null_text, x$scheme, identical(x$scheme_requested, "auto"), x$estimand)
-  cat(sprintf("  Comparison periods: %s   Trend: %s\n\n", paste(x$comparisons, collapse = ", "),
+  cat(sprintf("  Comparison periods: %s   Trend: %s\n\n", paste(.period_order(as.character(x$comparisons)), collapse = ", "),
               x$trend))
   .print_wald(x$statistic, x$df, x$p_value, label = "Wald")
   if (is.na(x$statistic))

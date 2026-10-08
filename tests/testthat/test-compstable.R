@@ -268,7 +268,6 @@ test_that("rd_compstable high-dual-sided: size controlled under the null", {
 })
 
 test_that("rd_compstable bwselect = 'cct' runs end-to-end and returns finite stat", {
-  skip_if_not_installed("rdrobust")
   dat <- make_panel_null(n = 1500, seed = 42L)
   out <- rd_compstable(dat, x = "R", time = "time", id = "id",
                        t_rd = 2L, comparisons = 1L,

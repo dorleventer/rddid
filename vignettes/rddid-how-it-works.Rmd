@@ -22,7 +22,8 @@ start with [Get started](rddid-estimation.html).
 
 ```{r setup, message = FALSE}
 library(rddid)
-library(ggplot2)
+has_gg <- requireNamespace("ggplot2", quietly = TRUE)
+if (has_gg) library(ggplot2)
 fmt <- function(x, d = 2) formatC(x, format = "f", digits = d)
 ```
 
@@ -97,7 +98,7 @@ knitr::kable(tab, digits = 3,
              col.names = c("t", "D", "SE", "D (bc)", "SE (bc)", "h", "n", "truth"))
 ```
 
-```{r rd-plot, fig.alt = "Binned scatter of Y on R with local-linear fits, one facet per period"}
+```{r rd-plot, fig.alt = "Binned scatter of Y on R with local-linear fits, one facet per period", eval = has_gg}
 bin_w <- 0.05
 binned <- do.call(rbind, lapply(periods, function(t) {
   d   <- per_period[[as.character(t)]]$d
@@ -432,7 +433,7 @@ For S3, $\chi^2(`r tc3$df`) = `r fmt(tc3$statistic)`$, $`r pmath(tc3$p_value)`$
 $`r pmath(tc3$per_period[["2"]]$ll_wald$p)`$). S0's per-period jumps are
 indistinguishable from zero in either period; S3's are not, in either period.
 
-```{r typecont-plot, fig.height = 3.5, fig.alt = "Type-share RD plots, rows S0/S3, columns period 1/2"}
+```{r typecont-plot, fig.height = 3.5, fig.alt = "Type-share RD plots, rows S0/S3, columns period 1/2", eval = has_gg}
 type_share_df <- function(ss, scenario) {
   do.call(rbind, lapply(1:2, function(t) {
     fit <- ss[[t]]$fit; d <- ss[[t]]$d
@@ -478,7 +479,7 @@ bw_r <- rd_bw_cct(refl$ind, refl$x, c = 0)
 fit_r <- rd_period(refl$ind, refl$x, h = unname(bw_r["h"]), b = unname(bw_r["b"]), id = refl$id, c = 0)
 ```
 
-```{r compstable-plot, fig.alt = "Binned means and local-linear lines of the reflected composition-stability RD, S1"}
+```{r compstable-plot, fig.alt = "Binned means and local-linear lines of the reflected composition-stability RD, S1", eval = has_gg}
 agg_r <- aggregate(refl$ind, by = list(x = bin_x(refl$x)), FUN = mean)
 names(agg_r)[2] <- "ind"
 h_r <- unname(fit_r$h)
@@ -587,7 +588,7 @@ $`r fmt(h2$period_type_jumps$jump[1])`$ and
 $`r fmt(h2$period_type_jumps$jump[2])`$, close to the construction values
 `conf = c(0.5, 1.5)`.
 
-```{r homog-plot, fig.alt = "Point-range of within-type jumps, facets S1/S2"}
+```{r homog-plot, fig.alt = "Point-range of within-type jumps, facets S1/S2", eval = has_gg}
 tab_h$scenario <- factor(tab_h$scenario, levels = c("S1", "S2"))
 ggplot(tab_h, aes(type, jump)) +
   geom_pointrange(aes(ymin = jump - 1.96 * se, ymax = jump + 1.96 * se)) +
@@ -620,7 +621,7 @@ $`r fmt(tr4$cell_period_jumps$jump[4])`$, by about the construction increment
 `gamma = 0.3`. With only two comparison periods the constant form is what can be
 tested here; `trend = "linear"` needs three or more.
 
-```{r trendcell-plot, fig.alt = "Point-range of within-type jumps by period, facets S0_3/S4"}
+```{r trendcell-plot, fig.alt = "Point-range of within-type jumps by period, facets S0_3/S4", eval = has_gg}
 tab_tr$scenario <- factor(tab_tr$scenario, levels = c("S0_3", "S4"))
 ggplot(tab_tr, aes(period, jump, colour = cell)) +
   geom_pointrange(aes(ymin = jump - 1.96 * se, ymax = jump + 1.96 * se), position = position_dodge(width = 0.3)) +

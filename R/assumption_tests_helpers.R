@@ -36,6 +36,9 @@
 
   # Pivot to wide: one row per unit, R and side per period.  Side is "+" if
   # R >= c (treated at the cutoff), "-" if R < c, NA if the unit is unobserved.
+  if (anyDuplicated(data[, c(id, time)]))
+    stop("some (", id, ", ", time, ") pairs appear more than once: each unit may appear once per ",
+         "period.", call. = FALSE)
   wide <- data.frame(id = unique(data[[id]]))
   for (k in seq_along(periods)) {
     sub <- data[data[[time]] == periods[k], , drop = FALSE]
@@ -86,7 +89,14 @@
 #'   Sigma), `p` (p-value from chi-square distribution).
 #' @keywords internal
 #' @noRd
-.joint_wald <- function(theta, Sigma) {
+.joint_wald <- function(theta, Sigma, scale = 1) {
+  if (length(theta) == 0L) return(list(stat = NA_real_, df = 0L, p = NA_real_))
+  # A share whose jump has a standard error that is zero to working precision (one switcher,
+  # a type that is deterministic near the cutoff) would give an astronomical statistic made
+  # of rounding noise: treat the test as undefined instead (the type indicators are 0/1, so
+  # the scale is 1)
+  if (any(sqrt(pmax(diag(Sigma), 0)) <= sqrt(.Machine$double.eps) * scale))
+    return(list(stat = NA_real_, df = 0L, p = NA_real_, degenerate = TRUE))
   # Moore-Penrose pseudo-inverse via SVD, truncating near-zero singular values.
   # Sigma is structurally rank-deficient here (the per-period type indicators
   # sum to 1, so each period contributes one exact-zero direction).  Use the
@@ -97,7 +107,7 @@
   tol <- sqrt(.Machine$double.eps) * max(sv$d)
   keep <- sv$d > tol
   df <- sum(keep)
-  if (df == 0L) return(list(stat = 0, df = 0L, p = 1))
+  if (df == 0L) return(list(stat = NA_real_, df = 0L, p = NA_real_))   # nothing testable
   d_inv <- ifelse(keep, 1 / sv$d, 0)
   Sigma_pinv <- sv$v %*% diag(d_inv, nrow = length(d_inv)) %*% t(sv$u)
   stat <- as.numeric(t(theta) %*% Sigma_pinv %*% theta)
@@ -213,6 +223,10 @@
   side_cols <- side_cols[side_cols %in% names(wide)]
   if (length(side_cols) < 2L) return(invisible(FALSE))
   sides <- wide[, side_cols, drop = FALSE]
+  observed <- rowSums(!is.na(sides))
+  if (!any(observed >= 2L))
+    stop(fn, ": no unit is observed in two of the periods used (the ids never repeat, as in a ",
+         "repeated cross-section); the tests of the assumptions need a panel.", call. = FALSE)
   switches <- apply(sides, 1L, function(s) { s <- s[!is.na(s)]; length(unique(s)) > 1L })
   if (!any(switches))
     stop(fn, ": no unit changes side of the cutoff between the periods, so every unit has the ",

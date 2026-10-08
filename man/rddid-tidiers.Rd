@@ -10,7 +10,7 @@
 \alias{tidy.rd_trendcell}
 \title{Tidy output for RD-DID fits and validation tests}
 \usage{
-\method{tidy}{rddid}(x, ...)
+\method{tidy}{rddid}(x, conf.int = TRUE, conf.level = NULL, ...)
 
 \method{glance}{rddid}(x, ...)
 
@@ -25,6 +25,11 @@
 \arguments{
 \item{x}{an object returned by \code{\link[=rddid]{rddid()}}, \code{\link[=rd_typecont]{rd_typecont()}}, \code{\link[=rd_compstable]{rd_compstable()}},
 \code{\link[=rd_homog]{rd_homog()}} or \code{\link[=rd_trendcell]{rd_trendcell()}}.}
+
+\item{conf.int, conf.level}{for \code{tidy()} of a fit: include the confidence interval (default
+\code{TRUE}) and at which level (default the fit's \code{level}; another value recomputes the
+interval from the estimate and its standard error), as \code{modelsummary} and other table
+makers pass them.}
 
 \item{...}{unused.}
 }

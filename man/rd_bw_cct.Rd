@@ -4,7 +4,7 @@
 \alias{rd_bw_cct}
 \title{CCT bandwidths for one period (building block)}
 \usage{
-rd_bw_cct(y, x, c = 0, p = 1L, kernel = "triangular")
+rd_bw_cct(y, x, c = 0, p = 1L, q = p + 1L, kernel = "triangular")
 }
 \arguments{
 \item{y}{the outcome (a numeric vector).}
@@ -14,6 +14,9 @@ rd_bw_cct(y, x, c = 0, p = 1L, kernel = "triangular")
 \item{c}{the cutoff (default 0). A unit with \code{x >= c} is above the cutoff.}
 
 \item{p}{order of the local polynomial (default 1, local linear).}
+
+\item{q}{order of the local polynomial of the bias correction (default \code{p + 1}); the
+pilot bandwidth \code{b} is chosen for it.}
 
 \item{kernel}{the kernel: \code{"triangular"} (default), \code{"epanechnikov"} or
 \code{"uniform"}.}

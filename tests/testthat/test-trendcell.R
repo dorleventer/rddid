@@ -229,7 +229,6 @@ test_that("rd_trendcell cov_matrix is block-diagonal by cell (3 comparison perio
 # 11. CCT bandwidth path: default bwselect = "cct" runs end-to-end
 # ---------------------------------------------------------------------------
 test_that("rd_trendcell with bwselect='cct' returns finite statistic with df >= 1", {
-  skip_if_not_installed("rdrobust")
   dat <- make_trendcell_panel(n = 600, T_comp = 2,
                                jump_fn = function(k, t) if (k == "+") 0.5 else 0.3)
   res <- rd_trendcell(dat, y = "y", x = "x", time = "time", id = "id",

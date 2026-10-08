@@ -125,7 +125,7 @@
 #' @noRd
 .typecont_wald <- function(theta, Sigma, rows) {
   if (length(rows) == 0L) {
-    return(list(stat = 0, df = 0L, p = 1))
+    return(list(stat = NA_real_, df = 0L, p = NA_real_))   # nothing testable
   }
   .joint_wald(theta[rows], Sigma[rows, rows, drop = FALSE])
 }
@@ -287,6 +287,8 @@ rd_typecont <- function(data, x, time, id,
   # ----- inputs and periods (the stops stay here so that errors name rd_typecont()) -----
   .check_columns(data, c(x, time, id))
   # `t_rd`/`comparisons` only select which periods enter: the test treats every period alike
+  if (!is.null(t_rd) && !t_rd %in% data[[time]])
+    stop("`t_rd` (", t_rd, ") is not a period in `data`.")
   if (!is.null(comparisons)) {
     use_periods <- c(t_rd, comparisons)
     if (!all(use_periods %in% data[[time]]))

@@ -53,7 +53,7 @@
   keys <- names(coef)
   fp1  <- factorial(p + 1)
   if (is.null(pilot_bws))
-    pilot_bws <- .bw_cct(plist, c = cutoff, p = p, kernel = kernel)
+    pilot_bws <- .bw_cct(plist, c = cutoff, p = p, q = q, kernel = kernel)
   missing_k <- setdiff(keys, names(pilot_bws))
   if (length(missing_k) > 0L)
     stop("`pilot_bws` is missing entries for period(s): ",

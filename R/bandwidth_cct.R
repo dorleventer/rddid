@@ -8,10 +8,10 @@
 #' @param plist named list of per-period data frames with columns `y`, `x`, `id`.
 #' @keywords internal
 #' @noRd
-.bw_cct <- function(plist, c = 0, p = 1L, kernel = "triangular") {
+.bw_cct <- function(plist, c = 0, p = 1L, q = p + 1L, kernel = "triangular") {
   # rd_bw_cct() wraps rdrobust::rdbwselect(bwselect = "mserd") with the
   # finiteness / failure guards and the documented 0.5*IQR fallback.
-  lapply(plist, function(d) rd_bw_cct(d$y, d$x, c = c, p = p, kernel = kernel))
+  lapply(plist, function(d) rd_bw_cct(d$y, d$x, c = c, p = p, q = q, kernel = kernel))
 }
 
 #' CCT bandwidths for one period (building block)
@@ -30,6 +30,8 @@
 #' @param y the outcome (a numeric vector).
 #' @param x the running variable (a numeric vector, same length as `y`).
 #' @param p order of the local polynomial (default 1, local linear).
+#' @param q order of the local polynomial of the bias correction (default `p + 1`); the
+#'   pilot bandwidth `b` is chosen for it.
 #' @inheritParams rddid
 #'
 #' @return A named numeric vector `c(h = , b = )`: the main bandwidth (point
@@ -46,7 +48,7 @@
 #' # each year of rddid_sim gets its own bandwidths (what bwselect = "cct" uses)
 #' sapply(split(rddid_sim, rddid_sim$year), function(d) rd_bw_cct(y = d$Y, x = d$R))
 #' @export
-rd_bw_cct <- function(y, x, c = 0, p = 1L, kernel = "triangular") {
+rd_bw_cct <- function(y, x, c = 0, p = 1L, q = p + 1L, kernel = "triangular") {
   fallback <- function(reason) {
     h0 <- 0.5 * stats::IQR(x)
     if (!is.finite(h0) || h0 <= 0) h0 <- stats::sd(x)
@@ -55,7 +57,7 @@ rd_bw_cct <- function(y, x, c = 0, p = 1L, kernel = "triangular") {
     c(h = h0, b = h0)
   }
   bw <- tryCatch(
-    rdrobust::rdbwselect(y = y, x = x, c = c, p = p, kernel = kernel,
+    rdrobust::rdbwselect(y = y, x = x, c = c, p = p, q = q, kernel = kernel,
                          bwselect = "mserd"),
     error = function(e) e
   )

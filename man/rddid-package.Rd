@@ -52,7 +52,7 @@ the computation, the options and the tests:
 \url{https://dorleventer.github.io/rddid/}
 }
 \author{
-\strong{Maintainer}: Dor Leventer \email{leventerdor@gmail.com}
+\strong{Maintainer}: Dor Leventer \email{leventerdor@gmail.com} [copyright holder]
 
 Authors:
 \itemize{

@@ -142,6 +142,10 @@ nobs.rddid <- function(object, ...) as.integer(sum(object$n_by_period))
 #'
 #' @param x an object returned by [rddid()], [rd_typecont()], [rd_compstable()],
 #'   [rd_homog()] or [rd_trendcell()].
+#' @param conf.int,conf.level for `tidy()` of a fit: include the confidence interval (default
+#'   `TRUE`) and at which level (default the fit's `level`; another value recomputes the
+#'   interval from the estimate and its standard error), as `modelsummary` and other table
+#'   makers pass them.
 #' @param ... unused.
 #' @return `tidy()` returns a data frame with one row per estimate (`term`, `estimate`,
 #'   `std.error`, `statistic`, `p.value`, `conf.low`, `conf.high`) for a fit, and one row per
@@ -163,11 +167,21 @@ NULL
 
 #' @rdname rddid-tidiers
 #' @exportS3Method generics::tidy
-tidy.rddid <- function(x, ...) {
+tidy.rddid <- function(x, conf.int = TRUE, conf.level = NULL, ...) {
   e <- x$estimates
-  data.frame(term = rownames(e), estimate = e$est, std.error = e$se, statistic = e$z,
-             p.value = e$p, conf.low = e$ci_l, conf.high = e$ci_u,
-             row.names = NULL, stringsAsFactors = FALSE)
+  out <- data.frame(term = rownames(e), estimate = e$est, std.error = e$se, statistic = e$z,
+                    p.value = e$p, row.names = NULL, stringsAsFactors = FALSE)
+  if (isTRUE(conf.int)) {
+    if (is.null(conf.level) || isTRUE(all.equal(conf.level, x$level))) {
+      out$conf.low  <- e$ci_l
+      out$conf.high <- e$ci_u
+    } else {
+      zc <- stats::qnorm(1 - (1 - conf.level) / 2)
+      out$conf.low  <- e$est - zc * e$se
+      out$conf.high <- e$est + zc * e$se
+    }
+  }
+  out
 }
 
 #' @rdname rddid-tidiers

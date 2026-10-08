@@ -1,5 +1,4 @@
 test_that("rd_bw_cct returns finite positive h on standard continuous DGP", {
-  skip_if_not_installed("rdrobust")
   set.seed(7)
   x <- runif(2000, -1, 1)
   y <- 0.3 * x + 0.5 * (x >= 0) + rnorm(2000, 0, 0.3)

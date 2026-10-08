@@ -228,7 +228,6 @@ test_that("scheme='auto' resolves to 'pc' for a panel with constant running vari
 # 10. CCT bandwidth path: default bwselect = "cct" runs end-to-end
 # ---------------------------------------------------------------------------
 test_that("rd_homog with bwselect='cct' returns finite statistic with df >= 1", {
-  skip_if_not_installed("rdrobust")
   dat <- make_panel(n = 600, jump_pos = 0.5, jump_neg = 0.5)
   res <- rd_homog(dat, y = "y", x = "x", time = "time", id = "id",
                   comparisons = 2L, t_rd = 1L)

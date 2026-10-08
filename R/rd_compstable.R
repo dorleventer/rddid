@@ -8,6 +8,9 @@
 #' period and 0 if below (NA if unobserved); returns the data frame.
 #' @noRd
 .compstable_wide <- function(data, x, time, id, all_periods, period_labels, cutoff, estimand) {
+  if (anyDuplicated(data[, c(id, time)]))
+    stop("some (", id, ", ", time, ") pairs appear more than once: each unit may appear once per ",
+         "period.", call. = FALSE)
   wide <- data.frame(id = unique(data[[id]]), stringsAsFactors = FALSE)
   for (lab in period_labels) {
     rows_t <- data[data[[time]] == all_periods[match(lab, period_labels)], , drop = FALSE]
@@ -206,7 +209,7 @@
   Sigma <- .compstable_sigma(fit$fits, n_types, use_scheme, bc)
 
   ok_idx <- .compstable_kept_types(theta, n_types)
-  wald   <- if (length(ok_idx) == 0L) list(stat = 0, df = 0L, p = 1) else
+  wald   <- if (length(ok_idx) == 0L) list(stat = NA_real_, df = 0L, p = NA_real_) else
     .joint_wald(theta[ok_idx], Sigma[ok_idx, ok_idx, drop = FALSE])
 
   list(
@@ -245,12 +248,12 @@
   wald_df <- 0L
   for (key in names(pairs_out)) {
     pair    <- pairs_out[[key]]
+    if (pair$ll_wald$df == 0L) next            # an untestable pair adds nothing
     stat    <- stat + pair$ll_wald$stat
     wald_df <- wald_df + pair$ll_wald$df
   }
-  p_value <- if (wald_df == 0L) 1 else
-    stats::pchisq(stat, df = wald_df, lower.tail = FALSE)
-  list(stat = stat, df = wald_df, p = p_value)
+  if (wald_df == 0L) return(list(stat = NA_real_, df = 0L, p = NA_real_))
+  list(stat = stat, df = wald_df, p = stats::pchisq(stat, df = wald_df, lower.tail = FALSE))
 }
 
 #' Test of composition stability
@@ -437,6 +440,8 @@ rd_compstable <- function(data, x, time, id, t_rd,
   if (!t_rd %in% all_periods) stop("`t_rd` (", t_rd, ") is not a period in `data`.")
   if (is.null(comparisons)) comparisons <- setdiff(all_periods, t_rd)
   if (length(comparisons) == 0L) stop("no comparison periods found.")
+  if (t_rd %in% comparisons) stop("`t_rd` must not be one of the `comparisons`.")
+  if (anyDuplicated(comparisons)) stop("`comparisons` contains a period more than once.")
   missing_comp <- setdiff(comparisons, all_periods)
   if (length(missing_comp) > 0L)
     stop("comparison periods not in data: ", paste(missing_comp, collapse = ", "))
@@ -502,7 +507,7 @@ print.rd_compstable <- function(x, ...) {
                      x$scheme, identical(x$scheme_requested, "auto"), x$estimand,
                      atu_note = atu_note)
   cat(sprintf("  RD period: %s   Comparison periods: %s   Bandwidth: %s\n\n",
-              x$t_rd, paste(x$comparisons, collapse = ", "),
+              x$t_rd, paste(.period_order(as.character(x$comparisons)), collapse = ", "),
               .bw_label_test(x$meta$h, x$meta$bwselect)))
   for (key in names(x$pairs)) {
     pair <- x$pairs[[key]]

@@ -1,5 +1,4 @@
 test_that("rd_period matches rdrobust to machine precision", {
-  skip_if_not_installed("rdrobust")
   set.seed(1)
   n <- 4000
   x <- runif(n, -1, 1)

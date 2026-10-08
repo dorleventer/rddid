@@ -125,7 +125,8 @@ utils::globalVariables(c("x", "y", "side", "jump", "lo", "hi", "x_a", "x_b", "st
   cols[startsWith(levels, "Below")] <- .col_below
   cols[startsWith(levels, "Above")] <- .col_above
   rest <- which(cols == "")
-  cols[rest] <- rep_len(.col_more, length(rest))
+  cols[rest] <- if (length(rest) <= length(.col_more)) .col_more[seq_along(rest)] else
+    grDevices::hcl.colors(length(rest), "Dark 3")
   stats::setNames(cols, levels)
 }
 
@@ -281,9 +282,11 @@ plot.rd_typecont <- function(x, t_rd = NULL, comparison = NULL, bins = 20L, ...)
 plot.rd_compstable <- function(x, pair = 1L, bins = 20L, ...) {
   .need_ggplot2()
   if (!length(x$pairs)) stop("no pair was tested (every pair was skipped).")
+  ok_pair <- (is.character(pair) && pair %in% names(x$pairs)) ||
+    (is.numeric(pair) && length(pair) == 1L && pair >= 1 && pair <= length(x$pairs))
+  if (!ok_pair) stop("`pair` must be an index 1..", length(x$pairs), " or one of: ",
+                     paste(names(x$pairs), collapse = ", "))
   pr <- x$pairs[[pair]]
-  if (is.null(pr)) stop("`pair` must be an index or a name of x$pairs: ",
-                        paste(names(x$pairs), collapse = ", "))
   pair_name <- if (is.character(pair)) pair else names(x$pairs)[pair]
   t_rd <- sub("::.*$", "", pair_name); t0 <- sub("^.*::", "", pair_name)
   atu <- identical(x$estimand, "atu")
@@ -371,7 +374,7 @@ plot.rd_homog <- function(x, ...) {
   .need_ggplot2()
   tab <- x$period_type_jumps
   if (is.null(tab) || !nrow(tab)) stop("no fitted cells to plot.")
-  tab$type <- .type_names(tab$type, x$call$t_rd)
+  tab$type <- .type_names(tab$type, x$t_rd)
   .jump_pointrange(tab, colour_var = "type")
 }
 
@@ -394,7 +397,7 @@ plot.rd_trendcell <- function(x, ...) {
   .need_ggplot2()
   tab <- x$cell_period_jumps
   if (is.null(tab) || !nrow(tab)) stop("no fitted cells to plot.")
-  tab$type <- .type_names(tab$cell, x$call$t_rd)
+  tab$type <- .type_names(tab$cell, x$t_rd)
   ref <- do.call(rbind, lapply(split(tab, tab$type), function(d) {
     tv <- suppressWarnings(as.numeric(d$period))
     fitted <- if (identical(x$trend, "linear") && !anyNA(tv) && length(unique(tv)) >= 2L)
@@ -437,6 +440,7 @@ plot_switchers <- function(data, x, time, id, periods = NULL, c = 0, ...) {
   names(a) <- c("id", "x_a"); names(b) <- c("id", "x_b")
   m <- merge(a, b, by = "id")
   m <- m[is.finite(m$x_a) & is.finite(m$x_b), ]
+  if (!nrow(m)) stop("no unit is observed in both periods (the ids never repeat).")
   above_a <- m$x_a >= cutoff; above_b <- m$x_b >= cutoff
   lab <- c(stay = "Same side", up = "Below, then above", down = "Above, then below")
   m$status <- factor(lab[ifelse(above_a == above_b, "stay", ifelse(above_a, "down", "up"))],

@@ -258,7 +258,7 @@ rddid <- function(data, y, x, time, id = NULL, t_rd,
   bwselect <- match.arg(bwselect)
   scheme   <- match.arg(scheme)
   estimand <- match.arg(estimand)
-  kernel   <- match.arg(kernel, c("triangular", "epanechnikov", "uniform"))
+  kernel   <- match.arg(tolower(kernel), c("triangular", "epanechnikov", "uniform"))
   cutoff   <- c                            # `c` stays the argument name, as in rdrobust
   if (!is.null(weights)) {                 # `weights` is the old name of `trend`
     if (!missing(trend))
@@ -274,6 +274,13 @@ rddid <- function(data, y, x, time, id = NULL, t_rd,
   if (is.null(comparisons)) comparisons <- sort(setdiff(unique(time_col), t_rd))
   if (length(comparisons) < 1L) stop("need at least one comparison period.")
   if (t_rd %in% comparisons) stop("`t_rd` must not be one of the `comparisons`.")
+  if (anyDuplicated(comparisons)) stop("`comparisons` contains a period more than once.")
+  if (!is.null(id)) {
+    dup <- duplicated(data[, c(id, time)]) & !is.na(data[[id]]) & !is.na(time_col)
+    if (any(dup))
+      stop(sum(dup), " row(s) repeat a (", id, ", ", time, ") pair: each unit may appear once ",
+           "per period (aggregate or deduplicate first).")
+  }
   missing_comp <- setdiff(comparisons, time_col)
   if (length(missing_comp))
     stop("comparison period(s) not in `", time, "`: ", paste(missing_comp, collapse = ", "))
@@ -282,6 +289,12 @@ rddid <- function(data, y, x, time, id = NULL, t_rd,
          "converted with as.numeric(format(x, \"%Y\")) or similar).")
   if (!is.numeric(level) || length(level) != 1L || level <= 0 || level >= 1)
     stop("`level` must be a single number strictly between 0 and 1 (e.g. 0.95).")
+  if (!is.null(b) && is.null(h))
+    stop("`b` is the pilot bandwidth that goes with a fixed `h`; supply `h` too, or neither.")
+  if (!is.null(h) && (!is.numeric(h) || length(h) != 1L || !is.finite(h) || h <= 0))
+    stop("`h` must be a single positive number.")
+  if (is.factor(t_rd)) t_rd <- as.character(t_rd)
+  if (is.factor(comparisons)) comparisons <- as.character(comparisons)
   if (is.null(id) && scheme == "auto")
     message("rddid(): no `id` given, so every row is treated as a different unit ",
             "(repeated cross-section standard errors).")
@@ -298,6 +311,9 @@ rddid <- function(data, y, x, time, id = NULL, t_rd,
   if (scheme %in% c("pc", "pv") && detected == "cs")
     warning("scheme = \"", scheme, "\" requested but no unit id repeats across periods; ",
             "all cross-period covariances are zero, so the reported SE equals the CS one.")
+  else if (scheme != "auto" && scheme != detected)
+    message("rddid(): scheme = \"", scheme, "\" as requested; the data look like \"", detected,
+            "\" (", .scheme_label(detected), ").")
 
   # ---- bandwidths, then one local-linear fit per period at those bandwidths ---------------
   bw <- .rddid_bandwidths(plist, period_coef, t_rd, periods, use_scheme, h, b, bwselect, start,
@@ -331,10 +347,22 @@ rddid <- function(data, y, x, time, id = NULL, t_rd,
 #' @noRd
 .rddid_period_frames <- function(data, y, x, id, time_col, periods) {
   unit_id <- if (is.null(id)) seq_len(nrow(data)) else data[[id]]
-  stats::setNames(lapply(periods, function(tv) {
+  frames <- stats::setNames(lapply(periods, function(tv) {
     rows <- which(time_col == tv)
     data.frame(y = data[[y]][rows], x = data[[x]][rows], id = unit_id[rows])
   }), as.character(periods))
+  # only complete (y, x, id) rows enter: the fits drop them anyway, and the sampling scheme,
+  # n_by_period and nobs() are read off the rows actually used (an NA running variable used
+  # to read as a side switch and turn a "pc" panel into "pv")
+  dropped <- 0L
+  frames <- lapply(frames, function(d) {
+    ok <- stats::complete.cases(d)
+    dropped <<- dropped + sum(!ok)
+    d[ok, , drop = FALSE]
+  })
+  if (dropped > 0L)
+    message("rddid(): ", dropped, " row(s) with a missing outcome, running variable or id dropped.")
+  frames
 }
 
 #' Bandwidth pair (h, b) for every period under the requested rule
@@ -352,7 +380,7 @@ rddid <- function(data, y, x, time, id = NULL, t_rd,
     bws  <- stats::setNames(rep(list(c(h = h, b = b)), length(periods)), labels)
     info <- list(method = "fixed", h = h, b = b)
   } else if (bwselect == "cct") {
-    bws  <- .bw_cct(plist, c = cutoff, p = p, kernel = kernel)
+    bws  <- .bw_cct(plist, c = cutoff, p = p, q = q, kernel = kernel)
     info <- list(method = "cct", bws = bws)
   } else if (bwselect == "iter") {
     ib <- .bw_joint_iter(plist, period_coef, as.character(t_rd), scheme = use_scheme,

@@ -137,9 +137,11 @@ rd_period <- function(y, x, h, b = h, id = NULL, c = 0, p = 1L, q = 2L,
   active <- (w_h > 0) | (w_b > 0)
   # the order-q fit needs more than q + 1 points, or its HC1 factor n_s / (n_s - (q + 1)) is
   # infinite
-  if (sum(active) <= q + 1L)
-    stop("too few observations in the bias-correction window on one side; ",
-         "widen the bandwidth.")
+  if (sum(active) <= q + 1L || length(unique(xs[w_h > 0])) <= p + 1L ||
+      length(unique(xs[w_b > 0])) <= q + 1L)
+    stop("too few distinct running-variable values within the bandwidth on one side of the ",
+         "cutoff (need more than p + 1 in the main window and more than q + 1 in the pilot ",
+         "window); use a wider bandwidth or check the data near the cutoff.")
   xs  <- xs[active]
   ys  <- ys[active]
   ids <- ids[active]

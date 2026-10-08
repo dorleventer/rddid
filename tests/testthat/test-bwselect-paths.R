@@ -47,7 +47,6 @@ make_typecont_panel <- function(n, seed = 1L) {
 # (1) bwselect = "cct" and "rot" produce different statistics
 # ---------------------------------------------------------------------------
 test_that("bwselect='cct' and 'rot' produce different statistics (rd_typecont)", {
-  skip_if_not_installed("rdrobust")
   dat <- make_typecont_panel(n = 800L, seed = 7L)
 
   out_cct <- rd_typecont(dat, x = "R", time = "time", id = "id",
@@ -74,7 +73,6 @@ test_that("bwselect='cct' and 'rot' produce different statistics (rd_typecont)",
 })
 
 test_that("bwselect='cct' and 'rot' produce different statistics (rd_homog)", {
-  skip_if_not_installed("rdrobust")
   dat <- make_bwtest_panel(n = 800L, seed = 11L)
 
   out_cct <- rd_homog(dat, y = "y", x = "x", time = "time", id = "id",

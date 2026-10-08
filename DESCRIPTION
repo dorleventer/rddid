@@ -1,14 +1,13 @@
 Package: rddid
-Title: Treatment-Effect Estimation in Regression-Discontinuity
-    Difference-in-Discontinuities (RD-DID) Designs
+Title: Regression Discontinuity with a Confounding Policy (RD-DID)
 Version: 0.4.0.9000
 Authors@R: c(
-    person("Dor", "Leventer", , "leventerdor@gmail.com", role = c("aut", "cre")),
+    person("Dor", "Leventer", , "leventerdor@gmail.com", role = c("aut", "cre", "cph")),
     person("Daniel", "Nevo", role = "aut"))
 Description: Estimation and inference for the regression-discontinuity
-    difference-in-discontinuities (RD-DID) design of Leventer and Nevo,
-    which recovers a causal effect when a confounding policy switches at the
-    same cutoff as the treatment of interest. The discontinuity is estimated
+    difference-in-discontinuities (RD-DID) design of Leventer and Nevo (2024)
+    <arXiv:2408.05847>, which recovers a causal effect when a confounding
+    policy switches at the same cutoff as the treatment of interest. The discontinuity is estimated
     period by period with standard local-linear RD and aggregated across
     periods following the identification result. Variances are provided for
     three sampling schemes (repeated cross-section, panel with time-constant

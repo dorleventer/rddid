@@ -9,8 +9,14 @@
   m <- length(comps)
   if (is.numeric(weights)) {
     if (length(weights) != m)
-      stop("numeric `weights` must have one entry per comparison period.")
-    w <- weights
+      stop("numeric `trend` weights must have one entry per comparison period.")
+    if (!is.null(names(weights)) && all(nzchar(names(weights)))) {
+      if (!setequal(names(weights), as.character(comps)))
+        stop("the names of the numeric `trend` weights must be the comparison periods: ",
+             paste(comps, collapse = ", "))
+      weights <- weights[as.character(comps)]     # match by name, not by position
+    }
+    w <- unname(weights)
     if (abs(sum(w) - 1) > 1e-8)
       warning("comparison weights do not sum to 1 (constant-trend admissibility).")
   } else {
