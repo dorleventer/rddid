@@ -18,9 +18,9 @@
       <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/rddid-estimation.html">Get started</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/rddid-estimation.html">Estimating the ATT or ATU with rddid()</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/rddid-how-it-works.html">How rddid() computes the estimate</a></li>
     <li><a class="dropdown-item" href="../articles/rddid-options.html">Bandwidth rules and sampling schemes</a></li>
-    <li><a class="dropdown-item" href="../articles/rddid-validation-tests.html">Composition validation tests</a></li>
+    <li><a class="dropdown-item" href="../articles/rddid-validation-tests.html">Checking the identification assumptions</a></li>
   </ul></li>
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -39,9 +39,25 @@
     </div>
 
     <div class="section level2">
-      <h2 id="estimation">Estimation<a class="anchor" aria-label="anchor" href="#estimation"></a></h2>
+      <h2 id="package-overview">Package overview<a class="anchor" aria-label="anchor" href="#package-overview"></a></h2>
 
-      <div class="section-desc"><p>The RD-DID estimator, its per-period local-linear RD engine, and the single-period CCT bandwidth.</p></div>
+
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="rddid-package.html">rddid-package</a></code>
+
+        </dt>
+        <dd>rddid: treatment effects at a cutoff shared with a confounding policy</dd>
+      </dl></div><div class="section level2">
+      <h2 id="estimate">Estimate<a class="anchor" aria-label="anchor" href="#estimate"></a></h2>
+
+      <div class="section-desc"><p>The RD-DID estimator and what to do with a fit.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -53,25 +69,32 @@
           <code><a href="rddid.html">rddid()</a></code>
 
         </dt>
-        <dd>RD-DID estimation and inference</dd>
+        <dd>Estimate the effect of a treatment at a cutoff shared with a confounding policy</dd>
 
         <dt>
 
-          <code><a href="rd_period.html">rd_period()</a></code>
+          <code><a href="summary.rddid.html">summary(<i>&lt;rddid&gt;</i>)</a></code> <code><a href="summary.rddid.html">print(<i>&lt;summary.rddid&gt;</i>)</a></code>
 
         </dt>
-        <dd>Single-period local-linear RD discontinuity</dd>
+        <dd>Summary of an RD-DID fit</dd>
 
         <dt>
 
-          <code><a href="rd_bw_cct.html">rd_bw_cct()</a></code>
+          <code><a href="rddid-methods.html">coef(<i>&lt;rddid&gt;</i>)</a></code> <code><a href="rddid-methods.html">confint(<i>&lt;rddid&gt;</i>)</a></code> <code><a href="rddid-methods.html">nobs(<i>&lt;rddid&gt;</i>)</a></code>
 
         </dt>
-        <dd>CCT (MSE-optimal) bandwidth for a single local-linear RD</dd>
+        <dd>Coefficients, confidence intervals and sample size of an RD-DID fit</dd>
+
+        <dt>
+
+          <code><a href="rddid-tidiers.html">tidy(<i>&lt;rddid&gt;</i>)</a></code> <code><a href="rddid-tidiers.html">glance(<i>&lt;rddid&gt;</i>)</a></code> <code><a href="rddid-tidiers.html">tidy(<i>&lt;rd_typecont&gt;</i>)</a></code> <code><a href="rddid-tidiers.html">tidy(<i>&lt;rd_compstable&gt;</i>)</a></code> <code><a href="rddid-tidiers.html">tidy(<i>&lt;rd_homog&gt;</i>)</a></code> <code><a href="rddid-tidiers.html">tidy(<i>&lt;rd_trendcell&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Tidy output for RD-DID fits and validation tests</dd>
       </dl></div><div class="section level2">
-      <h2 id="validation-tests">Validation tests<a class="anchor" aria-label="anchor" href="#validation-tests"></a></h2>
+      <h2 id="check-the-assumptions">Check the assumptions<a class="anchor" aria-label="anchor" href="#check-the-assumptions"></a></h2>
 
-      <div class="section-desc"><p>Tests of the identification assumptions for a time-varying running variable (Section 4.4 of the paper).</p></div>
+      <div class="section-desc"><p>Tests of the identification assumptions when the running variable moves over time, so that units can change side of the cutoff between periods.</p></div>
 
       <dl></dl></div><div class="section level2">
 
@@ -83,14 +106,14 @@
           <code><a href="rd_typecont.html">rd_typecont()</a></code>
 
         </dt>
-        <dd>Test the continuity of the type distribution</dd>
+        <dd>Test of type continuity</dd>
 
         <dt>
 
           <code><a href="rd_compstable.html">rd_compstable()</a></code>
 
         </dt>
-        <dd>Test composition stability across periods</dd>
+        <dd>Test of composition stability</dd>
 
         <dt>
 
@@ -104,7 +127,53 @@
           <code><a href="rd_trendcell.html">rd_trendcell()</a></code>
 
         </dt>
-        <dd>Test of a constant within-type confounding discontinuity</dd>
+        <dd>Test of constant within-type confounding</dd>
+      </dl></div><div class="section level2">
+      <h2 id="building-blocks">Building blocks<a class="anchor" aria-label="anchor" href="#building-blocks"></a></h2>
+
+      <div class="section-desc"><p>The local-linear RD in one period and its CCT bandwidths, for working period by period.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="rd_period.html">rd_period()</a></code>
+
+        </dt>
+        <dd>Local-linear RD in one period (building block)</dd>
+
+        <dt>
+
+          <code><a href="rd_bw_cct.html">rd_bw_cct()</a></code>
+
+        </dt>
+        <dd>CCT bandwidths for one period (building block)</dd>
+      </dl></div><div class="section level2">
+      <h2 id="data">Data<a class="anchor" aria-label="anchor" href="#data"></a></h2>
+
+      <div class="section-desc"><p>Simulated panels for trying things out.</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="rddid_sim.html">rddid_sim</a></code>
+
+        </dt>
+        <dd>Simulated RD-DID panel (running variable fixed over time)</dd>
+
+        <dt>
+
+          <code><a href="rddid_sim_pv.html">rddid_sim_pv</a></code>
+
+        </dt>
+        <dd>Simulated RD-DID panel (running variable moves over time)</dd>
       </dl></div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>

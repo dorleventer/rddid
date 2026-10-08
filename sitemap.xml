@@ -4,6 +4,7 @@
 <url><loc>https://dorleventer.github.io/rddid/LICENSE.html</loc></url>
 <url><loc>https://dorleventer.github.io/rddid/articles/index.html</loc></url>
 <url><loc>https://dorleventer.github.io/rddid/articles/rddid-estimation.html</loc></url>
+<url><loc>https://dorleventer.github.io/rddid/articles/rddid-how-it-works.html</loc></url>
 <url><loc>https://dorleventer.github.io/rddid/articles/rddid-options.html</loc></url>
 <url><loc>https://dorleventer.github.io/rddid/articles/rddid-validation-tests.html</loc></url>
 <url><loc>https://dorleventer.github.io/rddid/authors.html</loc></url>
@@ -16,6 +17,12 @@
 <url><loc>https://dorleventer.github.io/rddid/reference/rd_period.html</loc></url>
 <url><loc>https://dorleventer.github.io/rddid/reference/rd_trendcell.html</loc></url>
 <url><loc>https://dorleventer.github.io/rddid/reference/rd_typecont.html</loc></url>
+<url><loc>https://dorleventer.github.io/rddid/reference/rddid-methods.html</loc></url>
+<url><loc>https://dorleventer.github.io/rddid/reference/rddid-package.html</loc></url>
+<url><loc>https://dorleventer.github.io/rddid/reference/rddid-tidiers.html</loc></url>
 <url><loc>https://dorleventer.github.io/rddid/reference/rddid.html</loc></url>
+<url><loc>https://dorleventer.github.io/rddid/reference/rddid_sim.html</loc></url>
+<url><loc>https://dorleventer.github.io/rddid/reference/rddid_sim_pv.html</loc></url>
+<url><loc>https://dorleventer.github.io/rddid/reference/summary.rddid.html</loc></url>
 </urlset>
 

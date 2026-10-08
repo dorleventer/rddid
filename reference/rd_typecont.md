@@ -1,9 +1,18 @@
-# Test the continuity of the type distribution
+# Test of type continuity
 
-Wald test of the continuous-type-distribution assumption (Section 4.4 of
-Leventer and Nevo). The "type" of unit \\i\\ in period \\t\\ is the sign
-pattern of its running variables in the OTHER periods,
-\\\mathbf{V}\_{i,-t} = (1\\R\_{i,s} \ge c\\)\_{s \ne t}\\.
+When the running variable moves over time, some units are above the
+cutoff in one period and below it in another. A unit's **type** is the
+side of the cutoff it is on in the other period(s); with two periods,
+"above in the other period" or "below in the other period".
+`rd_typecont()` tests the null that **the share of each type jumps by
+zero at the cutoff, in every period**. A rejection means that units sort
+across the cutoff by type, so the jump in the outcome at the cutoff can
+reflect who is on each side as well as the policies, and the estimate of
+[`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md) can
+be biased. With a running variable fixed over time (as in
+[rddid_sim](https://dorleventer.github.io/rddid/reference/rddid_sim.md))
+every unit's type is its own side, the shares jump from 0 to 1 by
+construction, and the test is not informative.
 
 ## Usage
 
@@ -13,14 +22,15 @@ rd_typecont(
   x,
   time,
   id,
+  t_rd = NULL,
+  comparisons = NULL,
   estimand = c("att", "atu"),
   c = 0,
   h = NULL,
   bwselect = c("cct", "rot"),
   kernel = "triangular",
   scheme = c("auto", "cs", "pc", "pv"),
-  bc = TRUE,
-  ...
+  bc = TRUE
 )
 ```
 
@@ -28,103 +38,200 @@ rd_typecont(
 
 - data:
 
-  a long data frame, one row per unit-period. A unit's type in period
-  \\t\\ is read from its running variable in the other period(s); units
-  unobserved there are dropped from period \\t\\, so the panel need not
-  be balanced.
+  a data frame in long format, one row per unit and period, from a panel
+  (it need not be balanced). A unit's type is read from the periods in
+  which it is observed; a unit missing from a period that its type needs
+  is left out of the cells that use that type.
 
 - x:
 
-  column name (string) for the running variable.
+  name of the running-variable column (a string).
 
 - time:
 
-  column name (string) for the period.
+  name of the period column (a string).
 
 - id:
 
-  column name (string) for the unit identifier.
+  name of the unit-identifier column (a string). Required: types are
+  read across periods.
+
+- t_rd, comparisons:
+
+  optional: the RD period and the comparison periods, to restrict the
+  test to these periods. With `comparisons = NULL` (default) every
+  period in `data` enters, whatever `t_rd`; since the test treats all
+  periods alike, `t_rd` alone changes nothing and only lets you write
+  the same call as for
+  [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md).
 
 - estimand:
 
-  `"att"` (default) or `"atu"`. Label only: the test is identical under
-  either estimand, because the continuous-type-distribution assumption
-  is symmetric in the two sides of the cutoff.
+  `"att"` (default) or `"atu"`, as in
+  [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md).
+  Label only: the test is the same either way.
 
 - c:
 
-  cutoff (default 0).
+  the cutoff (default 0). A unit with `x >= c` is above the cutoff.
 
 - h:
 
-  bandwidth. If `NULL`, the bandwidth is determined by `bwselect`; an
-  explicit numeric value overrides `bwselect` and is used directly.
+  a bandwidth to use, as both main and pilot bandwidth, in every
+  regression of the test. If given, `bwselect` is ignored.
 
 - bwselect:
 
-  bandwidth selection rule when `h = NULL`: `"cct"` (default) computes a
-  per-cell CCT MSE-optimal bandwidth via
-  [`rd_bw_cct()`](https://dorleventer.github.io/rddid/reference/rd_bw_cct.md)
-  for each (period, type) RD; `"rot"` uses the `0.5 * IQR(x)` rule of
-  thumb applied to the full sample (the previous default behaviour).
-  Ignored when `h` is supplied explicitly.
+  the bandwidth rule when `h` is not given: `"cct"` (default; each
+  regression's own CCT bandwidths from
+  [`rd_bw_cct()`](https://dorleventer.github.io/rddid/reference/rd_bw_cct.md))
+  or `"rot"` (the rule of thumb `0.5 * IQR(x)`, the same in every
+  regression).
 
 - kernel:
 
-  kernel for the local-linear RD: `"triangular"` (default),
-  `"epanechnikov"`, or `"uniform"`.
+  the kernel: `"triangular"` (default), `"epanechnikov"` or `"uniform"`.
 
 - scheme:
 
-  covariance scheme for the joint Wald: `"auto"` detects from the data
-  (same logic as
+  the sampling scheme, which sets the covariance across periods in the
+  test: `"cs"`, `"pc"` or `"pv"` (as in
   [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md)),
-  or one of `"cs"`, `"pc"`, `"pv"`.
+  or `"auto"` (default), which reads it off the data as
+  [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md)
+  does. See Details.
 
 - bc:
 
-  use robust bias-corrected jumps and variances in the LL-Wald
-  (Calonico, Cattaneo and Titiunik 2014). `TRUE` (default) aligns the
-  test with the bias-corrected
-  [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md)
-  estimator; `FALSE` uses the conventional local-linear jumps and
-  variances.
-
-- ...:
-
-  currently unused.
+  logical. `TRUE` (default): test the bias-corrected jumps with their
+  robust variance, as in the `Robust` row of
+  [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md);
+  `FALSE`: the conventional jumps and variances.
 
 ## Value
 
-An object of class `"rd_typecont"`, a named list with:
+An object of class `"rd_typecont"`, a list with:
 
-- ll_wald:
+- `statistic`, `df`, `p_value`:
 
-  list with `stat` (chi-square), `df`, `p`.
+  the joint Wald statistic over all periods, its degrees of freedom and
+  its chi-squared p-value.
 
-- per_period:
+- `scheme`:
 
-  named list (by period) of the per-period components the joint test
-  aggregates; each entry has `ll_wald` (that period's own LL-Wald
-  `stat`/`df`/`p`, restricted to its kept contrasts).
+  the sampling scheme used; `scheme_requested` is the argument as
+  passed.
 
-- meta:
+- `estimand`:
 
-  list with `periods`, `type_values`, `h` (NA when `bwselect = "cct"`),
-  `bwselect`, `scheme`, `bc`, `estimand`.
+  `"att"` or `"atu"`, as passed.
+
+- `call`:
+
+  the matched call.
+
+- `per_period`:
+
+  a list by period; each element holds `ll_wald`, that period's own Wald
+  test (`stat`, `df`, `p`).
+
+- `ll_wald`:
+
+  the joint test again, as a list (`stat`, `df`, `p`).
+
+- `meta`:
+
+  a list with `periods`, `type_values` (the types, written as the sides
+  in the other periods in time order, e.g. `"+-"`), `h` (the common
+  bandwidth, `NA` with `bwselect = "cct"`), `bwselect`, `scheme`, `bc`
+  and `estimand`.
 
 ## Details
 
-For each period \\t\\ and each type value \\v\\, estimate the
-local-linear RD jump of the type indicator \\1\\\mathbf{V}\_{i,-t} =
-v\\\\ on the running variable \\R\_{i,t}\\. The jump
-\\\hat\pi\_{t,(+)}(v) - \hat\pi\_{t,(-)}(v)\\ is the output of
-[`rd_period()`](https://dorleventer.github.io/rddid/reference/rd_period.md)
-with a binary outcome. The joint Wald statistic across all (period,
-type) pairs drops one reference type per period, because within each
-period the type indicators sum to 1 (the full block is singular); df =
-number of kept contrasts. The covariance is built from the per-unit
-influence vectors returned by
-[`rd_period()`](https://dorleventer.github.io/rddid/reference/rd_period.md),
-using the same within-period and cross-period id-matching as the main
-estimator, scheme-aware.
+### What is estimated
+
+In each period and for each type, a local-linear RD of the indicator
+"the unit is of this type" on the running variable estimates the jump in
+that type's share at the cutoff. The shares sum to one within a period,
+so one reference type per period is dropped (the type below the cutoff
+in every other period), and the remaining jumps are tested jointly by a
+Wald statistic, chi-squared with as many degrees of freedom as
+independent jumps tested. Each period's own Wald test is reported as
+well. A unit's type in a period needs its side in every other period, so
+a unit missing from some period is left out of the regressions of the
+other periods. The test treats all periods alike: `t_rd` and
+`comparisons` only select which periods enter.
+
+### Shared units and the sampling scheme
+
+Within a period the type-indicator regressions use the same units, so
+their covariance always enters. Across periods it follows `scheme`,
+matching units on `id`: none under `"cs"`; from the units on the same
+side of the cutoff in both periods under `"pc"`; under `"pv"` also from
+the units that change side, with the opposite sign. `"auto"` reads the
+scheme off the data as
+[`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md)
+does.
+
+### Options
+
+`bc = TRUE` (default) tests the bias-corrected jumps with their robust
+variance, as in the `Robust` row of
+[`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md);
+`bc = FALSE` uses the conventional jumps and variances. With
+`bwselect = "cct"` (default) each (period, type) regression gets its own
+CCT bandwidths from
+[`rd_bw_cct()`](https://dorleventer.github.io/rddid/reference/rd_bw_cct.md).
+With `bwselect = "rot"` the rule of thumb is `h = b = 0.5 * IQR(x)`, the
+interquartile range of the running variable over all periods used
+(`sd(x)` if that is zero), the same in every regression. A numeric `h`
+is used as both bandwidths in every regression.
+
+### ATU designs
+
+The null treats the two sides of the cutoff alike, so the test is the
+same under `estimand = "att"` and `"atu"`; `estimand` only labels the
+output.
+
+## References
+
+Leventer, D. and D. Nevo (2024). *Correcting Invalid Regression
+Discontinuity Designs Using Multiple Time-Period Data.*
+arXiv:2408.05847. <https://arxiv.org/abs/2408.05847>
+
+Calonico, S., M. D. Cattaneo and R. Titiunik (2014). Robust
+nonparametric confidence intervals for regression-discontinuity designs.
+*Econometrica* 82(6), 2295-2326.
+
+## See also
+
+[`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md) for
+the estimate;
+[rddid_sim_pv](https://dorleventer.github.io/rddid/reference/rddid_sim_pv.md)
+for example data; `tidy()` in
+[rddid-tidiers](https://dorleventer.github.io/rddid/reference/rddid-tidiers.md)
+for a one-row summary.
+
+Other tests of the assumptions:
+[`rd_compstable()`](https://dorleventer.github.io/rddid/reference/rd_compstable.md),
+[`rd_homog()`](https://dorleventer.github.io/rddid/reference/rd_homog.md),
+[`rd_trendcell()`](https://dorleventer.github.io/rddid/reference/rd_trendcell.md)
+
+## Examples
+
+``` r
+# rddid_sim_pv: the running variable moves, so some units change side
+tc <- rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id")
+tc          # the null, the joint Wald test, then each period's own test
+#> Test of a continuous type distribution  [rd_typecont()]
+#>   H0: the share of each type jumps by zero at the cutoff, in every period
+#>   Sampling scheme: panel, running variable varies over time (detected from the data)
+#>   Periods: 1, 2, 3   Types: ++, +-, -+, --   Bandwidth: CCT MSE-optimal, chosen per cell
+#> 
+#>   Joint Wald chi-squared(9) = 4.782,  p = 0.853
+#>     Period 1: chi-squared(3) = 1.531,  p = 0.675
+#>     Period 2: chi-squared(3) = 0.382,  p = 0.944
+#>     Period 3: chi-squared(3) = 2.202,  p = 0.532
+tc$p_value
+#> [1] 0.8529133
+```

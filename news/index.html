@@ -18,9 +18,9 @@
       <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/rddid-estimation.html">Get started</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/rddid-estimation.html">Estimating the ATT or ATU with rddid()</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/rddid-how-it-works.html">How rddid() computes the estimate</a></li>
     <li><a class="dropdown-item" href="../articles/rddid-options.html">Bandwidth rules and sampling schemes</a></li>
-    <li><a class="dropdown-item" href="../articles/rddid-validation-tests.html">Composition validation tests</a></li>
+    <li><a class="dropdown-item" href="../articles/rddid-validation-tests.html">Checking the identification assumptions</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="active nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -41,6 +41,20 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.4.0.9000" id="rddid-0409000-development">rddid 0.4.0.9000 (development)<a class="anchor" aria-label="anchor" href="#rddid-0409000-development"></a></h2>
+<div class="section level3">
+<h3 id="id_2026-ux-sweep-step--the-api-0-4-0-9000">2026-10-08: UX sweep, step 2 — the API<a class="anchor" aria-label="anchor" href="#id_2026-ux-sweep-step--the-api-0-4-0-9000"></a></h3>
+<ul><li>
+<strong>Methods.</strong> <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>, <code><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef()</a></code>, <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code>, <code><a href="https://rdrr.io/r/stats/nobs.html" class="external-link">nobs()</a></code> for <code>rddid</code> objects, and broom-style <code>tidy()</code>/<code>glance()</code> for fits and <code>tidy()</code> for the four validation tests (registered for the <code>generics</code> package, so <code>modelsummary</code> tables work).</li>
+<li>
+<strong>Printing.</strong> <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> of a fit now shows the estimand and period in words, the sampling scheme in words, the bandwidth actually used, and z and p-values; the per-period fits and the standard error under every sampling scheme moved to <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code>. The four tests print the same way: the assumption, its null in words, then the Wald statistic.</li>
+<li>
+<strong>Fields added (nothing removed or renamed):</strong> <code><a href="../reference/rddid.html">rddid()</a></code> returns <code>call</code>, <code>bandwidth$h_by_period</code>/<code>$b_by_period</code> (the bandwidths used in every period, whatever the rule) and <code>estimates$z</code>/<code>$p</code>; <code><a href="../reference/rd_typecont.html">rd_typecont()</a></code> and <code><a href="../reference/rd_compstable.html">rd_compstable()</a></code> return top-level <code>statistic</code>, <code>df</code>, <code>p_value</code>, <code>scheme</code>, <code>estimand</code>, <code>call</code> like the other two tests.</li>
+<li>
+<strong>Arguments.</strong> <code>rddid(weights=)</code> is now <code>trend=</code> (the old name still works, with a message): it names the assumption on the confounding jump, and <code>weights</code> means observation weights elsewhere in R. <code><a href="../reference/rd_typecont.html">rd_typecont()</a></code> gains <code>t_rd</code>/<code>comparisons</code> so the same call works for every function; <code><a href="../reference/rd_homog.html">rd_homog()</a></code>/<code><a href="../reference/rd_trendcell.html">rd_trendcell()</a></code> take <code>p</code>, <code>q</code> explicitly instead of <code>...</code> (passing <code>b</code> through <code>...</code> used to fail with “argument matches multiple formal arguments”), and list <code>t_rd</code> before <code>comparisons</code> like <code><a href="../reference/rddid.html">rddid()</a></code>. <code><a href="../reference/rd_typecont.html">rd_typecont()</a></code>/<code><a href="../reference/rd_compstable.html">rd_compstable()</a></code> no longer silently accept unknown arguments. <code>kernel</code> is validated on entry everywhere.</li>
+<li>
+<strong>Messages.</strong> <code><a href="../reference/rddid.html">rddid()</a></code> says so when no <code>id</code> is given (rows are then treated as separate units); <code><a href="../reference/rd_homog.html">rd_homog()</a></code>/<code><a href="../reference/rd_trendcell.html">rd_trendcell()</a></code> list the cells they skip for <code>min_n</code>.</li>
+<li>Numerical output is unchanged: every value of the step-1 golden master is identical (<code>dev/snapshot_compare.R</code>).</li>
+</ul></div>
 <div class="section level3">
 <h3 id="id_2026-ux-sweep-step-0-4-0-9000">2026-10-08: UX sweep, step 1<a class="anchor" aria-label="anchor" href="#id_2026-ux-sweep-step-0-4-0-9000"></a></h3>
 <ul><li><p><strong>The default bandwidth rule is now the common bandwidth, <code>bwselect = "joint"</code></strong> (one <code>h</code> for every period, minimising the asymptotic MSE of the aggregate estimator). The iterative period-specific rule <code>"iter"</code> remains available but is no longer the default and is not used in the paper. Calls that pass <code>bwselect</code> explicitly are unaffected.</p></li>

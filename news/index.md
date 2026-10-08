@@ -2,6 +2,53 @@
 
 ## rddid 0.4.0.9000 (development)
 
+### 2026-10-08: UX sweep, step 2 — the API
+
+- **Methods.** [`summary()`](https://rdrr.io/r/base/summary.html),
+  [`coef()`](https://rdrr.io/r/stats/coef.html),
+  [`confint()`](https://rdrr.io/r/stats/confint.html),
+  [`nobs()`](https://rdrr.io/r/stats/nobs.html) for `rddid` objects, and
+  broom-style `tidy()`/`glance()` for fits and `tidy()` for the four
+  validation tests (registered for the `generics` package, so
+  `modelsummary` tables work).
+- **Printing.** [`print()`](https://rdrr.io/r/base/print.html) of a fit
+  now shows the estimand and period in words, the sampling scheme in
+  words, the bandwidth actually used, and z and p-values; the per-period
+  fits and the standard error under every sampling scheme moved to
+  [`summary()`](https://rdrr.io/r/base/summary.html). The four tests
+  print the same way: the assumption, its null in words, then the Wald
+  statistic.
+- **Fields added (nothing removed or renamed):**
+  [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md)
+  returns `call`, `bandwidth$h_by_period`/`$b_by_period` (the bandwidths
+  used in every period, whatever the rule) and `estimates$z`/`$p`;
+  [`rd_typecont()`](https://dorleventer.github.io/rddid/reference/rd_typecont.md)
+  and
+  [`rd_compstable()`](https://dorleventer.github.io/rddid/reference/rd_compstable.md)
+  return top-level `statistic`, `df`, `p_value`, `scheme`, `estimand`,
+  `call` like the other two tests.
+- **Arguments.** `rddid(weights=)` is now `trend=` (the old name still
+  works, with a message): it names the assumption on the confounding
+  jump, and `weights` means observation weights elsewhere in R.
+  [`rd_typecont()`](https://dorleventer.github.io/rddid/reference/rd_typecont.md)
+  gains `t_rd`/`comparisons` so the same call works for every function;
+  [`rd_homog()`](https://dorleventer.github.io/rddid/reference/rd_homog.md)/[`rd_trendcell()`](https://dorleventer.github.io/rddid/reference/rd_trendcell.md)
+  take `p`, `q` explicitly instead of `...` (passing `b` through `...`
+  used to fail with “argument matches multiple formal arguments”), and
+  list `t_rd` before `comparisons` like
+  [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md).
+  [`rd_typecont()`](https://dorleventer.github.io/rddid/reference/rd_typecont.md)/[`rd_compstable()`](https://dorleventer.github.io/rddid/reference/rd_compstable.md)
+  no longer silently accept unknown arguments. `kernel` is validated on
+  entry everywhere.
+- **Messages.**
+  [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md)
+  says so when no `id` is given (rows are then treated as separate
+  units);
+  [`rd_homog()`](https://dorleventer.github.io/rddid/reference/rd_homog.md)/[`rd_trendcell()`](https://dorleventer.github.io/rddid/reference/rd_trendcell.md)
+  list the cells they skip for `min_n`.
+- Numerical output is unchanged: every value of the step-1 golden master
+  is identical (`dev/snapshot_compare.R`).
+
 ### 2026-10-08: UX sweep, step 1
 
 - **The default bandwidth rule is now the common bandwidth,

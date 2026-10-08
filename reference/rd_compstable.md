@@ -1,15 +1,23 @@
-# Test composition stability across periods
+# Test of composition stability
 
-Wald test of the composition-stability assumption (Section 4.4 of
-Leventer and Nevo): for each RD-period / comparison-period pair
-\\(t\_{\mathrm{RD}}, t_0)\\, the share of each type among the units just
-above the cutoff is the same in the two periods,
-\\\pi\_{t\_{\mathrm{RD}},(+)}(v) = \pi\_{t_0,(+)}(v)\\. With two periods
-the type is binary (the unit's side in the other period) and this is the
-single share-jump test of the paper's Section 4.4; with more periods the
-type \\(\mathbf{u}, b)\\ collects the unit's sides in the other
-comparison periods, \\\mathbf{u}\\, and its side \\b\\ in the partner
-period of the pair.
+When the running variable moves over time, some units are above the
+cutoff in one period and below it in another. A unit's **type** is the
+side of the cutoff it is on in the other period(s); with two periods,
+"above in the other period" or "below in the other period".
+`rd_compstable()` tests the null that **the share of each type among the
+units above the cutoff is the same in the RD period and in each
+comparison period**. Composition stability and homogeneous confounding
+([`rd_homog()`](https://dorleventer.github.io/rddid/reference/rd_homog.md))
+are alternatives: the estimate of
+[`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md)
+needs one of the two (together with type continuity,
+[`rd_typecont()`](https://dorleventer.github.io/rddid/reference/rd_typecont.md)).
+A rejection here alone therefore does not invalidate the estimate; if
+homogeneous confounding is rejected as well, the comparison periods mix
+the types differently from the RD period and the estimate can be biased.
+With a running variable fixed over time (as in
+[rddid_sim](https://dorleventer.github.io/rddid/reference/rddid_sim.md))
+the types are degenerate and the test is not informative.
 
 ## Usage
 
@@ -27,8 +35,7 @@ rd_compstable(
   bwselect = c("cct", "rot"),
   kernel = "triangular",
   scheme = c("auto", "cs", "pc", "pv"),
-  bc = TRUE,
-  ...
+  bc = TRUE
 )
 ```
 
@@ -36,232 +43,249 @@ rd_compstable(
 
 - data:
 
-  a long data frame, one row per unit-period. A unit's type in period
-  \\t\\ is read from its running variable in the other period(s); units
-  unobserved there are dropped from period \\t\\, so the panel need not
-  be balanced.
+  a data frame in long format, one row per unit and period, from a panel
+  (it need not be balanced). A unit's type is read from the periods in
+  which it is observed; a unit missing from a period that its type needs
+  is left out of the cells that use that type.
 
 - x:
 
-  Column name (string) for the running variable.
+  name of the running-variable column (a string).
 
 - time:
 
-  Column name (string) for the period indicator.
+  name of the period column (a string).
 
 - id:
 
-  Column name (string) for the unit identifier.
+  name of the unit-identifier column (a string). Required: types are
+  read across periods.
 
 - t_rd:
 
-  Value of `time` identifying the RD period.
+  the RD period: the value of `time` in which the treatment of interest
+  switches on at the cutoff.
 
 - comparisons:
 
-  Values of `time` to use as comparison periods. If `NULL` (default),
-  all periods except `t_rd` are used.
+  the comparison periods: values of `time` in which the treatment of
+  interest is uniform at the cutoff (nobody treated, or, with
+  `estimand = "atu"`, everybody treated). `NULL` (default) uses every
+  period other than `t_rd`; pass the periods explicitly when the data
+  contain periods that are neither (a second RD period, say).
 
 - estimand:
 
-  `"att"` (default) or `"atu"`. Under `"atu"` the running variable is
-  mirrored before the test runs, so the test is on the below-cutoff
-  shares instead of the above-cutoff shares; this is the ONE function
-  among the five with `estimand` where the computation actually differs.
-  See "ATU designs" above.
+  `"att"` (default) or `"atu"`, as in
+  [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md).
+  Under `"atu"` the test is on the shares among the units below the
+  cutoff; see "ATU designs" in Details.
 
 - c:
 
-  Cutoff for the running variable (default 0).
+  the cutoff (default 0). A unit with `x >= c` is above the cutoff.
 
 - h:
 
-  Bandwidth. If `NULL` (default), the bandwidth is determined by
-  `bwselect`; an explicit numeric value overrides `bwselect` and is used
-  directly.
+  a bandwidth to use, as both main and pilot bandwidth, in every
+  regression of the test. If given, `bwselect` is ignored.
 
 - bwselect:
 
-  Bandwidth selection rule when `h = NULL`: `"cct"` (default) computes a
-  per-cell CCT MSE-optimal bandwidth via
-  [`rd_bw_cct()`](https://dorleventer.github.io/rddid/reference/rd_bw_cct.md)
-  for each type indicator RD in the reflected space; `"rot"` uses \\0.5
-  \times \mathrm{IQR}(x)\\ as a rule-of-thumb applied to the full
-  sample. Ignored when `h` is supplied explicitly.
+  the bandwidth rule when `h` is not given: `"cct"` (default; each
+  regression's own CCT bandwidths from
+  [`rd_bw_cct()`](https://dorleventer.github.io/rddid/reference/rd_bw_cct.md))
+  or `"rot"` (the rule of thumb `0.5 * IQR(x)`, the same in every
+  regression).
 
 - kernel:
 
-  Kernel for the local-linear RD: `"triangular"` (default),
-  `"epanechnikov"`, or `"uniform"`.
+  the kernel: `"triangular"` (default), `"epanechnikov"` or `"uniform"`.
 
 - scheme:
 
-  Covariance scheme for the Wald test:
-
-  `"auto"`
-
-  :   Detects whether any unit appears on both sides of the artificial
-      cutoff (i.e., above the true cutoff in both periods). If yes, uses
-      `"pv"` (time-varying panel); otherwise `"cs"`.
-
-  `"cs"`
-
-  :   Treats the two sides as independent.
-
-  `"pc"`
-
-  :   Includes same-side cross-period covariance only.
-
-  `"pv"`
-
-  :   Full panel with time-varying running variable: includes same-side
-      minus opposite-side cross-period covariance.
+  the sampling scheme for the covariance between the two groups of a
+  pair: `"auto"` (default; `"pv"` for a pair in which some unit is above
+  the cutoff in both periods, `"cs"` otherwise), `"cs"`, `"pc"` or
+  `"pv"` (as in
+  [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md)).
+  See Details.
 
 - bc:
 
-  Use robust bias-corrected jumps and variances in the LL-Wald
-  (Calonico, Cattaneo and Titiunik 2014). `TRUE` (default) aligns the
-  test with the bias-corrected
-  [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md)
-  estimator; `FALSE` uses the conventional local-linear jumps and
-  variances.
-
-- ...:
-
-  Currently unused.
+  logical. `TRUE` (default): test the bias-corrected jumps with their
+  robust variance, as in the `Robust` row of
+  [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md);
+  `FALSE`: the conventional jumps and variances.
 
 ## Value
 
-An object of class `"rd_compstable"`, a named list with:
+An object of class `"rd_compstable"`, a list with:
+
+- `statistic`, `df`, `p_value`:
+
+  the joint test over pairs: the sum of the pair Wald statistics, the
+  sum of their degrees of freedom, and the chi-squared p-value
+  (approximate; see Details).
+
+- `scheme`:
+
+  the sampling scheme used: one value if every pair used the same,
+  `"mixed"` otherwise; `scheme_requested` is the argument as passed.
+
+- `estimand`:
+
+  `"att"` or `"atu"`, as passed.
+
+- `call`:
+
+  the matched call.
+
+- `t_rd`, `comparisons`:
+
+  the RD period and the comparison periods used.
 
 - `pairs`:
 
-  A list, one element per \\(t\_{\mathrm{RD}}, t_0)\\ pair (named
-  `"trd::t0"`), each containing:
-
-  `ll_wald`
-
-  :   list with `stat`, `df`, `p`.
-
-  `jumps`, `jump_se`
-
-  :   The tested type-share jump(s) and their standard errors
-      (below-cutoff units when `estimand = "atu"`).
-
-  `type_values`
-
-  :   Character vector of \\(\mathbf{u},b)\\ type labels present in this
-      pair.
-
-  `scheme`
-
-  :   Scheme actually used.
-
-  `n_trd`
-
-  :   Number of above-cutoff units from \\t_RD\\ (below-cutoff units
-      when `estimand = "atu"`).
-
-  `n_t0`
-
-  :   Number of above-cutoff units from \\t_0\\ (below-cutoff units when
-      `estimand = "atu"`).
-
-  `n_both`
-
-  :   Number of units above the cutoff in both periods (below-cutoff
-      units when `estimand = "atu"`).
+  a list with one element per pair, named
+  `"<RD period>::<comparison period>"`, each holding `ll_wald` (the
+  pair's Wald test: `stat`, `df`, `p`); `jumps` and `jump_se` (the
+  tested share jumps and their standard errors, named by type: the
+  unit's sides, `1` above and `0` below the cutoff, with its side in the
+  other period of the pair last); `type_values` (the types present);
+  `scheme` (the scheme used for the pair); and `n_trd`, `n_t0`, `n_both`
+  (the number of units above the cutoff in the RD period, in the
+  comparison period, and in both; below the cutoff under
+  `estimand = "atu"`).
 
 - `joint`:
 
-  Joint result over all pairs (stacked Wald):
-
-  `ll_wald`
-
-  :   list with `stat`, `df`, `p` (sum of the per-pair statistics and
-      df, which assumes independent pairs; the pairs share the RD-period
-      above-cutoff group, so treat the joint as approximate — the
-      paper's test is per pair).
+  the joint test again, as `ll_wald` (`stat`, `df`, `p`).
 
 - `meta`:
 
-  list with `t_rd`, `comparisons`, `h` (NA when `bwselect = "cct"`),
-  `bwselect`, `c` (the original, unmirrored cutoff, as passed), `bc`,
-  `estimand`.
+  a list with `t_rd`, `comparisons`, `h` (the common bandwidth, `NA`
+  with `bwselect = "cct"`), `bwselect`, `c` (the cutoff as passed,
+  before any mirroring), `bc` and `estimand`.
 
 ## Details
 
-### Reflection construction
+### What is estimated
 
-For each RD-period / comparison-period pair \\(t\_{\mathrm{RD}}, t_0)\\,
-take the above-cutoff units of each period. For \\t_0\\-above units flip
-the centred running variable: \\x' = -(R\_{i,t_0} - c)\\, placing them
-just BELOW an artificial cutoff at 0. For \\t\_{\mathrm{RD}}\\-above
-units set \\x' = R\_{i,t\_{\mathrm{RD}}} - c\\, keeping them just ABOVE
-0. Stack the two groups into one artificial cross-section. At the
-artificial cutoff the left/right limits of the \\(\mathbf{u},b)\\ type
-share are then \\\pi\_{t_0,(+)}(\mathbf{u},b)\\ and
-\\\pi\_{t\_{\mathrm{RD}},(+)}(\mathbf{u},b)\\, so a jump at 0 equals the
-composition difference. A local-linear RD of each \\(\mathbf{u},b)\\
-indicator on the reflected running variable, with a joint Wald that all
-jumps are zero (dropping one reference type, since the type shares sum
-to 1 and the full set of jumps is rank-deficient), is then this test.
+The test runs on each pair of the RD period and one comparison period.
+Take the units above the cutoff in each of the two periods and stack
+them into one artificial sample: the RD-period units at their distance
+above the cutoff, the comparison-period units reflected to the same
+distance below an artificial cutoff at zero. In a local-linear RD of a
+type indicator on this reflected running variable, the jump at zero is
+the type's share among the RD-period units just above the cutoff minus
+its share among the comparison-period units just above the cutoff. With
+two periods the type is the unit's side in the other period of the pair,
+and there is one jump per pair; with more periods the type also records
+the unit's sides in the remaining periods. The shares sum to one, so one
+reference type is dropped and the remaining jumps are tested jointly by
+a Wald statistic, one test per pair. The joint test over pairs adds up
+the pair statistics and degrees of freedom, which treats the pairs as
+independent although they share the RD-period units; read it as
+approximate (the paper's test is per pair). A pair with fewer than three
+units in either group is skipped with a warning.
 
-### Unit-level wrinkle
+### Shared units and the sampling scheme
 
-A unit that is above the cutoff in BOTH periods \\t\_{\mathrm{RD}}\\ and
-\\t_0\\ appears on BOTH sides of the artificial cutoff (as a
-\\t\_{\mathrm{RD}}\\-above observation above the artificial 0 and a
-\\t_0\\-above observation below it). The covariance matrix between the
-left-side and right-side intercept estimates must therefore include the
-id-matched cross-side covariance term (the two g-vectors can share unit
-ids). The function computes \\(\text{cov}\_{++} + \text{cov}\_{--} -
-\text{cov}\_{+-} - \text{cov}\_{-+})\\ — the same formula as the PV
-scheme in the main estimator — rather than assuming the two sides are
-independent.
+A unit above the cutoff in both periods of a pair appears on both sides
+of the artificial cutoff. Under `"pv"` the covariance between its two
+appearances, matched on `id`, is subtracted from the variance of the
+jump; `"cs"` and `"pc"` treat the two groups as independent and give the
+same test. `"auto"` (default) uses `"pv"` for a pair in which some unit
+is above the cutoff in both periods and `"cs"` otherwise; the scheme is
+reported per pair.
+
+### Options
+
+`bc = TRUE` (default) tests the bias-corrected jumps with their robust
+variance, as in the `Robust` row of
+[`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md);
+`bc = FALSE` uses the conventional jumps and variances. With
+`bwselect = "cct"` (default) each type-indicator regression in the
+reflected sample gets its own CCT bandwidths from
+[`rd_bw_cct()`](https://dorleventer.github.io/rddid/reference/rd_bw_cct.md).
+With `bwselect = "rot"` the rule of thumb is `h = b = 0.5 * IQR(x)`, the
+interquartile range of the running variable in `data` (`sd(x)` if that
+is zero), the same in every regression. A numeric `h` is used as both
+bandwidths in every regression.
 
 ### ATU designs
 
-With `estimand = "atu"` the running variable is mirrored, \\x \to c -
-x\\ (and the cutoff reset to 0), before the construction above runs.
-This takes the units BELOW the original cutoff in each period. The type
-indicator keeps its original orientation, "above the cutoff in the other
-period", so the jump estimates \\\pi\_{t\_{\mathrm{RD}},(-)}(1) -
-\pi\_{t_0,(-)}(1)\\, the change across periods in the share of
-below-cutoff units that are above the cutoff in the other period – the
-composition-stability condition the ATU requires (Leventer and Nevo,
-Section 6). (Stating the jump for the complementary type, "below in the
-other period", would flip its sign and leave the Wald test unchanged.)
-Units with `x == c` are treated in the original design but cannot be
-placed on the treated side of the mirrored design, so `estimand = "atu"`
-errors if any are present; place the cutoff between support points (e.g.
-`c = 4999.5` for integer populations) so that no unit sits on it.
+With `estimand = "atu"` (comparison periods uniformly treated) the
+running variable is mirrored around the cutoff before the construction
+above, so the test is on the units *below* the cutoff: the null becomes
+that the share of each type among the units below the cutoff is the same
+in the RD period and in each comparison period. The type keeps its
+meaning, so the reported jump is the change in the share of below-cutoff
+units that are above the cutoff in the other period. This is the only
+one of the four tests whose computation changes with `estimand`. Units
+exactly at the cutoff count as above it in the original design and
+cannot be placed in the mirrored one, so `"atu"` stops with an error if
+any `x == c`; put the cutoff between support points (e.g. `c = 4999.5`
+for integer populations).
 
 ## References
 
-Leventer, D. and Nevo, D. "Correcting Invalid Regression Discontinuity
-Designs." Working paper.
+Leventer, D. and D. Nevo (2024). *Correcting Invalid Regression
+Discontinuity Designs Using Multiple Time-Period Data.*
+arXiv:2408.05847. <https://arxiv.org/abs/2408.05847>
+
+Calonico, S., M. D. Cattaneo and R. Titiunik (2014). Robust
+nonparametric confidence intervals for regression-discontinuity designs.
+*Econometrica* 82(6), 2295-2326.
 
 ## See also
 
-[`rd_typecont()`](https://dorleventer.github.io/rddid/reference/rd_typecont.md),
-[`rd_period()`](https://dorleventer.github.io/rddid/reference/rd_period.md),
-[`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md)
+[`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md) for
+the estimate;
+[rddid_sim_pv](https://dorleventer.github.io/rddid/reference/rddid_sim_pv.md)
+for example data; `tidy()` in
+[rddid-tidiers](https://dorleventer.github.io/rddid/reference/rddid-tidiers.md)
+for a one-row summary.
+
+Other tests of the assumptions:
+[`rd_homog()`](https://dorleventer.github.io/rddid/reference/rd_homog.md),
+[`rd_trendcell()`](https://dorleventer.github.io/rddid/reference/rd_trendcell.md),
+[`rd_typecont()`](https://dorleventer.github.io/rddid/reference/rd_typecont.md)
 
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
-# Two-period panel with no composition shift (null DGP).
-set.seed(1)
-n <- 500
-eta <- rnorm(n)
-dat <- data.frame(
-  id   = rep(seq_len(n), 2),
-  time = rep(1:2, each = n),
-  R    = c(eta + rnorm(n), eta + rnorm(n))
-)
-rd_compstable(dat, x = "R", time = "time", id = "id", t_rd = 2,
-              comparisons = 1, h = 0.5)
-} # }
+# rddid_sim_pv: the running variable moves, so some units change side
+cs <- rd_compstable(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
+cs          # one Wald test per (RD period, comparison period) pair, then their sum
+#> Test of composition stability  [rd_compstable()]
+#>   H0: the share of each type among the units above the cutoff is the same in the RD period and in each comparison period
+#>   Sampling scheme: panel, running variable varies over time (detected from the data)
+#>   RD period: 3   Comparison periods: 1, 2   Bandwidth: CCT MSE-optimal, chosen per cell
+#> 
+#>   Pair 3::1: chi-squared(3) = 21.982,  p = <0.001
+#>     n above the cutoff: 490 (RD period), 508 (comparison), 430 in both
+#>   Pair 3::2: chi-squared(3) = 6.137,  p = 0.105
+#>     n above the cutoff: 490 (RD period), 497 (comparison), 418 in both
+#> 
+#>   Joint over pairs (sum of chi-squared): chi-squared(6) = 28.119,  p = <0.001
+cs$pairs[["3::1"]]$jumps
+#>         01         10         11 
+#> -0.2519944 -0.2544709  0.3613727 
+# comparison periods uniformly treated: the shares below the cutoff
+rd_compstable(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3,
+              estimand = "atu")
+#> Test of composition stability  [rd_compstable()]
+#>   H0: the share of each type among the units below the cutoff is the same in the RD period and in each comparison period
+#>   Sampling scheme: panel, running variable varies over time (detected from the data)
+#>   Estimand: ATU (the units below the cutoff are the ones untreated in the RD period, so the test is on their shares (mirrored design))
+#>   RD period: 3   Comparison periods: 1, 2   Bandwidth: CCT MSE-optimal, chosen per cell
+#> 
+#>   Pair 3::1: chi-squared(3) = 6.206,  p = 0.102
+#>     n below the cutoff: 510 (RD period), 492 (comparison), 432 in both
+#>   Pair 3::2: chi-squared(3) = 3.164,  p = 0.367
+#>     n below the cutoff: 510 (RD period), 503 (comparison), 431 in both
+#> 
+#>   Joint over pairs (sum of chi-squared): chi-squared(6) = 9.370,  p = 0.154
 ```

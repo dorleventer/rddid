@@ -9,17 +9,18 @@
 ## Citation
 
 Source:
-[`DESCRIPTION`](https://github.com/dorleventer/rddid/blob/master/DESCRIPTION)
+[`inst/CITATION`](https://github.com/dorleventer/rddid/blob/master/inst/CITATION)
 
-Leventer D, Nevo D (2026). *rddid: Treatment-Effect Estimation in
-Regression-Discontinuity Difference-in-Discontinuities (RD-DID)
-Designs*. R package version 0.4.0.9000,
-<https://github.com/dorleventer/rddid>.
+Leventer, D. and D. Nevo (2024). Correcting Invalid Regression
+Discontinuity Designs Using Multiple Time-Period Data. arXiv:2408.05847.
+https://arxiv.org/abs/2408.05847
 
-    @Manual{,
-      title = {rddid: Treatment-Effect Estimation in Regression-Discontinuity Difference-in-Discontinuities (RD-DID) Designs},
+    @Misc{LeventerNevo2024,
+      title = {Correcting Invalid Regression Discontinuity Designs Using Multiple Time-Period Data},
       author = {Dor Leventer and Daniel Nevo},
-      year = {2026},
-      note = {R package version 0.4.0.9000},
-      url = {https://github.com/dorleventer/rddid},
+      year = {2024},
+      note = {arXiv:2408.05847},
+      eprint = {2408.05847},
+      archiveprefix = {arXiv},
+      url = {https://arxiv.org/abs/2408.05847},
     }
