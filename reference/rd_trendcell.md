@@ -97,7 +97,9 @@ rd_trendcell(
   `"linear"` (it moves linearly in time; needs at least three comparison
   periods). Use the `trend` of the
   [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md)
-  call being checked.
+  call being checked. With `"linear"` the second differences are taken
+  in time (the period values), so unequally spaced comparison periods
+  are handled.
 
 - c:
 
@@ -154,7 +156,7 @@ rd_trendcell(
 
   orders of the local polynomials in every cell, for the point estimate
   and the bias correction (defaults 1 and 2; `q` must exceed `p`). The
-  CCT bandwidths are always chosen for a local-linear fit.
+  per-cell CCT bandwidths are chosen for the order-`p` fit.
 
 ## Value
 

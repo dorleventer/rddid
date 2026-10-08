@@ -197,7 +197,7 @@ sides in all other periods in <code>data</code>).</p></dd>
 <dt id="arg-p-q">p, q<a class="anchor" aria-label="anchor" href="#arg-p-q"></a></dt>
 <dd><p>orders of the local polynomials in every cell, for the point
 estimate and the bias correction (defaults 1 and 2; <code>q</code> must exceed <code>p</code>).
-The CCT bandwidths are always chosen for a local-linear fit.</p></dd>
+The per-cell CCT bandwidths are chosen for the order-<code>p</code> fit.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -222,7 +222,8 @@ period, type) cell that was fitted: <code>period</code>, <code>type</code> (the 
 side(s), <code>"+"</code> above and <code>"-"</code> below the cutoff), <code>jump</code> (the cell's
 confounding jump,
 bias-corrected when <code>bc = TRUE</code>), <code>se</code>, <code>n</code> (observations in the cell)
-and <code>reference</code> (<code>TRUE</code> for the reference type).</p></dd>
+and <code>reference</code> (<code>TRUE</code> for the type used as the reference in that
+period: the all-below type when its cell was fitted, else the next type).</p></dd>
 
 <dt><code>contrasts</code></dt>
 <dd><p>named numeric vector of the tested differences (type

@@ -42,6 +42,20 @@
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.4.0.9000" id="rddid-0409000-development">rddid 0.4.0.9000 (development)<a class="anchor" aria-label="anchor" href="#rddid-0409000-development"></a></h2>
 <div class="section level3">
+<h3 id="id_2026-five-bug-fixes-found-during-the-ux-sweep-0-4-0-9000">2026-10-08: five bug fixes found during the UX sweep<a class="anchor" aria-label="anchor" href="#id_2026-five-bug-fixes-found-during-the-ux-sweep-0-4-0-9000"></a></h3>
+<ul><li>
+<code><a href="../reference/rd_homog.html">rd_homog()</a></code> / <code><a href="../reference/rd_trendcell.html">rd_trendcell()</a></code> with <code>p &gt; 1</code>: the per-cell CCT bandwidth is now chosen for the order-<code>p</code> fit (it used to be chosen at <code>p = 1</code> whatever <code>p</code> the fit used). Default calls (<code>p = 1</code>) are unchanged.</li>
+<li>
+<code>rd_trendcell(trend = "linear")</code>: the second differences are now taken in time, using the period values, so a jump that is linear in time is annihilated whatever the spacing of the comparison periods (the rows used to be index-based and could reject a true linear trend with unequally spaced periods). Equally spaced periods give exactly the same contrasts as before. Non-numeric period values now error under <code>"linear"</code>.</li>
+<li>
+<code><a href="../reference/rd_compstable.html">rd_compstable()</a></code>: a type whose local-linear fit fails is skipped as documented; when the last type (in radix order) failed, the function used to stop with “subscript out of bounds”.</li>
+<li>
+<code><a href="../reference/rd_homog.html">rd_homog()</a></code> / <code><a href="../reference/rd_trendcell.html">rd_trendcell()</a></code>: when the contrasts’ covariance is zero to working precision (no residual variation within the cells, e.g. a constant outcome) the functions now stop with a clear message instead of reporting a chi-squared statistic made of rounding noise.</li>
+<li>
+<code><a href="../reference/rd_homog.html">rd_homog()</a></code>: the <code>reference</code> column of <code>period_type_jumps</code> marks the type actually used as the reference in each period (the all-below type when its cell was fitted, else the next type in order); it used to flag the all-below type only, leaving some periods with no reference row.</li>
+<li>Golden master re-recorded as <code>dev/snapshots/baseline_bugfix.rds</code>: the only cells that moved are the <code>rd_homog(p = 2)</code> ones (first fix); every other value is identical to the step-1 baseline.</li>
+</ul></div>
+<div class="section level3">
 <h3 id="id_2026-ux-sweep-step--the-source-for-people-who-read-it-0-4-0-9000">2026-10-08: UX sweep, step 4 — the source, for people who read it<a class="anchor" aria-label="anchor" href="#id_2026-ux-sweep-step--the-source-for-people-who-read-it-0-4-0-9000"></a></h3>
 <ul><li>
 <strong>Files are named after what they hold.</strong> The four assumption tests live in <code>rd_typecont.R</code>, <code>rd_compstable.R</code>, <code>rd_homog.R</code>, <code>rd_trendcell.R</code> (they used to be <code>test_*.R</code>, which read as unit tests); their shared internals in <code>assumption_tests_helpers.R</code>; the covariance and aggregation in <code>cross_period_covariance.R</code>; the bandwidth rules in <code>bandwidth_cct.R</code> and <code>bandwidth_joint.R</code>; the trend weights and scheme detection in <code>trend_weights.R</code> and <code>sampling_scheme.R</code>. Every file opens with a header saying what it holds and who calls it.</li>

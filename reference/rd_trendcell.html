@@ -160,7 +160,9 @@ the test is the same either way.</p></dd>
 <dd><p>the trend assumption tested within each type: <code>"constant"</code>
 (default; the confounding jump is the same in every comparison period) or
 <code>"linear"</code> (it moves linearly in time; needs at least three comparison
-periods). Use the <code>trend</code> of the <code><a href="rddid.html">rddid()</a></code> call being checked.</p></dd>
+periods). Use the <code>trend</code> of the <code><a href="rddid.html">rddid()</a></code> call being checked.
+With <code>"linear"</code> the second differences are taken in time (the period values), so
+unequally spaced comparison periods are handled.</p></dd>
 
 
 <dt id="arg-c">c<a class="anchor" aria-label="anchor" href="#arg-c"></a></dt>
@@ -212,7 +214,7 @@ fixed across the comparison periods.</p></dd>
 <dt id="arg-p-q">p, q<a class="anchor" aria-label="anchor" href="#arg-p-q"></a></dt>
 <dd><p>orders of the local polynomials in every cell, for the point
 estimate and the bias correction (defaults 1 and 2; <code>q</code> must exceed <code>p</code>).
-The CCT bandwidths are always chosen for a local-linear fit.</p></dd>
+The per-cell CCT bandwidths are chosen for the order-<code>p</code> fit.</p></dd>
 
 </dl></div>
     <div class="section level2">

@@ -141,7 +141,7 @@ rd_homog(
 
   orders of the local polynomials in every cell, for the point estimate
   and the bias correction (defaults 1 and 2; `q` must exceed `p`). The
-  CCT bandwidths are always chosen for a local-linear fit.
+  per-cell CCT bandwidths are chosen for the order-`p` fit.
 
 ## Value
 
@@ -170,7 +170,8 @@ An object of class `"rd_homog"`, a list with:
   fitted: `period`, `type` (the unit's side(s), `"+"` above and `"-"`
   below the cutoff), `jump` (the cell's confounding jump, bias-corrected
   when `bc = TRUE`), `se`, `n` (observations in the cell) and
-  `reference` (`TRUE` for the reference type).
+  `reference` (`TRUE` for the type used as the reference in that period:
+  the all-below type when its cell was fitted, else the next type).
 
 - `contrasts`:
 
