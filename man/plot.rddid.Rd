@@ -9,20 +9,21 @@
 \arguments{
 \item{x}{an object returned by \code{\link[=rddid]{rddid()}}.}
 
-\item{bins}{number of equal-width bins for the binned means (default 20, over the
+\item{bins}{number of equal-width bins on each side of the cutoff (default 20, over the
 running variable's range in each period).}
 
 \item{...}{unused.}
 }
 \value{
-A ggplot object (ggplot2 must be installed).
+A ggplot object (ggplot2 must be installed), which can be changed with \code{+} and
+saved with \code{ggplot2::ggsave()}.
 }
 \description{
-One panel per period, in time order: the outcome averaged within \code{bins} equal-width
-bins of the running variable, and the two local-linear fits of that period drawn over their
-bandwidth on each side of the cutoff. The jump between the two lines at the cutoff is the
-period's discontinuity \eqn{D_t}; the RD-DID estimate is the RD-period jump minus the
-weighted comparison-period jumps (see \code{summary()}).
+One panel per period, in time order: the outcome averaged within \code{bins} equal-width bins
+of the running variable on each side of the cutoff, and the two local-linear fits of that
+period drawn over their bandwidth on each side. The jump between the two lines at the cutoff
+is the period's discontinuity \eqn{D_t}; \code{summary()} lists every \eqn{D_t} and the RD-DID
+estimate they combine into. Green panels are comparison periods, pink the RD period.
 }
 \examples{
 fit <- rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)

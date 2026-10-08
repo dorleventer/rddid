@@ -31,7 +31,9 @@
 \value{
 \code{tidy()} returns a data frame with one row per estimate (\code{term}, \code{estimate},
 \code{std.error}, \code{statistic}, \code{p.value}, \code{conf.low}, \code{conf.high}) for a fit, and one row per
-test (\code{test}, \code{statistic}, \code{df}, \code{p.value}) for a validation test. \code{glance()} returns a
+test (\code{test}, \code{statistic}, \code{df}, \code{p.value}) for a validation test; for \code{\link[=rd_compstable]{rd_compstable()}}
+that row is the joint test over pairs, whose p-value is approximate (see its Details).
+\code{glance()} returns a
 one-row data frame describing the fit (\code{nobs}, \code{t_rd}, \code{comparisons}, \code{trend}, \code{weights},
 \code{bwselect}, \code{h} (the common bandwidth under \code{"joint"}/fixed \code{h}, \code{NA} otherwise),
 \code{scheme}, \code{level}).
@@ -46,6 +48,6 @@ fit <- rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 if (requireNamespace("generics", quietly = TRUE)) {
   generics::tidy(fit)
   generics::glance(fit)
-  generics::tidy(rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id"))
+  generics::tidy(rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3))
 }
 }

@@ -13,7 +13,7 @@
 period variable). Defaults: the \code{t_rd} given to \code{\link[=rd_typecont]{rd_typecont()}} (else the last period),
 and the first other period.}
 
-\item{bins}{number of equal-width bins for the binned shares (default 20).}
+\item{bins}{number of equal-width bins on each side of the cutoff (default 20).}
 
 \item{...}{unused.}
 }
@@ -25,9 +25,9 @@ The paper's type-continuity figure. Two panels: in the comparison period, the sh
 units that are above the cutoff in the RD period, against the comparison-period running
 variable; in the RD period, the share that are above the cutoff in the comparison period,
 against the RD-period running variable. In each panel the share is averaged within \code{bins}
-equal-width bins inside the bandwidth and the local-linear fit is drawn on each side of the
-cutoff, at the bandwidth rule the test used. Under the null the two lines of a panel meet at
-the cutoff: who a unit is in the other period does not jump there.
+equal-width bins on each side of the cutoff inside the bandwidth, and the local-linear fit
+is drawn on each side, at the bandwidth rule the test used. Under the null the two lines of
+a panel meet at the cutoff: who a unit is in the other period does not jump there.
 }
 \details{
 With more than two periods the test itself uses the full sign pattern of the other periods

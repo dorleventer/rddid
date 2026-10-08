@@ -38,7 +38,7 @@ summary.rddid <- function(object, ...) {
 #' @export
 print.summary.rddid <- function(x, digits = 4, ...) {
   fit <- x$fit
-  print(fit, digits = digits)
+  print(fit, digits = digits, hint = FALSE)
   cat("\n  Per-period local-linear fits, in time order (estimate = sum of coef x jump):\n")
   tab <- x$per_period
   fmt <- function(v, d = digits) formatC(v, digits = d, format = "f")
@@ -50,27 +50,19 @@ print.summary.rddid <- function(x, digits = 4, ...) {
                 fmt(tab$b[i]), fmt(tab$jump[i]), fmt(tab$se[i]), fmt(tab$jump_bc[i]),
                 fmt(tab$se_rb[i])))
   e <- fit$estimates
-  cat(sprintf("\n  Robust s.e. under each sampling scheme:  cross-section %s   panel, fixed R %s   panel, varying R %s\n",
+  cat("\n  Robust s.e. under each sampling scheme (the printed one is for \"", fit$scheme,
+      "\"; the others are for comparison):\n", sep = "")
+  cat(sprintf("    cross-section %s   panel, no unit changes side %s   panel, some change side %s\n",
               fmt(e["Robust", "se_cs"]), fmt(e["Robust", "se_pc"]), fmt(e["Robust", "se_pv"])))
-  cat(sprintf("  (the printed s.e. is the one for scheme \"%s\"; the others are shown for comparison)\n",
-              fit$scheme))
   invisible(x)
 }
 
 #' Per-period table behind summary.rddid(): role, coefficient, n, bandwidths, jumps
 #' @keywords internal
 #' @noRd
-#' Period labels in time order (numeric order when every label is a number, else as given)
-#' @keywords internal
-#' @noRd
-.period_order <- function(labels) {
-  num <- suppressWarnings(as.numeric(labels))
-  if (!anyNA(num)) labels[order(num)] else labels
-}
-
 .rddid_period_table <- function(x) {
-  per <- .period_order(names(x$fits))
-  f <- x$fits
+  per <- .period_order(names(x$fits))      # rows in time order ...
+  f   <- x$fits[per]                       # ... and every column taken in that same order
   data.frame(
     period  = per,
     role    = ifelse(per == as.character(x$t_rd), "RD", "comparison"),
@@ -153,7 +145,9 @@ nobs.rddid <- function(object, ...) as.integer(sum(object$n_by_period))
 #' @param ... unused.
 #' @return `tidy()` returns a data frame with one row per estimate (`term`, `estimate`,
 #'   `std.error`, `statistic`, `p.value`, `conf.low`, `conf.high`) for a fit, and one row per
-#'   test (`test`, `statistic`, `df`, `p.value`) for a validation test. `glance()` returns a
+#'   test (`test`, `statistic`, `df`, `p.value`) for a validation test; for [rd_compstable()]
+#'   that row is the joint test over pairs, whose p-value is approximate (see its Details).
+#'   `glance()` returns a
 #'   one-row data frame describing the fit (`nobs`, `t_rd`, `comparisons`, `trend`, `weights`,
 #'   `bwselect`, `h` (the common bandwidth under `"joint"`/fixed `h`, `NA` otherwise),
 #'   `scheme`, `level`).
@@ -162,7 +156,7 @@ nobs.rddid <- function(object, ...) as.integer(sum(object$n_by_period))
 #' if (requireNamespace("generics", quietly = TRUE)) {
 #'   generics::tidy(fit)
 #'   generics::glance(fit)
-#'   generics::tidy(rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id"))
+#'   generics::tidy(rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3))
 #' }
 #' @name rddid-tidiers
 NULL
@@ -183,7 +177,7 @@ glance.rddid <- function(x, ...) {
              comparisons = paste(x$comparisons, collapse = ", "),
              trend = x$weights_type, weights = paste(signif(x$weights, 3), collapse = ", "),
              bwselect = x$bandwidth$method,
-             h = if (!is.null(x$bandwidth$h)) unname(x$bandwidth$h) else NA_real_,
+             h = if (!is.null(x$bandwidth[["h"]])) unname(x$bandwidth[["h"]]) else NA_real_,
              scheme = x$scheme, level = x$level, row.names = NULL, stringsAsFactors = FALSE)
 }
 
@@ -217,7 +211,7 @@ tidy.rd_trendcell <- function(x, ...) .tidy_test(x, "constant within-type confou
   cat(sprintf("  H0: %s\n", h0))
   if (!is.null(scheme))
     cat(sprintf("  Sampling scheme: %s%s\n", .scheme_label(scheme),
-                if (scheme_detected) " (detected from the data)" else ""))
+                if (scheme_detected) " (detected)" else ""))
   if (identical(estimand, "atu")) cat(sprintf("  Estimand: ATU (%s)\n", atu_note))
 }
 #' One line: Wald chi-squared(df) = stat, p = p (or 'not testable')

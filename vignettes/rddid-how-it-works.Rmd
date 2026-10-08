@@ -629,7 +629,10 @@ ggplot(tab_tr, aes(period, jump, colour = cell)) +
 
 ## What each test detects
 
-```{r summary-tests}
+The p-values of the tests and the `rddid()` estimate in each scenario, first the
+two-period designs S0 to S3, then the three-period designs S0_3 and S4:
+
+```{r summary-tests, echo = FALSE}
 tc1 <- rd_typecont(S1, x = "R", time = "t", id = "id", bwselect = "cct", bc = FALSE)
 tc2 <- rd_typecont(S2, x = "R", time = "t", id = "id", bwselect = "cct", bc = FALSE)
 cs2 <- rd_compstable(S2, x = "R", time = "t", id = "id", t_rd = 2, comparisons = 1, bwselect = "cct", bc = FALSE)
@@ -673,8 +676,8 @@ confounding is not ($`r pmath(h1$p_value)`$), and the estimate, `r estfmt(r1)`,
 is `r zd(r1)` standard errors from the truth: identification needs only one of
 composition stability and homogeneous confounding. In S2 both are rejected
 ($`r pmath(cs2$pairs[["2::1"]]$ll_wald$p)`$ and $`r pmath(h2$p_value)`$), and
-the estimate, `r estfmt(r2)`, is `r zd(r2)` standard errors from the truth: the
-composition term. In S3 type continuity is rejected ($`r pmath(tc3$p_value)`$);
+the estimate, `r estfmt(r2)`, is `r zd(r2)` standard errors from the truth; the
+gap is the bias from the difference in type composition. In S3 type continuity is rejected ($`r pmath(tc3$p_value)`$);
 the sorting biases the estimate, `r estfmt(r3)`, but in this one sample it is
 `r zd(r3)` standard errors from the truth, about as far as S0's, so the estimate
 alone does not reveal the problem and the test does. In the three-period design,

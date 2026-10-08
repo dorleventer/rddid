@@ -16,9 +16,9 @@ A ggplot object (ggplot2 must be installed).
 }
 \description{
 One panel per type: its local-linear jump in each comparison period with its 95\% interval,
-and a dashed line at the type's average jump. Under the null (\code{trend = "constant"}) the
-jumps of a type are the same in every comparison period; under \code{trend = "linear"} they lie
-on a line.
+and a dashed reference line, the type's average jump (\code{trend = "constant"}) or the
+least-squares line through its jumps (\code{trend = "linear"}). Under the null the points sit on
+the dashed line, up to sampling error.
 }
 \examples{
 tr <- rd_trendcell(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)

@@ -1,5 +1,34 @@
 # rddid 0.4.0.9000 (development)
 
+## 2026-10-08: review round on the plots, the console and the site
+
+* **Figures** (after a review against the paper's own figures): no titles, subtitles or
+  statistics in any figure; the paper's palette and `theme_bw`; bins never straddle the cutoff;
+  share plots clip at 0–1 without dropping line segments; the composition-stability axis shows
+  the running variable on both sides (folded ticks) and marks the mirrored period correctly
+  under `estimand = "atu"`; `plot.rd_trendcell()` draws the least-squares line under
+  `trend = "linear"`; switcher colours follow the side in the second period; periods in time
+  order everywhere; legends keep no internal names when a theme is replaced.
+* **Console**: `summary()`'s per-period table is aligned with its (time-ordered) labels — the
+  previous commit had scrambled the numbers; `glance()` is one row under every bandwidth rule
+  (`$h` used to partial-match `h_by_period`); shorter scheme labels; `summary()` no longer
+  repeats the print hint; `(detected)` only when the scheme was auto-detected; `rddid()`
+  checks `comparisons`, `level` and the period column's type and says so.
+* **Degenerate panels**: when no unit changes side of the cutoff between the periods (every
+  unit has the same type in every period, e.g. `rddid_sim`), the four tests now stop with one
+  clear message instead of returning a mechanical rejection, a `chi-squared(0)` or internal
+  errors. Every other numerical result is unchanged.
+* **Site and help pages**: *Get started* reads the four test printouts line by line, says what
+  the period column may be (`trend = "linear"` needs numeric periods), estimates on
+  `rddid_sim_pv` before testing its assumptions, defines a unit's type once in a table, and
+  shows how to export a table; the ATU section moved after the tests, and "What to report"
+  became "What the paper reports". Advice to the researcher is rewritten as description
+  across the articles and help pages, with "can be biased" throughout; the joint test over
+  pairs of `rd_compstable()` is flagged as approximate wherever it is tabulated. Articles menu:
+  the tests, the plots (now *Plots of the estimate and the checks*, with a `ggsave()`
+  example), the options, then *How rddid() computes the estimate* (for referees). The README
+  links the tests and plots articles and `citation("rddid")`.
+
 ## 2026-10-08: plots
 
 * `plot()` methods, mirroring the validation figures of the paper's application: `plot(fit)`
@@ -9,7 +38,7 @@
   (artificial) cutoff; `plot()` of an `rd_homog` or `rd_trendcell` result draws the within-type
   confounding jumps with 95% intervals by period. `plot_switchers()` draws the running
   variable in one period against another and counts the units that change side. All return
-  ggplot objects (ggplot2 in Suggests). New article *Pictures of the checks*.
+  ggplot objects (ggplot2 in Suggests). New article *Plots of the estimate and the checks*.
 * To feed the plots, the objects now also carry what the methods read: `rddid()$data` (the
   per-period data used), `rd_typecont()$fits`/`$data`, each `rd_compstable()` pair's `fits`
   and `sample`, and `rd_typecont()$meta$c`. Nothing else changed.
@@ -33,11 +62,9 @@
   the reference in each period (the all-below type when its cell was fitted, else the next
   type in order); it used to flag the all-below type only, leaving some periods with no
   reference row.
-* Golden master re-recorded as `dev/snapshots/baseline_bugfix.rds`: the only cells that moved
-  are the `rd_homog(p = 2)` ones (first fix); every other value is identical to the step-1
-  baseline.
+* Numerical results are unchanged except `rd_homog(p = 2)` (first fix).
 
-## 2026-10-08: UX sweep, step 4 — the source, for people who read it
+## 2026-10-08: source files renamed by what they hold
 
 * **Files are named after what they hold.** The four assumption tests live in `rd_typecont.R`,
   `rd_compstable.R`, `rd_homog.R`, `rd_trendcell.R` (they used to be `test_*.R`, which read as
@@ -55,8 +82,8 @@
   bias-correction matrix grouping, the HC1 factors, the radix sorts, the reference-type drop,
   the summation order of the pair loops) and dated history moved here.
 * **Nothing numerical changed.** Every statement that touches a number is the same, in the same
-  order; the golden master (`dev/snapshot_all.R`, 134 calls, 7,763 values) is identical before
-  and after every commit of the sweep. Column-check errors no longer carry an `Error in <fn>`
+  order; a snapshot of 134 calls (7,763 values) is identical before and after every commit of
+  the sweep. Column-check errors no longer carry an `Error in <fn>`
   prefix (the message is unchanged).
 
 ## 2026-10-08: UX sweep, step 3 — documentation and site
@@ -92,8 +119,7 @@
   silently accept unknown arguments. `kernel` is validated on entry everywhere.
 * **Messages.** `rddid()` says so when no `id` is given (rows are then treated as separate
   units); `rd_homog()`/`rd_trendcell()` list the cells they skip for `min_n`.
-* Numerical output is unchanged: every value of the step-1 golden master is identical
-  (`dev/snapshot_compare.R`).
+* Numerical output is unchanged: every value of the step-1 snapshot is identical.
 
 ## 2026-10-08: UX sweep, step 1
 

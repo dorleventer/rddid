@@ -13,7 +13,15 @@ same units in several periods; it need not be balanced).}
 
 \item{x}{name of the running-variable column (a string).}
 
-\item{time}{name of the period column (a string).}
+\item{time}{name of the period column (a string). The column is usually
+numeric (a year); character or factor labels work as well, except under
+\code{trend = "linear"} (in \code{\link[=rddid]{rddid()}} or \code{\link[=rd_trendcell]{rd_trendcell()}}), where the line is
+fitted on the period values: these then need to be numeric and are the
+time scale of the line (so 2015, 2017, 2018 are unequally spaced);
+\code{as.numeric()} converts character labels such as \code{"2019"}. In \code{\link[=rddid]{rddid()}}
+the default comparison periods are every period other than \code{t_rd}, in
+sorted order of the values (alphabetical for character or factor labels),
+the order a numeric \code{trend} follows.}
 
 \item{id}{name of the unit-identifier column (a string), needed for panel
 standard errors. With \code{NULL} (default) every row is treated as a different
@@ -32,7 +40,9 @@ A ggplot object (ggplot2 must be installed).
 \description{
 Each unit observed in both periods is a point; the dashed lines are the cutoff. Units in the
 off-diagonal quadrants changed side of the cutoff between the two periods (the "switchers"
-that the composition tests are about); the title gives their share.
+that the composition tests are about): orange, below in the first period and above in the
+second; blue, above and then below; grey, the same side in both. A message gives the share
+of switchers.
 }
 \examples{
 if (requireNamespace("ggplot2", quietly = TRUE))

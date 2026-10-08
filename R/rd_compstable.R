@@ -286,7 +286,8 @@
 #' and the remaining jumps are tested jointly by a Wald statistic, one test per
 #' pair. The joint test over pairs adds up the pair statistics and degrees of
 #' freedom, which treats the pairs as independent although they share the
-#' RD-period units; read it as approximate (the paper's test is per pair). A
+#' RD-period units, so its p-value is approximate (the paper's test is per
+#' pair). A
 #' pair with fewer than three units in either group is skipped with a warning.
 #'
 #' ## Shared units and the sampling scheme
@@ -446,6 +447,7 @@ rd_compstable <- function(data, x, time, id, t_rd,
   # ----- one Wald test per (RD period, comparison period) pair -----
   period_labels <- as.character(all_periods)
   wide <- .compstable_wide(data, x, time, id, all_periods, period_labels, cutoff, estimand)
+  .stop_if_no_switchers(wide, period_labels, "rd_compstable")
   pairs_out <- list()
   for (t0 in comparisons) {
     pair_key <- paste0(as.character(t_rd), "::", as.character(t0))

@@ -36,8 +36,8 @@ would recover 1.5, the effect plus the confounding jump.
 The running variable does not move between years, so every unit stays on the
 same side of the cutoff (sampling scheme "panel, running variable fixed over
 time"). The tests of the assumptions are degenerate here: every unit keeps
-its type, so there is nothing to test (and \code{\link[=rd_typecont]{rd_typecont()}} rejects
-mechanically); use \link{rddid_sim_pv} for them.
+its type, so there is nothing to test; \link{rddid_sim_pv} is the version for
+the tests.
 }
 \examples{
 head(rddid_sim)

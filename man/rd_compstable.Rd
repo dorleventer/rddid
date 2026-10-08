@@ -28,7 +28,15 @@ left out of the cells that use that type.}
 
 \item{x}{name of the running-variable column (a string).}
 
-\item{time}{name of the period column (a string).}
+\item{time}{name of the period column (a string). The column is usually
+numeric (a year); character or factor labels work as well, except under
+\code{trend = "linear"} (in \code{\link[=rddid]{rddid()}} or \code{\link[=rd_trendcell]{rd_trendcell()}}), where the line is
+fitted on the period values: these then need to be numeric and are the
+time scale of the line (so 2015, 2017, 2018 are unequally spaced);
+\code{as.numeric()} converts character labels such as \code{"2019"}. In \code{\link[=rddid]{rddid()}}
+the default comparison periods are every period other than \code{t_rd}, in
+sorted order of the values (alphabetical for character or factor labels),
+the order a numeric \code{trend} follows.}
 
 \item{id}{name of the unit-identifier column (a string). Required: types are
 read across periods.}
@@ -131,7 +139,8 @@ remaining periods. The shares sum to one, so one reference type is dropped
 and the remaining jumps are tested jointly by a Wald statistic, one test per
 pair. The joint test over pairs adds up the pair statistics and degrees of
 freedom, which treats the pairs as independent although they share the
-RD-period units; read it as approximate (the paper's test is per pair). A
+RD-period units, so its p-value is approximate (the paper's test is per
+pair). A
 pair with fewer than three units in either group is skipped with a warning.
 }
 

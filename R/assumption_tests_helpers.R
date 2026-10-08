@@ -202,3 +202,21 @@
   if (h <= 0) h <- stats::sd(all_x)
   h
 }
+
+#' Stop when no unit changes side of the cutoff between the periods used: every unit then has
+#' the same type in every period, and the tests of the assumptions for a time-varying running
+#' variable are not defined (2026-10-08: they used to return degenerate statistics)
+#' @keywords internal
+#' @noRd
+.stop_if_no_switchers <- function(wide, periods, fn) {
+  side_cols <- paste0("side_", periods)
+  side_cols <- side_cols[side_cols %in% names(wide)]
+  if (length(side_cols) < 2L) return(invisible(FALSE))
+  sides <- wide[, side_cols, drop = FALSE]
+  switches <- apply(sides, 1L, function(s) { s <- s[!is.na(s)]; length(unique(s)) > 1L })
+  if (!any(switches))
+    stop(fn, ": no unit changes side of the cutoff between the periods, so every unit has the ",
+         "same type in every period and the test is not defined. The tests are for a running ",
+         "variable that varies over time (see ?", fn, ").", call. = FALSE)
+  invisible(TRUE)
+}

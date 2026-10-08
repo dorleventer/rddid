@@ -12,8 +12,8 @@
 #' The running variable does not move between years, so every unit stays on the
 #' same side of the cutoff (sampling scheme "panel, running variable fixed over
 #' time"). The tests of the assumptions are degenerate here: every unit keeps
-#' its type, so there is nothing to test (and [rd_typecont()] rejects
-#' mechanically); use [rddid_sim_pv] for them.
+#' its type, so there is nothing to test; [rddid_sim_pv] is the version for
+#' the tests.
 #'
 #' @format A data frame with 3,000 rows (one per unit-year) and 6 columns:
 #' \describe{
@@ -58,7 +58,8 @@
 #' @seealso [rddid_sim].
 #' @examples
 #' # units that change side of the cutoff between years
-#' sw <- tapply(rddid_sim_pv$V, rddid_sim_pv$id, function(v) length(unique(v)) > 1)
+#' above <- rddid_sim_pv$R >= 0
+#' sw <- tapply(above, rddid_sim_pv$id, function(a) length(unique(a)) > 1)
 #' sum(sw)
-#' rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id")
+#' rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
 "rddid_sim_pv"

@@ -36,9 +36,10 @@ constant within-type jump also hold.
 }
 \examples{
 # units that change side of the cutoff between years
-sw <- tapply(rddid_sim_pv$V, rddid_sim_pv$id, function(v) length(unique(v)) > 1)
+above <- rddid_sim_pv$R >= 0
+sw <- tapply(above, rddid_sim_pv$id, function(a) length(unique(a)) > 1)
 sum(sw)
-rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id")
+rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
 }
 \seealso{
 \link{rddid_sim}.

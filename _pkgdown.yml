@@ -13,14 +13,14 @@ navbar:
     articles:
       text: Articles
       menu:
-        - text: How rddid() computes the estimate
-          href: articles/rddid-how-it-works.html
-        - text: Bandwidth rules and sampling schemes
-          href: articles/rddid-options.html
         - text: Checking the identification assumptions
           href: articles/rddid-validation-tests.html
-        - text: Pictures of the checks
+        - text: Plots of the estimate and the checks
           href: articles/rddid-plots.html
+        - text: Bandwidth rules and sampling schemes
+          href: articles/rddid-options.html
+        - text: How rddid() computes the estimate (for referees)
+          href: articles/rddid-how-it-works.html
     news:
       text: Changelog
       href: news/index.html
@@ -33,10 +33,10 @@ articles:
   - title: Articles
     navbar: ~
     contents:
-      - rddid-how-it-works
-      - rddid-options
       - rddid-validation-tests
       - rddid-plots
+      - rddid-options
+      - rddid-how-it-works
 
 reference:
   - title: Package overview

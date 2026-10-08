@@ -27,6 +27,7 @@ linear in time.
 Leventer, D. and D. Nevo (2024). *Correcting Invalid Regression
 Discontinuity Designs Using Multiple Time-Period Data.*
 [arXiv:2408.05847](https://arxiv.org/abs/2408.05847).
+`citation("rddid")` returns this reference, with a BibTeX entry.
 
 ## Installation
 
@@ -47,8 +48,8 @@ fit <- rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 fit
 #> RD-DID estimate of the ATT in period 3
 #>   Comparison periods: 1, 2   (constant confounding trend; weights 0.5, 0.5)
-#>   Sampling scheme: panel, running variable fixed over time: no unit changes side of the cutoff (detected from the data)
-#>   Bandwidth: common h = 0.2672 (rule "joint", AMSE-optimal for the aggregate)
+#>   Sampling scheme: panel, no unit changes side of the cutoff (detected)
+#>   Bandwidth: common h = 0.2672 (rule "joint": one bandwidth, chosen for the RD-DID estimate)
 #>   Pilot bandwidth b (period = value): 1 = 0.4102, 2 = 0.3868, 3 = 0.3951
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI
@@ -58,21 +59,27 @@ fit
 #>   summary() shows the per-period fits and the s.e. under every sampling scheme.
 ```
 
-Years 1 and 2 are the comparison periods, with equal weights.
-`Conventional` is the local-linear estimate with its conventional
-standard error; `Robust (bias-corrected)` is the bias-corrected estimate
-with its robust standard error. A plain RD in year 3 would target 1.5,
-the effect plus the confounding jump.
+The ATT is the effect of the treatment on the units just above the
+cutoff, the ones treated in year 3. Years 1 and 2 are the comparison
+periods, with equal weights. `h` is the main bandwidth, one for every
+year, chosen for the RD-DID estimate; `b` is the pilot bandwidth of the
+bias correction in each year. `Conventional` is the local-linear
+estimate with its conventional standard error; `Robust (bias-corrected)`
+is the bias-corrected estimate with its robust standard error. A plain
+RD in year 3 would target 1.5, the effect plus the confounding jump.
+[Get
+started](https://dorleventer.github.io/rddid/articles/rddid-estimation.html)
+reads every line.
 
 When the running variable moves over time, so that units can change side
 of the cutoff between periods, four tests check the assumptions this
 adds, for example type continuity:
 
 ``` r
-rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id")
+rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
 #> Test of a continuous type distribution  [rd_typecont()]
 #>   H0: the share of each type jumps by zero at the cutoff, in every period
-#>   Sampling scheme: panel, running variable varies over time: some units change side (detected from the data)
+#>   Sampling scheme: panel, some units change side of the cutoff (detected)
 #>   Periods: 1, 2, 3   Types: ++, +-, -+, --   Bandwidth: CCT MSE-optimal, chosen per cell
 #> 
 #>   Joint Wald chi-squared(9) = 4.782,  p = 0.853
@@ -92,5 +99,11 @@ between two periods.
 - [Get
   started](https://dorleventer.github.io/rddid/articles/rddid-estimation.html):
   the estimate, its printout, and the four tests.
+- [Checking the identification
+  assumptions](https://dorleventer.github.io/rddid/articles/rddid-validation-tests.html):
+  the four tests, one at a time.
+- [Plots of the estimate and the
+  checks](https://dorleventer.github.io/rddid/articles/rddid-plots.html):
+  `plot()` on a fit and on each test.
 - [Reference](https://dorleventer.github.io/rddid/reference/index.html):
   every function, with examples.

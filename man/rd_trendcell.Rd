@@ -36,7 +36,15 @@ left out of the cells that use that type.}
 
 \item{x}{name of the running-variable column (a string).}
 
-\item{time}{name of the period column (a string).}
+\item{time}{name of the period column (a string). The column is usually
+numeric (a year); character or factor labels work as well, except under
+\code{trend = "linear"} (in \code{\link[=rddid]{rddid()}} or \code{\link[=rd_trendcell]{rd_trendcell()}}), where the line is
+fitted on the period values: these then need to be numeric and are the
+time scale of the line (so 2015, 2017, 2018 are unequally spaced);
+\code{as.numeric()} converts character labels such as \code{"2019"}. In \code{\link[=rddid]{rddid()}}
+the default comparison periods are every period other than \code{t_rd}, in
+sorted order of the values (alphabetical for character or factor labels),
+the order a numeric \code{trend} follows.}
 
 \item{id}{name of the unit-identifier column (a string). Required: types are
 read across periods.}
@@ -55,7 +63,8 @@ the test is the same either way.}
 \item{trend}{the trend assumption tested within each type: \code{"constant"}
 (default; the confounding jump is the same in every comparison period) or
 \code{"linear"} (it moves linearly in time; needs at least three comparison
-periods). Use the \code{trend} of the \code{\link[=rddid]{rddid()}} call being checked.
+periods). Given the \code{trend} of an \code{\link[=rddid]{rddid()}} call, the test checks that
+call's assumption.
 With \code{"linear"} the second differences are taken in time (the period values), so
 unequally spaced comparison periods are handled.}
 
@@ -122,18 +131,19 @@ stacked across types.}
 When the running variable moves over time, some units are above the cutoff
 in one period and below it in another. A unit's \strong{type} is the side of the
 cutoff it is on in the other period(s); by default here, its side in the RD
-period, which stays fixed across the comparison periods. The
-confounding-trend assumption of \code{\link[=rddid]{rddid()}} must then hold within each type.
+period, which stays fixed across the comparison periods. The paper's
+identification result then requires the confounding-trend assumption of
+\code{\link[=rddid]{rddid()}} within each type.
 It concerns the RD period, where the confounding jump is not observed
 separately, so, like a pre-trends check in difference-in-differences,
 \code{rd_trendcell()} tests it across the comparison periods: the null is that
 \strong{within each type, the confounding jump is the same in every comparison
 period} (with \code{trend = "linear"}: moves linearly in time). A rejection
 means the comparison periods do not support the trend assumption, and the
-estimate of \code{\link[=rddid]{rddid()}} under that assumption can be biased; if the jumps
-move linearly, consider \code{rddid(trend = "linear")}. With a running variable
-fixed over time (as in \link{rddid_sim}) the types are degenerate and the test is
-not informative.
+estimate of \code{\link[=rddid]{rddid()}} under that assumption can be biased.
+\code{rddid(trend = "linear")} allows jumps that move linearly in time. With a
+running variable fixed over time (as in \link{rddid_sim}) the types are
+degenerate and the test is not informative.
 }
 \details{
 \subsection{What is estimated}{

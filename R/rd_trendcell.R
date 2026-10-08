@@ -242,7 +242,7 @@
 
 #' The result when no type has three comparison periods under `trend = "linear"`: NA, df 0, NA.
 #' @noRd
-.trendcell_untestable <- function(jump_df, use_scheme, bc, estimand, trend, comparisons, cl) {
+.trendcell_untestable <- function(jump_df, use_scheme, scheme, bc, estimand, trend, comparisons, cl) {
   message("rd_trendcell: linear trend is not testable -- no cell has ",
           "3 or more comparison periods (degrees of freedom = 0). ",
           "Returning an object with df = 0, statistic = NA, p_value = NA.")
@@ -254,6 +254,7 @@
          contrasts         = numeric(0),
          cov_matrix        = matrix(numeric(0), 0L, 0L),
          scheme            = use_scheme,
+         scheme_requested  = scheme,
          bc                = bc,
          estimand          = estimand,
          trend             = trend,
@@ -268,18 +269,19 @@
 #' When the running variable moves over time, some units are above the cutoff
 #' in one period and below it in another. A unit's **type** is the side of the
 #' cutoff it is on in the other period(s); by default here, its side in the RD
-#' period, which stays fixed across the comparison periods. The
-#' confounding-trend assumption of [rddid()] must then hold within each type.
+#' period, which stays fixed across the comparison periods. The paper's
+#' identification result then requires the confounding-trend assumption of
+#' [rddid()] within each type.
 #' It concerns the RD period, where the confounding jump is not observed
 #' separately, so, like a pre-trends check in difference-in-differences,
 #' `rd_trendcell()` tests it across the comparison periods: the null is that
 #' **within each type, the confounding jump is the same in every comparison
 #' period** (with `trend = "linear"`: moves linearly in time). A rejection
 #' means the comparison periods do not support the trend assumption, and the
-#' estimate of [rddid()] under that assumption can be biased; if the jumps
-#' move linearly, consider `rddid(trend = "linear")`. With a running variable
-#' fixed over time (as in [rddid_sim]) the types are degenerate and the test is
-#' not informative.
+#' estimate of [rddid()] under that assumption can be biased.
+#' `rddid(trend = "linear")` allows jumps that move linearly in time. With a
+#' running variable fixed over time (as in [rddid_sim]) the types are
+#' degenerate and the test is not informative.
 #'
 #' @details
 #' ## What is estimated
@@ -346,7 +348,8 @@
 #' @param trend the trend assumption tested within each type: `"constant"`
 #'   (default; the confounding jump is the same in every comparison period) or
 #'   `"linear"` (it moves linearly in time; needs at least three comparison
-#'   periods). Use the `trend` of the [rddid()] call being checked.
+#'   periods). Given the `trend` of an [rddid()] call, the test checks that
+#'   call's assumption.
 #'   With `"linear"` the second differences are taken in time (the period values), so
 #'   unequally spaced comparison periods are handled.
 #' @param h a bandwidth to use, as both main and pilot bandwidth, in every cell.
@@ -449,6 +452,8 @@ rd_trendcell <- function(data, y, x, time, id,
     stop("need at least one comparison period.")
 
   types    <- .build_types(data, x = x, time = time, id = id, c = cutoff)
+
+  .stop_if_no_switchers(types$wide, as.character(sort(unique(data[[time]]))), "rd_trendcell")
   cell_map <- .trendcell_cell_map(types, type_by, t_rd, comparisons)
 
   detected_scheme <- .detect_scheme_comparisons(data, x, time, id, comparisons, cutoff)
@@ -468,7 +473,7 @@ rd_trendcell <- function(data, y, x, time, id,
 
   if (length(Delta_all) == 0L) {
     if (trend == "linear")
-      return(.trendcell_untestable(jump_df, use_scheme, bc, estimand, trend, comparisons, cl))
+      return(.trendcell_untestable(jump_df, use_scheme, scheme, bc, estimand, trend, comparisons, cl))
     stop("rd_trendcell: no usable within-cell cross-period contrasts found; ",
          "check data, bandwidth, min_n, or number of comparison periods.")
   }
@@ -490,6 +495,7 @@ rd_trendcell <- function(data, y, x, time, id,
          contrasts         = Delta_all,
          cov_matrix        = Sigma_all,
          scheme            = use_scheme,
+         scheme_requested  = scheme,
          bc                = bc,
          estimand          = estimand,
          trend             = trend,
@@ -506,7 +512,7 @@ print.rd_trendcell <- function(x, ...) {
   else
     "within each type, the confounding jump is the same in every comparison period"
   .print_test_header("a constant within-type confounding discontinuity", "rd_trendcell",
-                     null_text, x$scheme, TRUE, x$estimand)
+                     null_text, x$scheme, identical(x$scheme_requested, "auto"), x$estimand)
   cat(sprintf("  Comparison periods: %s   Trend: %s\n\n", paste(x$comparisons, collapse = ", "),
               x$trend))
   .print_wald(x$statistic, x$df, x$p_value, label = "Wald")

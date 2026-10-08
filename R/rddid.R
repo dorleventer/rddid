@@ -39,19 +39,17 @@
 #'
 #' ## Sampling schemes
 #'
-#' The scheme sets the standard error and, under `"joint"` and `"iter"`, the
-#' bandwidth (so the estimate); with a fixed `h` or `"cct"` it changes only the
-#' standard error. In a repeated
+#' The scheme sets the standard error and, under `"joint"` and `"iter"`, also
+#' the bandwidth, and with it the estimate, because those rules balance bias
+#' against the variance under the scheme in use; with a fixed `h` or `"cct"` it
+#' changes only the standard error. In a repeated
 #' cross-section (`"cs"`) the periods' samples are independent and the variance
 #' is the weighted sum of the period variances. In a panel the same units
 #' appear in several periods, so the period jumps are correlated and the
 #' variance adds their covariances, computed by matching units on `id`: under
 #' `"pc"` from units on the same side of the cutoff in both periods; under
 #' `"pv"` also from the units that change side, which enter with the opposite
-#' sign. With a fixed `h` or `bwselect = "cct"`, the scheme changes only the
-#' standard error. Under `"joint"` and `"iter"` it can also change the
-#' bandwidth, and with it the estimate, because those rules balance bias
-#' against the variance under the scheme in use. The standard errors under all
+#' sign. The standard errors under all
 #' three schemes, at the bandwidths actually used, are in `estimates` and in
 #' `summary()`.
 #'
@@ -110,7 +108,15 @@
 #'   same units in several periods; it need not be balanced).
 #' @param y name of the outcome column (a string).
 #' @param x name of the running-variable column (a string).
-#' @param time name of the period column (a string).
+#' @param time name of the period column (a string). The column is usually
+#'   numeric (a year); character or factor labels work as well, except under
+#'   `trend = "linear"` (in [rddid()] or [rd_trendcell()]), where the line is
+#'   fitted on the period values: these then need to be numeric and are the
+#'   time scale of the line (so 2015, 2017, 2018 are unequally spaced);
+#'   `as.numeric()` converts character labels such as `"2019"`. In [rddid()]
+#'   the default comparison periods are every period other than `t_rd`, in
+#'   sorted order of the values (alphabetical for character or factor labels),
+#'   the order a numeric `trend` follows.
 #' @param id name of the unit-identifier column (a string), needed for panel
 #'   standard errors. With `NULL` (default) every row is treated as a different
 #'   unit, which gives repeated cross-section standard errors (with a message).
@@ -126,7 +132,8 @@
 #'   the same in every period, equal weights) or `"linear"` (the confounding
 #'   jump moves linearly in time; needs at least two comparison periods). A
 #'   numeric vector gives the weights directly, one per entry of `comparisons`
-#'   in that order; they should sum to one (a warning otherwise).
+#'   in that order. Weights that sum to one cancel a constant confounding
+#'   jump; `rddid()` warns when they do not.
 #' @param estimand `"att"` (default) when the comparison periods are uniformly
 #'   untreated: the ATT, the effect of the treatment on the units just above the
 #'   cutoff that are treated in the RD period. `"atu"` when the comparison
@@ -185,7 +192,7 @@
 #'       bandwidths).}
 #'     \item{`coef`}{named numeric vector, the coefficient of each period's jump
 #'       in the estimate: 1 for the RD period, minus its weight for each
-#'       comparison period. For the estimate itself use [coef()].}
+#'       comparison period. [coef()] returns the estimate itself.}
 #'     \item{`weights`}{named numeric vector of the comparison-period weights.}
 #'     \item{`weights_type`}{`"constant"`, `"linear"`, or `"custom"` for numeric
 #'       weights.}
@@ -267,6 +274,14 @@ rddid <- function(data, y, x, time, id = NULL, t_rd,
   if (is.null(comparisons)) comparisons <- sort(setdiff(unique(time_col), t_rd))
   if (length(comparisons) < 1L) stop("need at least one comparison period.")
   if (t_rd %in% comparisons) stop("`t_rd` must not be one of the `comparisons`.")
+  missing_comp <- setdiff(comparisons, time_col)
+  if (length(missing_comp))
+    stop("comparison period(s) not in `", time, "`: ", paste(missing_comp, collapse = ", "))
+  if (!is.numeric(time_col) && !is.character(time_col) && !is.factor(time_col))
+    stop("the period column `", time, "` must be numeric, character or factor (a Date can be ",
+         "converted with as.numeric(format(x, \"%Y\")) or similar).")
+  if (!is.numeric(level) || length(level) != 1L || level <= 0 || level >= 1)
+    stop("`level` must be a single number strictly between 0 and 1 (e.g. 0.95).")
   if (is.null(id) && scheme == "auto")
     message("rddid(): no `id` given, so every row is treated as a different unit ",
             "(repeated cross-section standard errors).")
@@ -299,7 +314,7 @@ rddid <- function(data, y, x, time, id = NULL, t_rd,
   structure(list(
     estimates = .rddid_estimate_table(agg_conv, agg_bc, use_scheme, level),
     coef = period_coef, weights = comp_weights,
-    weights_type = if (is.numeric(trend)) "custom" else trend,
+    weights_type = if (is.numeric(trend)) "custom" else match.arg(trend, c("constant", "linear")),
     estimand = estimand,
     t_rd = t_rd, comparisons = comparisons,
     scheme = use_scheme, scheme_detected = detected, scheme_requested = scheme,
@@ -381,17 +396,18 @@ rddid <- function(data, y, x, time, id = NULL, t_rd,
 }
 
 #' @export
-print.rddid <- function(x, digits = 4, ...) {
+print.rddid <- function(x, digits = 4, hint = TRUE, ...) {
   est <- if (is.null(x$estimand)) "att" else x$estimand
   cat(sprintf("RD-DID estimate of the %s in period %s\n", toupper(est), x$t_rd))
   cat(sprintf("  Comparison periods: %s   (%s; weights %s)\n",
               paste(x$comparisons, collapse = ", "), .trend_label(x$weights_type),
               paste(trimws(formatC(x$weights, digits = 3, format = "g")), collapse = ", ")))
   cat(sprintf("  Sampling scheme: %s%s\n", .scheme_label(x$scheme),
-              if (identical(x$scheme_requested, "auto")) " (detected from the data)" else ""))
+              if (identical(x$scheme_requested, "auto")) " (detected)" else ""))
   cat(sprintf("  Bandwidth: %s\n\n", .bandwidth_label(x$bandwidth)))
   .print_estimates(x, digits = digits)
-  cat("\n  summary() shows the per-period fits and the s.e. under every sampling scheme.\n")
+  if (hint)
+    cat("\n  summary() shows the per-period fits and the s.e. under every sampling scheme.\n")
   invisible(x)
 }
 
@@ -401,8 +417,8 @@ print.rddid <- function(x, digits = 4, ...) {
 #' @noRd
 .scheme_label <- function(s) {
   labels <- c(cs = "repeated cross-section",
-              pc = "panel, running variable fixed over time: no unit changes side of the cutoff",
-              pv = "panel, running variable varies over time: some units change side")
+              pc = "panel, no unit changes side of the cutoff",
+              pv = "panel, some units change side of the cutoff")
   if (s %in% names(labels)) labels[[s]] else s   # e.g. "mixed" (rd_compstable pairs differ)
 }
 #' Confounding-trend assumption in words, for printouts
@@ -423,7 +439,7 @@ print.rddid <- function(x, digits = 4, ...) {
   }
   switch(bw$method,
     fixed = sprintf("h = %.4g in every period (fixed), pilot b = %.4g", bw$h, bw$b),
-    joint = sprintf("common h = %.4g (rule \"joint\", AMSE-optimal for the aggregate)\n  Pilot bandwidth b (period = value): %s",
+    joint = sprintf("common h = %.4g (rule \"joint\": one bandwidth, chosen for the RD-DID estimate)\n  Pilot bandwidth b (period = value): %s",
                     bw$h, by_t(bw$b_by_period)),
     cct   = sprintf("per-period CCT MSE-optimal (rule \"cct\"): h (period = value) %s", by_t(bw$h_by_period)),
     iter  = sprintf("period-specific (rule \"iter\", %d iterations): h (period = value) %s", bw$niter,

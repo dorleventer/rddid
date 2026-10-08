@@ -30,6 +30,7 @@ Suggests:
     generics,
     ggplot2,
     knitr,
+    modelsummary,
     rmarkdown,
     testthat (>= 3.0.0)
 VignetteBuilder: knitr

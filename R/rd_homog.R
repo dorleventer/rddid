@@ -375,6 +375,7 @@ rd_homog <- function(data, y, x, time, id,
   # types are "+"/"-" sign-pattern strings (a unit at the cutoff counts as above); a unit
   # unobserved in a period its type needs is dropped from that period
   types     <- .build_types(data, x = x, time = time, id = id, c = cutoff)
+  .stop_if_no_switchers(types$wide, as.character(sort(unique(data[[time]]))), "rd_homog")
   type_list <- types$period_types
   if (type_by == "rd_side") {
     if (is.null(t_rd))
@@ -428,6 +429,7 @@ rd_homog <- function(data, y, x, time, id,
       contrasts         = Delta,
       cov_matrix        = Sigma,
       scheme            = use_scheme,
+      scheme_requested  = scheme,
       bc                = bc,
       estimand          = estimand,
       comparisons       = names(cells$contrast_keys),
@@ -441,7 +443,7 @@ rd_homog <- function(data, y, x, time, id,
 print.rd_homog <- function(x, ...) {
   .print_test_header("homogeneous confounding", "rd_homog",
                      "in each comparison period the confounding jump is the same for every type",
-                     x$scheme, TRUE, x$estimand)
+                     x$scheme, identical(x$scheme_requested, "auto"), x$estimand)
   cat(sprintf("  Comparison periods: %s\n\n", paste(x$comparisons, collapse = ", ")))
   .print_wald(x$statistic, x$df, x$p_value, label = "Wald")
   .print_jump_table(x$period_type_jumps, c("period", "type"), c("Period", "Type"))

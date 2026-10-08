@@ -38,7 +38,15 @@ same units in several periods; it need not be balanced).}
 
 \item{x}{name of the running-variable column (a string).}
 
-\item{time}{name of the period column (a string).}
+\item{time}{name of the period column (a string). The column is usually
+numeric (a year); character or factor labels work as well, except under
+\code{trend = "linear"} (in \code{\link[=rddid]{rddid()}} or \code{\link[=rd_trendcell]{rd_trendcell()}}), where the line is
+fitted on the period values: these then need to be numeric and are the
+time scale of the line (so 2015, 2017, 2018 are unequally spaced);
+\code{as.numeric()} converts character labels such as \code{"2019"}. In \code{\link[=rddid]{rddid()}}
+the default comparison periods are every period other than \code{t_rd}, in
+sorted order of the values (alphabetical for character or factor labels),
+the order a numeric \code{trend} follows.}
 
 \item{id}{name of the unit-identifier column (a string), needed for panel
 standard errors. With \code{NULL} (default) every row is treated as a different
@@ -58,7 +66,8 @@ comparison-period weights: \code{"constant"} (default; the confounding jump is
 the same in every period, equal weights) or \code{"linear"} (the confounding
 jump moves linearly in time; needs at least two comparison periods). A
 numeric vector gives the weights directly, one per entry of \code{comparisons}
-in that order; they should sum to one (a warning otherwise).}
+in that order. Weights that sum to one cancel a constant confounding
+jump; \code{rddid()} warns when they do not.}
 
 \item{estimand}{\code{"att"} (default) when the comparison periods are uniformly
 untreated: the ATT, the effect of the treatment on the units just above the
@@ -132,7 +141,7 @@ statistic and p-value under \code{scheme}) and \code{se_cs}, \code{se_pc}, \code
 bandwidths).}
 \item{\code{coef}}{named numeric vector, the coefficient of each period's jump
 in the estimate: 1 for the RD period, minus its weight for each
-comparison period. For the estimate itself use \code{\link[=coef]{coef()}}.}
+comparison period. \code{\link[=coef]{coef()}} returns the estimate itself.}
 \item{\code{weights}}{named numeric vector of the comparison-period weights.}
 \item{\code{weights_type}}{\code{"constant"}, \code{"linear"}, or \code{"custom"} for numeric
 weights.}
@@ -197,19 +206,17 @@ A numeric \code{trend} supplies the weights directly.
 
 \subsection{Sampling schemes}{
 
-The scheme sets the standard error and, under \code{"joint"} and \code{"iter"}, the
-bandwidth (so the estimate); with a fixed \code{h} or \code{"cct"} it changes only the
-standard error. In a repeated
+The scheme sets the standard error and, under \code{"joint"} and \code{"iter"}, also
+the bandwidth, and with it the estimate, because those rules balance bias
+against the variance under the scheme in use; with a fixed \code{h} or \code{"cct"} it
+changes only the standard error. In a repeated
 cross-section (\code{"cs"}) the periods' samples are independent and the variance
 is the weighted sum of the period variances. In a panel the same units
 appear in several periods, so the period jumps are correlated and the
 variance adds their covariances, computed by matching units on \code{id}: under
 \code{"pc"} from units on the same side of the cutoff in both periods; under
 \code{"pv"} also from the units that change side, which enter with the opposite
-sign. With a fixed \code{h} or \code{bwselect = "cct"}, the scheme changes only the
-standard error. Under \code{"joint"} and \code{"iter"} it can also change the
-bandwidth, and with it the estimate, because those rules balance bias
-against the variance under the scheme in use. The standard errors under all
+sign. The standard errors under all
 three schemes, at the bandwidths actually used, are in \code{estimates} and in
 \code{summary()}.
 }

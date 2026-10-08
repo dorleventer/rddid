@@ -28,7 +28,15 @@ left out of the cells that use that type.}
 
 \item{x}{name of the running-variable column (a string).}
 
-\item{time}{name of the period column (a string).}
+\item{time}{name of the period column (a string). The column is usually
+numeric (a year); character or factor labels work as well, except under
+\code{trend = "linear"} (in \code{\link[=rddid]{rddid()}} or \code{\link[=rd_trendcell]{rd_trendcell()}}), where the line is
+fitted on the period values: these then need to be numeric and are the
+time scale of the line (so 2015, 2017, 2018 are unequally spaced);
+\code{as.numeric()} converts character labels such as \code{"2019"}. In \code{\link[=rddid]{rddid()}}
+the default comparison periods are every period other than \code{t_rd}, in
+sorted order of the values (alphabetical for character or factor labels),
+the order a numeric \code{trend} follows.}
 
 \item{id}{name of the unit-identifier column (a string). Required: types are
 read across periods.}
@@ -145,7 +153,7 @@ under \code{estimand = "att"} and \code{"atu"}; \code{estimand} only labels the 
 }
 \examples{
 # rddid_sim_pv: the running variable moves, so some units change side
-tc <- rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id")
+tc <- rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
 tc          # the null, the joint Wald test, then each period's own test
 tc$p_value
 }

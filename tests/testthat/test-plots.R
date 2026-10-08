@@ -38,9 +38,45 @@ test_that("every plot method returns a ggplot that builds", {
                "two values")
 })
 
-test_that("the binned-means helper bins over the requested range", {
-  b <- rddid:::.bin_means(seq(-1, 1, length.out = 201), rep(1, 201), bins = 4, range = c(-1, 1))
-  expect_equal(nrow(b), 4L)
-  expect_equal(b$y, rep(1, 4))
+test_that("the binned-means helper bins each side of the cutoff separately", {
+  x <- seq(-1, 1, length.out = 201)
+  b <- rddid:::.bin_sides(x, rep(1, 201), cutoff = 0, bins = 4, lo = -1, hi = 1)
+  expect_equal(nrow(b), 8L)                      # 4 bins per side
+  expect_true(all(b$x[1:4] < 0) && all(b$x[5:8] >= 0))   # no bin straddles the cutoff
+  expect_equal(b$y, rep(1, 8))
   expect_equal(sum(b$n), 201L)
+})
+
+test_that("degenerate panels (no unit changes side) give a clear error from every test", {
+  for (f in list(function() rd_typecont(rddid_sim, x = "R", time = "year", id = "id"),
+                 function() rd_compstable(rddid_sim, x = "R", time = "year", id = "id", t_rd = 3),
+                 function() rd_homog(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3),
+                 function() rd_trendcell(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)))
+    expect_error(f(), "no unit changes side")
+})
+
+test_that("glance() is one row under every bandwidth rule", {
+  for (bw in c("joint", "cct", "iter")) {
+    g <- generics::glance(rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
+                                bwselect = bw))
+    expect_equal(nrow(g), 1L)
+  }
+  expect_error(rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, level = 95),
+               "between 0 and 1")
+  expect_error(rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
+                     comparisons = c(1, 7)), "not in `year`")
+})
+
+test_that("summary() per-period table is aligned with its period labels (time order)", {
+  fit <- rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
+  tab <- summary(fit)$per_period
+  expect_equal(tab$period, c("1", "2", "3"))
+  for (i in seq_len(nrow(tab))) {
+    f <- fit$fits[[tab$period[i]]]
+    expect_equal(tab$jump[i], f$D)
+    expect_equal(tab$h[i], unname(f$h))
+    expect_equal(tab$n[i], as.integer(f$n))
+    expect_equal(tab$coef[i], unname(fit$coef[tab$period[i]]))
+  }
+  expect_equal(sum(tab$coef * tab$jump), unname(coef(fit)[["Conventional"]]))
 })

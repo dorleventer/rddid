@@ -19,6 +19,9 @@
       w <- rep(1 / m, m)                 # equal weights: constant confounding trend
     } else {
       if (m < 2) stop("linear weights need at least 2 comparison periods.")
+      if (!is.numeric(comps) || !is.numeric(t_rd))
+        stop("trend = \"linear\" needs numeric period values (the line is fitted on the period ",
+             "values); the `time` column is not numeric.")
       X <- cbind(1, comps)               # extrapolate the line through the D_t to t_rd
       w <- as.numeric(c(1, t_rd) %*% solve(crossprod(X), t(X)))
     }

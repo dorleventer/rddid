@@ -264,7 +264,7 @@
 #'
 #' @examples
 #' # rddid_sim_pv: the running variable moves, so some units change side
-#' tc <- rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id")
+#' tc <- rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
 #' tc          # the null, the joint Wald test, then each period's own test
 #' tc$p_value
 #' @export
@@ -304,6 +304,7 @@ rd_typecont <- function(data, x, time, id,
 
   # ----- types, scheme, fits, covariance -----
   types        <- .build_types(data, x, time, id, c = cutoff)
+  .stop_if_no_switchers(types$wide, period_labels, "rd_typecont")
   period_types <- types$period_types
   # radix: a locale-independent order, so the reference type dropped is the same on every machine
   type_values <- sort(unique(unlist(lapply(period_types, `[[`, "type"))), method = "radix")

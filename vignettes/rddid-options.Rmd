@@ -9,6 +9,7 @@ vignette: >
 
 ```{r, include = FALSE}
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+fmt <- function(x, d = 3) formatC(x, format = "f", digits = d)
 ```
 
 This article covers the `rddid()` arguments that set the bandwidths, the main
@@ -20,7 +21,6 @@ the estimator.
 
 ```{r}
 library(rddid)
-fmt <- function(x, d = 3) formatC(x, format = "f", digits = d)
 ```
 
 ## Bandwidth rules
@@ -105,7 +105,10 @@ estimated curvature does not blow the bandwidth up; `reg_const` (default
 
 ### The rules side by side
 
-```{r}
+The four fits above, with the main bandwidth in each year and the two
+estimates (standard errors in parentheses):
+
+```{r, echo = FALSE}
 estse <- function(f, row) paste0(fmt(f$estimates[row, "est"]), " (", fmt(f$estimates[row, "se"]), ")")
 fits <- list(joint = fit_joint, cct = fit_cct, iter = fit_iter, "fixed h = 0.3" = fit_fixed)
 tab <- data.frame(
@@ -144,7 +147,7 @@ no `id`, or no unit observed in more than one period, gives `"cs"`; units
 observed in more than one period, each on the same side of the cutoff in every
 period, give `"pc"`; any unit on different sides in different periods gives
 `"pv"`. Without `id`, `rddid()` treats every row as a different unit and says
-so; for a panel, pass `id`.
+so; a panel needs `id`.
 
 Three data sets, one per scheme: a repeated cross-section made from `rddid_sim`
 by keeping each unit in one year only, `rddid_sim` itself, and `rddid_sim_pv`,
@@ -207,8 +210,9 @@ stopifnot(
   relative to the variances); here the three standard errors range from
   `r fmt(min(se_tab[3, ]))` to `r fmt(max(se_tab[3, ]))`.
 
-The scheme describes how the data were sampled; it is not a choice among the
-three columns. Setting `scheme` replaces the detection. The scheme sets which
+The scheme describes how the data were sampled; the printout reports the
+column for that scheme, and the other columns show the other formulas on the
+same data. Setting `scheme` replaces the detection. The scheme sets which
 standard error is reported and, under the `"joint"` (default) and `"iter"`
 bandwidth rules, it also enters the bandwidth: these rules weigh bias against
 the asymptotic variance of the estimate, and that variance

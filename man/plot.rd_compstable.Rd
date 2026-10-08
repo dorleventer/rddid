@@ -11,8 +11,7 @@
 
 \item{pair}{which pair to draw: an index or a name of \code{x$pairs} (default the first).}
 
-\item{bins}{number of equal-width bins for the binned shares (default 20, over the
-bandwidth on each side).}
+\item{bins}{number of equal-width bins on each side (default 20, over the bandwidth).}
 
 \item{...}{unused.}
 }
@@ -24,10 +23,12 @@ The paper's composition-stability figure. The units above the cutoff in the comp
 period are placed to the left of an artificial cutoff at their mirrored distance
 \eqn{-(R_{t_0} - c)}, the units above the cutoff in the RD period to the right at
 \eqn{R_{t_{RD}} - c}; the outcome is whether the unit is above the cutoff in the other
-period of the pair. The binned share is drawn with the local-linear fit on each side, at the
+period of the pair. The axis shows the running variable itself (so both sides read outward
+from the cutoff); the binned share and the local-linear fit on each side are drawn at the
 bandwidth rule the test used. Under the null the two lines meet at the artificial cutoff:
 the units just above the cutoff are the same mix in both periods. With
-\code{estimand = "atu"} the same picture is drawn for the units below the cutoff.
+\code{estimand = "atu"} the picture is drawn for the units below the cutoff, with the RD period
+mirrored instead.
 }
 \details{
 With more than two periods the test's types also record the unit's sides in the remaining
