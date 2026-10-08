@@ -85,8 +85,8 @@ interval, the comparison periods with their weights, the sampling scheme
 and the bandwidth. See <code><a href="rddid.html">rddid()</a></code>.</p></li>
 <li><p><strong>Look inside.</strong> <code>summary(fit)</code> shows the jump in every period and the
 standard error under each sampling scheme (<code><a href="summary.rddid.html">summary.rddid()</a></code>); <code><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef()</a></code>,
-<code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code> and <code><a href="https://rdrr.io/r/stats/nobs.html" class="external-link">nobs()</a></code> work as usual (<a href="rddid-methods.html">rddid-methods</a>), and <code>tidy()</code>
-and <code>glance()</code> feed table makers (<a href="rddid-tidiers.html">rddid-tidiers</a>).</p></li>
+<code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code> and <code><a href="https://rdrr.io/r/stats/nobs.html" class="external-link">nobs()</a></code> work as usual (<a href="rddid-methods.html">rddid-methods</a>), and <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code>
+and <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code> feed table makers (<a href="rddid-tidiers.html">rddid-tidiers</a>).</p></li>
 <li><p><strong>Check the assumptions.</strong> When the running variable moves over time,
 units can change side of the cutoff between periods, and four tests check
 the assumptions this adds: type continuity (<code><a href="rd_typecont.html">rd_typecont()</a></code>), composition

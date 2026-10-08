@@ -31,7 +31,9 @@ constant (equal weights) or linear in time.
     [`confint()`](https://rdrr.io/r/stats/confint.html) and
     [`nobs()`](https://rdrr.io/r/stats/nobs.html) work as usual
     ([rddid-methods](https://dorleventer.github.io/rddid/reference/rddid-methods.md)),
-    and `tidy()` and `glance()` feed table makers
+    and [`tidy()`](https://generics.r-lib.org/reference/tidy.html) and
+    [`glance()`](https://generics.r-lib.org/reference/glance.html) feed
+    table makers
     ([rddid-tidiers](https://dorleventer.github.io/rddid/reference/rddid-tidiers.md)).
 
 3.  **Check the assumptions.** When the running variable moves over

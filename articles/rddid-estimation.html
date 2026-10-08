@@ -248,15 +248,15 @@ accounts for it, is 0.149.</p>
 <span><span class="co">#&gt;                  2.5 %   97.5 %</span></span>
 <span><span class="co">#&gt; Conventional 0.8449613 1.340457</span></span>
 <span><span class="co">#&gt; Robust       0.8485735 1.434187</span></span>
-<span><span class="fu">generics</span><span class="fu">::</span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span>
 <span><span class="co">#&gt;           term estimate std.error statistic      p.value  conf.low conf.high</span></span>
 <span><span class="co">#&gt; 1 Conventional 1.092709 0.1264043  8.644556 5.401507e-18 0.8449613  1.340457</span></span>
 <span><span class="co">#&gt; 2       Robust 1.141380 0.1493939  7.640071 2.171020e-14 0.8485735  1.434187</span></span></code></pre></div>
 <p><code><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef()</a></code> returns the two point estimates and
-<code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code> their confidence intervals. <code>tidy()</code>
-(from the generics package) returns one row per estimate, so table
-makers such as modelsummary work with <code><a href="../reference/rddid.html">rddid()</a></code> fits; <a href="#a-table-for-a-paper">A table for a paper</a> below has an
-example.</p>
+<code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code> their confidence intervals. <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code>
+returns one row per estimate, so table makers such as modelsummary work
+with <code><a href="../reference/rddid.html">rddid()</a></code> fits; <a href="#a-table-for-a-paper">A table
+for a paper</a> below has an example.</p>
 </div>
 <div class="section level2">
 <h2 id="a-confounding-jump-that-moves-linearly">A confounding jump that moves linearly<a class="anchor" aria-label="anchor" href="#a-confounding-jump-that-moves-linearly"></a>
@@ -292,7 +292,7 @@ period.</p>
 <div class="section level2">
 <h2 id="a-table-for-a-paper">A table for a paper<a class="anchor" aria-label="anchor" href="#a-table-for-a-paper"></a>
 </h2>
-<p><code>tidy()</code> gives the estimates and <code>glance()</code> the
+<p><code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code> gives the estimates and <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code> the
 design (RD period, comparison periods, trend, bandwidth rule,
 <code>h</code>, scheme), which is what table makers read. With the
 modelsummary package installed, the two fits side by side, with
@@ -305,42 +305,42 @@ confidence intervals:</p>
 
     <script src="https://cdn.jsdelivr.net/gh/vincentarelbundock/tinytable@main/inst/tinytable.js"></script><script>
       // Create table-specific functions using external factory
-      const tableFns_xxsfq3e4cu3p1qeivu7t = TinyTable.createTableFunctions("tinytable_xxsfq3e4cu3p1qeivu7t");
+      const tableFns_bp0q2e0jk5fh7641e9cf = TinyTable.createTableFunctions("tinytable_bp0q2e0jk5fh7641e9cf");
       // tinytable span after
       window.addEventListener('load', function () {
           var cellsToStyle = [
             // tinytable style arrays after
-          { positions: [ { i: '6', j: 2 }, { i: '6', j: 3 } ], css_id: 'tinytable_css_0so9e6e0u49cga4447ye',}, 
-          { positions: [ { i: '4', j: 2 }, { i: '4', j: 3 } ], css_id: 'tinytable_css_ftfjhim05adui06xd7tq',}, 
-          { positions: [ { i: '1', j: 2 }, { i: '2', j: 2 }, { i: '3', j: 2 }, { i: '5', j: 2 }, { i: '1', j: 3 }, { i: '2', j: 3 }, { i: '3', j: 3 }, { i: '5', j: 3 } ], css_id: 'tinytable_css_uzhunyslpnnbfkv30mfz',}, 
-          { positions: [ { i: '0', j: 2 }, { i: '0', j: 3 } ], css_id: 'tinytable_css_i4c9xizcz8h1wszprkvs',}, 
-          { positions: [ { i: '6', j: 1 } ], css_id: 'tinytable_css_kutp9rtxdfku4nr032nf',}, 
-          { positions: [ { i: '4', j: 1 } ], css_id: 'tinytable_css_t9wf4djta6exs65zhn1y',}, 
-          { positions: [ { i: '1', j: 1 }, { i: '2', j: 1 }, { i: '3', j: 1 }, { i: '5', j: 1 } ], css_id: 'tinytable_css_eyfh2sfqs7eibab6filq',}, 
-          { positions: [ { i: '0', j: 1 } ], css_id: 'tinytable_css_tcswl2khbaeil0kfw5ur',}, 
+          { positions: [ { i: '6', j: 2 }, { i: '6', j: 3 } ], css_id: 'tinytable_css_7izglavogm6z4wig4v0d',}, 
+          { positions: [ { i: '4', j: 2 }, { i: '4', j: 3 } ], css_id: 'tinytable_css_kikv4b8mslyaqlaj7q5g',}, 
+          { positions: [ { i: '1', j: 2 }, { i: '2', j: 2 }, { i: '3', j: 2 }, { i: '5', j: 2 }, { i: '1', j: 3 }, { i: '2', j: 3 }, { i: '3', j: 3 }, { i: '5', j: 3 } ], css_id: 'tinytable_css_fqxmzuublmelxqk8ll8a',}, 
+          { positions: [ { i: '0', j: 2 }, { i: '0', j: 3 } ], css_id: 'tinytable_css_v7n874qx6lp21034t4t1',}, 
+          { positions: [ { i: '6', j: 1 } ], css_id: 'tinytable_css_jry8v4hz2ys3gk7xncpr',}, 
+          { positions: [ { i: '4', j: 1 } ], css_id: 'tinytable_css_dx7oqsc8dueve46tdfub',}, 
+          { positions: [ { i: '1', j: 1 }, { i: '2', j: 1 }, { i: '3', j: 1 }, { i: '5', j: 1 } ], css_id: 'tinytable_css_vkrg9tdi1gyu66w52cps',}, 
+          { positions: [ { i: '0', j: 1 } ], css_id: 'tinytable_css_gnysgo54zi0a0siz01dd',}, 
           ];
 
           // Loop over the arrays to style the cells
           cellsToStyle.forEach(function (group) {
               group.positions.forEach(function (cell) {
-                  tableFns_xxsfq3e4cu3p1qeivu7t.styleCell(cell.i, cell.j, group.css_id);
+                  tableFns_bp0q2e0jk5fh7641e9cf.styleCell(cell.i, cell.j, group.css_id);
               });
           });
       });
     </script><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/vincentarelbundock/tinytable@main/inst/tinytable.css">
 <style>
     /* tinytable css entries after */
-    #tinytable_xxsfq3e4cu3p1qeivu7t td.tinytable_css_0so9e6e0u49cga4447ye, #tinytable_xxsfq3e4cu3p1qeivu7t th.tinytable_css_0so9e6e0u49cga4447ye {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.08em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center }
-    #tinytable_xxsfq3e4cu3p1qeivu7t td.tinytable_css_ftfjhim05adui06xd7tq, #tinytable_xxsfq3e4cu3p1qeivu7t th.tinytable_css_ftfjhim05adui06xd7tq {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center }
-    #tinytable_xxsfq3e4cu3p1qeivu7t td.tinytable_css_uzhunyslpnnbfkv30mfz, #tinytable_xxsfq3e4cu3p1qeivu7t th.tinytable_css_uzhunyslpnnbfkv30mfz { text-align: center }
-    #tinytable_xxsfq3e4cu3p1qeivu7t td.tinytable_css_i4c9xizcz8h1wszprkvs, #tinytable_xxsfq3e4cu3p1qeivu7t th.tinytable_css_i4c9xizcz8h1wszprkvs {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 1; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.08em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center }
-    #tinytable_xxsfq3e4cu3p1qeivu7t td.tinytable_css_kutp9rtxdfku4nr032nf, #tinytable_xxsfq3e4cu3p1qeivu7t th.tinytable_css_kutp9rtxdfku4nr032nf {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.08em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: left }
-    #tinytable_xxsfq3e4cu3p1qeivu7t td.tinytable_css_t9wf4djta6exs65zhn1y, #tinytable_xxsfq3e4cu3p1qeivu7t th.tinytable_css_t9wf4djta6exs65zhn1y {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: left }
-    #tinytable_xxsfq3e4cu3p1qeivu7t td.tinytable_css_eyfh2sfqs7eibab6filq, #tinytable_xxsfq3e4cu3p1qeivu7t th.tinytable_css_eyfh2sfqs7eibab6filq { text-align: left }
-    #tinytable_xxsfq3e4cu3p1qeivu7t td.tinytable_css_tcswl2khbaeil0kfw5ur, #tinytable_xxsfq3e4cu3p1qeivu7t th.tinytable_css_tcswl2khbaeil0kfw5ur {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 1; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.08em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: left }
+    #tinytable_bp0q2e0jk5fh7641e9cf td.tinytable_css_7izglavogm6z4wig4v0d, #tinytable_bp0q2e0jk5fh7641e9cf th.tinytable_css_7izglavogm6z4wig4v0d {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.08em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center }
+    #tinytable_bp0q2e0jk5fh7641e9cf td.tinytable_css_kikv4b8mslyaqlaj7q5g, #tinytable_bp0q2e0jk5fh7641e9cf th.tinytable_css_kikv4b8mslyaqlaj7q5g {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center }
+    #tinytable_bp0q2e0jk5fh7641e9cf td.tinytable_css_fqxmzuublmelxqk8ll8a, #tinytable_bp0q2e0jk5fh7641e9cf th.tinytable_css_fqxmzuublmelxqk8ll8a { text-align: center }
+    #tinytable_bp0q2e0jk5fh7641e9cf td.tinytable_css_v7n874qx6lp21034t4t1, #tinytable_bp0q2e0jk5fh7641e9cf th.tinytable_css_v7n874qx6lp21034t4t1 {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 1; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.08em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center }
+    #tinytable_bp0q2e0jk5fh7641e9cf td.tinytable_css_jry8v4hz2ys3gk7xncpr, #tinytable_bp0q2e0jk5fh7641e9cf th.tinytable_css_jry8v4hz2ys3gk7xncpr {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.08em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: left }
+    #tinytable_bp0q2e0jk5fh7641e9cf td.tinytable_css_dx7oqsc8dueve46tdfub, #tinytable_bp0q2e0jk5fh7641e9cf th.tinytable_css_dx7oqsc8dueve46tdfub {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: left }
+    #tinytable_bp0q2e0jk5fh7641e9cf td.tinytable_css_vkrg9tdi1gyu66w52cps, #tinytable_bp0q2e0jk5fh7641e9cf th.tinytable_css_vkrg9tdi1gyu66w52cps { text-align: left }
+    #tinytable_bp0q2e0jk5fh7641e9cf td.tinytable_css_gnysgo54zi0a0siz01dd, #tinytable_bp0q2e0jk5fh7641e9cf th.tinytable_css_gnysgo54zi0a0siz01dd {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 1; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.08em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: left }
     </style>
 <div class="container">
-      <table class="table tinytable" id="tinytable_xxsfq3e4cu3p1qeivu7t" style="width: auto; margin-left: auto; margin-right: auto;" data-quarto-disable-processing="true">
+      <table class="table tinytable" id="tinytable_bp0q2e0jk5fh7641e9cf" style="width: auto; margin-left: auto; margin-right: auto;" data-quarto-disable-processing="true">
 <thead><tr>
 <th scope="col" data-row="0" data-col="1"> </th>
                 <th scope="col" data-row="0" data-col="2">Constant</th>
@@ -384,12 +384,12 @@ confidence intervals:</p>
 <p>The same call with <code>output = "rddid_table.tex"</code> (or
 <code>.html</code>, <code>.md</code>, <code>.docx</code>) writes the
 table to a file;
-<code>write.csv(generics::tidy(fit), "rddid_estimate.csv", row.names = FALSE)</code>
+<code>write.csv(tidy(fit), "rddid_estimate.csv", row.names = FALSE)</code>
 writes the estimate table to a plain CSV file.</p>
-<p><code>gof_map</code> sets which rows of <code>glance()</code> appear
+<p><code>gof_map</code> sets which rows of <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code> appear
 below the estimates and their digits (<code>fmt</code>): here
 <code>h</code> with three digits and the number of observations. Without
-it, every column of <code>glance()</code> is listed and <code>h</code>
+it, every column of <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code> is listed and <code>h</code>
 prints with all its digits. The last line writes the estimate table to a
 plain CSV file.</p>
 </div>
@@ -575,7 +575,7 @@ Wald statistic has one contrast per type: year 2 against the year marked
 <code>(reference)</code>, the type’s first comparison year.</p>
 <p>One table for all four:</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">rbind</span>, <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">tc</span>, <span class="va">cs</span>, <span class="va">hg</span>, <span class="va">tr</span><span class="op">)</span>, <span class="fu">generics</span><span class="fu">::</span><span class="va"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">)</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">rbind</span>, <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">tc</span>, <span class="va">cs</span>, <span class="va">hg</span>, <span class="va">tr</span><span class="op">)</span>, <span class="va">tidy</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;                               test   statistic df      p.value</span></span>
 <span><span class="co">#&gt; 1                  type continuity  4.78163259  9 8.529133e-01</span></span>
 <span><span class="co">#&gt; 2            composition stability 28.11902600  6 8.923469e-05</span></span>
@@ -642,8 +642,8 @@ can under-cover.</li>
 <strong>The design.</strong> The choices behind an estimate (the RD
 period, the comparison periods, the trend assumption with its weights,
 the bandwidth rule and <code>h</code>, the sampling scheme) are in the
-first lines of the printout; <code>generics::glance(fit)</code> returns
-them as a one-row table.</li>
+first lines of the printout; <code>glance(fit)</code> returns them as a
+one-row table.</li>
 <li>
 <strong>The tests.</strong> When the running variable moves over
 time, the table above collects the four tests of the assumptions the

@@ -177,7 +177,7 @@ confint(fit)
 #>                  2.5 %   97.5 %
 #> Conventional 0.8449613 1.340457
 #> Robust       0.8485735 1.434187
-generics::tidy(fit)
+tidy(fit)
 #>           term estimate std.error statistic      p.value  conf.low conf.high
 #> 1 Conventional 1.092709 0.1264043  8.644556 5.401507e-18 0.8449613  1.340457
 #> 2       Robust 1.141380 0.1493939  7.640071 2.171020e-14 0.8485735  1.434187
@@ -185,7 +185,8 @@ generics::tidy(fit)
 
 [`coef()`](https://rdrr.io/r/stats/coef.html) returns the two point
 estimates and [`confint()`](https://rdrr.io/r/stats/confint.html) their
-confidence intervals. `tidy()` (from the generics package) returns one
+confidence intervals.
+[`tidy()`](https://generics.r-lib.org/reference/tidy.html) returns one
 row per estimate, so table makers such as modelsummary work with
 [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md)
 fits; [A table for a paper](#a-table-for-a-paper) below has an example.
@@ -223,10 +224,12 @@ period.
 
 ## A table for a paper
 
-`tidy()` gives the estimates and `glance()` the design (RD period,
-comparison periods, trend, bandwidth rule, `h`, scheme), which is what
-table makers read. With the modelsummary package installed, the two fits
-side by side, with confidence intervals:
+[`tidy()`](https://generics.r-lib.org/reference/tidy.html) gives the
+estimates and
+[`glance()`](https://generics.r-lib.org/reference/glance.html) the
+design (RD period, comparison periods, trend, bandwidth rule, `h`,
+scheme), which is what table makers read. With the modelsummary package
+installed, the two fits side by side, with confidence intervals:
 
 ``` r
 
@@ -247,14 +250,16 @@ modelsummary::modelsummary(
 
 The same call with `output = "rddid_table.tex"` (or `.html`, `.md`,
 `.docx`) writes the table to a file;
-`write.csv(generics::tidy(fit), "rddid_estimate.csv", row.names = FALSE)`
-writes the estimate table to a plain CSV file.
+`write.csv(tidy(fit), "rddid_estimate.csv", row.names = FALSE)` writes
+the estimate table to a plain CSV file.
 
-`gof_map` sets which rows of `glance()` appear below the estimates and
-their digits (`fmt`): here `h` with three digits and the number of
-observations. Without it, every column of `glance()` is listed and `h`
-prints with all its digits. The last line writes the estimate table to a
-plain CSV file.
+`gof_map` sets which rows of
+[`glance()`](https://generics.r-lib.org/reference/glance.html) appear
+below the estimates and their digits (`fmt`): here `h` with three digits
+and the number of observations. Without it, every column of
+[`glance()`](https://generics.r-lib.org/reference/glance.html) is listed
+and `h` prints with all its digits. The last line writes the estimate
+table to a plain CSV file.
 
 ## When the running variable moves over time
 
@@ -437,7 +442,7 @@ One table for all four:
 
 ``` r
 
-do.call(rbind, lapply(list(tc, cs, hg, tr), generics::tidy))
+do.call(rbind, lapply(list(tc, cs, hg, tr), tidy))
 #>                               test   statistic df      p.value
 #> 1                  type continuity  4.78163259  9 8.529133e-01
 #> 2            composition stability 28.11902600  6 8.923469e-05
@@ -504,7 +509,7 @@ is 1.
 - **The design.** The choices behind an estimate (the RD period, the
   comparison periods, the trend assumption with its weights, the
   bandwidth rule and `h`, the sampling scheme) are in the first lines of
-  the printout; `generics::glance(fit)` returns them as a one-row table.
+  the printout; `glance(fit)` returns them as a one-row table.
 - **The tests.** When the running variable moves over time, the table
   above collects the four tests of the assumptions the estimate relies
   on.

@@ -335,16 +335,16 @@ period, whose composition the estimate relies on.</p>
 <span>  <span class="fu"><a href="../reference/rd_homog.html">rd_homog</a></span><span class="op">(</span><span class="va">rddid_sim_pv</span>, y <span class="op">=</span> <span class="st">"Y"</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span><span class="op">)</span>,</span>
 <span>  <span class="fu"><a href="../reference/rd_trendcell.html">rd_trendcell</a></span><span class="op">(</span><span class="va">rddid_sim_pv</span>, y <span class="op">=</span> <span class="st">"Y"</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">rbind</span>, <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">tests</span>, <span class="fu">generics</span><span class="fu">::</span><span class="va"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">rbind</span>, <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">tests</span>, <span class="va">tidy</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;                               test   statistic df      p.value</span></span>
 <span><span class="co">#&gt; 1                  type continuity  4.78163259  9 8.529133e-01</span></span>
 <span><span class="co">#&gt; 2            composition stability 28.11902600  6 8.923469e-05</span></span>
 <span><span class="co">#&gt; 3          homogeneous confounding  0.46500200  2 7.925490e-01</span></span>
 <span><span class="co">#&gt; 4 constant within-type confounding  0.07832992  2 9.615921e-01</span></span></code></pre></div>
-<p><code>tidy()</code> (from the generics package) returns one row per
-test, so the four stack into one table for a paper or a table maker such
-as modelsummary. The composition-stability row is the joint-over-pairs
-statistic, whose p-value is approximate.</p>
+<p><code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code> returns one row per test, so the four stack into
+one table for a paper or a table maker such as modelsummary. The
+composition-stability row is the joint-over-pairs statistic, whose
+p-value is approximate.</p>
 <p>Together, the four results map onto the list at the top. A rejection
 of type continuity, or of constant within-type confounding, would call
 the estimate into question; so would a rejection of both composition

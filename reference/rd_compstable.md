@@ -261,7 +261,8 @@ nonparametric confidence intervals for regression-discontinuity designs.
 [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md) for
 the estimate;
 [rddid_sim_pv](https://dorleventer.github.io/rddid/reference/rddid_sim_pv.md)
-for example data; `tidy()` in
+for example data;
+[`tidy()`](https://generics.r-lib.org/reference/tidy.html) in
 [rddid-tidiers](https://dorleventer.github.io/rddid/reference/rddid-tidiers.md)
 for a one-row summary.
 

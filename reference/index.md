@@ -29,6 +29,10 @@ The RD-DID estimator and what to do with a fit.
   [`tidy(`*`<rd_homog>`*`)`](https://dorleventer.github.io/rddid/reference/rddid-tidiers.md)
   [`tidy(`*`<rd_trendcell>`*`)`](https://dorleventer.github.io/rddid/reference/rddid-tidiers.md)
   : Tidy output for RD-DID fits and validation tests
+- [`reexports`](https://dorleventer.github.io/rddid/reference/reexports.md)
+  [`tidy`](https://dorleventer.github.io/rddid/reference/reexports.md)
+  [`glance`](https://dorleventer.github.io/rddid/reference/reexports.md)
+  : Objects exported from other packages
 
 ## Check the assumptions
 

@@ -278,7 +278,7 @@ tests <- list(
   rd_homog(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3),
   rd_trendcell(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 )
-do.call(rbind, lapply(tests, generics::tidy))
+do.call(rbind, lapply(tests, tidy))
 #>                               test   statistic df      p.value
 #> 1                  type continuity  4.78163259  9 8.529133e-01
 #> 2            composition stability 28.11902600  6 8.923469e-05
@@ -286,10 +286,10 @@ do.call(rbind, lapply(tests, generics::tidy))
 #> 4 constant within-type confounding  0.07832992  2 9.615921e-01
 ```
 
-`tidy()` (from the generics package) returns one row per test, so the
-four stack into one table for a paper or a table maker such as
-modelsummary. The composition-stability row is the joint-over-pairs
-statistic, whose p-value is approximate.
+[`tidy()`](https://generics.r-lib.org/reference/tidy.html) returns one
+row per test, so the four stack into one table for a paper or a table
+maker such as modelsummary. The composition-stability row is the
+joint-over-pairs statistic, whose p-value is approximate.
 
 Together, the four results map onto the list at the top. A rejection of
 type continuity, or of constant within-type confounding, would call the

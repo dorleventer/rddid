@@ -2,6 +2,19 @@
 
 ## rddid 0.4.0.9000 (development)
 
+### 2026-10-08: `tidy()`/`glance()` always available; a no-Suggests check
+
+- `generics` moved from Suggests to Imports and its
+  [`tidy()`](https://generics.r-lib.org/reference/tidy.html)/[`glance()`](https://generics.r-lib.org/reference/glance.html)
+  are re-exported: `tidy(fit)` works after
+  [`library(rddid)`](https://github.com/dorleventer/rddid) without
+  `generics::` and without installing anything else. No numerical
+  change.
+- New workflow `check-no-suggests.yaml`: R CMD check with only the hard
+  dependencies installed (plus testthat, knitr, rmarkdown), so every use
+  of ggplot2, modelsummary or broom stays guarded. `broom` added to
+  Suggests (the Get-started modelsummary chunk needs it).
+
 ### 2026-10-08: second bug-hunt round (input handling; no numerical change on valid input)
 
 - [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md)
@@ -48,10 +61,11 @@
   comparison periods print in time order.
 - Tests: console snapshots (`tests/testthat/_snaps/`) and one regression
   test per fix.
-- Also: `tidy()` of a fit honours `conf.int` and `conf.level`;
-  DESCRIPTION cites the paper and has a shorter Title; `CITATION.cff`;
-  lifecycle badge; the How-it-works article is guarded on ggplot2;
-  rdrobust skips removed from the tests.
+- Also: [`tidy()`](https://generics.r-lib.org/reference/tidy.html) of a
+  fit honours `conf.int` and `conf.level`; DESCRIPTION cites the paper
+  and has a shorter Title; `CITATION.cff`; lifecycle badge; the
+  How-it-works article is guarded on ggplot2; rdrobust skips removed
+  from the tests.
 
 ### 2026-10-08: review round on the plots, the console and the site
 
@@ -67,9 +81,10 @@
   everywhere; legends keep no internal names when a theme is replaced.
 - **Console**: [`summary()`](https://rdrr.io/r/base/summary.html)’s
   per-period table is aligned with its (time-ordered) labels — the
-  previous commit had scrambled the numbers; `glance()` is one row under
-  every bandwidth rule (`$h` used to partial-match `h_by_period`);
-  shorter scheme labels;
+  previous commit had scrambled the numbers;
+  [`glance()`](https://generics.r-lib.org/reference/glance.html) is one
+  row under every bandwidth rule (`$h` used to partial-match
+  `h_by_period`); shorter scheme labels;
   [`summary()`](https://rdrr.io/r/base/summary.html) no longer repeats
   the print hint; `(detected)` only when the scheme was auto-detected;
   [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md)
@@ -208,8 +223,11 @@
   [`coef()`](https://rdrr.io/r/stats/coef.html),
   [`confint()`](https://rdrr.io/r/stats/confint.html),
   [`nobs()`](https://rdrr.io/r/stats/nobs.html) for `rddid` objects, and
-  broom-style `tidy()`/`glance()` for fits and `tidy()` for the four
-  validation tests (registered for the `generics` package, so
+  broom-style
+  [`tidy()`](https://generics.r-lib.org/reference/tidy.html)/[`glance()`](https://generics.r-lib.org/reference/glance.html)
+  for fits and
+  [`tidy()`](https://generics.r-lib.org/reference/tidy.html) for the
+  four validation tests (registered for the `generics` package, so
   `modelsummary` tables work).
 - **Printing.** [`print()`](https://rdrr.io/r/base/print.html) of a fit
   now shows the estimand and period in words, the sampling scheme in
