@@ -20,7 +20,10 @@ fmt <- function(x, d = 3) formatC(x, format = "f", digits = d)
 
 `bwselect` picks the rule. Whatever the rule,
 `fit$bandwidth$h_by_period` and `fit$bandwidth$b_by_period` hold the
-bandwidths used in each period, named by period (the RD period first).
+bandwidths used in each period, named by period (stored with the RD
+period first; the printout and
+[`summary()`](https://rdrr.io/r/base/summary.html) list them in time
+order).
 
 ### The common bandwidth: `bwselect = "joint"` (the default)
 
@@ -194,7 +197,7 @@ summary(fit_pv)
 #>   Comparison periods: 1, 2   (constant confounding trend; weights 0.5, 0.5)
 #>   Sampling scheme: panel, running variable varies over time: some units change side (detected from the data)
 #>   Bandwidth: common h = 0.2367 (rule "joint", AMSE-optimal for the aggregate)
-#>   Pilot bandwidth b (period = value): 3 = 0.3933, 1 = 0.3889, 2 = 0.3847
+#>   Pilot bandwidth b (period = value): 1 = 0.3889, 2 = 0.3847, 3 = 0.3933
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI
 #>   Conventional                 0.9654     0.1933    4.99   <0.001   [0.5866, 1.3442]
@@ -202,11 +205,11 @@ summary(fit_pv)
 #> 
 #>   summary() shows the per-period fits and the s.e. under every sampling scheme.
 #> 
-#>   Per-period local-linear fits (estimate = sum of coef x jump):
+#>   Per-period local-linear fits, in time order (estimate = sum of coef x jump):
 #>   period   role          coef      n        h        b       jump      s.e.  jump (bc) s.e. (rb)
-#>   3        RD               1   1000   0.2367   0.3933     1.7077    0.1559     1.7757    0.1818
-#>   1        comparison    -0.5   1000   0.2367   0.3889     0.7519    0.1593     0.7893    0.1893
-#>   2        comparison    -0.5   1000   0.2367   0.3847     0.7327    0.1824     0.7974    0.2231
+#>   1        comparison    -0.5   1000   0.2367   0.3933     1.7077    0.1559     1.7757    0.1818
+#>   2        comparison    -0.5   1000   0.2367   0.3889     0.7519    0.1593     0.7893    0.1893
+#>   3        RD               1   1000   0.2367   0.3847     0.7327    0.1824     0.7974    0.2231
 #> 
 #>   Robust s.e. under each sampling scheme:  cross-section 0.2333   panel, fixed R 0.2254   panel, varying R 0.2292
 #>   (the printed s.e. is the one for scheme "pv"; the others are shown for comparison)

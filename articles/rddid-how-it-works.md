@@ -170,7 +170,7 @@ res
 #> RD-DID estimate of the ATT in period 3
 #>   Comparison periods: 1, 2   (constant confounding trend; weights 0.5, 0.5)
 #>   Sampling scheme: panel, running variable fixed over time: no unit changes side of the cutoff (detected from the data)
-#>   Bandwidth: per-period CCT MSE-optimal (rule "cct"): h (period = value) 3 = 0.403, 1 = 0.3952, 2 = 0.3109
+#>   Bandwidth: per-period CCT MSE-optimal (rule "cct"): h (period = value) 1 = 0.3952, 2 = 0.3109, 3 = 0.403
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI
 #>   Conventional                 1.0788     0.0888   12.15   <0.001   [0.9047, 1.2528]
@@ -309,7 +309,7 @@ res_atu
 #>   Comparison periods: 1, 2   (constant confounding trend; weights 0.5, 0.5)
 #>   Sampling scheme: panel, running variable fixed over time: no unit changes side of the cutoff (detected from the data)
 #>   Bandwidth: common h = 0.3025 (rule "joint", AMSE-optimal for the aggregate)
-#>   Pilot bandwidth b (period = value): 3 = 0.4415, 1 = 0.452, 2 = 0.4691
+#>   Pilot bandwidth b (period = value): 1 = 0.452, 2 = 0.4691, 3 = 0.4415
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI
 #>   Conventional                 1.0874     0.1008   10.79   <0.001   [0.8899, 1.2850]

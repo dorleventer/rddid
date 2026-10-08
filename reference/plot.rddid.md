@@ -1,11 +1,11 @@
 # Plot the per-period RD fits behind an RD-DID estimate
 
-One panel per period, the RD period first: the outcome averaged within
-`bins` equal-width bins of the running variable, and the two
-local-linear fits of that period drawn over their bandwidth on each side
-of the cutoff. The jump between the two lines at the cutoff is the
-period's discontinuity \\D_t\\; the RD-DID estimate is the RD-period
-jump minus the weighted comparison-period jumps (see
+One panel per period, in time order: the outcome averaged within `bins`
+equal-width bins of the running variable, and the two local-linear fits
+of that period drawn over their bandwidth on each side of the cutoff.
+The jump between the two lines at the cutoff is the period's
+discontinuity \\D_t\\; the RD-DID estimate is the RD-period jump minus
+the weighted comparison-period jumps (see
 [`summary()`](https://rdrr.io/r/base/summary.html)).
 
 ## Usage

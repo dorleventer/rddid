@@ -59,7 +59,7 @@ fit
 #>   Comparison periods: 1, 2   (constant confounding trend; weights 0.5, 0.5)
 #>   Sampling scheme: panel, running variable fixed over time: no unit changes side of the cutoff (detected from the data)
 #>   Bandwidth: common h = 0.2672 (rule "joint", AMSE-optimal for the aggregate)
-#>   Pilot bandwidth b (period = value): 3 = 0.3951, 1 = 0.4102, 2 = 0.3868
+#>   Pilot bandwidth b (period = value): 1 = 0.4102, 2 = 0.3868, 3 = 0.3951
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI
 #>   Conventional                 1.0927     0.1264    8.64   <0.001   [0.8450, 1.3405]
@@ -93,7 +93,7 @@ Line by line:
   uses one main bandwidth `h` in every period, chosen to minimize the
   asymptotic mean squared error of the RD-DID estimate.
   **`Pilot bandwidth b (period = value)`** lists the bandwidth of the
-  bias correction in each period, the RD period first.
+  bias correction in each period, in time order.
 - **The two rows.** `Conventional` is the local-linear estimate with its
   conventional standard error. `Robust (bias-corrected)` is the
   bias-corrected estimate with its robust standard error (Calonico,
@@ -112,10 +112,10 @@ fit$fits[["3"]]
 #>   D (bias-corrected) = +1.6854  (se 0.1931)
 ```
 
-Its jump, 1.66, is that naive RD estimate, whose target is 1.5, not 1.
+Its jump, 0.63, is that naive RD estimate, whose target is 1.5, not 1.
 [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md)
-subtracts the average of the year-1 and year-2 jumps, (0.51 + 0.63) / 2
-= 0.57, its estimate of the confounding jump of 0.5.
+subtracts the average of the year-1 and year-2 jumps, (1.66 + 0.51) / 2
+= 1.09, its estimate of the confounding jump of 0.5.
 
 ## Summary, coefficients and tables
 
@@ -126,7 +126,7 @@ summary(fit)
 #>   Comparison periods: 1, 2   (constant confounding trend; weights 0.5, 0.5)
 #>   Sampling scheme: panel, running variable fixed over time: no unit changes side of the cutoff (detected from the data)
 #>   Bandwidth: common h = 0.2672 (rule "joint", AMSE-optimal for the aggregate)
-#>   Pilot bandwidth b (period = value): 3 = 0.3951, 1 = 0.4102, 2 = 0.3868
+#>   Pilot bandwidth b (period = value): 1 = 0.4102, 2 = 0.3868, 3 = 0.3951
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI
 #>   Conventional                 1.0927     0.1264    8.64   <0.001   [0.8450, 1.3405]
@@ -134,11 +134,11 @@ summary(fit)
 #> 
 #>   summary() shows the per-period fits and the s.e. under every sampling scheme.
 #> 
-#>   Per-period local-linear fits (estimate = sum of coef x jump):
+#>   Per-period local-linear fits, in time order (estimate = sum of coef x jump):
 #>   period   role          coef      n        h        b       jump      s.e.  jump (bc) s.e. (rb)
-#>   3        RD               1   1000   0.2672   0.3951     1.6640    0.1641     1.6854    0.1931
-#>   1        comparison    -0.5   1000   0.2672   0.4102     0.5119    0.1688     0.4639    0.1948
-#>   2        comparison    -0.5   1000   0.2672   0.3868     0.6306    0.1686     0.6240    0.2012
+#>   1        comparison    -0.5   1000   0.2672   0.3951     1.6640    0.1641     1.6854    0.1931
+#>   2        comparison    -0.5   1000   0.2672   0.4102     0.5119    0.1688     0.4639    0.1948
+#>   3        RD               1   1000   0.2672   0.3868     0.6306    0.1686     0.6240    0.2012
 #> 
 #>   Robust s.e. under each sampling scheme:  cross-section 0.2385   panel, fixed R 0.1494   panel, varying R 0.1494
 #>   (the printed s.e. is the one for scheme "pc"; the others are shown for comparison)
@@ -149,8 +149,8 @@ fits. Each row gives the period’s role, its coefficient in the estimate
 (+1 for the RD period, minus its weight for a comparison period), its
 number of observations, its bandwidths, and its jump with standard
 error, conventional (`jump`, `s.e.`) and bias-corrected (`jump (bc)`,
-`s.e. (rb)`). The estimate is the sum of coefficient times jump: 1.664 -
-0.5 × 0.512 - 0.5 × 0.631 = 1.093.
+`s.e. (rb)`). The estimate is the sum of coefficient times jump: 0.631 -
+0.5 × 1.664 - 0.5 × 0.512 = 1.093.
 
 The last line gives the robust standard error under each of the three
 sampling schemes. The printout uses the one that matches how the data
@@ -192,7 +192,7 @@ fit_lin
 #>   Comparison periods: 1, 2   (linear confounding trend; weights -1, 2)
 #>   Sampling scheme: panel, running variable fixed over time: no unit changes side of the cutoff (detected from the data)
 #>   Bandwidth: common h = 0.2672 (rule "joint", AMSE-optimal for the aggregate)
-#>   Pilot bandwidth b (period = value): 3 = 0.3951, 1 = 0.4102, 2 = 0.3869
+#>   Pilot bandwidth b (period = value): 1 = 0.4102, 2 = 0.3869, 3 = 0.3951
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI
 #>   Conventional                 0.9147     0.2582    3.54   <0.001   [0.4087, 1.4207]
@@ -232,7 +232,7 @@ rddid(sim_atu, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, estimand = 
 #>   Comparison periods: 1, 2   (constant confounding trend; weights 0.5, 0.5)
 #>   Sampling scheme: panel, running variable fixed over time: no unit changes side of the cutoff (detected from the data)
 #>   Bandwidth: common h = 0.2672 (rule "joint", AMSE-optimal for the aggregate)
-#>   Pilot bandwidth b (period = value): 3 = 0.3951, 1 = 0.4102, 2 = 0.3868
+#>   Pilot bandwidth b (period = value): 1 = 0.4102, 2 = 0.3868, 3 = 0.3951
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI
 #>   Conventional                 1.0927     0.1264    8.64   <0.001   [0.8450, 1.3405]

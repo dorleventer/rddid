@@ -82,7 +82,7 @@ rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 #>   Comparison periods: 1, 2   (constant confounding trend; weights 0.5, 0.5)
 #>   Sampling scheme: panel, running variable fixed over time: no unit changes side of the cutoff (detected from the data)
 #>   Bandwidth: common h = 0.2672 (rule "joint", AMSE-optimal for the aggregate)
-#>   Pilot bandwidth b (period = value): 3 = 0.3951, 1 = 0.4102, 2 = 0.3868
+#>   Pilot bandwidth b (period = value): 1 = 0.4102, 2 = 0.3868, 3 = 0.3951
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI
 #>   Conventional                 1.0927     0.1264    8.64   <0.001   [0.8450, 1.3405]

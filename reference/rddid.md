@@ -403,7 +403,7 @@ fit            # the estimate, its standard error and confidence interval
 #>   Comparison periods: 1, 2   (constant confounding trend; weights 0.5, 0.5)
 #>   Sampling scheme: panel, running variable fixed over time: no unit changes side of the cutoff (detected from the data)
 #>   Bandwidth: common h = 0.2672 (rule "joint", AMSE-optimal for the aggregate)
-#>   Pilot bandwidth b (period = value): 3 = 0.3951, 1 = 0.4102, 2 = 0.3868
+#>   Pilot bandwidth b (period = value): 1 = 0.4102, 2 = 0.3868, 3 = 0.3951
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI
 #>   Conventional                 1.0927     0.1264    8.64   <0.001   [0.8450, 1.3405]
@@ -415,7 +415,7 @@ summary(fit)   # the jump in every period, and the s.e. under each scheme
 #>   Comparison periods: 1, 2   (constant confounding trend; weights 0.5, 0.5)
 #>   Sampling scheme: panel, running variable fixed over time: no unit changes side of the cutoff (detected from the data)
 #>   Bandwidth: common h = 0.2672 (rule "joint", AMSE-optimal for the aggregate)
-#>   Pilot bandwidth b (period = value): 3 = 0.3951, 1 = 0.4102, 2 = 0.3868
+#>   Pilot bandwidth b (period = value): 1 = 0.4102, 2 = 0.3868, 3 = 0.3951
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI
 #>   Conventional                 1.0927     0.1264    8.64   <0.001   [0.8450, 1.3405]
@@ -423,11 +423,11 @@ summary(fit)   # the jump in every period, and the s.e. under each scheme
 #> 
 #>   summary() shows the per-period fits and the s.e. under every sampling scheme.
 #> 
-#>   Per-period local-linear fits (estimate = sum of coef x jump):
+#>   Per-period local-linear fits, in time order (estimate = sum of coef x jump):
 #>   period   role          coef      n        h        b       jump      s.e.  jump (bc) s.e. (rb)
-#>   3        RD               1   1000   0.2672   0.3951     1.6640    0.1641     1.6854    0.1931
-#>   1        comparison    -0.5   1000   0.2672   0.4102     0.5119    0.1688     0.4639    0.1948
-#>   2        comparison    -0.5   1000   0.2672   0.3868     0.6306    0.1686     0.6240    0.2012
+#>   1        comparison    -0.5   1000   0.2672   0.3951     1.6640    0.1641     1.6854    0.1931
+#>   2        comparison    -0.5   1000   0.2672   0.4102     0.5119    0.1688     0.4639    0.1948
+#>   3        RD               1   1000   0.2672   0.3868     0.6306    0.1686     0.6240    0.2012
 #> 
 #>   Robust s.e. under each sampling scheme:  cross-section 0.2385   panel, fixed R 0.1494   panel, varying R 0.1494
 #>   (the printed s.e. is the one for scheme "pc"; the others are shown for comparison)
@@ -444,7 +444,7 @@ rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
 #>   Comparison periods: 1, 2   (linear confounding trend; weights -1, 2)
 #>   Sampling scheme: panel, running variable fixed over time: no unit changes side of the cutoff (detected from the data)
 #>   Bandwidth: common h = 0.2672 (rule "joint", AMSE-optimal for the aggregate)
-#>   Pilot bandwidth b (period = value): 3 = 0.3951, 1 = 0.4102, 2 = 0.3869
+#>   Pilot bandwidth b (period = value): 1 = 0.4102, 2 = 0.3869, 3 = 0.3951
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI
 #>   Conventional                 0.9147     0.2582    3.54   <0.001   [0.4087, 1.4207]
