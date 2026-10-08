@@ -413,6 +413,10 @@ each printout in detail.
 - [Checking the identification
   assumptions](https://dorleventer.github.io/rddid/articles/rddid-validation-tests.md):
   the four tests one at a time.
+- [Pictures of the
+  checks](https://dorleventer.github.io/rddid/articles/rddid-plots.md):
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) on a fit and
+  on each test, and the switchers picture.
 
 ## References
 

@@ -126,6 +126,25 @@ An object of class `"rd_typecont"`, a list with:
 
   `"att"` or `"atu"`, as passed.
 
+- `fits`:
+
+  the per-cell
+  [`rd_period()`](https://dorleventer.github.io/rddid/reference/rd_period.md)
+  fits, a list-matrix indexed by type and period (`NULL` where a cell
+  could not be fitted).
+
+- `data`:
+
+  the typed data by period: for each period a data frame with `id`, `R`
+  (the running variable) and `type`.
+
+- `sides`:
+
+  one row per unit with its running variable (`R_<period>`) and side of
+  the cutoff (`side_<period>`, `"+"`/`"-"`) in every period;
+  [`plot.rd_typecont()`](https://dorleventer.github.io/rddid/reference/plot.rd_typecont.md)
+  reads it.
+
 - `call`:
 
   the matched call.
@@ -213,6 +232,11 @@ for example data; `tidy()` in
 for a one-row summary.
 
 Other tests of the assumptions:
+[`plot.rd_compstable()`](https://dorleventer.github.io/rddid/reference/plot.rd_compstable.md),
+[`plot.rd_homog()`](https://dorleventer.github.io/rddid/reference/plot.rd_homog.md),
+[`plot.rd_trendcell()`](https://dorleventer.github.io/rddid/reference/plot.rd_trendcell.md),
+[`plot.rd_typecont()`](https://dorleventer.github.io/rddid/reference/plot.rd_typecont.md),
+[`plot_switchers()`](https://dorleventer.github.io/rddid/reference/plot_switchers.md),
 [`rd_compstable()`](https://dorleventer.github.io/rddid/reference/rd_compstable.md),
 [`rd_homog()`](https://dorleventer.github.io/rddid/reference/rd_homog.md),
 [`rd_trendcell()`](https://dorleventer.github.io/rddid/reference/rd_trendcell.md)

@@ -58,6 +58,7 @@ nonparametric confidence intervals for regression-discontinuity designs.
 ## See also
 
 Other RD-DID estimation:
+[`plot.rddid()`](https://dorleventer.github.io/rddid/reference/plot.rddid.md),
 [`rd_period()`](https://dorleventer.github.io/rddid/reference/rd_period.md),
 [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md)
 

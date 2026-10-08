@@ -41,6 +41,7 @@ confounding-trend assumption: constant (equal weights) or linear in time."></hea
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/rddid-how-it-works.html">How rddid() computes the estimate</a></li>
     <li><a class="dropdown-item" href="../articles/rddid-options.html">Bandwidth rules and sampling schemes</a></li>
     <li><a class="dropdown-item" href="../articles/rddid-validation-tests.html">Checking the identification assumptions</a></li>
+    <li><a class="dropdown-item" href="../articles/rddid-plots.html">Pictures of the checks</a></li>
   </ul></li>
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -295,6 +296,10 @@ period first (index by name).</p></dd>
 <dt><code>level</code>, <code>c</code>, <code>p</code>, <code>q</code>, <code>kernel</code></dt>
 <dd><p>as passed.</p></dd>
 
+<dt><code>data</code></dt>
+<dd><p>the per-period data used (a named list of data frames with
+columns <code>y</code>, <code>x</code>, <code>id</code>), for <code><a href="plot.rddid.html">plot.rddid()</a></code>.</p></dd>
+
 <dt><code>call</code></dt>
 <dd><p>the matched call.</p></dd>
 
@@ -424,6 +429,7 @@ confidence intervals for regression-discontinuity designs. <em>Econometrica</em>
 <code><a href="rd_typecont.html">rd_typecont()</a></code>, <code><a href="rd_compstable.html">rd_compstable()</a></code>, <code><a href="rd_homog.html">rd_homog()</a></code> and <code><a href="rd_trendcell.html">rd_trendcell()</a></code>; the
 example data <a href="rddid_sim.html">rddid_sim</a> and <a href="rddid_sim_pv.html">rddid_sim_pv</a>.</p>
 <p>Other RD-DID estimation:
+<code><a href="plot.rddid.html">plot.rddid()</a></code>,
 <code><a href="rd_bw_cct.html">rd_bw_cct()</a></code>,
 <code><a href="rd_period.html">rd_period()</a></code></p></div>
     </div>

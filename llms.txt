@@ -80,6 +80,11 @@ The other three are
 [`rd_homog()`](https://dorleventer.github.io/rddid/reference/rd_homog.md)
 and
 [`rd_trendcell()`](https://dorleventer.github.io/rddid/reference/rd_trendcell.md).
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) draws any fit
+or test (one RD plot per period; the binned type shares with their
+fitted lines; the within-type jumps), and
+[`plot_switchers()`](https://dorleventer.github.io/rddid/reference/plot_switchers.md)
+shows who changes side of the cutoff between two periods.
 
 ## Learn more
 
@@ -107,6 +112,8 @@ The RD-DID estimator and what to do with a fit.
 - [`summary(`*`<rddid>`*`)`](https://dorleventer.github.io/rddid/reference/summary.rddid.md)
   [`print(`*`<summary.rddid>`*`)`](https://dorleventer.github.io/rddid/reference/summary.rddid.md)
   : Summary of an RD-DID fit
+- [`plot(`*`<rddid>`*`)`](https://dorleventer.github.io/rddid/reference/plot.rddid.md)
+  : Plot the per-period RD fits behind an RD-DID estimate
 - [`coef(`*`<rddid>`*`)`](https://dorleventer.github.io/rddid/reference/rddid-methods.md)
   [`confint(`*`<rddid>`*`)`](https://dorleventer.github.io/rddid/reference/rddid-methods.md)
   [`nobs(`*`<rddid>`*`)`](https://dorleventer.github.io/rddid/reference/rddid-methods.md)
@@ -132,6 +139,21 @@ over time, so that units can change side of the cutoff between periods.
   : Test of homogeneous confounding
 - [`rd_trendcell()`](https://dorleventer.github.io/rddid/reference/rd_trendcell.md)
   : Test of constant within-type confounding
+- [`plot(`*`<rd_typecont>`*`)`](https://dorleventer.github.io/rddid/reference/plot.rd_typecont.md)
+  : Plot a type-continuity test: one comparison period against one RD
+  period
+- [`plot(`*`<rd_compstable>`*`)`](https://dorleventer.github.io/rddid/reference/plot.rd_compstable.md)
+  : Plot a composition-stability test: the reflected sample of one pair
+  of periods
+- [`plot(`*`<rd_homog>`*`)`](https://dorleventer.github.io/rddid/reference/plot.rd_homog.md)
+  : Plot a homogeneous-confounding test: the confounding jump of each
+  type, by comparison period
+- [`plot(`*`<rd_trendcell>`*`)`](https://dorleventer.github.io/rddid/reference/plot.rd_trendcell.md)
+  : Plot a constant-within-type-confounding test: each type's
+  confounding jump over time
+- [`plot_switchers()`](https://dorleventer.github.io/rddid/reference/plot_switchers.md)
+  : Plot the switchers: the running variable in one period against
+  another
 
 ## Building blocks
 
@@ -167,3 +189,5 @@ Simulated panels for trying things out.
   schemes](https://dorleventer.github.io/rddid/articles/rddid-options.md):
 - [Checking the identification
   assumptions](https://dorleventer.github.io/rddid/articles/rddid-validation-tests.md):
+- [Pictures of the
+  checks](https://dorleventer.github.io/rddid/articles/rddid-plots.md):

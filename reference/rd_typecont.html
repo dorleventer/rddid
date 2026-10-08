@@ -41,6 +41,7 @@ not informative."></head><body>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/rddid-how-it-works.html">How rddid() computes the estimate</a></li>
     <li><a class="dropdown-item" href="../articles/rddid-options.html">Bandwidth rules and sampling schemes</a></li>
     <li><a class="dropdown-item" href="../articles/rddid-validation-tests.html">Checking the identification assumptions</a></li>
+    <li><a class="dropdown-item" href="../articles/rddid-plots.html">Pictures of the checks</a></li>
   </ul></li>
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -175,6 +176,19 @@ argument as passed.</p></dd>
 <dt><code>estimand</code></dt>
 <dd><p><code>"att"</code> or <code>"atu"</code>, as passed.</p></dd>
 
+<dt><code>fits</code></dt>
+<dd><p>the per-cell <code><a href="rd_period.html">rd_period()</a></code> fits, a list-matrix indexed by type and
+period (<code>NULL</code> where a cell could not be fitted).</p></dd>
+
+<dt><code>data</code></dt>
+<dd><p>the typed data by period: for each period a data frame with <code>id</code>, <code>R</code>
+(the running variable) and <code>type</code>.</p></dd>
+
+<dt><code>sides</code></dt>
+<dd><p>one row per unit with its running variable (<code>R_&lt;period&gt;</code>) and side of
+the cutoff (<code>side_&lt;period&gt;</code>, <code>"+"</code>/<code>"-"</code>) in every period; <code><a href="plot.rd_typecont.html">plot.rd_typecont()</a></code>
+reads it.</p></dd>
+
 <dt><code>call</code></dt>
 <dd><p>the matched call.</p></dd>
 
@@ -261,6 +275,11 @@ confidence intervals for regression-discontinuity designs. <em>Econometrica</em>
     <div class="dont-index"><p><code><a href="rddid.html">rddid()</a></code> for the estimate; <a href="rddid_sim_pv.html">rddid_sim_pv</a> for example data;
 <code>tidy()</code> in <a href="rddid-tidiers.html">rddid-tidiers</a> for a one-row summary.</p>
 <p>Other tests of the assumptions:
+<code><a href="plot.rd_compstable.html">plot.rd_compstable()</a></code>,
+<code><a href="plot.rd_homog.html">plot.rd_homog()</a></code>,
+<code><a href="plot.rd_trendcell.html">plot.rd_trendcell()</a></code>,
+<code><a href="plot.rd_typecont.html">plot.rd_typecont()</a></code>,
+<code><a href="plot_switchers.html">plot_switchers()</a></code>,
 <code><a href="rd_compstable.html">rd_compstable()</a></code>,
 <code><a href="rd_homog.html">rd_homog()</a></code>,
 <code><a href="rd_trendcell.html">rd_trendcell()</a></code></p></div>

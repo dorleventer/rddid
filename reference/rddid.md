@@ -248,6 +248,12 @@ An object of class `"rddid"`, a list with:
 
   as passed.
 
+- `data`:
+
+  the per-period data used (a named list of data frames with columns
+  `y`, `x`, `id`), for
+  [`plot.rddid()`](https://dorleventer.github.io/rddid/reference/plot.rddid.md).
+
 - `call`:
 
   the matched call.
@@ -383,6 +389,7 @@ and
 [rddid_sim_pv](https://dorleventer.github.io/rddid/reference/rddid_sim_pv.md).
 
 Other RD-DID estimation:
+[`plot.rddid()`](https://dorleventer.github.io/rddid/reference/plot.rddid.md),
 [`rd_bw_cct()`](https://dorleventer.github.io/rddid/reference/rd_bw_cct.md),
 [`rd_period()`](https://dorleventer.github.io/rddid/reference/rd_period.md)
 

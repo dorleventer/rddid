@@ -13,3 +13,5 @@
   schemes](https://dorleventer.github.io/rddid/articles/rddid-options.md):
 - [Checking the identification
   assumptions](https://dorleventer.github.io/rddid/articles/rddid-validation-tests.md):
+- [Pictures of the
+  checks](https://dorleventer.github.io/rddid/articles/rddid-plots.md):

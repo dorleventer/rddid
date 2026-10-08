@@ -21,6 +21,7 @@
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/rddid-how-it-works.html">How rddid() computes the estimate</a></li>
     <li><a class="dropdown-item" href="../articles/rddid-options.html">Bandwidth rules and sampling schemes</a></li>
     <li><a class="dropdown-item" href="../articles/rddid-validation-tests.html">Checking the identification assumptions</a></li>
+    <li><a class="dropdown-item" href="../articles/rddid-plots.html">Pictures of the checks</a></li>
   </ul></li>
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
 <li class="active nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
@@ -41,6 +42,12 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.4.0.9000" id="rddid-0409000-development">rddid 0.4.0.9000 (development)<a class="anchor" aria-label="anchor" href="#rddid-0409000-development"></a></h2>
+<div class="section level3">
+<h3 id="id_2026-plots-0-4-0-9000">2026-10-08: plots<a class="anchor" aria-label="anchor" href="#id_2026-plots-0-4-0-9000"></a></h3>
+<ul><li>
+<code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> methods, mirroring the validation figures of the paper’s application: <code>plot(fit)</code> draws the per-period RD plots behind an <code><a href="../reference/rddid.html">rddid()</a></code> estimate (binned outcome, local-linear fits on each side, the jump at the cutoff); <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> of an <code>rd_typecont</code> or <code>rd_compstable</code> result draws the binned share of each type with its fitted lines on both sides of the (artificial) cutoff; <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> of an <code>rd_homog</code> or <code>rd_trendcell</code> result draws the within-type confounding jumps with 95% intervals by period. <code><a href="../reference/plot_switchers.html">plot_switchers()</a></code> draws the running variable in one period against another and counts the units that change side. All return ggplot objects (ggplot2 in Suggests). New article <em>Pictures of the checks</em>.</li>
+<li>To feed the plots, the objects now also carry what the methods read: <code>rddid()$data</code> (the per-period data used), <code>rd_typecont()$fits</code>/<code>$data</code>, each <code><a href="../reference/rd_compstable.html">rd_compstable()</a></code> pair’s <code>fits</code> and <code>sample</code>, and <code>rd_typecont()$meta$c</code>. Nothing else changed.</li>
+</ul></div>
 <div class="section level3">
 <h3 id="id_2026-five-bug-fixes-found-during-the-ux-sweep-0-4-0-9000">2026-10-08: five bug fixes found during the UX sweep<a class="anchor" aria-label="anchor" href="#id_2026-five-bug-fixes-found-during-the-ux-sweep-0-4-0-9000"></a></h3>
 <ul><li>

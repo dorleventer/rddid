@@ -2,6 +2,30 @@
 
 ## rddid 0.4.0.9000 (development)
 
+### 2026-10-08: plots
+
+- [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods,
+  mirroring the validation figures of the paper’s application:
+  `plot(fit)` draws the per-period RD plots behind an
+  [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md)
+  estimate (binned outcome, local-linear fits on each side, the jump at
+  the cutoff); [`plot()`](https://rdrr.io/r/graphics/plot.default.html)
+  of an `rd_typecont` or `rd_compstable` result draws the binned share
+  of each type with its fitted lines on both sides of the (artificial)
+  cutoff; [`plot()`](https://rdrr.io/r/graphics/plot.default.html) of an
+  `rd_homog` or `rd_trendcell` result draws the within-type confounding
+  jumps with 95% intervals by period.
+  [`plot_switchers()`](https://dorleventer.github.io/rddid/reference/plot_switchers.md)
+  draws the running variable in one period against another and counts
+  the units that change side. All return ggplot objects (ggplot2 in
+  Suggests). New article *Pictures of the checks*.
+- To feed the plots, the objects now also carry what the methods read:
+  `rddid()$data` (the per-period data used),
+  `rd_typecont()$fits`/`$data`, each
+  [`rd_compstable()`](https://dorleventer.github.io/rddid/reference/rd_compstable.md)
+  pair’s `fits` and `sample`, and `rd_typecont()$meta$c`. Nothing else
+  changed.
+
 ### 2026-10-08: five bug fixes found during the UX sweep
 
 - [`rd_homog()`](https://dorleventer.github.io/rddid/reference/rd_homog.md)

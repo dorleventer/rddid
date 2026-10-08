@@ -80,6 +80,11 @@ The other three are
 [`rd_homog()`](https://dorleventer.github.io/rddid/reference/rd_homog.md)
 and
 [`rd_trendcell()`](https://dorleventer.github.io/rddid/reference/rd_trendcell.md).
+[`plot()`](https://rdrr.io/r/graphics/plot.default.html) draws any fit
+or test (one RD plot per period; the binned type shares with their
+fitted lines; the within-type jumps), and
+[`plot_switchers()`](https://dorleventer.github.io/rddid/reference/plot_switchers.md)
+shows who changes side of the cutoff between two periods.
 
 ## Learn more
 

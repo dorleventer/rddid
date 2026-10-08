@@ -156,7 +156,11 @@ An object of class `"rd_compstable"`, a list with:
   `scheme` (the scheme used for the pair); and `n_trd`, `n_t0`, `n_both`
   (the number of units above the cutoff in the RD period, in the
   comparison period, and in both; below the cutoff under
-  `estimand = "atu"`).
+  `estimand = "atu"`); `fits` (each type's
+  [`rd_period()`](https://dorleventer.github.io/rddid/reference/rd_period.md)
+  fit on the reflected sample, `NULL` where it failed) and `sample` (the
+  reflected sample: `x_trd`, `type_trd`, `x_t0`, `type_t0`), which feed
+  [`plot.rd_compstable()`](https://dorleventer.github.io/rddid/reference/plot.rd_compstable.md).
 
 - `joint`:
 
@@ -249,6 +253,11 @@ for example data; `tidy()` in
 for a one-row summary.
 
 Other tests of the assumptions:
+[`plot.rd_compstable()`](https://dorleventer.github.io/rddid/reference/plot.rd_compstable.md),
+[`plot.rd_homog()`](https://dorleventer.github.io/rddid/reference/plot.rd_homog.md),
+[`plot.rd_trendcell()`](https://dorleventer.github.io/rddid/reference/plot.rd_trendcell.md),
+[`plot.rd_typecont()`](https://dorleventer.github.io/rddid/reference/plot.rd_typecont.md),
+[`plot_switchers()`](https://dorleventer.github.io/rddid/reference/plot_switchers.md),
 [`rd_homog()`](https://dorleventer.github.io/rddid/reference/rd_homog.md),
 [`rd_trendcell()`](https://dorleventer.github.io/rddid/reference/rd_trendcell.md),
 [`rd_typecont()`](https://dorleventer.github.io/rddid/reference/rd_typecont.md)
