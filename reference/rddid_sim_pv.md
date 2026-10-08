@@ -54,13 +54,14 @@ within-type jump also hold.
 
 ``` r
 # units that change side of the cutoff between years
-sw <- tapply(rddid_sim_pv$V, rddid_sim_pv$id, function(v) length(unique(v)) > 1)
+above <- rddid_sim_pv$R >= 0
+sw <- tapply(above, rddid_sim_pv$id, function(a) length(unique(a)) > 1)
 sum(sw)
 #> [1] 176
-rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id")
+rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
 #> Test of a continuous type distribution  [rd_typecont()]
 #>   H0: the share of each type jumps by zero at the cutoff, in every period
-#>   Sampling scheme: panel, running variable varies over time: some units change side (detected from the data)
+#>   Sampling scheme: panel, some units change side of the cutoff (detected)
 #>   Periods: 1, 2, 3   Types: ++, +-, -+, --   Bandwidth: CCT MSE-optimal, chosen per cell
 #> 
 #>   Joint Wald chi-squared(9) = 4.782,  p = 0.853

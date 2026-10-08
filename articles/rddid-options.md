@@ -13,7 +13,6 @@ introduces the data and the estimator.
 ``` r
 
 library(rddid)
-fmt <- function(x, d = 3) formatC(x, format = "f", digits = d)
 ```
 
 ## Bandwidth rules
@@ -126,20 +125,8 @@ near-zero estimated curvature does not blow the bandwidth up;
 
 ### The rules side by side
 
-``` r
-
-estse <- function(f, row) paste0(fmt(f$estimates[row, "est"]), " (", fmt(f$estimates[row, "se"]), ")")
-fits <- list(joint = fit_joint, cct = fit_cct, iter = fit_iter, "fixed h = 0.3" = fit_fixed)
-tab <- data.frame(
-  rule = names(fits),
-  t(sapply(fits, function(f) f$bandwidth$h_by_period[c("1", "2", "3")])),
-  Conventional = sapply(fits, estse, row = "Conventional"),
-  Robust = sapply(fits, estse, row = "Robust"),
-  check.names = FALSE, row.names = NULL
-)
-names(tab)[2:4] <- c("h, year 1", "h, year 2", "h, year 3")
-knitr::kable(tab, digits = 3)
-```
+The four fits above, with the main bandwidth in each year and the two
+estimates (standard errors in parentheses):
 
 | rule          | h, year 1 | h, year 2 | h, year 3 | Conventional  | Robust        |
 |:--------------|----------:|----------:|----------:|:--------------|:--------------|
@@ -169,8 +156,7 @@ one period, gives `"cs"`; units observed in more than one period, each
 on the same side of the cutoff in every period, give `"pc"`; any unit on
 different sides in different periods gives `"pv"`. Without `id`,
 [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md)
-treats every row as a different unit and says so; for a panel, pass
-`id`.
+treats every row as a different unit and says so; a panel needs `id`.
 
 Three data sets, one per scheme: a repeated cross-section made from
 `rddid_sim` by keeping each unit in one year only, `rddid_sim` itself,
@@ -195,24 +181,22 @@ standard error under each scheme:
 summary(fit_pv)
 #> RD-DID estimate of the ATT in period 3
 #>   Comparison periods: 1, 2   (constant confounding trend; weights 0.5, 0.5)
-#>   Sampling scheme: panel, running variable varies over time: some units change side (detected from the data)
-#>   Bandwidth: common h = 0.2367 (rule "joint", AMSE-optimal for the aggregate)
+#>   Sampling scheme: panel, some units change side of the cutoff (detected)
+#>   Bandwidth: common h = 0.2367 (rule "joint": one bandwidth, chosen for the RD-DID estimate)
 #>   Pilot bandwidth b (period = value): 1 = 0.3889, 2 = 0.3847, 3 = 0.3933
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI
 #>   Conventional                 0.9654     0.1933    4.99   <0.001   [0.5866, 1.3442]
 #>   Robust (bias-corrected)      0.9823     0.2292    4.29   <0.001   [0.5332, 1.4315]
 #> 
-#>   summary() shows the per-period fits and the s.e. under every sampling scheme.
-#> 
 #>   Per-period local-linear fits, in time order (estimate = sum of coef x jump):
 #>   period   role          coef      n        h        b       jump      s.e.  jump (bc) s.e. (rb)
-#>   1        comparison    -0.5   1000   0.2367   0.3933     1.7077    0.1559     1.7757    0.1818
-#>   2        comparison    -0.5   1000   0.2367   0.3889     0.7519    0.1593     0.7893    0.1893
-#>   3        RD               1   1000   0.2367   0.3847     0.7327    0.1824     0.7974    0.2231
+#>   1        comparison    -0.5   1000   0.2367   0.3889     0.7519    0.1593     0.7893    0.1893
+#>   2        comparison    -0.5   1000   0.2367   0.3847     0.7327    0.1824     0.7974    0.2231
+#>   3        RD               1   1000   0.2367   0.3933     1.7077    0.1559     1.7757    0.1818
 #> 
-#>   Robust s.e. under each sampling scheme:  cross-section 0.2333   panel, fixed R 0.2254   panel, varying R 0.2292
-#>   (the printed s.e. is the one for scheme "pv"; the others are shown for comparison)
+#>   Robust s.e. under each sampling scheme (the printed one is for "pv"; the others are for comparison):
+#>     cross-section 0.2333   panel, no unit changes side 0.2254   panel, some change side 0.2292
 ```
 
 The same line for the three data sets:
@@ -250,10 +234,11 @@ knitr::kable(se_tab, digits = 3)
   vanish relative to the variances); here the three standard errors
   range from 0.225 to 0.233.
 
-The scheme describes how the data were sampled; it is not a choice among
-the three columns. Setting `scheme` replaces the detection. The scheme
-sets which standard error is reported and, under the `"joint"` (default)
-and `"iter"` bandwidth rules, it also enters the bandwidth: these rules
+The scheme describes how the data were sampled; the printout reports the
+column for that scheme, and the other columns show the other formulas on
+the same data. Setting `scheme` replaces the detection. The scheme sets
+which standard error is reported and, under the `"joint"` (default) and
+`"iter"` bandwidth rules, it also enters the bandwidth: these rules
 weigh bias against the asymptotic variance of the estimate, and that
 variance has a cross-period covariance term under `"pc"` only (the term
 is zero under `"cs"` and negligible in large samples under `"pv"`). On
@@ -263,6 +248,7 @@ is zero under `"cs"` and negligible in large samples under `"pv"`). On
 
 fit_as_cs <- rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
                    scheme = "cs")
+#> rddid(): scheme = "cs" as requested; the data look like "pc" (panel, no unit changes side of the cutoff).
 rbind(pc = c(h = fit_pc$bandwidth$h, coef(fit_pc)),
       cs = c(h = fit_as_cs$bandwidth$h, coef(fit_as_cs)))
 #>            h Conventional   Robust

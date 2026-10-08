@@ -33,14 +33,13 @@
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/rddid-how-it-works.html">How rddid() computes the estimate</a></li>
+<li><a class="dropdown-item" href="../articles/rddid-validation-tests.html">Checking the identification assumptions</a></li>
+    <li><a class="dropdown-item" href="../articles/rddid-plots.html">Plots of the estimate and the checks</a></li>
     <li><a class="dropdown-item" href="../articles/rddid-options.html">Bandwidth rules and sampling schemes</a></li>
-    <li><a class="dropdown-item" href="../articles/rddid-validation-tests.html">Checking the identification assumptions</a></li>
-    <li><a class="dropdown-item" href="../articles/rddid-plots.html">Pictures of the checks</a></li>
+    <li><a class="dropdown-item" href="../articles/rddid-how-it-works.html">How rddid() computes the estimate (for referees)</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
-<li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul>
 <ul class="navbar-nav">
 <li class="nav-item"><form class="form-inline" role="search">
@@ -124,6 +123,16 @@ and raises <code>Y</code> by 0.5; the treatment of interest
 <code>W</code> is on above the cutoff in year 3 only and raises
 <code>Y</code> by 1. So year 3 is the RD period, years 1 and 2 are
 comparison periods, and <strong>the true effect is 1</strong>.</p>
+<p>With your own data, <code><a href="../reference/rddid.html">rddid()</a></code> needs the same shape: a data
+frame in long format, one row per unit and period, with the outcome, the
+running variable, the period and, for a panel, a unit identifier (the
+panel need not be balanced). The cutoff is <code>c</code> (default 0),
+and a unit with <code>x &gt;= c</code> is above it. The period column is
+usually numeric, a year; a character column works with the default
+constant trend, while <code>trend = "linear"</code> fits its line on the
+period values and so needs a numeric column. By default the comparison
+periods are all periods other than <code>t_rd</code>, in sorted
+order.</p>
 </div>
 <div class="section level2">
 <h2 id="estimate">Estimate<a class="anchor" aria-label="anchor" href="#estimate"></a>
@@ -133,8 +142,8 @@ comparison periods, and <strong>the true effect is 1</strong>.</p>
 <span><span class="va">fit</span></span>
 <span><span class="co">#&gt; RD-DID estimate of the ATT in period 3</span></span>
 <span><span class="co">#&gt;   Comparison periods: 1, 2   (constant confounding trend; weights 0.5, 0.5)</span></span>
-<span><span class="co">#&gt;   Sampling scheme: panel, running variable fixed over time: no unit changes side of the cutoff (detected from the data)</span></span>
-<span><span class="co">#&gt;   Bandwidth: common h = 0.2672 (rule "joint", AMSE-optimal for the aggregate)</span></span>
+<span><span class="co">#&gt;   Sampling scheme: panel, no unit changes side of the cutoff (detected)</span></span>
+<span><span class="co">#&gt;   Bandwidth: common h = 0.2672 (rule "joint": one bandwidth, chosen for the RD-DID estimate)</span></span>
 <span><span class="co">#&gt;   Pilot bandwidth b (period = value): 1 = 0.4102, 2 = 0.3868, 3 = 0.3951</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;                              Estimate  Std. err.       z  p-value   95% CI</span></span>
@@ -148,7 +157,9 @@ comparison periods, and <strong>the true effect is 1</strong>.</p>
 <strong><code>RD-DID estimate of the ATT in period 3</code></strong>:
 the estimand and the RD period (<code>t_rd = 3</code>). The ATT is the
 effect of the treatment on the units just above the cutoff, which are
-the ones treated in the RD period.</li>
+the ones treated in the RD period. If everybody is treated in the
+comparison periods, <code>estimand = "atu"</code> labels the same
+numbers as the ATU (see <a href="#atu">the ATU section</a> below).</li>
 <li>
 <strong><code>Comparison periods: 1, 2 (constant confounding trend; weights 0.5, 0.5)</code></strong>:
 by default every period other than <code>t_rd</code> is a comparison
@@ -158,16 +169,13 @@ gets the same weight and their average stands in for the confounding
 jump in year 3.</li>
 <li>
 <strong><code>Sampling scheme</code></strong>: how the data were
-sampled, read off <code>id</code> and <code>R</code>. Here it is a panel
-(the same units in every year) whose running variable does not move. The
-scheme sets which standard error is reported: in a panel the same units
-enter every year’s fit, so the yearly jumps are correlated, and the
-standard error takes that into account. Under the <code>"joint"</code>
-(default) and <code>"iter"</code> bandwidth rules the scheme also enters
-the bandwidth (next line), which weighs bias against the variance of the
-estimate, and so it can move the estimate; only with a fixed
-<code>h</code> or <code>bwselect = "cct"</code> does it leave the
-estimate untouched.</li>
+sampled, read off <code>id</code> and <code>R</code>: here a panel (the
+same units every year) in which no unit changes side of the cutoff,
+because the running variable does not move. The standard error takes
+into account that the same units enter every year’s fit. Under the
+default bandwidth rule the scheme can also move the bandwidth, and so
+the estimate; <a href="rddid-options.html">Bandwidth rules and sampling
+schemes</a> shows how.</li>
 <li>
 <strong><code>Bandwidth: common h</code></strong>: the default rule,
 <code>bwselect = "joint"</code>, uses one main bandwidth <code>h</code>
@@ -190,9 +198,9 @@ in year 3 alone would estimate the effect plus the confounding jump, 1 +
 <span><span class="co">#&gt; Single-period RD (p=1, h=0.2672, b=0.3951, kernel=triangular, n=1000)</span></span>
 <span><span class="co">#&gt;   D (conventional)   = +1.664  (se 0.1641)</span></span>
 <span><span class="co">#&gt;   D (bias-corrected) = +1.6854  (se 0.1931)</span></span></code></pre></div>
-<p>Its jump, 0.63, is that naive RD estimate, whose target is 1.5, not
+<p>Its jump, 1.66, is that naive RD estimate, whose target is 1.5, not
 1. <code><a href="../reference/rddid.html">rddid()</a></code> subtracts the average of the year-1 and year-2
-jumps, (1.66 + 0.51) / 2 = 1.09, its estimate of the confounding jump of
+jumps, (0.51 + 0.63) / 2 = 0.57, its estimate of the confounding jump of
 0.5.</p>
 </div>
 <div class="section level2">
@@ -202,38 +210,36 @@ jumps, (1.66 + 0.51) / 2 = 1.09, its estimate of the confounding jump of
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span>
 <span><span class="co">#&gt; RD-DID estimate of the ATT in period 3</span></span>
 <span><span class="co">#&gt;   Comparison periods: 1, 2   (constant confounding trend; weights 0.5, 0.5)</span></span>
-<span><span class="co">#&gt;   Sampling scheme: panel, running variable fixed over time: no unit changes side of the cutoff (detected from the data)</span></span>
-<span><span class="co">#&gt;   Bandwidth: common h = 0.2672 (rule "joint", AMSE-optimal for the aggregate)</span></span>
+<span><span class="co">#&gt;   Sampling scheme: panel, no unit changes side of the cutoff (detected)</span></span>
+<span><span class="co">#&gt;   Bandwidth: common h = 0.2672 (rule "joint": one bandwidth, chosen for the RD-DID estimate)</span></span>
 <span><span class="co">#&gt;   Pilot bandwidth b (period = value): 1 = 0.4102, 2 = 0.3868, 3 = 0.3951</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;                              Estimate  Std. err.       z  p-value   95% CI</span></span>
 <span><span class="co">#&gt;   Conventional                 1.0927     0.1264    8.64   &lt;0.001   [0.8450, 1.3405]</span></span>
 <span><span class="co">#&gt;   Robust (bias-corrected)      1.1414     0.1494    7.64   &lt;0.001   [0.8486, 1.4342]</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   summary() shows the per-period fits and the s.e. under every sampling scheme.</span></span>
-<span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Per-period local-linear fits, in time order (estimate = sum of coef x jump):</span></span>
 <span><span class="co">#&gt;   period   role          coef      n        h        b       jump      s.e.  jump (bc) s.e. (rb)</span></span>
-<span><span class="co">#&gt;   1        comparison    -0.5   1000   0.2672   0.3951     1.6640    0.1641     1.6854    0.1931</span></span>
-<span><span class="co">#&gt;   2        comparison    -0.5   1000   0.2672   0.4102     0.5119    0.1688     0.4639    0.1948</span></span>
-<span><span class="co">#&gt;   3        RD               1   1000   0.2672   0.3868     0.6306    0.1686     0.6240    0.2012</span></span>
+<span><span class="co">#&gt;   1        comparison    -0.5   1000   0.2672   0.4102     0.5119    0.1688     0.4639    0.1948</span></span>
+<span><span class="co">#&gt;   2        comparison    -0.5   1000   0.2672   0.3868     0.6306    0.1686     0.6240    0.2012</span></span>
+<span><span class="co">#&gt;   3        RD               1   1000   0.2672   0.3951     1.6640    0.1641     1.6854    0.1931</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Robust s.e. under each sampling scheme:  cross-section 0.2385   panel, fixed R 0.1494   panel, varying R 0.1494</span></span>
-<span><span class="co">#&gt;   (the printed s.e. is the one for scheme "pc"; the others are shown for comparison)</span></span></code></pre></div>
+<span><span class="co">#&gt;   Robust s.e. under each sampling scheme (the printed one is for "pc"; the others are for comparison):</span></span>
+<span><span class="co">#&gt;     cross-section 0.2385   panel, no unit changes side 0.1494   panel, some change side 0.1494</span></span></code></pre></div>
 <p><code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> adds the per-period fits. Each row gives the
 period’s role, its coefficient in the estimate (+1 for the RD period,
 minus its weight for a comparison period), its number of observations,
 its bandwidths, and its jump with standard error, conventional
 (<code>jump</code>, <code>s.e.</code>) and bias-corrected
 (<code>jump (bc)</code>, <code>s.e. (rb)</code>). The estimate is the
-sum of coefficient times jump: 0.631 - 0.5 × 1.664 - 0.5 × 0.512 =
+sum of coefficient times jump: 1.664 - 0.5 × 0.512 - 0.5 × 0.631 =
 1.093.</p>
-<p>The last line gives the robust standard error under each of the three
-sampling schemes. The printout uses the one that matches how the data
-were sampled; the others are there for comparison, not to choose from.
-Here the cross-section standard error, 0.239, ignores that the same
-units appear in every year; the panel one, which accounts for it, is
-0.149.</p>
+<p>The last lines give the robust standard error under each of the three
+sampling schemes. The printout uses the one for the scheme detected in
+the data; the other two show what the formulas for the other schemes
+give on the same data. Here the cross-section standard error, 0.239,
+ignores that the same units appear in every year; the panel one, which
+accounts for it, is 0.149.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Conventional       Robust </span></span>
@@ -249,7 +255,8 @@ units appear in every year; the panel one, which accounts for it, is
 <p><code><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef()</a></code> returns the two point estimates and
 <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code> their confidence intervals. <code>tidy()</code>
 (from the generics package) returns one row per estimate, so table
-makers such as modelsummary work with <code><a href="../reference/rddid.html">rddid()</a></code> fits.</p>
+makers such as modelsummary work with <code><a href="../reference/rddid.html">rddid()</a></code> fits; <a href="#a-table-for-a-paper">A table for a paper</a> below has an
+example.</p>
 </div>
 <div class="section level2">
 <h2 id="a-confounding-jump-that-moves-linearly">A confounding jump that moves linearly<a class="anchor" aria-label="anchor" href="#a-confounding-jump-that-moves-linearly"></a>
@@ -260,8 +267,8 @@ makers such as modelsummary work with <code><a href="../reference/rddid.html">rd
 <span><span class="va">fit_lin</span></span>
 <span><span class="co">#&gt; RD-DID estimate of the ATT in period 3</span></span>
 <span><span class="co">#&gt;   Comparison periods: 1, 2   (linear confounding trend; weights -1, 2)</span></span>
-<span><span class="co">#&gt;   Sampling scheme: panel, running variable fixed over time: no unit changes side of the cutoff (detected from the data)</span></span>
-<span><span class="co">#&gt;   Bandwidth: common h = 0.2672 (rule "joint", AMSE-optimal for the aggregate)</span></span>
+<span><span class="co">#&gt;   Sampling scheme: panel, no unit changes side of the cutoff (detected)</span></span>
+<span><span class="co">#&gt;   Bandwidth: common h = 0.2672 (rule "joint": one bandwidth, chosen for the RD-DID estimate)</span></span>
 <span><span class="co">#&gt;   Pilot bandwidth b (period = value): 1 = 0.4102, 2 = 0.3869, 3 = 0.3951</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;                              Estimate  Std. err.       z  p-value   95% CI</span></span>
@@ -283,23 +290,333 @@ linear trend. A numeric vector instead of <code>"constant"</code> or
 period.</p>
 </div>
 <div class="section level2">
-<h2 id="comparison-periods-where-everybody-is-treated-the-atu">Comparison periods where everybody is treated: the ATU<a class="anchor" aria-label="anchor" href="#comparison-periods-where-everybody-is-treated-the-atu"></a>
+<h2 id="a-table-for-a-paper">A table for a paper<a class="anchor" aria-label="anchor" href="#a-table-for-a-paper"></a>
+</h2>
+<p><code>tidy()</code> gives the estimates and <code>glance()</code> the
+design (RD period, comparison periods, trend, bandwidth rule,
+<code>h</code>, scheme), which is what table makers read. With the
+modelsummary package installed, the two fits side by side, with
+confidence intervals:</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">modelsummary</span><span class="fu">::</span><span class="fu"><a href="https://modelsummary.com/man/modelsummary.html" class="external-link">modelsummary</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>Constant <span class="op">=</span> <span class="va">fit</span>, Linear <span class="op">=</span> <span class="va">fit_lin</span><span class="op">)</span>, statistic <span class="op">=</span> <span class="st">"conf.int"</span>,</span>
+<span>  gof_map <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>raw <span class="op">=</span> <span class="st">"h"</span>, clean <span class="op">=</span> <span class="st">"h"</span>, fmt <span class="op">=</span> <span class="fl">3</span><span class="op">)</span>,</span>
+<span>                 <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>raw <span class="op">=</span> <span class="st">"nobs"</span>, clean <span class="op">=</span> <span class="st">"Num.Obs."</span>, fmt <span class="op">=</span> <span class="fl">0</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+
+    <script src="https://cdn.jsdelivr.net/gh/vincentarelbundock/tinytable@main/inst/tinytable.js"></script><script>
+      // Create table-specific functions using external factory
+      const tableFns_xxsfq3e4cu3p1qeivu7t = TinyTable.createTableFunctions("tinytable_xxsfq3e4cu3p1qeivu7t");
+      // tinytable span after
+      window.addEventListener('load', function () {
+          var cellsToStyle = [
+            // tinytable style arrays after
+          { positions: [ { i: '6', j: 2 }, { i: '6', j: 3 } ], css_id: 'tinytable_css_0so9e6e0u49cga4447ye',}, 
+          { positions: [ { i: '4', j: 2 }, { i: '4', j: 3 } ], css_id: 'tinytable_css_ftfjhim05adui06xd7tq',}, 
+          { positions: [ { i: '1', j: 2 }, { i: '2', j: 2 }, { i: '3', j: 2 }, { i: '5', j: 2 }, { i: '1', j: 3 }, { i: '2', j: 3 }, { i: '3', j: 3 }, { i: '5', j: 3 } ], css_id: 'tinytable_css_uzhunyslpnnbfkv30mfz',}, 
+          { positions: [ { i: '0', j: 2 }, { i: '0', j: 3 } ], css_id: 'tinytable_css_i4c9xizcz8h1wszprkvs',}, 
+          { positions: [ { i: '6', j: 1 } ], css_id: 'tinytable_css_kutp9rtxdfku4nr032nf',}, 
+          { positions: [ { i: '4', j: 1 } ], css_id: 'tinytable_css_t9wf4djta6exs65zhn1y',}, 
+          { positions: [ { i: '1', j: 1 }, { i: '2', j: 1 }, { i: '3', j: 1 }, { i: '5', j: 1 } ], css_id: 'tinytable_css_eyfh2sfqs7eibab6filq',}, 
+          { positions: [ { i: '0', j: 1 } ], css_id: 'tinytable_css_tcswl2khbaeil0kfw5ur',}, 
+          ];
+
+          // Loop over the arrays to style the cells
+          cellsToStyle.forEach(function (group) {
+              group.positions.forEach(function (cell) {
+                  tableFns_xxsfq3e4cu3p1qeivu7t.styleCell(cell.i, cell.j, group.css_id);
+              });
+          });
+      });
+    </script><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/vincentarelbundock/tinytable@main/inst/tinytable.css">
+<style>
+    /* tinytable css entries after */
+    #tinytable_xxsfq3e4cu3p1qeivu7t td.tinytable_css_0so9e6e0u49cga4447ye, #tinytable_xxsfq3e4cu3p1qeivu7t th.tinytable_css_0so9e6e0u49cga4447ye {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.08em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center }
+    #tinytable_xxsfq3e4cu3p1qeivu7t td.tinytable_css_ftfjhim05adui06xd7tq, #tinytable_xxsfq3e4cu3p1qeivu7t th.tinytable_css_ftfjhim05adui06xd7tq {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center }
+    #tinytable_xxsfq3e4cu3p1qeivu7t td.tinytable_css_uzhunyslpnnbfkv30mfz, #tinytable_xxsfq3e4cu3p1qeivu7t th.tinytable_css_uzhunyslpnnbfkv30mfz { text-align: center }
+    #tinytable_xxsfq3e4cu3p1qeivu7t td.tinytable_css_i4c9xizcz8h1wszprkvs, #tinytable_xxsfq3e4cu3p1qeivu7t th.tinytable_css_i4c9xizcz8h1wszprkvs {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 1; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.08em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center }
+    #tinytable_xxsfq3e4cu3p1qeivu7t td.tinytable_css_kutp9rtxdfku4nr032nf, #tinytable_xxsfq3e4cu3p1qeivu7t th.tinytable_css_kutp9rtxdfku4nr032nf {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.08em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: left }
+    #tinytable_xxsfq3e4cu3p1qeivu7t td.tinytable_css_t9wf4djta6exs65zhn1y, #tinytable_xxsfq3e4cu3p1qeivu7t th.tinytable_css_t9wf4djta6exs65zhn1y {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: left }
+    #tinytable_xxsfq3e4cu3p1qeivu7t td.tinytable_css_eyfh2sfqs7eibab6filq, #tinytable_xxsfq3e4cu3p1qeivu7t th.tinytable_css_eyfh2sfqs7eibab6filq { text-align: left }
+    #tinytable_xxsfq3e4cu3p1qeivu7t td.tinytable_css_tcswl2khbaeil0kfw5ur, #tinytable_xxsfq3e4cu3p1qeivu7t th.tinytable_css_tcswl2khbaeil0kfw5ur {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 1; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.08em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: left }
+    </style>
+<div class="container">
+      <table class="table tinytable" id="tinytable_xxsfq3e4cu3p1qeivu7t" style="width: auto; margin-left: auto; margin-right: auto;" data-quarto-disable-processing="true">
+<thead><tr>
+<th scope="col" data-row="0" data-col="1"> </th>
+                <th scope="col" data-row="0" data-col="2">Constant</th>
+                <th scope="col" data-row="0" data-col="3">Linear</th>
+              </tr></thead>
+<tbody>
+<tr>
+<td data-row="1" data-col="1">Conventional</td>
+                  <td data-row="1" data-col="2">1.093</td>
+                  <td data-row="1" data-col="3">0.915</td>
+                </tr>
+<tr>
+<td data-row="2" data-col="1"></td>
+                  <td data-row="2" data-col="2">[0.845, 1.340]</td>
+                  <td data-row="2" data-col="3">[0.409, 1.421]</td>
+                </tr>
+<tr>
+<td data-row="3" data-col="1">Robust</td>
+                  <td data-row="3" data-col="2">1.141</td>
+                  <td data-row="3" data-col="3">0.901</td>
+                </tr>
+<tr>
+<td data-row="4" data-col="1"></td>
+                  <td data-row="4" data-col="2">[0.849, 1.434]</td>
+                  <td data-row="4" data-col="3">[0.300, 1.502]</td>
+                </tr>
+<tr>
+<td data-row="5" data-col="1">h</td>
+                  <td data-row="5" data-col="2">0.267</td>
+                  <td data-row="5" data-col="3">0.267</td>
+                </tr>
+<tr>
+<td data-row="6" data-col="1">Num.Obs.</td>
+                  <td data-row="6" data-col="2">3000</td>
+                  <td data-row="6" data-col="3">3000</td>
+                </tr>
+</tbody>
+</table>
+</div>
+<!-- hack to avoid NA insertion in last line -->
+<p>The same call with <code>output = "rddid_table.tex"</code> (or
+<code>.html</code>, <code>.md</code>, <code>.docx</code>) writes the
+table to a file;
+<code>write.csv(generics::tidy(fit), "rddid_estimate.csv", row.names = FALSE)</code>
+writes the estimate table to a plain CSV file.</p>
+<p><code>gof_map</code> sets which rows of <code>glance()</code> appear
+below the estimates and their digits (<code>fmt</code>): here
+<code>h</code> with three digits and the number of observations. Without
+it, every column of <code>glance()</code> is listed and <code>h</code>
+prints with all its digits. The last line writes the estimate table to a
+plain CSV file.</p>
+</div>
+<div class="section level2">
+<h2 id="when-the-running-variable-moves-over-time">When the running variable moves over time<a class="anchor" aria-label="anchor" href="#when-the-running-variable-moves-over-time"></a>
+</h2>
+<p>In <code>rddid_sim</code> every unit stays on its side of the cutoff.
+In many applications the running variable moves (a population count, a
+test score, an income), and some units, the <strong>switchers</strong>,
+are above the cutoff in one period and below it in another. The units at
+the cutoff in the RD period can then be a different mix from the units
+at the cutoff in a comparison period, and the difference of jumps can be
+biased. A unit’s <strong>type</strong> records its side of the cutoff in
+periods other than the one at hand. The tests use two versions:</p>
+<table class="table">
+<colgroup>
+<col width="33%">
+<col width="33%">
+<col width="33%">
+</colgroup>
+<thead><tr class="header">
+<th>Test</th>
+<th>A unit’s type in period <em>t</em>
+</th>
+<th>Printed as</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td>type continuity, composition stability</td>
+<td>its sides of the cutoff in all the other periods, in time order</td>
+<td>
+<code>++</code>, <code>+-</code>, <code>-+</code>, <code>--</code>
+(<code>+</code> above, <code>-</code> below)</td>
+</tr>
+<tr class="even">
+<td>homogeneous confounding, constant within-type confounding</td>
+<td>its side of the cutoff in the RD period (the default,
+<code>type_by = "rd_side"</code>)</td>
+<td>
+<code>+</code>, <code>-</code>; in plots “Above in 3”, “Below in
+3”</td>
+</tr>
+</tbody>
+</table>
+<p>With two periods, both versions are the unit’s side of the cutoff in
+the other period.</p>
+<p>The RD-DID estimate identifies the ATT when the type distribution is
+continuous at the cutoff and the confounding jump within each type is
+constant over time, and in addition either the type composition is
+stable across periods or the confounding jump is the same for every type
+(Leventer and Nevo, 2024). Four tests check these assumptions.
+<code>rddid_sim_pv</code> is the <code>rddid_sim</code> design with a
+running variable that drifts between years. The estimate whose
+assumptions the four tests below check:</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">fit_pv</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rddid.html">rddid</a></span><span class="op">(</span><span class="va">rddid_sim_pv</span>, y <span class="op">=</span> <span class="st">"Y"</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
+<span><span class="va">fit_pv</span></span>
+<span><span class="co">#&gt; RD-DID estimate of the ATT in period 3</span></span>
+<span><span class="co">#&gt;   Comparison periods: 1, 2   (constant confounding trend; weights 0.5, 0.5)</span></span>
+<span><span class="co">#&gt;   Sampling scheme: panel, some units change side of the cutoff (detected)</span></span>
+<span><span class="co">#&gt;   Bandwidth: common h = 0.2367 (rule "joint": one bandwidth, chosen for the RD-DID estimate)</span></span>
+<span><span class="co">#&gt;   Pilot bandwidth b (period = value): 1 = 0.3889, 2 = 0.3847, 3 = 0.3933</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;                              Estimate  Std. err.       z  p-value   95% CI</span></span>
+<span><span class="co">#&gt;   Conventional                 0.9654     0.1933    4.99   &lt;0.001   [0.5866, 1.3442]</span></span>
+<span><span class="co">#&gt;   Robust (bias-corrected)      0.9823     0.2292    4.29   &lt;0.001   [0.5332, 1.4315]</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;   summary() shows the per-period fits and the s.e. under every sampling scheme.</span></span></code></pre></div>
+<p>The sampling scheme is now a panel in which some units change side of
+the cutoff between years.</p>
+<p><strong>Type continuity.</strong> H0: the share of each type jumps by
+zero at the cutoff, in every period. A rejection means units sort around
+the cutoff by their side in other periods, so the jump in the outcome
+partly reflects who the units are; the estimate can then be biased,
+whatever the other tests say.</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">tc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rd_typecont.html">rd_typecont</a></span><span class="op">(</span><span class="va">rddid_sim_pv</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
+<span><span class="va">tc</span></span>
+<span><span class="co">#&gt; Test of a continuous type distribution  [rd_typecont()]</span></span>
+<span><span class="co">#&gt;   H0: the share of each type jumps by zero at the cutoff, in every period</span></span>
+<span><span class="co">#&gt;   Sampling scheme: panel, some units change side of the cutoff (detected)</span></span>
+<span><span class="co">#&gt;   Periods: 1, 2, 3   Types: ++, +-, -+, --   Bandwidth: CCT MSE-optimal, chosen per cell</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;   Joint Wald chi-squared(9) = 4.782,  p = 0.853</span></span>
+<span><span class="co">#&gt;     Period 1: chi-squared(3) = 1.531,  p = 0.675</span></span>
+<span><span class="co">#&gt;     Period 2: chi-squared(3) = 0.382,  p = 0.944</span></span>
+<span><span class="co">#&gt;     Period 3: chi-squared(3) = 2.202,  p = 0.532</span></span></code></pre></div>
+<p>Every test prints its null (H0) and the sampling scheme read off the
+data. <code>Types: ++, +-, -+, --</code> are the types of the first row
+of the table above.
+<code>Bandwidth: CCT MSE-optimal, chosen per cell</code> means that each
+local-linear fit the test runs (one per period and type, a
+<em>cell</em>) gets its own MSE-optimal bandwidth from
+<code><a href="https://rdrr.io/pkg/rdrobust/man/rdbwselect.html" class="external-link">rdrobust::rdbwselect</a></code> (Calonico, Cattaneo and Titiunik,
+2014; hence “CCT”). <code>Joint Wald chi-squared(9)</code> tests all the
+jumps in the type shares at once: in each year the four shares sum to
+one, so three jumps are free, and three years give 9. Each
+<code>Period</code> line tests one year alone.</p>
+<p><strong>Composition stability.</strong> H0: the share of each type
+among the units just above the cutoff is the same in the RD period and
+in each comparison period. A rejection means the units at the cutoff in
+the RD period are a different mix of types from those in a comparison
+period; the estimate is then valid only if the next test’s null
+holds.</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">cs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rd_compstable.html">rd_compstable</a></span><span class="op">(</span><span class="va">rddid_sim_pv</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
+<span><span class="va">cs</span></span>
+<span><span class="co">#&gt; Test of composition stability  [rd_compstable()]</span></span>
+<span><span class="co">#&gt;   H0: the share of each type among the units just above the cutoff is the same in the RD period and in each comparison period</span></span>
+<span><span class="co">#&gt;   Sampling scheme: panel, some units change side of the cutoff (detected)</span></span>
+<span><span class="co">#&gt;   RD period: 3   Comparison periods: 1, 2   Bandwidth: CCT MSE-optimal, chosen per cell</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;   Pair 3::1: chi-squared(3) = 21.982,  p = &lt;0.001</span></span>
+<span><span class="co">#&gt;     n above the cutoff: 490 (RD period), 508 (comparison), 430 in both</span></span>
+<span><span class="co">#&gt;   Pair 3::2: chi-squared(3) = 6.137,  p = 0.105</span></span>
+<span><span class="co">#&gt;     n above the cutoff: 490 (RD period), 497 (comparison), 418 in both</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;   Joint over pairs (sum of chi-squared): chi-squared(6) = 28.119,  p = &lt;0.001</span></span></code></pre></div>
+<p><code>Pair 3::1</code> compares year 3, the RD period, with year 1;
+its <code>chi-squared(3)</code> tests the three free jumps in the type
+shares. <code>n above the cutoff</code> counts the units above the
+cutoff in the RD year, in the comparison year, and in both.
+<code>Joint over pairs</code> adds up the pair statistics and their
+degrees of freedom; it treats the pairs as independent although they
+share the year-3 units, so its p-value is approximate (the paper’s test
+is per pair).</p>
+<p><strong>Homogeneous confounding.</strong> H0: in each comparison
+period the confounding jump is the same for every type. Here, and in the
+next test, the types are those of the second row of the table above: a
+unit’s side of the cutoff in the RD period. A rejection means the
+confounding jump differs by type; together with a rejection of
+composition stability, the comparison-period jumps do not measure the
+confounding jump of the units at the RD-period cutoff, and the estimate
+can be biased.</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">hg</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rd_homog.html">rd_homog</a></span><span class="op">(</span><span class="va">rddid_sim_pv</span>, y <span class="op">=</span> <span class="st">"Y"</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
+<span><span class="va">hg</span></span>
+<span><span class="co">#&gt; Test of homogeneous confounding  [rd_homog()]</span></span>
+<span><span class="co">#&gt;   H0: in each comparison period the confounding jump is the same for every type</span></span>
+<span><span class="co">#&gt;   Sampling scheme: panel, some units change side of the cutoff (detected)</span></span>
+<span><span class="co">#&gt;   Comparison periods: 1, 2</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;   Wald chi-squared(2) = 0.465,  p = 0.793</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;   Per-cell local-linear jumps (comparison periods):</span></span>
+<span><span class="co">#&gt;     Period     Type               jump       s.e.       n</span></span>
+<span><span class="co">#&gt;     1          -                0.8985     0.2213     510  (reference)</span></span>
+<span><span class="co">#&gt;     1          +                0.7374     0.3582     490</span></span>
+<span><span class="co">#&gt;     2          -                1.0282     0.4007     510  (reference)</span></span>
+<span><span class="co">#&gt;     2          +                0.7356     0.3588     490</span></span></code></pre></div>
+<p>The table gives the confounding jump of each type in each comparison
+year, with its standard error and number of observations. The Wald
+statistic has one contrast per year, type <code>+</code> against the
+type marked <code>(reference)</code>, so two comparison years give
+<code>chi-squared(2)</code>.</p>
+<p><strong>Constant within-type confounding.</strong> H0: within each
+type, the confounding jump is the same in every comparison period. This
+is a pre-trends check: the assumption concerns the RD period, where the
+confounding jump cannot be seen apart from the effect, so the test asks
+whether it is stable across the comparison periods. A rejection means
+the constant-trend weights do not cancel the confounding jump.
+<code>trend = "linear"</code> allows a confounding jump that moves
+linearly in time; <code>rd_trendcell(trend = "linear")</code> tests that
+version (three or more comparison periods).</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">tr</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rd_trendcell.html">rd_trendcell</a></span><span class="op">(</span><span class="va">rddid_sim_pv</span>, y <span class="op">=</span> <span class="st">"Y"</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
+<span><span class="va">tr</span></span>
+<span><span class="co">#&gt; Test of a constant within-type confounding discontinuity  [rd_trendcell()]</span></span>
+<span><span class="co">#&gt;   H0: within each type, the confounding jump is the same in every comparison period</span></span>
+<span><span class="co">#&gt;   Sampling scheme: panel, some units change side of the cutoff (detected)</span></span>
+<span><span class="co">#&gt;   Comparison periods: 1, 2   Trend: constant</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;   Wald chi-squared(2) = 0.078,  p = 0.962</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;   Per-cell local-linear jumps (comparison periods):</span></span>
+<span><span class="co">#&gt;     Type       Period             jump       s.e.       n</span></span>
+<span><span class="co">#&gt;     +          1                0.7374     0.3582     490  (reference)</span></span>
+<span><span class="co">#&gt;     +          2                0.7356     0.3588     490</span></span>
+<span><span class="co">#&gt;     -          1                0.8985     0.2213     510  (reference)</span></span>
+<span><span class="co">#&gt;     -          2                1.0282     0.4007     510</span></span></code></pre></div>
+<p>The jumps are those of <code><a href="../reference/rd_homog.html">rd_homog()</a></code>, grouped by type. The
+Wald statistic has one contrast per type: year 2 against the year marked
+<code>(reference)</code>, the type’s first comparison year.</p>
+<p>One table for all four:</p>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">rbind</span>, <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">tc</span>, <span class="va">cs</span>, <span class="va">hg</span>, <span class="va">tr</span><span class="op">)</span>, <span class="fu">generics</span><span class="fu">::</span><span class="va"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt;                               test   statistic df      p.value</span></span>
+<span><span class="co">#&gt; 1                  type continuity  4.78163259  9 8.529133e-01</span></span>
+<span><span class="co">#&gt; 2            composition stability 28.11902600  6 8.923469e-05</span></span>
+<span><span class="co">#&gt; 3          homogeneous confounding  0.46500200  2 7.925490e-01</span></span>
+<span><span class="co">#&gt; 4 constant within-type confounding  0.07832992  2 9.615921e-01</span></span></code></pre></div>
+<p>The composition-stability row is the joint-over-pairs statistic,
+whose p-value is approximate; the per-pair tests are in its printout
+above.</p>
+<p>In <code>rddid_sim_pv</code> three of the four nulls are true by
+construction: types are continuous at the cutoff, and the confounding
+jump is 0.5 for every unit in every year. Composition stability is
+false: units at the year-3 cutoff were mostly on the same side in years
+1 and 2, while units at the year-1 cutoff are spread evenly over the
+four types. In this sample the four p-values are 0.853, below 0.001,
+0.793 and 0.962 (in the order of the table). A p-value below 0.05 for a
+true null is a false rejection, which a test at the 5% level is designed
+to make in about one sample in twenty. Because the other three
+assumptions hold, homogeneous confounding among them, the failure of
+composition stability does not bias <code>fit_pv</code>: its estimate is
+0.97, against a true effect of 1. The article on the identification
+assumptions shows how each statistic is built and the options of the
+tests.</p>
+</div>
+<div class="section level2">
+<h2 id="atu">Comparison periods where everybody is treated: the ATU<a class="anchor" aria-label="anchor" href="#atu"></a>
 </h2>
 <p>When everybody is treated in the comparison periods, rather than
 nobody, the same difference of jumps estimates the ATU: the effect for
 the units just below the cutoff, which are untreated in the RD period.
-Set <code>estimand = "atu"</code>. The estimate, standard errors and
-bandwidths are the same as without it, so the argument labels the output
-(among the tests it changes only <code><a href="../reference/rd_compstable.html">rd_compstable()</a></code>). For
+<code>estimand = "atu"</code> labels the output as the ATU: the
+estimate, standard errors and bandwidths are the same as without it
+(among the tests, it changes only <code><a href="../reference/rd_compstable.html">rd_compstable()</a></code>). For
 illustration, make everybody treated in years 1 and 2 of
 <code>rddid_sim</code>, with the same effect of 1:</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sim_atu</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/transform.html" class="external-link">transform</a></span><span class="op">(</span><span class="va">rddid_sim</span>, W <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="va">year</span> <span class="op">&lt;</span> <span class="fl">3</span>, <span class="fl">1</span>, <span class="va">W</span><span class="op">)</span>, Y <span class="op">=</span> <span class="va">Y</span> <span class="op">+</span> <span class="op">(</span><span class="va">year</span> <span class="op">&lt;</span> <span class="fl">3</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/rddid.html">rddid</a></span><span class="op">(</span><span class="va">sim_atu</span>, y <span class="op">=</span> <span class="st">"Y"</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span>, estimand <span class="op">=</span> <span class="st">"atu"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; RD-DID estimate of the ATU in period 3</span></span>
 <span><span class="co">#&gt;   Comparison periods: 1, 2   (constant confounding trend; weights 0.5, 0.5)</span></span>
-<span><span class="co">#&gt;   Sampling scheme: panel, running variable fixed over time: no unit changes side of the cutoff (detected from the data)</span></span>
-<span><span class="co">#&gt;   Bandwidth: common h = 0.2672 (rule "joint", AMSE-optimal for the aggregate)</span></span>
+<span><span class="co">#&gt;   Sampling scheme: panel, no unit changes side of the cutoff (detected)</span></span>
+<span><span class="co">#&gt;   Bandwidth: common h = 0.2672 (rule "joint": one bandwidth, chosen for the RD-DID estimate)</span></span>
 <span><span class="co">#&gt;   Pilot bandwidth b (period = value): 1 = 0.4102, 2 = 0.3868, 3 = 0.3951</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;                              Estimate  Std. err.       z  p-value   95% CI</span></span>
@@ -311,150 +628,26 @@ illustration, make everybody treated in years 1 and 2 of
 true ATU here is 1.</p>
 </div>
 <div class="section level2">
-<h2 id="when-the-running-variable-moves-over-time">When the running variable moves over time<a class="anchor" aria-label="anchor" href="#when-the-running-variable-moves-over-time"></a>
-</h2>
-<p>In <code>rddid_sim</code> every unit stays on its side of the cutoff.
-In many applications the running variable moves (a population count, a
-test score, an income), and some units, the <strong>switchers</strong>,
-are above the cutoff in one period and below it in another. The units at
-the cutoff in the RD period can then be a different mix from the units
-at the cutoff in a comparison period, and the difference of jumps can be
-biased. A unit’s <strong>type</strong> is the side of the cutoff it is
-on in the other period(s). The RD-DID estimate identifies the ATT when
-the type distribution is continuous at the cutoff and the confounding
-jump within each type is constant over time, and in addition either the
-type composition is stable across periods or the confounding jump is the
-same for every type (Leventer and Nevo, 2024). Four tests check these
-assumptions. <code>rddid_sim_pv</code> is the <code>rddid_sim</code>
-design with a running variable that drifts between years.</p>
-<p><strong>Type continuity.</strong> H0: the share of each type jumps by
-zero at the cutoff, in every period. A rejection means units sort around
-the cutoff by their side in other periods, so the jump in the outcome
-partly reflects who the units are; the estimate can then be biased,
-whatever the other tests say.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">tc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rd_typecont.html">rd_typecont</a></span><span class="op">(</span><span class="va">rddid_sim_pv</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span><span class="op">)</span></span>
-<span><span class="va">tc</span></span>
-<span><span class="co">#&gt; Test of a continuous type distribution  [rd_typecont()]</span></span>
-<span><span class="co">#&gt;   H0: the share of each type jumps by zero at the cutoff, in every period</span></span>
-<span><span class="co">#&gt;   Sampling scheme: panel, running variable varies over time: some units change side (detected from the data)</span></span>
-<span><span class="co">#&gt;   Periods: 1, 2, 3   Types: ++, +-, -+, --   Bandwidth: CCT MSE-optimal, chosen per cell</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Joint Wald chi-squared(9) = 4.782,  p = 0.853</span></span>
-<span><span class="co">#&gt;     Period 1: chi-squared(3) = 1.531,  p = 0.675</span></span>
-<span><span class="co">#&gt;     Period 2: chi-squared(3) = 0.382,  p = 0.944</span></span>
-<span><span class="co">#&gt;     Period 3: chi-squared(3) = 2.202,  p = 0.532</span></span></code></pre></div>
-<p>With three years, a unit’s type in one year is its pair of sides in
-the other two, in time order: <code>++</code> is above the cutoff in
-both, <code>+-</code> above in the earlier and below in the later, and
-so on.</p>
-<p><strong>Composition stability.</strong> H0: the share of each type
-among the units just above the cutoff is the same in the RD period and
-in each comparison period. A rejection means the units at the cutoff in
-the RD period are a different mix of types from those in a comparison
-period; the estimate is then valid only if the next test’s null
-holds.</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">cs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rd_compstable.html">rd_compstable</a></span><span class="op">(</span><span class="va">rddid_sim_pv</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
-<span><span class="va">cs</span></span>
-<span><span class="co">#&gt; Test of composition stability  [rd_compstable()]</span></span>
-<span><span class="co">#&gt;   H0: the share of each type among the units just above the cutoff is the same in the RD period and in each comparison period</span></span>
-<span><span class="co">#&gt;   Sampling scheme: panel, running variable varies over time: some units change side (detected from the data)</span></span>
-<span><span class="co">#&gt;   RD period: 3   Comparison periods: 1, 2   Bandwidth: CCT MSE-optimal, chosen per cell</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Pair 3::1: chi-squared(3) = 21.982,  p = &lt;0.001</span></span>
-<span><span class="co">#&gt;     n above the cutoff: 490 (RD period), 508 (comparison), 430 in both</span></span>
-<span><span class="co">#&gt;   Pair 3::2: chi-squared(3) = 6.137,  p = 0.105</span></span>
-<span><span class="co">#&gt;     n above the cutoff: 490 (RD period), 497 (comparison), 418 in both</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Joint over pairs (sum of chi-squared): chi-squared(6) = 28.119,  p = &lt;0.001</span></span></code></pre></div>
-<p><strong>Homogeneous confounding.</strong> H0: in each comparison
-period the confounding jump is the same for every type. Here, and in the
-next test, a unit’s type is its side of the cutoff in the RD period
-(<code>+</code> above, <code>-</code> below). A rejection means the
-confounding jump differs by type; together with a rejection of
-composition stability, the comparison-period jumps do not measure the
-confounding jump of the units at the RD-period cutoff, and the estimate
-is biased.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">hg</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rd_homog.html">rd_homog</a></span><span class="op">(</span><span class="va">rddid_sim_pv</span>, y <span class="op">=</span> <span class="st">"Y"</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
-<span><span class="va">hg</span></span>
-<span><span class="co">#&gt; Test of homogeneous confounding  [rd_homog()]</span></span>
-<span><span class="co">#&gt;   H0: in each comparison period the confounding jump is the same for every type</span></span>
-<span><span class="co">#&gt;   Sampling scheme: panel, running variable varies over time: some units change side (detected from the data)</span></span>
-<span><span class="co">#&gt;   Comparison periods: 1, 2</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Wald chi-squared(2) = 0.465,  p = 0.793</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Per-cell local-linear jumps (comparison periods):</span></span>
-<span><span class="co">#&gt;     Period     Type               jump       s.e.       n</span></span>
-<span><span class="co">#&gt;     1          -                0.8985     0.2213     510  (reference)</span></span>
-<span><span class="co">#&gt;     1          +                0.7374     0.3582     490</span></span>
-<span><span class="co">#&gt;     2          -                1.0282     0.4007     510  (reference)</span></span>
-<span><span class="co">#&gt;     2          +                0.7356     0.3588     490</span></span></code></pre></div>
-<p><strong>Constant within-type confounding.</strong> H0: within each
-type, the confounding jump is the same in every comparison period. This
-is a pre-trends check: the assumption concerns the RD period, where the
-confounding jump cannot be seen apart from the effect, so the test asks
-whether it is stable across the comparison periods. A rejection means
-the constant-trend weights do not cancel the confounding jump;
-<code>trend = "linear"</code> is the alternative when the movement looks
-linear.</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">tr</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rd_trendcell.html">rd_trendcell</a></span><span class="op">(</span><span class="va">rddid_sim_pv</span>, y <span class="op">=</span> <span class="st">"Y"</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
-<span><span class="va">tr</span></span>
-<span><span class="co">#&gt; Test of a constant within-type confounding discontinuity  [rd_trendcell()]</span></span>
-<span><span class="co">#&gt;   H0: within each type, the confounding jump is the same in every comparison period</span></span>
-<span><span class="co">#&gt;   Sampling scheme: panel, running variable varies over time: some units change side (detected from the data)</span></span>
-<span><span class="co">#&gt;   Comparison periods: 1, 2   Trend: constant</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Wald chi-squared(2) = 0.078,  p = 0.962</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Per-cell local-linear jumps (comparison periods):</span></span>
-<span><span class="co">#&gt;     Type       Period             jump       s.e.       n</span></span>
-<span><span class="co">#&gt;     +          1                0.7374     0.3582     490  (reference)</span></span>
-<span><span class="co">#&gt;     +          2                0.7356     0.3588     490</span></span>
-<span><span class="co">#&gt;     -          1                0.8985     0.2213     510  (reference)</span></span>
-<span><span class="co">#&gt;     -          2                1.0282     0.4007     510</span></span></code></pre></div>
-<p>One table for all four:</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">rbind</span>, <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">tc</span>, <span class="va">cs</span>, <span class="va">hg</span>, <span class="va">tr</span><span class="op">)</span>, <span class="fu">generics</span><span class="fu">::</span><span class="va"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt;                               test   statistic df      p.value</span></span>
-<span><span class="co">#&gt; 1                  type continuity  4.78163259  9 8.529133e-01</span></span>
-<span><span class="co">#&gt; 2            composition stability 28.11902600  6 8.923469e-05</span></span>
-<span><span class="co">#&gt; 3          homogeneous confounding  0.46500200  2 7.925490e-01</span></span>
-<span><span class="co">#&gt; 4 constant within-type confounding  0.07832992  2 9.615921e-01</span></span></code></pre></div>
-<p>In <code>rddid_sim_pv</code> three of the four nulls are true by
-construction: types are continuous at the cutoff, and the confounding
-jump is 0.5 for every unit in every year. Composition stability is
-false: units at the year-3 cutoff were mostly on the same side in years
-1 and 2, while units at the year-1 cutoff are spread evenly over the
-four types. In this sample the four p-values are 0.853, below 0.001,
-0.793 and 0.962 (in the order of the table). A p-value below 0.05 for a
-true null is a false rejection, which a test at the 5% level is designed
-to make in about one sample in twenty. The article on the identification
-assumptions reads each printout in detail.</p>
-</div>
-<div class="section level2">
-<h2 id="what-to-report">What to report<a class="anchor" aria-label="anchor" href="#what-to-report"></a>
+<h2 id="what-the-paper-reports">What the paper reports<a class="anchor" aria-label="anchor" href="#what-the-paper-reports"></a>
 </h2>
 <ul>
 <li>
-<strong>The estimate.</strong> Both rows, as the paper does. Base
-the confidence interval and p-value on the
-<code>Robust (bias-corrected)</code> row: at a bandwidth chosen to
-minimize the mean squared error, the conventional interval is centered
-on a biased estimate and can under-cover (Calonico, Cattaneo and
-Titiunik, 2014).</li>
+<strong>The estimate.</strong> The paper reports both rows. It bases
+its confidence intervals and p-values on the
+<code>Robust (bias-corrected)</code> row, following Calonico, Cattaneo
+and Titiunik (2014): at a bandwidth chosen to minimize the mean squared
+error, the conventional interval is centered on a biased estimate and
+can under-cover.</li>
 <li>
-<strong>The design.</strong> The RD period, the comparison periods
-and the trend assumption (with the weights), the bandwidth rule and
-<code>h</code>, and the sampling scheme. All are in the first lines of
-the printout; <code>generics::glance(fit)</code> returns them as a
-one-row table.</li>
+<strong>The design.</strong> The choices behind an estimate (the RD
+period, the comparison periods, the trend assumption with its weights,
+the bandwidth rule and <code>h</code>, the sampling scheme) are in the
+first lines of the printout; <code>generics::glance(fit)</code> returns
+them as a one-row table.</li>
 <li>
-<strong>The tests</strong>, when the running variable moves over
-time: the table above.</li>
+<strong>The tests.</strong> When the running variable moves over
+time, the table above collects the four tests of the assumptions the
+estimate relies on.</li>
 </ul>
 </div>
 <div class="section level2">
@@ -462,25 +655,28 @@ time: the table above.</li>
 </h2>
 <ul>
 <li>
-<a href="rddid-how-it-works.html">How rddid() computes the
-estimate</a>: the estimate and the tests rebuilt by hand, for readers
-who want to see the pieces.</li>
+<a href="rddid-validation-tests.html">Checking the identification
+assumptions</a>: how each test statistic is built, the tests under the
+ATU design, and their options.</li>
+<li>
+<a href="rddid-plots.html">Plots of the estimate and the checks</a>:
+<code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> on a fit and on each test, the switchers picture,
+and saving a figure.</li>
 <li>
 <a href="rddid-options.html">Bandwidth rules and sampling
 schemes</a>: <code>bwselect</code>, fixed bandwidths, and the standard
 error under each scheme.</li>
 <li>
-<a href="rddid-validation-tests.html">Checking the identification
-assumptions</a>: the four tests one at a time.</li>
-<li>
-<a href="rddid-plots.html">Pictures of the checks</a>:
-<code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> on a fit and on each test, and the switchers
-picture.</li>
+<a href="rddid-how-it-works.html">How rddid() computes the
+estimate</a>: the estimate and the tests rebuilt by hand, for referees
+and readers who want to see the pieces.</li>
 </ul>
 </div>
 <div class="section level2">
 <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h2>
+<p><code>citation("rddid")</code> returns the reference for the package,
+the paper below, with a BibTeX entry.</p>
 <p>Leventer, D. and D. Nevo (2024). Correcting Invalid Regression
 Discontinuity Designs Using Multiple Time-Period Data. arXiv:2408.05847.
 <a href="https://arxiv.org/abs/2408.05847" class="external-link uri">https://arxiv.org/abs/2408.05847</a></p>

@@ -1,9 +1,10 @@
 # Plot a constant-within-type-confounding test: each type's confounding jump over time
 
 One panel per type: its local-linear jump in each comparison period with
-its 95% interval, and a dashed line at the type's average jump. Under
-the null (`trend = "constant"`) the jumps of a type are the same in
-every comparison period; under `trend = "linear"` they lie on a line.
+its 95% interval, and a dashed reference line, the type's average jump
+(`trend = "constant"`) or the least-squares line through its jumps
+(`trend = "linear"`). Under the null the points sit on the dashed line,
+up to sampling error.
 
 ## Usage
 

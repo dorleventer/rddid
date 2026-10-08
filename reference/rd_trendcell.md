@@ -4,18 +4,19 @@ When the running variable moves over time, some units are above the
 cutoff in one period and below it in another. A unit's **type** is the
 side of the cutoff it is on in the other period(s); by default here, its
 side in the RD period, which stays fixed across the comparison periods.
-The confounding-trend assumption of
-[`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md) must
-then hold within each type. It concerns the RD period, where the
-confounding jump is not observed separately, so, like a pre-trends check
-in difference-in-differences, `rd_trendcell()` tests it across the
+The paper's identification result then requires the confounding-trend
+assumption of
+[`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md)
+within each type. It concerns the RD period, where the confounding jump
+is not observed separately, so, like a pre-trends check in
+difference-in-differences, `rd_trendcell()` tests it across the
 comparison periods: the null is that **within each type, the confounding
 jump is the same in every comparison period** (with `trend = "linear"`:
 moves linearly in time). A rejection means the comparison periods do not
 support the trend assumption, and the estimate of
 [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md)
-under that assumption can be biased; if the jumps move linearly,
-consider `rddid(trend = "linear")`. With a running variable fixed over
+under that assumption can be biased. `rddid(trend = "linear")` allows
+jumps that move linearly in time. With a running variable fixed over
 time (as in
 [rddid_sim](https://dorleventer.github.io/rddid/reference/rddid_sim.md))
 the types are degenerate and the test is not informative.
@@ -65,7 +66,19 @@ rd_trendcell(
 
 - time:
 
-  name of the period column (a string).
+  name of the period column (a string). The column is usually numeric (a
+  year); character or factor labels work as well, except under
+  `trend = "linear"` (in
+  [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md) or
+  `rd_trendcell()`), where the line is fitted on the period values:
+  these then need to be numeric and are the time scale of the line (so
+  2015, 2017, 2018 are unequally spaced);
+  [`as.numeric()`](https://rdrr.io/r/base/numeric.html) converts
+  character labels such as `"2019"`. In
+  [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md)
+  the default comparison periods are every period other than `t_rd`, in
+  sorted order of the values (alphabetical for character or factor
+  labels), the order a numeric `trend` follows.
 
 - id:
 
@@ -95,11 +108,11 @@ rd_trendcell(
   the trend assumption tested within each type: `"constant"` (default;
   the confounding jump is the same in every comparison period) or
   `"linear"` (it moves linearly in time; needs at least three comparison
-  periods). Use the `trend` of the
+  periods). Given the `trend` of an
   [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md)
-  call being checked. With `"linear"` the second differences are taken
-  in time (the period values), so unequally spaced comparison periods
-  are handled.
+  call, the test checks that call's assumption. With `"linear"` the
+  second differences are taken in time (the period values), so unequally
+  spaced comparison periods are handled.
 
 - c:
 
@@ -297,7 +310,7 @@ tr <- rd_trendcell(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_r
 tr          # the Wald test, then each type's jump in each comparison period
 #> Test of a constant within-type confounding discontinuity  [rd_trendcell()]
 #>   H0: within each type, the confounding jump is the same in every comparison period
-#>   Sampling scheme: panel, running variable varies over time: some units change side (detected from the data)
+#>   Sampling scheme: panel, some units change side of the cutoff (detected)
 #>   Comparison periods: 1, 2   Trend: constant
 #> 
 #>   Wald chi-squared(2) = 0.078,  p = 0.962
@@ -314,7 +327,7 @@ rd_trendcell(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
 #> rd_trendcell: linear trend is not testable -- no cell has 3 or more comparison periods (degrees of freedom = 0). Returning an object with df = 0, statistic = NA, p_value = NA.
 #> Test of a constant within-type confounding discontinuity  [rd_trendcell()]
 #>   H0: within each type, the confounding jump moves linearly across the comparison periods
-#>   Sampling scheme: panel, running variable varies over time: some units change side (detected from the data)
+#>   Sampling scheme: panel, some units change side of the cutoff (detected)
 #>   Comparison periods: 1, 2   Trend: linear
 #> 
 #>   Wald: not testable (df = 0)

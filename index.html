@@ -5,14 +5,14 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Treatment-Effect Estimation in Regression-Discontinuity Difference-in-Discontinuities (RD-DID) Designs • rddid</title>
+<title>Regression Discontinuity with a Confounding Policy (RD-DID) • rddid</title>
 <script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
 <script src="deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Treatment-Effect Estimation in Regression-Discontinuity Difference-in-Discontinuities (RD-DID) Designs">
-<meta name="description" content="Estimation and inference for the regression-discontinuity difference-in-discontinuities (RD-DID) design of Leventer and Nevo, which recovers a causal effect when a confounding policy switches at the same cutoff as the treatment of interest. The discontinuity is estimated period by period with standard local-linear RD and aggregated across periods following the identification result. Variances are provided for three sampling schemes (repeated cross-section, panel with time-constant running variable, panel with time-varying running variable), and the common bandwidth can be chosen either per period (the Imbens-Kalyanaraman / CCT within-period MSE-optimal rule) or jointly to minimise the asymptotic MSE of the aggregate estimator.">
-<meta property="og:description" content="Estimation and inference for the regression-discontinuity difference-in-discontinuities (RD-DID) design of Leventer and Nevo, which recovers a causal effect when a confounding policy switches at the same cutoff as the treatment of interest. The discontinuity is estimated period by period with standard local-linear RD and aggregated across periods following the identification result. Variances are provided for three sampling schemes (repeated cross-section, panel with time-constant running variable, panel with time-varying running variable), and the common bandwidth can be chosen either per period (the Imbens-Kalyanaraman / CCT within-period MSE-optimal rule) or jointly to minimise the asymptotic MSE of the aggregate estimator.">
+<script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Regression Discontinuity with a Confounding Policy (RD-DID)">
+<meta name="description" content="Estimation and inference for the regression-discontinuity difference-in-discontinuities (RD-DID) design of Leventer and Nevo (2024) &lt;arXiv:2408.05847&gt;, which recovers a causal effect when a confounding policy switches at the same cutoff as the treatment of interest. The discontinuity is estimated period by period with standard local-linear RD and aggregated across periods following the identification result. Variances are provided for three sampling schemes (repeated cross-section, panel with time-constant running variable, panel with time-varying running variable), and the common bandwidth can be chosen either per period (the Imbens-Kalyanaraman / CCT within-period MSE-optimal rule) or jointly to minimise the asymptotic MSE of the aggregate estimator.">
+<meta property="og:description" content="Estimation and inference for the regression-discontinuity difference-in-discontinuities (RD-DID) design of Leventer and Nevo (2024) &lt;arXiv:2408.05847&gt;, which recovers a causal effect when a confounding policy switches at the same cutoff as the treatment of interest. The discontinuity is estimated period by period with standard local-linear RD and aggregated across periods following the identification result. Variances are provided for three sampling schemes (repeated cross-section, panel with time-constant running variable, panel with time-varying running variable), and the common bandwidth can be chosen either per period (the Imbens-Kalyanaraman / CCT within-period MSE-optimal rule) or jointly to minimise the asymptotic MSE of the aggregate estimator.">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -35,14 +35,13 @@
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="articles/rddid-how-it-works.html">How rddid() computes the estimate</a></li>
+<li><a class="dropdown-item" href="articles/rddid-validation-tests.html">Checking the identification assumptions</a></li>
+    <li><a class="dropdown-item" href="articles/rddid-plots.html">Plots of the estimate and the checks</a></li>
     <li><a class="dropdown-item" href="articles/rddid-options.html">Bandwidth rules and sampling schemes</a></li>
-    <li><a class="dropdown-item" href="articles/rddid-validation-tests.html">Checking the identification assumptions</a></li>
-    <li><a class="dropdown-item" href="articles/rddid-plots.html">Pictures of the checks</a></li>
+    <li><a class="dropdown-item" href="articles/rddid-how-it-works.html">How rddid() computes the estimate (for referees)</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="reference/index.html">Reference</a></li>
-<li class="nav-item"><a class="nav-link" href="news/index.html">Changelog</a></li>
       </ul>
 <ul class="navbar-nav">
 <li class="nav-item"><form class="form-inline" role="search">
@@ -62,7 +61,8 @@
 <!-- badges: start -->
 
 <p>A treatment of interest switches on at a cutoff of a running variable in one period, the <strong>RD period</strong>. A <strong>confounding policy</strong> switches at the same cutoff, in every period, so the jump in the outcome at the cutoff in the RD period mixes the treatment effect with the <strong>confounding jump</strong>. In the <strong>comparison periods</strong> the treatment of interest is uniform at the cutoff (nobody treated, or everybody treated), so, provided the treatment of interest has no anticipation or carry-over effects there (which the paper assumes), the jump there <em>is</em> the confounding jump. <code><a href="reference/rddid.html">rddid()</a></code> estimates the jump in every period by local-linear RD and subtracts a weighted average of the comparison-period jumps from the RD-period jump. How the weights are set is the <strong>confounding-trend assumption</strong>: constant (equal weights) or linear in time.</p>
-<p>Leventer, D. and D. Nevo (2024). <em>Correcting Invalid Regression Discontinuity Designs Using Multiple Time-Period Data.</em> <a href="https://arxiv.org/abs/2408.05847" class="external-link">arXiv:2408.05847</a>.</p>
+<p>Leventer, D. and D. Nevo (2024). <em>Correcting Invalid Regression Discontinuity Designs Using Multiple Time-Period Data.</em> <a href="https://arxiv.org/abs/2408.05847" class="external-link">arXiv:2408.05847</a>. <code>citation("rddid")</code> returns this reference, with a BibTeX entry.</p>
+<p>Compared with a single <code>rdrobust</code> fit, <code><a href="reference/rddid.html">rddid()</a></code> runs one local-linear RD per period with the same conventions (<code><a href="reference/rd_period.html">rd_period()</a></code> reproduces <code>rdrobust</code> at a given bandwidth) and then nets the comparison-period jumps out of the RD-period jump, with standard errors that account for the same units appearing in several periods and bandwidth rules chosen for the combined estimate.</p>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
@@ -80,8 +80,8 @@
 <span><span class="va">fit</span></span>
 <span><span class="co">#&gt; RD-DID estimate of the ATT in period 3</span></span>
 <span><span class="co">#&gt;   Comparison periods: 1, 2   (constant confounding trend; weights 0.5, 0.5)</span></span>
-<span><span class="co">#&gt;   Sampling scheme: panel, running variable fixed over time: no unit changes side of the cutoff (detected from the data)</span></span>
-<span><span class="co">#&gt;   Bandwidth: common h = 0.2672 (rule "joint", AMSE-optimal for the aggregate)</span></span>
+<span><span class="co">#&gt;   Sampling scheme: panel, no unit changes side of the cutoff (detected)</span></span>
+<span><span class="co">#&gt;   Bandwidth: common h = 0.2672 (rule "joint": one bandwidth, chosen for the RD-DID estimate)</span></span>
 <span><span class="co">#&gt;   Pilot bandwidth b (period = value): 1 = 0.4102, 2 = 0.3868, 3 = 0.3951</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;                              Estimate  Std. err.       z  p-value   95% CI</span></span>
@@ -89,13 +89,13 @@
 <span><span class="co">#&gt;   Robust (bias-corrected)      1.1414     0.1494    7.64   &lt;0.001   [0.8486, 1.4342]</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   summary() shows the per-period fits and the s.e. under every sampling scheme.</span></span></code></pre></div>
-<p>Years 1 and 2 are the comparison periods, with equal weights. <code>Conventional</code> is the local-linear estimate with its conventional standard error; <code>Robust (bias-corrected)</code> is the bias-corrected estimate with its robust standard error. A plain RD in year 3 would target 1.5, the effect plus the confounding jump.</p>
+<p>The ATT is the effect of the treatment on the units just above the cutoff, the ones treated in year 3. Years 1 and 2 are the comparison periods, with equal weights. <code>h</code> is the main bandwidth, one for every year, chosen for the RD-DID estimate; <code>b</code> is the pilot bandwidth of the bias correction in each year. <code>Conventional</code> is the local-linear estimate with its conventional standard error; <code>Robust (bias-corrected)</code> is the bias-corrected estimate with its robust standard error. A plain RD in year 3 would target 1.5, the effect plus the confounding jump. <a href="https://dorleventer.github.io/rddid/articles/rddid-estimation.html">Get started</a> reads every line.</p>
 <p>When the running variable moves over time, so that units can change side of the cutoff between periods, four tests check the assumptions this adds, for example type continuity:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="reference/rd_typecont.html">rd_typecont</a></span><span class="op">(</span><span class="va">rddid_sim_pv</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="reference/rd_typecont.html">rd_typecont</a></span><span class="op">(</span><span class="va">rddid_sim_pv</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Test of a continuous type distribution  [rd_typecont()]</span></span>
 <span><span class="co">#&gt;   H0: the share of each type jumps by zero at the cutoff, in every period</span></span>
-<span><span class="co">#&gt;   Sampling scheme: panel, running variable varies over time: some units change side (detected from the data)</span></span>
+<span><span class="co">#&gt;   Sampling scheme: panel, some units change side of the cutoff (detected)</span></span>
 <span><span class="co">#&gt;   Periods: 1, 2, 3   Types: ++, +-, -+, --   Bandwidth: CCT MSE-optimal, chosen per cell</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Joint Wald chi-squared(9) = 4.782,  p = 0.853</span></span>
@@ -110,6 +110,10 @@
 <ul>
 <li>
 <a href="https://dorleventer.github.io/rddid/articles/rddid-estimation.html">Get started</a>: the estimate, its printout, and the four tests.</li>
+<li>
+<a href="https://dorleventer.github.io/rddid/articles/rddid-validation-tests.html">Checking the identification assumptions</a>: the four tests, one at a time.</li>
+<li>
+<a href="https://dorleventer.github.io/rddid/articles/rddid-plots.html">Plots of the estimate and the checks</a>: <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> on a fit and on each test.</li>
 <li>
 <a href="https://dorleventer.github.io/rddid/reference/index.html">Reference</a>: every function, with examples.</li>
 </ul>
@@ -142,7 +146,7 @@
 <div class="developers">
 <h2 data-toc-skip>Developers</h2>
 <ul class="list-unstyled">
-<li>Dor Leventer <br><small class="roles"> Author, maintainer </small>   </li>
+<li>Dor Leventer <br><small class="roles"> Author, maintainer, copyright holder </small>   </li>
 <li>Daniel Nevo <br><small class="roles"> Author </small>   </li>
 </ul>
 </div>
@@ -152,6 +156,7 @@
 <ul class="list-unstyled">
 <li><a href="https://github.com/dorleventer/rddid/actions/workflows/R-CMD-check.yaml" class="external-link"><img src="https://github.com/dorleventer/rddid/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R-CMD-check"></a></li>
 <li><a href="https://opensource.org/licenses/MIT" class="external-link"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a></li>
+<li><a href="https://lifecycle.r-lib.org/articles/stages.html#experimental" class="external-link"><img src="https://img.shields.io/badge/lifecycle-experimental-orange.svg" alt="Lifecycle: experimental"></a></li>
 </ul>
 </div>
 

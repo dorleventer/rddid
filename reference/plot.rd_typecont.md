@@ -5,10 +5,10 @@ period, the share of units that are above the cutoff in the RD period,
 against the comparison-period running variable; in the RD period, the
 share that are above the cutoff in the comparison period, against the
 RD-period running variable. In each panel the share is averaged within
-`bins` equal-width bins inside the bandwidth and the local-linear fit is
-drawn on each side of the cutoff, at the bandwidth rule the test used.
-Under the null the two lines of a panel meet at the cutoff: who a unit
-is in the other period does not jump there.
+`bins` equal-width bins on each side of the cutoff inside the bandwidth,
+and the local-linear fit is drawn on each side, at the bandwidth rule
+the test used. Under the null the two lines of a panel meet at the
+cutoff: who a unit is in the other period does not jump there.
 
 ## Usage
 
@@ -33,7 +33,7 @@ plot(x, t_rd = NULL, comparison = NULL, bins = 20L, ...)
 
 - bins:
 
-  number of equal-width bins for the binned shares (default 20).
+  number of equal-width bins on each side of the cutoff (default 20).
 
 - ...:
 

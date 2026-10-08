@@ -1,12 +1,13 @@
 # Plot the per-period RD fits behind an RD-DID estimate
 
 One panel per period, in time order: the outcome averaged within `bins`
-equal-width bins of the running variable, and the two local-linear fits
-of that period drawn over their bandwidth on each side of the cutoff.
-The jump between the two lines at the cutoff is the period's
-discontinuity \\D_t\\; the RD-DID estimate is the RD-period jump minus
-the weighted comparison-period jumps (see
-[`summary()`](https://rdrr.io/r/base/summary.html)).
+equal-width bins of the running variable on each side of the cutoff, and
+the two local-linear fits of that period drawn over their bandwidth on
+each side. The jump between the two lines at the cutoff is the period's
+discontinuity \\D_t\\;
+[`summary()`](https://rdrr.io/r/base/summary.html) lists every \\D_t\\
+and the RD-DID estimate they combine into. Green panels are comparison
+periods, pink the RD period.
 
 ## Usage
 
@@ -24,8 +25,8 @@ plot(x, bins = 20L, ...)
 
 - bins:
 
-  number of equal-width bins for the binned means (default 20, over the
-  running variable's range in each period).
+  number of equal-width bins on each side of the cutoff (default 20,
+  over the running variable's range in each period).
 
 - ...:
 
@@ -33,7 +34,9 @@ plot(x, bins = 20L, ...)
 
 ## Value
 
-A ggplot object (ggplot2 must be installed).
+A ggplot object (ggplot2 must be installed), which can be changed with
+`+` and saved with
+[`ggplot2::ggsave()`](https://ggplot2.tidyverse.org/reference/ggsave.html).
 
 ## See also
 

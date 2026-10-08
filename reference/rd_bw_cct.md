@@ -13,7 +13,7 @@ it takes vectors, not a data frame and column names.
 ## Usage
 
 ``` r
-rd_bw_cct(y, x, c = 0, p = 1L, kernel = "triangular")
+rd_bw_cct(y, x, c = 0, p = 1L, q = p + 1L, kernel = "triangular")
 ```
 
 ## Arguments
@@ -33,6 +33,11 @@ rd_bw_cct(y, x, c = 0, p = 1L, kernel = "triangular")
 - p:
 
   order of the local polynomial (default 1, local linear).
+
+- q:
+
+  order of the local polynomial of the bias correction (default
+  `p + 1`); the pilot bandwidth `b` is chosen for it.
 
 - kernel:
 

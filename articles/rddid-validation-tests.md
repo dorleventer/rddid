@@ -1,15 +1,23 @@
 # Checking the identification assumptions
 
-## When the tests are needed
+[Get
+started](https://dorleventer.github.io/rddid/articles/rddid-estimation.md)
+runs the four tests and reads their printouts. This article adds how
+each statistic is built, the tests under the ATU design, their options,
+and how the four results read together.
+
+## When the tests apply
 
 The tests are for a panel in which the running variable moves over time,
 so that some units, the **switchers**, are above the cutoff in one
 period and below it in another. The units at the cutoff in the RD period
 can then be a different mix from the units at the cutoff in a comparison
 period, and the difference of the two jumps can mix the treatment effect
-with that difference in who is at the cutoff. A unit’s **type** is the
-side of the cutoff it is on in the other period(s). The RD-DID estimate
-identifies the ATT when
+with that difference in who is at the cutoff. A unit’s **type** records
+its side of the cutoff in other periods; the table in [Get
+started](https://dorleventer.github.io/rddid/articles/rddid-estimation.html#when-the-running-variable-moves-over-time)
+gives the two versions the tests use. The RD-DID estimate identifies the
+ATT when
 
 1.  **type continuity** holds,
 2.  **constant within-type confounding** holds, and
@@ -30,7 +38,8 @@ stay on one side; some switch:
 ``` r
 
 library(rddid)
-switcher <- tapply(rddid_sim_pv$V, rddid_sim_pv$id, function(v) length(unique(v)) > 1)
+above <- rddid_sim_pv$R >= 0
+switcher <- tapply(above, rddid_sim_pv$id, function(a) length(unique(a)) > 1)
 sum(switcher)
 #> [1] 176
 ```
@@ -50,11 +59,11 @@ period.**
 
 ``` r
 
-tc <- rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id")
+tc <- rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
 tc
 #> Test of a continuous type distribution  [rd_typecont()]
 #>   H0: the share of each type jumps by zero at the cutoff, in every period
-#>   Sampling scheme: panel, running variable varies over time: some units change side (detected from the data)
+#>   Sampling scheme: panel, some units change side of the cutoff (detected)
 #>   Periods: 1, 2, 3   Types: ++, +-, -+, --   Bandwidth: CCT MSE-optimal, chosen per cell
 #> 
 #>   Joint Wald chi-squared(9) = 4.782,  p = 0.853
@@ -63,9 +72,8 @@ tc
 #>     Period 3: chi-squared(3) = 2.202,  p = 0.532
 ```
 
-- `Types: ++, +-, -+, --`: with three years, a unit’s type in one year
-  is its pair of sides in the other two, in time order (`+-` is above
-  the cutoff in the earlier of the two and below it in the later).
+- `Types: ++, +-, -+, --`: a unit’s sides of the cutoff in the other two
+  years, in time order (the first row of the type table in Get started).
 - The test runs, in each year and for each type, a local-linear RD of
   the indicator “the unit is of this type” on the running variable; the
   jump is the difference between the type’s share just above and just
@@ -75,8 +83,7 @@ tc
   each year alone.
 
 Here p = 0.853. Type continuity holds in `rddid_sim_pv` by construction,
-so a p-value below 0.05 would be a false rejection, which a test at the
-5% level is designed to make in about one sample in twenty.
+so a p-value below 0.05 would be a false rejection.
 
 **If it rejects:** units sort around the cutoff according to their side
 in other periods, so the jump in the outcome partly reflects a jump in
@@ -94,7 +101,7 @@ cs <- rd_compstable(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
 cs
 #> Test of composition stability  [rd_compstable()]
 #>   H0: the share of each type among the units just above the cutoff is the same in the RD period and in each comparison period
-#>   Sampling scheme: panel, running variable varies over time: some units change side (detected from the data)
+#>   Sampling scheme: panel, some units change side of the cutoff (detected)
 #>   RD period: 3   Comparison periods: 1, 2   Bandwidth: CCT MSE-optimal, chosen per cell
 #> 
 #>   Pair 3::1: chi-squared(3) = 21.982,  p = <0.001
@@ -106,10 +113,9 @@ cs
 ```
 
 - One block per pair of the RD period and a comparison period:
-  `Pair 3::1` compares year 3 with year 1. Within a pair, a unit’s type
-  is its side in the other comparison period and in the partner year of
-  the pair, so there are four types and three free shares
-  (`chi-squared(3)`).
+  `Pair 3::1` compares year 3 with year 1. The types are those of type
+  continuity (a unit’s sides in the other two years), so there are four
+  types and three free shares (`chi-squared(3)`).
 - The test stacks the units above the cutoff in the two years, with the
   comparison year’s running variable reflected below an artificial
   cutoff, and tests the jump in each type share there.
@@ -119,8 +125,8 @@ cs
   accounts for them.
 - `Joint over pairs`: the sum of the pair statistics and degrees of
   freedom. It treats the pairs as independent although they share the
-  RD-period units, so read it as approximate; the paper’s test is per
-  pair.
+  RD-period units, so its p-value is approximate; the paper’s test is
+  per pair.
 
 Here p \< 0.001. Composition stability is false in `rddid_sim_pv` by
 construction: the units at the year-3 cutoff were mostly on the same
@@ -131,8 +137,8 @@ with 1,000 units the test does not always detect it.
 **If it rejects:** the units at the cutoff in the RD period are a
 different mix of types from those in a comparison period. If the
 confounding jump also differs across types, the comparison-period jump
-measures the confounding jump of a different mix, and the estimate is
-biased. If the confounding jump is the same for every type (the next
+measures the confounding jump of a different mix, and the estimate can
+be biased. If the confounding jump is the same for every type (the next
 test), the mix does not matter and the estimate is still valid.
 
 ## Homogeneous confounding: `rd_homog()`
@@ -140,8 +146,9 @@ test), the mix does not matter and the estimate is still valid.
 **H0: in each comparison period the confounding jump is the same for
 every type.**
 
-Here a unit’s type is its side of the cutoff in the RD period
-(`type_by = "rd_side"`, the default).
+Here a unit’s type is its side of the cutoff in the RD period (the
+second row of the type table in Get started; `type_by = "rd_side"`, the
+default).
 
 ``` r
 
@@ -149,7 +156,7 @@ hg <- rd_homog(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 
 hg
 #> Test of homogeneous confounding  [rd_homog()]
 #>   H0: in each comparison period the confounding jump is the same for every type
-#>   Sampling scheme: panel, running variable varies over time: some units change side (detected from the data)
+#>   Sampling scheme: panel, some units change side of the cutoff (detected)
 #>   Comparison periods: 1, 2
 #> 
 #>   Wald chi-squared(2) = 0.465,  p = 0.793
@@ -171,13 +178,13 @@ hg
 
 Here p = 0.793. The null is true in `rddid_sim_pv` (the confounding jump
 is 0.5 for every unit), so a p-value below 0.05 would be a false
-rejection, which a test at the 5% level is designed to make in about one
-sample in twenty. The per-type jumps are imprecise (standard errors 0.22
-to 0.40).
+rejection. The per-type jumps are imprecise (standard errors 0.22 to
+0.40).
 
-**If it rejects:** the confounding jump differs across types. This is
-harmless if composition stability holds. If both are rejected, the
-estimate is biased.
+**If it rejects:** the confounding jump differs across types. If
+composition stability holds, a confounding jump that differs across
+types does not bias the estimate. If both nulls are false, the estimate
+can be biased.
 
 ## Constant within-type confounding: `rd_trendcell()`
 
@@ -190,7 +197,7 @@ tr <- rd_trendcell(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_r
 tr
 #> Test of a constant within-type confounding discontinuity  [rd_trendcell()]
 #>   H0: within each type, the confounding jump is the same in every comparison period
-#>   Sampling scheme: panel, running variable varies over time: some units change side (detected from the data)
+#>   Sampling scheme: panel, some units change side of the cutoff (detected)
 #>   Comparison periods: 1, 2   Trend: constant
 #> 
 #>   Wald chi-squared(2) = 0.078,  p = 0.962
@@ -224,10 +231,10 @@ three comparison periods; with two, the function says so and returns no
 statistic.
 
 **If it rejects:** the within-type confounding jump changes over time,
-and constant weights do not cancel it. If the change looks linear and
-there are enough comparison periods, estimate with
-`rddid(trend = "linear")` and test with
-`rd_trendcell(trend = "linear")`.
+and constant weights do not cancel it. `rddid(trend = "linear")` allows
+a within-type confounding jump that moves linearly in time, and
+`rd_trendcell(trend = "linear")` tests that version (three or more
+comparison periods).
 
 ## ATU designs
 
@@ -245,7 +252,7 @@ mechanics:
 rd_compstable(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3, estimand = "atu")
 #> Test of composition stability  [rd_compstable()]
 #>   H0: the share of each type among the units just below the cutoff is the same in the RD period and in each comparison period
-#>   Sampling scheme: panel, running variable varies over time: some units change side (detected from the data)
+#>   Sampling scheme: panel, some units change side of the cutoff (detected)
 #>   Estimand: ATU (the units below the cutoff are the ones untreated in the RD period, so the test is on their shares (mirrored design))
 #>   RD period: 3   Comparison periods: 1, 2   Bandwidth: CCT MSE-optimal, chosen per cell
 #> 
@@ -281,10 +288,11 @@ do.call(rbind, lapply(tests, generics::tidy))
 
 `tidy()` (from the generics package) returns one row per test, so the
 four stack into one table for a paper or a table maker such as
-modelsummary.
+modelsummary. The composition-stability row is the joint-over-pairs
+statistic, whose p-value is approximate.
 
-Read the four together with the list at the top. A rejection of type
-continuity, or of constant within-type confounding, would call the
+Together, the four results map onto the list at the top. A rejection of
+type continuity, or of constant within-type confounding, would call the
 estimate into question; so would a rejection of both composition
 stability and homogeneous confounding. A rejection of only one of those
 two would not on its own, because either one is enough for
@@ -297,8 +305,8 @@ valid:
 rddid(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 #> RD-DID estimate of the ATT in period 3
 #>   Comparison periods: 1, 2   (constant confounding trend; weights 0.5, 0.5)
-#>   Sampling scheme: panel, running variable varies over time: some units change side (detected from the data)
-#>   Bandwidth: common h = 0.2367 (rule "joint", AMSE-optimal for the aggregate)
+#>   Sampling scheme: panel, some units change side of the cutoff (detected)
+#>   Bandwidth: common h = 0.2367 (rule "joint": one bandwidth, chosen for the RD-DID estimate)
 #>   Pilot bandwidth b (period = value): 1 = 0.3889, 2 = 0.3847, 3 = 0.3933
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI

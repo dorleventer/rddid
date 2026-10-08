@@ -16,7 +16,8 @@ started](https://dorleventer.github.io/rddid/articles/rddid-estimation.md).
 ``` r
 
 library(rddid)
-library(ggplot2)
+has_gg <- requireNamespace("ggplot2", quietly = TRUE)
+if (has_gg) library(ggplot2)
 fmt <- function(x, d = 2) formatC(x, format = "f", digits = d)
 ```
 
@@ -169,7 +170,7 @@ res <- rddid(dat, y = "Y", x = "R", time = "t", id = "id", t_rd = 3, bwselect = 
 res
 #> RD-DID estimate of the ATT in period 3
 #>   Comparison periods: 1, 2   (constant confounding trend; weights 0.5, 0.5)
-#>   Sampling scheme: panel, running variable fixed over time: no unit changes side of the cutoff (detected from the data)
+#>   Sampling scheme: panel, no unit changes side of the cutoff (detected)
 #>   Bandwidth: per-period CCT MSE-optimal (rule "cct"): h (period = value) 1 = 0.3952, 2 = 0.3109, 3 = 0.403
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI
@@ -307,8 +308,8 @@ res_atu <- rddid(dat_atu, y = "Y", x = "R", time = "t", id = "id", t_rd = 3,
 res_atu
 #> RD-DID estimate of the ATU in period 3
 #>   Comparison periods: 1, 2   (constant confounding trend; weights 0.5, 0.5)
-#>   Sampling scheme: panel, running variable fixed over time: no unit changes side of the cutoff (detected from the data)
-#>   Bandwidth: common h = 0.3025 (rule "joint", AMSE-optimal for the aggregate)
+#>   Sampling scheme: panel, no unit changes side of the cutoff (detected)
+#>   Bandwidth: common h = 0.3025 (rule "joint": one bandwidth, chosen for the RD-DID estimate)
 #>   Pilot bandwidth b (period = value): 1 = 0.452, 2 = 0.4691, 3 = 0.4415
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI
@@ -688,31 +689,10 @@ S0_3/S4](rddid-how-it-works_files/figure-html/trendcell-plot-1.png)
 
 ### What each test detects
 
-``` r
-
-tc1 <- rd_typecont(S1, x = "R", time = "t", id = "id", bwselect = "cct", bc = FALSE)
-tc2 <- rd_typecont(S2, x = "R", time = "t", id = "id", bwselect = "cct", bc = FALSE)
-cs2 <- rd_compstable(S2, x = "R", time = "t", id = "id", t_rd = 2, comparisons = 1, bwselect = "cct", bc = FALSE)
-cs3 <- rd_compstable(S3, x = "R", time = "t", id = "id", t_rd = 2, comparisons = 1, bwselect = "cct", bc = FALSE)
-h0 <- rd_homog(S0, y = "Y", x = "R", time = "t", id = "id", t_rd = 2, comparisons = 1, bwselect = "cct", bc = FALSE)
-h3 <- rd_homog(S3, y = "Y", x = "R", time = "t", id = "id", t_rd = 2, comparisons = 1, bwselect = "cct", bc = FALSE)
-
-rid <- function(dat, ...) rddid(dat, y = "Y", x = "R", time = "t", id = "id", t_rd = max(dat$t), bwselect = "cct", ...)
-estfmt <- function(r) sprintf("%s (%s)", fmt(r$estimates["Conventional", "est"]), fmt(r$estimates["Conventional", "se"]))
-r0 <- rid(S0); r1 <- rid(S1); r2 <- rid(S2); r3 <- rid(S3)
-r0_3 <- rid(S0_3); r4c <- rid(S4); r0_3l <- rid(S0_3, trend = "linear"); r4l <- rid(S4, trend = "linear")
-
-tab1 <- data.frame(
-  scenario = c("S0", "S1", "S2", "S3"),
-  type_cont_p    = fmtp(c(tc0$p_value, tc1$p_value, tc2$p_value, tc3$p_value)),
-  comp_stable_p  = fmtp(c(p0$ll_wald$p, p1$ll_wald$p, cs2$pairs[["2::1"]]$ll_wald$p, cs3$pairs[["2::1"]]$ll_wald$p)),
-  homog_p        = fmtp(c(h0$p_value, h1$p_value, h2$p_value, h3$p_value)),
-  rddid_est_se   = c(estfmt(r0), estfmt(r1), estfmt(r2), estfmt(r3)),
-  truth = 1
-)
-knitr::kable(tab1, col.names = c("scenario", "type continuity p", "composition stability p",
-                                 "homogeneous confounding p", "rddid() est (SE)", "truth"))
-```
+The p-values of the tests and the
+[`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md)
+estimate in each scenario, first the two-period designs S0 to S3, then
+the three-period designs S0_3 and S4:
 
 | scenario | type continuity p | composition stability p | homogeneous confounding p | rddid() est (SE) | truth |
 |:---|:---|:---|:---|:---|---:|
@@ -720,17 +700,6 @@ knitr::kable(tab1, col.names = c("scenario", "type continuity p", "composition s
 | S1 | 0.861 | \< 0.001 | 0.762 | 0.909 (0.081) | 1 |
 | S2 | 0.861 | \< 0.001 | \< 0.001 | 0.369 (0.087) | 1 |
 | S3 | \< 0.001 | 0.290 | 0.983 | 1.304 (0.152) | 1 |
-
-``` r
-
-
-tab2 <- data.frame(
-  scenario = c("S0_3", "S4"), trendcell_p = fmtp(c(tr0$p_value, tr4$p_value)),
-  est_constant = c(estfmt(r0_3), estfmt(r4c)), est_linear = c(estfmt(r0_3l), estfmt(r4l)), truth = 1
-)
-knitr::kable(tab2, col.names = c("scenario", "constant within-type confounding p",
-                                 "rddid() est (SE), constant", "rddid() est (SE), linear", "truth"))
-```
 
 | scenario | constant within-type confounding p | rddid() est (SE), constant | rddid() est (SE), linear | truth |
 |:---|:---|:---|:---|---:|
@@ -745,15 +714,15 @@ homogeneous confounding is not ($`p = 0.762`$), and the estimate, 0.909
 (0.081), is 1.1 standard errors from the truth: identification needs
 only one of composition stability and homogeneous confounding. In S2
 both are rejected ($`p < 0.001`$ and $`p < 0.001`$), and the estimate,
-0.369 (0.087), is 7.2 standard errors from the truth: the composition
-term. In S3 type continuity is rejected ($`p < 0.001`$); the sorting
-biases the estimate, 1.304 (0.152), but in this one sample it is 2.0
-standard errors from the truth, about as far as S0’s, so the estimate
-alone does not reveal the problem and the test does. In the three-period
-design, S4’s test of constant within-type confounding rejects
-($`p = 0.011`$): the constant-trend estimate, 1.563 (0.071), is 8.0
-standard errors from the truth, the linear-trend estimate, 1.147
-(0.134), 1.1.
+0.369 (0.087), is 7.2 standard errors from the truth; the gap is the
+bias from the difference in type composition. In S3 type continuity is
+rejected ($`p < 0.001`$); the sorting biases the estimate, 1.304
+(0.152), but in this one sample it is 2.0 standard errors from the
+truth, about as far as S0’s, so the estimate alone does not reveal the
+problem and the test does. In the three-period design, S4’s test of
+constant within-type confounding rejects ($`p = 0.011`$): the
+constant-trend estimate, 1.563 (0.071), is 8.0 standard errors from the
+truth, the linear-trend estimate, 1.147 (0.134), 1.1.
 
 ### References
 

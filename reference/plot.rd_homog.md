@@ -2,8 +2,9 @@
 
 The paper's homogeneous-confounding figure: for each comparison period,
 the local-linear jump in the outcome at the cutoff within each type
-(point) with its 95% interval, types side by side. Under the null the
-types' jumps coincide within each period.
+(point) with its 95% interval, types side by side (blue: below the
+cutoff in the RD period; orange: above). Under the null the types' jumps
+coincide within each period.
 
 ## Usage
 

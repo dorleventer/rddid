@@ -3,17 +3,21 @@
 period are placed to the left of an artificial cutoff at their mirrored distance
 \(-(R_{t_0} - c)\), the units above the cutoff in the RD period to the right at
 \(R_{t_{RD}} - c\); the outcome is whether the unit is above the cutoff in the other
-period of the pair. The binned share is drawn with the local-linear fit on each side, at the
+period of the pair. The axis shows the running variable itself (so both sides read outward
+from the cutoff); the binned share and the local-linear fit on each side are drawn at the
 bandwidth rule the test used. Under the null the two lines meet at the artificial cutoff:
 the units just above the cutoff are the same mix in both periods. With
-estimand = &quot;atu&quot; the same picture is drawn for the units below the cutoff."><meta property="og:description" content="The paper's composition-stability figure. The units above the cutoff in the comparison
+estimand = &quot;atu&quot; the picture is drawn for the units below the cutoff, with the RD period
+mirrored instead."><meta property="og:description" content="The paper's composition-stability figure. The units above the cutoff in the comparison
 period are placed to the left of an artificial cutoff at their mirrored distance
 \(-(R_{t_0} - c)\), the units above the cutoff in the RD period to the right at
 \(R_{t_{RD}} - c\); the outcome is whether the unit is above the cutoff in the other
-period of the pair. The binned share is drawn with the local-linear fit on each side, at the
+period of the pair. The axis shows the running variable itself (so both sides read outward
+from the cutoff); the binned share and the local-linear fit on each side are drawn at the
 bandwidth rule the test used. Under the null the two lines meet at the artificial cutoff:
 the units just above the cutoff are the same mix in both periods. With
-estimand = &quot;atu&quot; the same picture is drawn for the units below the cutoff."></head><body>
+estimand = &quot;atu&quot; the picture is drawn for the units below the cutoff, with the RD period
+mirrored instead."></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -32,13 +36,12 @@ estimand = &quot;atu&quot; the same picture is drawn for the units below the cut
       <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/rddid-estimation.html">Get started</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/rddid-how-it-works.html">How rddid() computes the estimate</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/rddid-validation-tests.html">Checking the identification assumptions</a></li>
+    <li><a class="dropdown-item" href="../articles/rddid-plots.html">Plots of the estimate and the checks</a></li>
     <li><a class="dropdown-item" href="../articles/rddid-options.html">Bandwidth rules and sampling schemes</a></li>
-    <li><a class="dropdown-item" href="../articles/rddid-validation-tests.html">Checking the identification assumptions</a></li>
-    <li><a class="dropdown-item" href="../articles/rddid-plots.html">Pictures of the checks</a></li>
+    <li><a class="dropdown-item" href="../articles/rddid-how-it-works.html">How rddid() computes the estimate (for referees)</a></li>
   </ul></li>
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
-<li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
 <li class="nav-item"><a class="external-link nav-link" href="https://github.com/dorleventer/rddid/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
@@ -60,10 +63,12 @@ estimand = &quot;atu&quot; the same picture is drawn for the units below the cut
 period are placed to the left of an artificial cutoff at their mirrored distance
 \(-(R_{t_0} - c)\), the units above the cutoff in the RD period to the right at
 \(R_{t_{RD}} - c\); the outcome is whether the unit is above the cutoff in the other
-period of the pair. The binned share is drawn with the local-linear fit on each side, at the
+period of the pair. The axis shows the running variable itself (so both sides read outward
+from the cutoff); the binned share and the local-linear fit on each side are drawn at the
 bandwidth rule the test used. Under the null the two lines meet at the artificial cutoff:
 the units just above the cutoff are the same mix in both periods. With
-<code>estimand = "atu"</code> the same picture is drawn for the units below the cutoff.</p>
+<code>estimand = "atu"</code> the picture is drawn for the units below the cutoff, with the RD period
+mirrored instead.</p>
     </div>
 
     <div class="section level2">
@@ -85,8 +90,7 @@ the units just above the cutoff are the same mix in both periods. With
 
 
 <dt id="arg-bins">bins<a class="anchor" aria-label="anchor" href="#arg-bins"></a></dt>
-<dd><p>number of equal-width bins for the binned shares (default 20, over the
-bandwidth on each side).</p></dd>
+<dd><p>number of equal-width bins on each side (default 20, over the bandwidth).</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>

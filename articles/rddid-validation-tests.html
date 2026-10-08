@@ -33,14 +33,13 @@
 <li class="active nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="../articles/rddid-how-it-works.html">How rddid() computes the estimate</a></li>
+<li><a class="dropdown-item" href="../articles/rddid-validation-tests.html">Checking the identification assumptions</a></li>
+    <li><a class="dropdown-item" href="../articles/rddid-plots.html">Plots of the estimate and the checks</a></li>
     <li><a class="dropdown-item" href="../articles/rddid-options.html">Bandwidth rules and sampling schemes</a></li>
-    <li><a class="dropdown-item" href="../articles/rddid-validation-tests.html">Checking the identification assumptions</a></li>
-    <li><a class="dropdown-item" href="../articles/rddid-plots.html">Pictures of the checks</a></li>
+    <li><a class="dropdown-item" href="../articles/rddid-how-it-works.html">How rddid() computes the estimate (for referees)</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
-<li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul>
 <ul class="navbar-nav">
 <li class="nav-item"><form class="form-inline" role="search">
@@ -69,8 +68,12 @@
 
     
     
+<p><a href="rddid-estimation.html">Get started</a> runs the four tests
+and reads their printouts. This article adds how each statistic is
+built, the tests under the ATU design, their options, and how the four
+results read together.</p>
 <div class="section level2">
-<h2 id="when-the-tests-are-needed">When the tests are needed<a class="anchor" aria-label="anchor" href="#when-the-tests-are-needed"></a>
+<h2 id="when-the-tests-apply">When the tests apply<a class="anchor" aria-label="anchor" href="#when-the-tests-apply"></a>
 </h2>
 <p>The tests are for a panel in which the running variable moves over
 time, so that some units, the <strong>switchers</strong>, are above the
@@ -78,8 +81,10 @@ cutoff in one period and below it in another. The units at the cutoff in
 the RD period can then be a different mix from the units at the cutoff
 in a comparison period, and the difference of the two jumps can mix the
 treatment effect with that difference in who is at the cutoff. A unit’s
-<strong>type</strong> is the side of the cutoff it is on in the other
-period(s). The RD-DID estimate identifies the ATT when</p>
+<strong>type</strong> records its side of the cutoff in other periods;
+the table in <a href="rddid-estimation.html#when-the-running-variable-moves-over-time">Get
+started</a> gives the two versions the tests use. The RD-DID estimate
+identifies the ATT when</p>
 <ol style="list-style-type: decimal">
 <li>
 <strong>type continuity</strong> holds,</li>
@@ -101,7 +106,8 @@ variable that drifts between years. Most units stay on one side; some
 switch:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/dorleventer/rddid" class="external-link">rddid</a></span><span class="op">)</span></span>
-<span><span class="va">switcher</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tapply.html" class="external-link">tapply</a></span><span class="op">(</span><span class="va">rddid_sim_pv</span><span class="op">$</span><span class="va">V</span>, <span class="va">rddid_sim_pv</span><span class="op">$</span><span class="va">id</span>, <span class="kw">function</span><span class="op">(</span><span class="va">v</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">v</span><span class="op">)</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">1</span><span class="op">)</span></span>
+<span><span class="va">above</span> <span class="op">&lt;-</span> <span class="va">rddid_sim_pv</span><span class="op">$</span><span class="va">R</span> <span class="op">&gt;=</span> <span class="fl">0</span></span>
+<span><span class="va">switcher</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tapply.html" class="external-link">tapply</a></span><span class="op">(</span><span class="va">above</span>, <span class="va">rddid_sim_pv</span><span class="op">$</span><span class="va">id</span>, <span class="kw">function</span><span class="op">(</span><span class="va">a</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="va">a</span><span class="op">)</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">switcher</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 176</span></span></code></pre></div>
 <p>Every test takes the same long data frame and column names as
@@ -117,11 +123,11 @@ picks a separate CCT bandwidth for every local-linear fit it runs
 <p><strong>H0: the share of each type jumps by zero at the cutoff, in
 every period.</strong></p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">tc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rd_typecont.html">rd_typecont</a></span><span class="op">(</span><span class="va">rddid_sim_pv</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">tc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rd_typecont.html">rd_typecont</a></span><span class="op">(</span><span class="va">rddid_sim_pv</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="va">tc</span></span>
 <span><span class="co">#&gt; Test of a continuous type distribution  [rd_typecont()]</span></span>
 <span><span class="co">#&gt;   H0: the share of each type jumps by zero at the cutoff, in every period</span></span>
-<span><span class="co">#&gt;   Sampling scheme: panel, running variable varies over time: some units change side (detected from the data)</span></span>
+<span><span class="co">#&gt;   Sampling scheme: panel, some units change side of the cutoff (detected)</span></span>
 <span><span class="co">#&gt;   Periods: 1, 2, 3   Types: ++, +-, -+, --   Bandwidth: CCT MSE-optimal, chosen per cell</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Joint Wald chi-squared(9) = 4.782,  p = 0.853</span></span>
@@ -130,10 +136,9 @@ every period.</strong></p>
 <span><span class="co">#&gt;     Period 3: chi-squared(3) = 2.202,  p = 0.532</span></span></code></pre></div>
 <ul>
 <li>
-<code>Types: ++, +-, -+, --</code>: with three years, a unit’s type
-in one year is its pair of sides in the other two, in time order
-(<code>+-</code> is above the cutoff in the earlier of the two and below
-it in the later).</li>
+<code>Types: ++, +-, -+, --</code>: a unit’s sides of the cutoff in
+the other two years, in time order (the first row of the type table in
+Get started).</li>
 <li>The test runs, in each year and for each type, a local-linear RD of
 the indicator “the unit is of this type” on the running variable; the
 jump is the difference between the type’s share just above and just
@@ -144,9 +149,7 @@ sum to one, so three jumps are free; three years give 9. The
 <code>Period</code> lines test each year alone.</li>
 </ul>
 <p>Here p = 0.853. Type continuity holds in <code>rddid_sim_pv</code> by
-construction, so a p-value below 0.05 would be a false rejection, which
-a test at the 5% level is designed to make in about one sample in
-twenty.</p>
+construction, so a p-value below 0.05 would be a false rejection.</p>
 <p><strong>If it rejects:</strong> units sort around the cutoff
 according to their side in other periods, so the jump in the outcome
 partly reflects a jump in who the units are. The RD-DID estimate can
@@ -163,7 +166,7 @@ period.</strong></p>
 <span><span class="va">cs</span></span>
 <span><span class="co">#&gt; Test of composition stability  [rd_compstable()]</span></span>
 <span><span class="co">#&gt;   H0: the share of each type among the units just above the cutoff is the same in the RD period and in each comparison period</span></span>
-<span><span class="co">#&gt;   Sampling scheme: panel, running variable varies over time: some units change side (detected from the data)</span></span>
+<span><span class="co">#&gt;   Sampling scheme: panel, some units change side of the cutoff (detected)</span></span>
 <span><span class="co">#&gt;   RD period: 3   Comparison periods: 1, 2   Bandwidth: CCT MSE-optimal, chosen per cell</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Pair 3::1: chi-squared(3) = 21.982,  p = &lt;0.001</span></span>
@@ -174,10 +177,9 @@ period.</strong></p>
 <span><span class="co">#&gt;   Joint over pairs (sum of chi-squared): chi-squared(6) = 28.119,  p = &lt;0.001</span></span></code></pre></div>
 <ul>
 <li>One block per pair of the RD period and a comparison period:
-<code>Pair 3::1</code> compares year 3 with year 1. Within a pair, a
-unit’s type is its side in the other comparison period and in the
-partner year of the pair, so there are four types and three free shares
-(<code>chi-squared(3)</code>).</li>
+<code>Pair 3::1</code> compares year 3 with year 1. The types are those
+of type continuity (a unit’s sides in the other two years), so there are
+four types and three free shares (<code>chi-squared(3)</code>).</li>
 <li>The test stacks the units above the cutoff in the two years, with
 the comparison year’s running variable reflected below an artificial
 cutoff, and tests the jump in each type share there.</li>
@@ -189,8 +191,8 @@ error accounts for them.</li>
 <li>
 <code>Joint over pairs</code>: the sum of the pair statistics and
 degrees of freedom. It treats the pairs as independent although they
-share the RD-period units, so read it as approximate; the paper’s test
-is per pair.</li>
+share the RD-period units, so its p-value is approximate; the paper’s
+test is per pair.</li>
 </ul>
 <p>Here p &lt; 0.001. Composition stability is false in
 <code>rddid_sim_pv</code> by construction: the units at the year-3
@@ -202,22 +204,23 @@ detect it.</p>
 period are a different mix of types from those in a comparison period.
 If the confounding jump also differs across types, the comparison-period
 jump measures the confounding jump of a different mix, and the estimate
-is biased. If the confounding jump is the same for every type (the next
-test), the mix does not matter and the estimate is still valid.</p>
+can be biased. If the confounding jump is the same for every type (the
+next test), the mix does not matter and the estimate is still valid.</p>
 </div>
 <div class="section level2">
 <h2 id="homogeneous-confounding-rd_homog">Homogeneous confounding: <code>rd_homog()</code><a class="anchor" aria-label="anchor" href="#homogeneous-confounding-rd_homog"></a>
 </h2>
 <p><strong>H0: in each comparison period the confounding jump is the
 same for every type.</strong></p>
-<p>Here a unit’s type is its side of the cutoff in the RD period
-(<code>type_by = "rd_side"</code>, the default).</p>
+<p>Here a unit’s type is its side of the cutoff in the RD period (the
+second row of the type table in Get started;
+<code>type_by = "rd_side"</code>, the default).</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">hg</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rd_homog.html">rd_homog</a></span><span class="op">(</span><span class="va">rddid_sim_pv</span>, y <span class="op">=</span> <span class="st">"Y"</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="va">hg</span></span>
 <span><span class="co">#&gt; Test of homogeneous confounding  [rd_homog()]</span></span>
 <span><span class="co">#&gt;   H0: in each comparison period the confounding jump is the same for every type</span></span>
-<span><span class="co">#&gt;   Sampling scheme: panel, running variable varies over time: some units change side (detected from the data)</span></span>
+<span><span class="co">#&gt;   Sampling scheme: panel, some units change side of the cutoff (detected)</span></span>
 <span><span class="co">#&gt;   Comparison periods: 1, 2</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Wald chi-squared(2) = 0.465,  p = 0.793</span></span>
@@ -240,12 +243,12 @@ against the reference type <code>-</code>) per comparison year.</li>
 </ul>
 <p>Here p = 0.793. The null is true in <code>rddid_sim_pv</code> (the
 confounding jump is 0.5 for every unit), so a p-value below 0.05 would
-be a false rejection, which a test at the 5% level is designed to make
-in about one sample in twenty. The per-type jumps are imprecise
-(standard errors 0.22 to 0.40).</p>
+be a false rejection. The per-type jumps are imprecise (standard errors
+0.22 to 0.40).</p>
 <p><strong>If it rejects:</strong> the confounding jump differs across
-types. This is harmless if composition stability holds. If both are
-rejected, the estimate is biased.</p>
+types. If composition stability holds, a confounding jump that differs
+across types does not bias the estimate. If both nulls are false, the
+estimate can be biased.</p>
 </div>
 <div class="section level2">
 <h2 id="constant-within-type-confounding-rd_trendcell">Constant within-type confounding: <code>rd_trendcell()</code><a class="anchor" aria-label="anchor" href="#constant-within-type-confounding-rd_trendcell"></a>
@@ -257,7 +260,7 @@ every comparison period.</strong></p>
 <span><span class="va">tr</span></span>
 <span><span class="co">#&gt; Test of a constant within-type confounding discontinuity  [rd_trendcell()]</span></span>
 <span><span class="co">#&gt;   H0: within each type, the confounding jump is the same in every comparison period</span></span>
-<span><span class="co">#&gt;   Sampling scheme: panel, running variable varies over time: some units change side (detected from the data)</span></span>
+<span><span class="co">#&gt;   Sampling scheme: panel, some units change side of the cutoff (detected)</span></span>
 <span><span class="co">#&gt;   Comparison periods: 1, 2   Trend: constant</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Wald chi-squared(2) = 0.078,  p = 0.962</span></span>
@@ -287,10 +290,11 @@ confounding jump moves linearly across the comparison periods. That
 needs at least three comparison periods; with two, the function says so
 and returns no statistic.</p>
 <p><strong>If it rejects:</strong> the within-type confounding jump
-changes over time, and constant weights do not cancel it. If the change
-looks linear and there are enough comparison periods, estimate with
-<code>rddid(trend = "linear")</code> and test with
-<code>rd_trendcell(trend = "linear")</code>.</p>
+changes over time, and constant weights do not cancel it.
+<code>rddid(trend = "linear")</code> allows a within-type confounding
+jump that moves linearly in time, and
+<code>rd_trendcell(trend = "linear")</code> tests that version (three or
+more comparison periods).</p>
 </div>
 <div class="section level2">
 <h2 id="atu-designs">ATU designs<a class="anchor" aria-label="anchor" href="#atu-designs"></a>
@@ -307,7 +311,7 @@ ATT design, so the call below only shows the mechanics:</p>
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/rd_compstable.html">rd_compstable</a></span><span class="op">(</span><span class="va">rddid_sim_pv</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span>, estimand <span class="op">=</span> <span class="st">"atu"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Test of composition stability  [rd_compstable()]</span></span>
 <span><span class="co">#&gt;   H0: the share of each type among the units just below the cutoff is the same in the RD period and in each comparison period</span></span>
-<span><span class="co">#&gt;   Sampling scheme: panel, running variable varies over time: some units change side (detected from the data)</span></span>
+<span><span class="co">#&gt;   Sampling scheme: panel, some units change side of the cutoff (detected)</span></span>
 <span><span class="co">#&gt;   Estimand: ATU (the units below the cutoff are the ones untreated in the RD period, so the test is on their shares (mirrored design))</span></span>
 <span><span class="co">#&gt;   RD period: 3   Comparison periods: 1, 2   Bandwidth: CCT MSE-optimal, chosen per cell</span></span>
 <span><span class="co">#&gt; </span></span>
@@ -339,10 +343,11 @@ period, whose composition the estimate relies on.</p>
 <span><span class="co">#&gt; 4 constant within-type confounding  0.07832992  2 9.615921e-01</span></span></code></pre></div>
 <p><code>tidy()</code> (from the generics package) returns one row per
 test, so the four stack into one table for a paper or a table maker such
-as modelsummary.</p>
-<p>Read the four together with the list at the top. A rejection of type
-continuity, or of constant within-type confounding, would call the
-estimate into question; so would a rejection of both composition
+as modelsummary. The composition-stability row is the joint-over-pairs
+statistic, whose p-value is approximate.</p>
+<p>Together, the four results map onto the list at the top. A rejection
+of type continuity, or of constant within-type confounding, would call
+the estimate into question; so would a rejection of both composition
 stability and homogeneous confounding. A rejection of only one of those
 two would not on its own, because either one is enough for
 identification. In <code>rddid_sim_pv</code> the truth is known:
@@ -352,8 +357,8 @@ estimate is valid:</p>
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/rddid.html">rddid</a></span><span class="op">(</span><span class="va">rddid_sim_pv</span>, y <span class="op">=</span> <span class="st">"Y"</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="co">#&gt; RD-DID estimate of the ATT in period 3</span></span>
 <span><span class="co">#&gt;   Comparison periods: 1, 2   (constant confounding trend; weights 0.5, 0.5)</span></span>
-<span><span class="co">#&gt;   Sampling scheme: panel, running variable varies over time: some units change side (detected from the data)</span></span>
-<span><span class="co">#&gt;   Bandwidth: common h = 0.2367 (rule "joint", AMSE-optimal for the aggregate)</span></span>
+<span><span class="co">#&gt;   Sampling scheme: panel, some units change side of the cutoff (detected)</span></span>
+<span><span class="co">#&gt;   Bandwidth: common h = 0.2367 (rule "joint": one bandwidth, chosen for the RD-DID estimate)</span></span>
 <span><span class="co">#&gt;   Pilot bandwidth b (period = value): 1 = 0.3889, 2 = 0.3847, 3 = 0.3933</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;                              Estimate  Std. err.       z  p-value   95% CI</span></span>

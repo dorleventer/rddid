@@ -2,7 +2,7 @@
 
 ## Authors
 
-- **Dor Leventer**. Author, maintainer.
+- **Dor Leventer**. Author, maintainer, copyright holder.
 
 - **Daniel Nevo**. Author.
 

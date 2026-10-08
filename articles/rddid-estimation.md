@@ -49,6 +49,17 @@ confounding policy `V` is on above the cutoff in every year and raises
 3 only and raises `Y` by 1. So year 3 is the RD period, years 1 and 2
 are comparison periods, and **the true effect is 1**.
 
+With your own data,
+[`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md)
+needs the same shape: a data frame in long format, one row per unit and
+period, with the outcome, the running variable, the period and, for a
+panel, a unit identifier (the panel need not be balanced). The cutoff is
+`c` (default 0), and a unit with `x >= c` is above it. The period column
+is usually numeric, a year; a character column works with the default
+constant trend, while `trend = "linear"` fits its line on the period
+values and so needs a numeric column. By default the comparison periods
+are all periods other than `t_rd`, in sorted order.
+
 ## Estimate
 
 ``` r
@@ -57,8 +68,8 @@ fit <- rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 fit
 #> RD-DID estimate of the ATT in period 3
 #>   Comparison periods: 1, 2   (constant confounding trend; weights 0.5, 0.5)
-#>   Sampling scheme: panel, running variable fixed over time: no unit changes side of the cutoff (detected from the data)
-#>   Bandwidth: common h = 0.2672 (rule "joint", AMSE-optimal for the aggregate)
+#>   Sampling scheme: panel, no unit changes side of the cutoff (detected)
+#>   Bandwidth: common h = 0.2672 (rule "joint": one bandwidth, chosen for the RD-DID estimate)
 #>   Pilot bandwidth b (period = value): 1 = 0.4102, 2 = 0.3868, 3 = 0.3951
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI
@@ -73,22 +84,22 @@ Line by line:
 - **`RD-DID estimate of the ATT in period 3`**: the estimand and the RD
   period (`t_rd = 3`). The ATT is the effect of the treatment on the
   units just above the cutoff, which are the ones treated in the RD
-  period.
+  period. If everybody is treated in the comparison periods,
+  `estimand = "atu"` labels the same numbers as the ATU (see [the ATU
+  section](#atu) below).
 - **`Comparison periods: 1, 2 (constant confounding trend; weights 0.5, 0.5)`**:
   by default every period other than `t_rd` is a comparison period. The
   default `trend = "constant"` assumes the confounding jump is the same
   in every period, so each comparison period gets the same weight and
   their average stands in for the confounding jump in year 3.
 - **`Sampling scheme`**: how the data were sampled, read off `id` and
-  `R`. Here it is a panel (the same units in every year) whose running
-  variable does not move. The scheme sets which standard error is
-  reported: in a panel the same units enter every year’s fit, so the
-  yearly jumps are correlated, and the standard error takes that into
-  account. Under the `"joint"` (default) and `"iter"` bandwidth rules
-  the scheme also enters the bandwidth (next line), which weighs bias
-  against the variance of the estimate, and so it can move the estimate;
-  only with a fixed `h` or `bwselect = "cct"` does it leave the estimate
-  untouched.
+  `R`: here a panel (the same units every year) in which no unit changes
+  side of the cutoff, because the running variable does not move. The
+  standard error takes into account that the same units enter every
+  year’s fit. Under the default bandwidth rule the scheme can also move
+  the bandwidth, and so the estimate; [Bandwidth rules and sampling
+  schemes](https://dorleventer.github.io/rddid/articles/rddid-options.md)
+  shows how.
 - **`Bandwidth: common h`**: the default rule, `bwselect = "joint"`,
   uses one main bandwidth `h` in every period, chosen to minimize the
   asymptotic mean squared error of the RD-DID estimate.
@@ -112,10 +123,10 @@ fit$fits[["3"]]
 #>   D (bias-corrected) = +1.6854  (se 0.1931)
 ```
 
-Its jump, 0.63, is that naive RD estimate, whose target is 1.5, not 1.
+Its jump, 1.66, is that naive RD estimate, whose target is 1.5, not 1.
 [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md)
-subtracts the average of the year-1 and year-2 jumps, (1.66 + 0.51) / 2
-= 1.09, its estimate of the confounding jump of 0.5.
+subtracts the average of the year-1 and year-2 jumps, (0.51 + 0.63) / 2
+= 0.57, its estimate of the confounding jump of 0.5.
 
 ## Summary, coefficients and tables
 
@@ -124,24 +135,22 @@ subtracts the average of the year-1 and year-2 jumps, (1.66 + 0.51) / 2
 summary(fit)
 #> RD-DID estimate of the ATT in period 3
 #>   Comparison periods: 1, 2   (constant confounding trend; weights 0.5, 0.5)
-#>   Sampling scheme: panel, running variable fixed over time: no unit changes side of the cutoff (detected from the data)
-#>   Bandwidth: common h = 0.2672 (rule "joint", AMSE-optimal for the aggregate)
+#>   Sampling scheme: panel, no unit changes side of the cutoff (detected)
+#>   Bandwidth: common h = 0.2672 (rule "joint": one bandwidth, chosen for the RD-DID estimate)
 #>   Pilot bandwidth b (period = value): 1 = 0.4102, 2 = 0.3868, 3 = 0.3951
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI
 #>   Conventional                 1.0927     0.1264    8.64   <0.001   [0.8450, 1.3405]
 #>   Robust (bias-corrected)      1.1414     0.1494    7.64   <0.001   [0.8486, 1.4342]
 #> 
-#>   summary() shows the per-period fits and the s.e. under every sampling scheme.
-#> 
 #>   Per-period local-linear fits, in time order (estimate = sum of coef x jump):
 #>   period   role          coef      n        h        b       jump      s.e.  jump (bc) s.e. (rb)
-#>   1        comparison    -0.5   1000   0.2672   0.3951     1.6640    0.1641     1.6854    0.1931
-#>   2        comparison    -0.5   1000   0.2672   0.4102     0.5119    0.1688     0.4639    0.1948
-#>   3        RD               1   1000   0.2672   0.3868     0.6306    0.1686     0.6240    0.2012
+#>   1        comparison    -0.5   1000   0.2672   0.4102     0.5119    0.1688     0.4639    0.1948
+#>   2        comparison    -0.5   1000   0.2672   0.3868     0.6306    0.1686     0.6240    0.2012
+#>   3        RD               1   1000   0.2672   0.3951     1.6640    0.1641     1.6854    0.1931
 #> 
-#>   Robust s.e. under each sampling scheme:  cross-section 0.2385   panel, fixed R 0.1494   panel, varying R 0.1494
-#>   (the printed s.e. is the one for scheme "pc"; the others are shown for comparison)
+#>   Robust s.e. under each sampling scheme (the printed one is for "pc"; the others are for comparison):
+#>     cross-section 0.2385   panel, no unit changes side 0.1494   panel, some change side 0.1494
 ```
 
 [`summary()`](https://rdrr.io/r/base/summary.html) adds the per-period
@@ -149,15 +158,15 @@ fits. Each row gives the period’s role, its coefficient in the estimate
 (+1 for the RD period, minus its weight for a comparison period), its
 number of observations, its bandwidths, and its jump with standard
 error, conventional (`jump`, `s.e.`) and bias-corrected (`jump (bc)`,
-`s.e. (rb)`). The estimate is the sum of coefficient times jump: 0.631 -
-0.5 × 1.664 - 0.5 × 0.512 = 1.093.
+`s.e. (rb)`). The estimate is the sum of coefficient times jump: 1.664 -
+0.5 × 0.512 - 0.5 × 0.631 = 1.093.
 
-The last line gives the robust standard error under each of the three
-sampling schemes. The printout uses the one that matches how the data
-were sampled; the others are there for comparison, not to choose from.
-Here the cross-section standard error, 0.239, ignores that the same
-units appear in every year; the panel one, which accounts for it, is
-0.149.
+The last lines give the robust standard error under each of the three
+sampling schemes. The printout uses the one for the scheme detected in
+the data; the other two show what the formulas for the other schemes
+give on the same data. Here the cross-section standard error, 0.239,
+ignores that the same units appear in every year; the panel one, which
+accounts for it, is 0.149.
 
 ``` r
 
@@ -179,7 +188,7 @@ estimates and [`confint()`](https://rdrr.io/r/stats/confint.html) their
 confidence intervals. `tidy()` (from the generics package) returns one
 row per estimate, so table makers such as modelsummary work with
 [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md)
-fits.
+fits; [A table for a paper](#a-table-for-a-paper) below has an example.
 
 ## A confounding jump that moves linearly
 
@@ -190,8 +199,8 @@ fit_lin <- rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3
 fit_lin
 #> RD-DID estimate of the ATT in period 3
 #>   Comparison periods: 1, 2   (linear confounding trend; weights -1, 2)
-#>   Sampling scheme: panel, running variable fixed over time: no unit changes side of the cutoff (detected from the data)
-#>   Bandwidth: common h = 0.2672 (rule "joint", AMSE-optimal for the aggregate)
+#>   Sampling scheme: panel, no unit changes side of the cutoff (detected)
+#>   Bandwidth: common h = 0.2672 (rule "joint": one bandwidth, chosen for the RD-DID estimate)
 #>   Pilot bandwidth b (period = value): 1 = 0.4102, 2 = 0.3869, 3 = 0.3951
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI
@@ -212,37 +221,40 @@ precision to allow for a linear trend. A numeric vector instead of
 `"constant"` or `"linear"` sets the weights directly, one per comparison
 period.
 
-## Comparison periods where everybody is treated: the ATU
+## A table for a paper
 
-When everybody is treated in the comparison periods, rather than nobody,
-the same difference of jumps estimates the ATU: the effect for the units
-just below the cutoff, which are untreated in the RD period. Set
-`estimand = "atu"`. The estimate, standard errors and bandwidths are the
-same as without it, so the argument labels the output (among the tests
-it changes only
-[`rd_compstable()`](https://dorleventer.github.io/rddid/reference/rd_compstable.md)).
-For illustration, make everybody treated in years 1 and 2 of
-`rddid_sim`, with the same effect of 1:
+`tidy()` gives the estimates and `glance()` the design (RD period,
+comparison periods, trend, bandwidth rule, `h`, scheme), which is what
+table makers read. With the modelsummary package installed, the two fits
+side by side, with confidence intervals:
 
 ``` r
 
-sim_atu <- transform(rddid_sim, W = ifelse(year < 3, 1, W), Y = Y + (year < 3))
-rddid(sim_atu, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, estimand = "atu")
-#> RD-DID estimate of the ATU in period 3
-#>   Comparison periods: 1, 2   (constant confounding trend; weights 0.5, 0.5)
-#>   Sampling scheme: panel, running variable fixed over time: no unit changes side of the cutoff (detected from the data)
-#>   Bandwidth: common h = 0.2672 (rule "joint", AMSE-optimal for the aggregate)
-#>   Pilot bandwidth b (period = value): 1 = 0.4102, 2 = 0.3868, 3 = 0.3951
-#> 
-#>                              Estimate  Std. err.       z  p-value   95% CI
-#>   Conventional                 1.0927     0.1264    8.64   <0.001   [0.8450, 1.3405]
-#>   Robust (bias-corrected)      1.1414     0.1494    7.64   <0.001   [0.8486, 1.4342]
-#> 
-#>   summary() shows the per-period fits and the s.e. under every sampling scheme.
+modelsummary::modelsummary(
+  list(Constant = fit, Linear = fit_lin), statistic = "conf.int",
+  gof_map = list(list(raw = "h", clean = "h", fmt = 3),
+                 list(raw = "nobs", clean = "Num.Obs.", fmt = 0)))
 ```
 
-The numbers are those of `fit`, now labeled the ATU; the true ATU here
-is 1.
+|              | Constant         | Linear           |
+|--------------|------------------|------------------|
+| Conventional | 1.093            | 0.915            |
+|              | \[0.845, 1.340\] | \[0.409, 1.421\] |
+| Robust       | 1.141            | 0.901            |
+|              | \[0.849, 1.434\] | \[0.300, 1.502\] |
+| h            | 0.267            | 0.267            |
+| Num.Obs.     | 3000             | 3000             |
+
+The same call with `output = "rddid_table.tex"` (or `.html`, `.md`,
+`.docx`) writes the table to a file;
+`write.csv(generics::tidy(fit), "rddid_estimate.csv", row.names = FALSE)`
+writes the estimate table to a plain CSV file.
+
+`gof_map` sets which rows of `glance()` appear below the estimates and
+their digits (`fmt`): here `h` with three digits and the number of
+observations. Without it, every column of `glance()` is listed and `h`
+prints with all its digits. The last line writes the estimate table to a
+plain CSV file.
 
 ## When the running variable moves over time
 
@@ -252,14 +264,45 @@ score, an income), and some units, the **switchers**, are above the
 cutoff in one period and below it in another. The units at the cutoff in
 the RD period can then be a different mix from the units at the cutoff
 in a comparison period, and the difference of jumps can be biased. A
-unit’s **type** is the side of the cutoff it is on in the other
-period(s). The RD-DID estimate identifies the ATT when the type
-distribution is continuous at the cutoff and the confounding jump within
-each type is constant over time, and in addition either the type
-composition is stable across periods or the confounding jump is the same
-for every type (Leventer and Nevo, 2024). Four tests check these
-assumptions. `rddid_sim_pv` is the `rddid_sim` design with a running
-variable that drifts between years.
+unit’s **type** records its side of the cutoff in periods other than the
+one at hand. The tests use two versions:
+
+| Test | A unit’s type in period *t* | Printed as |
+|----|----|----|
+| type continuity, composition stability | its sides of the cutoff in all the other periods, in time order | `++`, `+-`, `-+`, `--` (`+` above, `-` below) |
+| homogeneous confounding, constant within-type confounding | its side of the cutoff in the RD period (the default, `type_by = "rd_side"`) | `+`, `-`; in plots “Above in 3”, “Below in 3” |
+
+With two periods, both versions are the unit’s side of the cutoff in the
+other period.
+
+The RD-DID estimate identifies the ATT when the type distribution is
+continuous at the cutoff and the confounding jump within each type is
+constant over time, and in addition either the type composition is
+stable across periods or the confounding jump is the same for every type
+(Leventer and Nevo, 2024). Four tests check these assumptions.
+`rddid_sim_pv` is the `rddid_sim` design with a running variable that
+drifts between years. The estimate whose assumptions the four tests
+below check:
+
+``` r
+
+fit_pv <- rddid(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
+fit_pv
+#> RD-DID estimate of the ATT in period 3
+#>   Comparison periods: 1, 2   (constant confounding trend; weights 0.5, 0.5)
+#>   Sampling scheme: panel, some units change side of the cutoff (detected)
+#>   Bandwidth: common h = 0.2367 (rule "joint": one bandwidth, chosen for the RD-DID estimate)
+#>   Pilot bandwidth b (period = value): 1 = 0.3889, 2 = 0.3847, 3 = 0.3933
+#> 
+#>                              Estimate  Std. err.       z  p-value   95% CI
+#>   Conventional                 0.9654     0.1933    4.99   <0.001   [0.5866, 1.3442]
+#>   Robust (bias-corrected)      0.9823     0.2292    4.29   <0.001   [0.5332, 1.4315]
+#> 
+#>   summary() shows the per-period fits and the s.e. under every sampling scheme.
+```
+
+The sampling scheme is now a panel in which some units change side of
+the cutoff between years.
 
 **Type continuity.** H0: the share of each type jumps by zero at the
 cutoff, in every period. A rejection means units sort around the cutoff
@@ -269,11 +312,11 @@ the other tests say.
 
 ``` r
 
-tc <- rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id")
+tc <- rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
 tc
 #> Test of a continuous type distribution  [rd_typecont()]
 #>   H0: the share of each type jumps by zero at the cutoff, in every period
-#>   Sampling scheme: panel, running variable varies over time: some units change side (detected from the data)
+#>   Sampling scheme: panel, some units change side of the cutoff (detected)
 #>   Periods: 1, 2, 3   Types: ++, +-, -+, --   Bandwidth: CCT MSE-optimal, chosen per cell
 #> 
 #>   Joint Wald chi-squared(9) = 4.782,  p = 0.853
@@ -282,9 +325,16 @@ tc
 #>     Period 3: chi-squared(3) = 2.202,  p = 0.532
 ```
 
-With three years, a unit’s type in one year is its pair of sides in the
-other two, in time order: `++` is above the cutoff in both, `+-` above
-in the earlier and below in the later, and so on.
+Every test prints its null (H0) and the sampling scheme read off the
+data. `Types: ++, +-, -+, --` are the types of the first row of the
+table above. `Bandwidth: CCT MSE-optimal, chosen per cell` means that
+each local-linear fit the test runs (one per period and type, a *cell*)
+gets its own MSE-optimal bandwidth from
+[`rdrobust::rdbwselect`](https://rdrr.io/pkg/rdrobust/man/rdbwselect.html)
+(Calonico, Cattaneo and Titiunik, 2014; hence “CCT”).
+`Joint Wald chi-squared(9)` tests all the jumps in the type shares at
+once: in each year the four shares sum to one, so three jumps are free,
+and three years give 9. Each `Period` line tests one year alone.
 
 **Composition stability.** H0: the share of each type among the units
 just above the cutoff is the same in the RD period and in each
@@ -298,7 +348,7 @@ cs <- rd_compstable(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
 cs
 #> Test of composition stability  [rd_compstable()]
 #>   H0: the share of each type among the units just above the cutoff is the same in the RD period and in each comparison period
-#>   Sampling scheme: panel, running variable varies over time: some units change side (detected from the data)
+#>   Sampling scheme: panel, some units change side of the cutoff (detected)
 #>   RD period: 3   Comparison periods: 1, 2   Bandwidth: CCT MSE-optimal, chosen per cell
 #> 
 #>   Pair 3::1: chi-squared(3) = 21.982,  p = <0.001
@@ -309,13 +359,21 @@ cs
 #>   Joint over pairs (sum of chi-squared): chi-squared(6) = 28.119,  p = <0.001
 ```
 
+`Pair 3::1` compares year 3, the RD period, with year 1; its
+`chi-squared(3)` tests the three free jumps in the type shares.
+`n above the cutoff` counts the units above the cutoff in the RD year,
+in the comparison year, and in both. `Joint over pairs` adds up the pair
+statistics and their degrees of freedom; it treats the pairs as
+independent although they share the year-3 units, so its p-value is
+approximate (the paper’s test is per pair).
+
 **Homogeneous confounding.** H0: in each comparison period the
 confounding jump is the same for every type. Here, and in the next test,
-a unit’s type is its side of the cutoff in the RD period (`+` above, `-`
-below). A rejection means the confounding jump differs by type; together
-with a rejection of composition stability, the comparison-period jumps
-do not measure the confounding jump of the units at the RD-period
-cutoff, and the estimate is biased.
+the types are those of the second row of the table above: a unit’s side
+of the cutoff in the RD period. A rejection means the confounding jump
+differs by type; together with a rejection of composition stability, the
+comparison-period jumps do not measure the confounding jump of the units
+at the RD-period cutoff, and the estimate can be biased.
 
 ``` r
 
@@ -323,7 +381,7 @@ hg <- rd_homog(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 
 hg
 #> Test of homogeneous confounding  [rd_homog()]
 #>   H0: in each comparison period the confounding jump is the same for every type
-#>   Sampling scheme: panel, running variable varies over time: some units change side (detected from the data)
+#>   Sampling scheme: panel, some units change side of the cutoff (detected)
 #>   Comparison periods: 1, 2
 #> 
 #>   Wald chi-squared(2) = 0.465,  p = 0.793
@@ -336,13 +394,20 @@ hg
 #>     2          +                0.7356     0.3588     490
 ```
 
+The table gives the confounding jump of each type in each comparison
+year, with its standard error and number of observations. The Wald
+statistic has one contrast per year, type `+` against the type marked
+`(reference)`, so two comparison years give `chi-squared(2)`.
+
 **Constant within-type confounding.** H0: within each type, the
 confounding jump is the same in every comparison period. This is a
 pre-trends check: the assumption concerns the RD period, where the
 confounding jump cannot be seen apart from the effect, so the test asks
 whether it is stable across the comparison periods. A rejection means
-the constant-trend weights do not cancel the confounding jump;
-`trend = "linear"` is the alternative when the movement looks linear.
+the constant-trend weights do not cancel the confounding jump.
+`trend = "linear"` allows a confounding jump that moves linearly in
+time; `rd_trendcell(trend = "linear")` tests that version (three or more
+comparison periods).
 
 ``` r
 
@@ -350,7 +415,7 @@ tr <- rd_trendcell(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_r
 tr
 #> Test of a constant within-type confounding discontinuity  [rd_trendcell()]
 #>   H0: within each type, the confounding jump is the same in every comparison period
-#>   Sampling scheme: panel, running variable varies over time: some units change side (detected from the data)
+#>   Sampling scheme: panel, some units change side of the cutoff (detected)
 #>   Comparison periods: 1, 2   Trend: constant
 #> 
 #>   Wald chi-squared(2) = 0.078,  p = 0.962
@@ -362,6 +427,11 @@ tr
 #>     -          1                0.8985     0.2213     510  (reference)
 #>     -          2                1.0282     0.4007     510
 ```
+
+The jumps are those of
+[`rd_homog()`](https://dorleventer.github.io/rddid/reference/rd_homog.md),
+grouped by type. The Wald statistic has one contrast per type: year 2
+against the year marked `(reference)`, the type’s first comparison year.
 
 One table for all four:
 
@@ -375,6 +445,9 @@ do.call(rbind, lapply(list(tc, cs, hg, tr), generics::tidy))
 #> 4 constant within-type confounding  0.07832992  2 9.615921e-01
 ```
 
+The composition-stability row is the joint-over-pairs statistic, whose
+p-value is approximate; the per-pair tests are in its printout above.
+
 In `rddid_sim_pv` three of the four nulls are true by construction:
 types are continuous at the cutoff, and the confounding jump is 0.5 for
 every unit in every year. Composition stability is false: units at the
@@ -383,42 +456,82 @@ at the year-1 cutoff are spread evenly over the four types. In this
 sample the four p-values are 0.853, below 0.001, 0.793 and 0.962 (in the
 order of the table). A p-value below 0.05 for a true null is a false
 rejection, which a test at the 5% level is designed to make in about one
-sample in twenty. The article on the identification assumptions reads
-each printout in detail.
+sample in twenty. Because the other three assumptions hold, homogeneous
+confounding among them, the failure of composition stability does not
+bias `fit_pv`: its estimate is 0.97, against a true effect of 1. The
+article on the identification assumptions shows how each statistic is
+built and the options of the tests.
 
-## What to report
+## Comparison periods where everybody is treated: the ATU
 
-- **The estimate.** Both rows, as the paper does. Base the confidence
-  interval and p-value on the `Robust (bias-corrected)` row: at a
-  bandwidth chosen to minimize the mean squared error, the conventional
-  interval is centered on a biased estimate and can under-cover
-  (Calonico, Cattaneo and Titiunik, 2014).
-- **The design.** The RD period, the comparison periods and the trend
-  assumption (with the weights), the bandwidth rule and `h`, and the
-  sampling scheme. All are in the first lines of the printout;
-  `generics::glance(fit)` returns them as a one-row table.
-- **The tests**, when the running variable moves over time: the table
-  above.
+When everybody is treated in the comparison periods, rather than nobody,
+the same difference of jumps estimates the ATU: the effect for the units
+just below the cutoff, which are untreated in the RD period.
+`estimand = "atu"` labels the output as the ATU: the estimate, standard
+errors and bandwidths are the same as without it (among the tests, it
+changes only
+[`rd_compstable()`](https://dorleventer.github.io/rddid/reference/rd_compstable.md)).
+For illustration, make everybody treated in years 1 and 2 of
+`rddid_sim`, with the same effect of 1:
+
+``` r
+
+sim_atu <- transform(rddid_sim, W = ifelse(year < 3, 1, W), Y = Y + (year < 3))
+rddid(sim_atu, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, estimand = "atu")
+#> RD-DID estimate of the ATU in period 3
+#>   Comparison periods: 1, 2   (constant confounding trend; weights 0.5, 0.5)
+#>   Sampling scheme: panel, no unit changes side of the cutoff (detected)
+#>   Bandwidth: common h = 0.2672 (rule "joint": one bandwidth, chosen for the RD-DID estimate)
+#>   Pilot bandwidth b (period = value): 1 = 0.4102, 2 = 0.3868, 3 = 0.3951
+#> 
+#>                              Estimate  Std. err.       z  p-value   95% CI
+#>   Conventional                 1.0927     0.1264    8.64   <0.001   [0.8450, 1.3405]
+#>   Robust (bias-corrected)      1.1414     0.1494    7.64   <0.001   [0.8486, 1.4342]
+#> 
+#>   summary() shows the per-period fits and the s.e. under every sampling scheme.
+```
+
+The numbers are those of `fit`, now labeled the ATU; the true ATU here
+is 1.
+
+## What the paper reports
+
+- **The estimate.** The paper reports both rows. It bases its confidence
+  intervals and p-values on the `Robust (bias-corrected)` row, following
+  Calonico, Cattaneo and Titiunik (2014): at a bandwidth chosen to
+  minimize the mean squared error, the conventional interval is centered
+  on a biased estimate and can under-cover.
+- **The design.** The choices behind an estimate (the RD period, the
+  comparison periods, the trend assumption with its weights, the
+  bandwidth rule and `h`, the sampling scheme) are in the first lines of
+  the printout; `generics::glance(fit)` returns them as a one-row table.
+- **The tests.** When the running variable moves over time, the table
+  above collects the four tests of the assumptions the estimate relies
+  on.
 
 ## Next
 
-- [How rddid() computes the
-  estimate](https://dorleventer.github.io/rddid/articles/rddid-how-it-works.md):
-  the estimate and the tests rebuilt by hand, for readers who want to
-  see the pieces.
+- [Checking the identification
+  assumptions](https://dorleventer.github.io/rddid/articles/rddid-validation-tests.md):
+  how each test statistic is built, the tests under the ATU design, and
+  their options.
+- [Plots of the estimate and the
+  checks](https://dorleventer.github.io/rddid/articles/rddid-plots.md):
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) on a fit and
+  on each test, the switchers picture, and saving a figure.
 - [Bandwidth rules and sampling
   schemes](https://dorleventer.github.io/rddid/articles/rddid-options.md):
   `bwselect`, fixed bandwidths, and the standard error under each
   scheme.
-- [Checking the identification
-  assumptions](https://dorleventer.github.io/rddid/articles/rddid-validation-tests.md):
-  the four tests one at a time.
-- [Pictures of the
-  checks](https://dorleventer.github.io/rddid/articles/rddid-plots.md):
-  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) on a fit and
-  on each test, and the switchers picture.
+- [How rddid() computes the
+  estimate](https://dorleventer.github.io/rddid/articles/rddid-how-it-works.md):
+  the estimate and the tests rebuilt by hand, for referees and readers
+  who want to see the pieces.
 
 ## References
+
+`citation("rddid")` returns the reference for the package, the paper
+below, with a BibTeX entry.
 
 Leventer, D. and D. Nevo (2024). Correcting Invalid Regression
 Discontinuity Designs Using Multiple Time-Period Data. arXiv:2408.05847.

@@ -49,7 +49,20 @@ rd_typecont(
 
 - time:
 
-  name of the period column (a string).
+  name of the period column (a string). The column is usually numeric (a
+  year); character or factor labels work as well, except under
+  `trend = "linear"` (in
+  [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md) or
+  [`rd_trendcell()`](https://dorleventer.github.io/rddid/reference/rd_trendcell.md)),
+  where the line is fitted on the period values: these then need to be
+  numeric and are the time scale of the line (so 2015, 2017, 2018 are
+  unequally spaced);
+  [`as.numeric()`](https://rdrr.io/r/base/numeric.html) converts
+  character labels such as `"2019"`. In
+  [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md)
+  the default comparison periods are every period other than `t_rd`, in
+  sorted order of the values (alphabetical for character or factor
+  labels), the order a numeric `trend` follows.
 
 - id:
 
@@ -245,11 +258,11 @@ Other tests of the assumptions:
 
 ``` r
 # rddid_sim_pv: the running variable moves, so some units change side
-tc <- rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id")
+tc <- rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
 tc          # the null, the joint Wald test, then each period's own test
 #> Test of a continuous type distribution  [rd_typecont()]
 #>   H0: the share of each type jumps by zero at the cutoff, in every period
-#>   Sampling scheme: panel, running variable varies over time: some units change side (detected from the data)
+#>   Sampling scheme: panel, some units change side of the cutoff (detected)
 #>   Periods: 1, 2, 3   Types: ++, +-, -+, --   Bandwidth: CCT MSE-optimal, chosen per cell
 #> 
 #>   Joint Wald chi-squared(9) = 4.782,  p = 0.853

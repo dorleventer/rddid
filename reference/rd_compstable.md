@@ -54,7 +54,20 @@ rd_compstable(
 
 - time:
 
-  name of the period column (a string).
+  name of the period column (a string). The column is usually numeric (a
+  year); character or factor labels work as well, except under
+  `trend = "linear"` (in
+  [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md) or
+  [`rd_trendcell()`](https://dorleventer.github.io/rddid/reference/rd_trendcell.md)),
+  where the line is fitted on the period values: these then need to be
+  numeric and are the time scale of the line (so 2015, 2017, 2018 are
+  unequally spaced);
+  [`as.numeric()`](https://rdrr.io/r/base/numeric.html) converts
+  character labels such as `"2019"`. In
+  [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md)
+  the default comparison periods are every period other than `t_rd`, in
+  sorted order of the values (alphabetical for character or factor
+  labels), the order a numeric `trend` follows.
 
 - id:
 
@@ -190,7 +203,7 @@ the unit's sides in the remaining periods. The shares sum to one, so one
 reference type is dropped and the remaining jumps are tested jointly by
 a Wald statistic, one test per pair. The joint test over pairs adds up
 the pair statistics and degrees of freedom, which treats the pairs as
-independent although they share the RD-period units; read it as
+independent although they share the RD-period units, so its p-value is
 approximate (the paper's test is per pair). A pair with fewer than three
 units in either group is skipped with a warning.
 
@@ -270,7 +283,7 @@ cs <- rd_compstable(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
 cs          # one Wald test per (RD period, comparison period) pair, then their sum
 #> Test of composition stability  [rd_compstable()]
 #>   H0: the share of each type among the units just above the cutoff is the same in the RD period and in each comparison period
-#>   Sampling scheme: panel, running variable varies over time: some units change side (detected from the data)
+#>   Sampling scheme: panel, some units change side of the cutoff (detected)
 #>   RD period: 3   Comparison periods: 1, 2   Bandwidth: CCT MSE-optimal, chosen per cell
 #> 
 #>   Pair 3::1: chi-squared(3) = 21.982,  p = <0.001
@@ -287,7 +300,7 @@ rd_compstable(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3,
               estimand = "atu")
 #> Test of composition stability  [rd_compstable()]
 #>   H0: the share of each type among the units just below the cutoff is the same in the RD period and in each comparison period
-#>   Sampling scheme: panel, running variable varies over time: some units change side (detected from the data)
+#>   Sampling scheme: panel, some units change side of the cutoff (detected)
 #>   Estimand: ATU (the units below the cutoff are the ones untreated in the RD period, so the test is on their shares (mirrored design))
 #>   RD period: 3   Comparison periods: 1, 2   Bandwidth: CCT MSE-optimal, chosen per cell
 #> 

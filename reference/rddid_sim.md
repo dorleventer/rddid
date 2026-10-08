@@ -55,11 +55,9 @@ confounding jump 0.5 in every year, treatment effect 1.
 The running variable does not move between years, so every unit stays on
 the same side of the cutoff (sampling scheme "panel, running variable
 fixed over time"). The tests of the assumptions are degenerate here:
-every unit keeps its type, so there is nothing to test (and
-[`rd_typecont()`](https://dorleventer.github.io/rddid/reference/rd_typecont.md)
-rejects mechanically); use
+every unit keeps its type, so there is nothing to test;
 [rddid_sim_pv](https://dorleventer.github.io/rddid/reference/rddid_sim_pv.md)
-for them.
+is the version for the tests.
 
 ## See also
 
@@ -80,8 +78,8 @@ head(rddid_sim)
 rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 #> RD-DID estimate of the ATT in period 3
 #>   Comparison periods: 1, 2   (constant confounding trend; weights 0.5, 0.5)
-#>   Sampling scheme: panel, running variable fixed over time: no unit changes side of the cutoff (detected from the data)
-#>   Bandwidth: common h = 0.2672 (rule "joint", AMSE-optimal for the aggregate)
+#>   Sampling scheme: panel, no unit changes side of the cutoff (detected)
+#>   Bandwidth: common h = 0.2672 (rule "joint": one bandwidth, chosen for the RD-DID estimate)
 #>   Pilot bandwidth b (period = value): 1 = 0.4102, 2 = 0.3868, 3 = 0.3951
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI

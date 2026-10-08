@@ -3,15 +3,15 @@
 units that are above the cutoff in the RD period, against the comparison-period running
 variable; in the RD period, the share that are above the cutoff in the comparison period,
 against the RD-period running variable. In each panel the share is averaged within bins
-equal-width bins inside the bandwidth and the local-linear fit is drawn on each side of the
-cutoff, at the bandwidth rule the test used. Under the null the two lines of a panel meet at
-the cutoff: who a unit is in the other period does not jump there."><meta property="og:description" content="The paper's type-continuity figure. Two panels: in the comparison period, the share of
+equal-width bins on each side of the cutoff inside the bandwidth, and the local-linear fit
+is drawn on each side, at the bandwidth rule the test used. Under the null the two lines of
+a panel meet at the cutoff: who a unit is in the other period does not jump there."><meta property="og:description" content="The paper's type-continuity figure. Two panels: in the comparison period, the share of
 units that are above the cutoff in the RD period, against the comparison-period running
 variable; in the RD period, the share that are above the cutoff in the comparison period,
 against the RD-period running variable. In each panel the share is averaged within bins
-equal-width bins inside the bandwidth and the local-linear fit is drawn on each side of the
-cutoff, at the bandwidth rule the test used. Under the null the two lines of a panel meet at
-the cutoff: who a unit is in the other period does not jump there."></head><body>
+equal-width bins on each side of the cutoff inside the bandwidth, and the local-linear fit
+is drawn on each side, at the bandwidth rule the test used. Under the null the two lines of
+a panel meet at the cutoff: who a unit is in the other period does not jump there."></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -30,13 +30,12 @@ the cutoff: who a unit is in the other period does not jump there."></head><body
       <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/rddid-estimation.html">Get started</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/rddid-how-it-works.html">How rddid() computes the estimate</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/rddid-validation-tests.html">Checking the identification assumptions</a></li>
+    <li><a class="dropdown-item" href="../articles/rddid-plots.html">Plots of the estimate and the checks</a></li>
     <li><a class="dropdown-item" href="../articles/rddid-options.html">Bandwidth rules and sampling schemes</a></li>
-    <li><a class="dropdown-item" href="../articles/rddid-validation-tests.html">Checking the identification assumptions</a></li>
-    <li><a class="dropdown-item" href="../articles/rddid-plots.html">Pictures of the checks</a></li>
+    <li><a class="dropdown-item" href="../articles/rddid-how-it-works.html">How rddid() computes the estimate (for referees)</a></li>
   </ul></li>
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
-<li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
 <li class="nav-item"><a class="external-link nav-link" href="https://github.com/dorleventer/rddid/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
@@ -58,9 +57,9 @@ the cutoff: who a unit is in the other period does not jump there."></head><body
 units that are above the cutoff in the RD period, against the comparison-period running
 variable; in the RD period, the share that are above the cutoff in the comparison period,
 against the RD-period running variable. In each panel the share is averaged within <code>bins</code>
-equal-width bins inside the bandwidth and the local-linear fit is drawn on each side of the
-cutoff, at the bandwidth rule the test used. Under the null the two lines of a panel meet at
-the cutoff: who a unit is in the other period does not jump there.</p>
+equal-width bins on each side of the cutoff inside the bandwidth, and the local-linear fit
+is drawn on each side, at the bandwidth rule the test used. Under the null the two lines of
+a panel meet at the cutoff: who a unit is in the other period does not jump there.</p>
     </div>
 
     <div class="section level2">
@@ -84,7 +83,7 @@ and the first other period.</p></dd>
 
 
 <dt id="arg-bins">bins<a class="anchor" aria-label="anchor" href="#arg-bins"></a></dt>
-<dd><p>number of equal-width bins for the binned shares (default 20).</p></dd>
+<dd><p>number of equal-width bins on each side of the cutoff (default 20).</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>

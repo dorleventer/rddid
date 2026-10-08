@@ -42,13 +42,12 @@ types are degenerate and the test is not informative."></head><body>
       <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/rddid-estimation.html">Get started</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/rddid-how-it-works.html">How rddid() computes the estimate</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/rddid-validation-tests.html">Checking the identification assumptions</a></li>
+    <li><a class="dropdown-item" href="../articles/rddid-plots.html">Plots of the estimate and the checks</a></li>
     <li><a class="dropdown-item" href="../articles/rddid-options.html">Bandwidth rules and sampling schemes</a></li>
-    <li><a class="dropdown-item" href="../articles/rddid-validation-tests.html">Checking the identification assumptions</a></li>
-    <li><a class="dropdown-item" href="../articles/rddid-plots.html">Pictures of the checks</a></li>
+    <li><a class="dropdown-item" href="../articles/rddid-how-it-works.html">How rddid() computes the estimate (for referees)</a></li>
   </ul></li>
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
-<li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
 <li class="nav-item"><a class="external-link nav-link" href="https://github.com/dorleventer/rddid/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
@@ -116,7 +115,15 @@ left out of the cells that use that type.</p></dd>
 
 
 <dt id="arg-time">time<a class="anchor" aria-label="anchor" href="#arg-time"></a></dt>
-<dd><p>name of the period column (a string).</p></dd>
+<dd><p>name of the period column (a string). The column is usually
+numeric (a year); character or factor labels work as well, except under
+<code>trend = "linear"</code> (in <code><a href="rddid.html">rddid()</a></code> or <code><a href="rd_trendcell.html">rd_trendcell()</a></code>), where the line is
+fitted on the period values: these then need to be numeric and are the
+time scale of the line (so 2015, 2017, 2018 are unequally spaced);
+<code><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric()</a></code> converts character labels such as <code>"2019"</code>. In <code><a href="rddid.html">rddid()</a></code>
+the default comparison periods are every period other than <code>t_rd</code>, in
+sorted order of the values (alphabetical for character or factor labels),
+the order a numeric <code>trend</code> follows.</p></dd>
 
 
 <dt id="arg-id">id<a class="anchor" aria-label="anchor" href="#arg-id"></a></dt>
@@ -244,7 +251,8 @@ remaining periods. The shares sum to one, so one reference type is dropped
 and the remaining jumps are tested jointly by a Wald statistic, one test per
 pair. The joint test over pairs adds up the pair statistics and degrees of
 freedom, which treats the pairs as independent although they share the
-RD-period units; read it as approximate (the paper's test is per pair). A
+RD-period units, so its p-value is approximate (the paper's test is per
+pair). A
 pair with fewer than three units in either group is skipped with a warning.</p>
 </div>
 
@@ -324,7 +332,7 @@ confidence intervals for regression-discontinuity designs. <em>Econometrica</em>
 <span class="r-in"><span><span class="va">cs</span>          <span class="co"># one Wald test per (RD period, comparison period) pair, then their sum</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Test of composition stability  [rd_compstable()]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   H0: the share of each type among the units just above the cutoff is the same in the RD period and in each comparison period</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Sampling scheme: panel, running variable varies over time: some units change side (detected from the data)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Sampling scheme: panel, some units change side of the cutoff (detected)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   RD period: 3   Comparison periods: 1, 2   Bandwidth: CCT MSE-optimal, chosen per cell</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Pair 3::1: chi-squared(3) = 21.982,  p = &lt;0.001</span>
@@ -341,7 +349,7 @@ confidence intervals for regression-discontinuity designs. <em>Econometrica</em>
 <span class="r-in"><span>              estimand <span class="op">=</span> <span class="st">"atu"</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Test of composition stability  [rd_compstable()]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   H0: the share of each type among the units just below the cutoff is the same in the RD period and in each comparison period</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Sampling scheme: panel, running variable varies over time: some units change side (detected from the data)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Sampling scheme: panel, some units change side of the cutoff (detected)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Estimand: ATU (the units below the cutoff are the ones untreated in the RD period, so the test is on their shares (mirrored design))</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   RD period: 3   Comparison periods: 1, 2   Bandwidth: CCT MSE-optimal, chosen per cell</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>

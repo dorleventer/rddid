@@ -1,4 +1,4 @@
-# Pictures of the checks
+# Plots of the estimate and the checks
 
 Every object the package returns can be drawn with
 [`plot()`](https://rdrr.io/r/graphics/plot.default.html). The pictures
@@ -44,6 +44,7 @@ title is one `+ labs()` away (last section).
 ``` r
 
 plot_switchers(rddid_sim_pv, x = "R", time = "year", id = "id", periods = c(1, 3))
+#> plot_switchers: 13.8% of the 1000 units observed in both periods change side
 ```
 
 ![](rddid-plots_files/figure-html/switchers-1.png)
@@ -75,8 +76,10 @@ the cutoff, at the bandwidth rule the test used. Under the null the two
 lines of a panel meet at the cutoff: who a unit is in the other period
 does not jump at the cutoff. The test’s statistic is in `print(tc)`;
 with three or more periods the test uses the full pattern of a unit’s
-sides in the other periods, so the picture is the pairwise version, one
-pair at a time (`plot(tc, comparison = 2)` draws the other pair).
+sides in the other periods (the type table in [Get
+started](https://dorleventer.github.io/rddid/articles/rddid-estimation.html#when-the-running-variable-moves-over-time)),
+so the picture is the pairwise version, one pair at a time
+(`plot(tc, comparison = 2)` draws the other pair).
 
 ## Composition stability
 
@@ -90,11 +93,11 @@ plot(cs)
 
 The paper’s reflected-sample construction. The units above the cutoff in
 the comparison period are placed to the **left** of an artificial cutoff
-at their mirrored distance $`-(R_{t_0} - c)`$; the units above the
-cutoff in the RD period are placed to the **right** at
-$`R_{t_{RD}} - c`$. The outcome is whether the unit is above the cutoff
-in the other period of the pair; the binned share and the local-linear
-fit on each side are drawn. Under the null the two lines meet at the
+at zero, at minus their distance above the cutoff; the units above the
+cutoff in the RD period are placed to the **right**, at their distance
+above the cutoff. The outcome is whether the unit is above the cutoff in
+the other period of the pair; the binned share and the local-linear fit
+on each side are drawn. Under the null the two lines meet at the
 artificial cutoff: the units just above the cutoff are the same mix in
 both periods. In `rddid_sim_pv` the assumption fails by construction and
 the pair’s test rejects (`print(cs)`); with three periods that test also
@@ -134,10 +137,9 @@ plot(tr)
 The same within-type jumps, read the other way: one panel per type, its
 jump in each comparison period, and a dashed line at the type’s average.
 Under the null (`trend = "constant"`) the points of a panel sit on the
-dashed line, up to sampling error; a drift across periods would call for
-`rddid(trend = "linear")`, and `rd_trendcell(trend = "linear")` then
-tests whether the drift is itself linear (three or more comparison
-periods are needed for that).
+dashed line, up to sampling error. `rddid(trend = "linear")` allows a
+drift that is linear in time, and `rd_trendcell(trend = "linear")` tests
+whether it is (this needs three or more comparison periods).
 
 ## Changing a plot
 
@@ -149,6 +151,14 @@ plot(hg) + labs(title = "Within-type confounding jumps, by year") + theme_classi
 ```
 
 ![](rddid-plots_files/figure-html/modify-1.png)
+
+[`ggsave()`](https://ggplot2.tidyverse.org/reference/ggsave.html) writes
+any of them to a file; the size is in inches:
+
+``` r
+
+ggsave("rd_by_period.png", plot(fit), width = 9, height = 4)
+```
 
 ## References
 

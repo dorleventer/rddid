@@ -3,7 +3,9 @@
 Each unit observed in both periods is a point; the dashed lines are the
 cutoff. Units in the off-diagonal quadrants changed side of the cutoff
 between the two periods (the "switchers" that the composition tests are
-about); the title gives their share.
+about): orange, below in the first period and above in the second; blue,
+above and then below; grey, the same side in both. A message gives the
+share of switchers.
 
 ## Usage
 
@@ -25,7 +27,20 @@ plot_switchers(data, x, time, id, periods = NULL, c = 0, ...)
 
 - time:
 
-  name of the period column (a string).
+  name of the period column (a string). The column is usually numeric (a
+  year); character or factor labels work as well, except under
+  `trend = "linear"` (in
+  [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md) or
+  [`rd_trendcell()`](https://dorleventer.github.io/rddid/reference/rd_trendcell.md)),
+  where the line is fitted on the period values: these then need to be
+  numeric and are the time scale of the line (so 2015, 2017, 2018 are
+  unequally spaced);
+  [`as.numeric()`](https://rdrr.io/r/base/numeric.html) converts
+  character labels such as `"2019"`. In
+  [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md)
+  the default comparison periods are every period other than `t_rd`, in
+  sorted order of the values (alphabetical for character or factor
+  labels), the order a numeric `trend` follows.
 
 - id:
 
@@ -68,4 +83,5 @@ Other tests of the assumptions:
 ``` r
 if (requireNamespace("ggplot2", quietly = TRUE))
   plot_switchers(rddid_sim_pv, x = "R", time = "year", id = "id", periods = c(1, 3))
+#> plot_switchers: 13.8% of the 1000 units observed in both periods change side
 ```

@@ -71,7 +71,8 @@ computation, the options and the tests:
 
 ## Author
 
-**Maintainer**: Dor Leventer <leventerdor@gmail.com>
+**Maintainer**: Dor Leventer <leventerdor@gmail.com> \[copyright
+holder\]
 
 Authors:
 

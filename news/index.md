@@ -2,6 +2,100 @@
 
 ## rddid 0.4.0.9000 (development)
 
+### 2026-10-08: second bug-hunt round (input handling; no numerical change on valid input)
+
+- [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md)
+  now works on complete (outcome, running variable, id) rows only and
+  says how many it dropped: an NA running variable used to read as a
+  side switch, turning a “no unit changes side” panel into “some units
+  change side” and moving the common bandwidth and the estimate;
+  `n_by_period` and [`nobs()`](https://rdrr.io/r/stats/nobs.html) now
+  count the rows actually used.
+- Errors instead of silent misuse: a unit appearing twice in a period
+  ([`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md)
+  and the four tests), a period repeated in `comparisons`, `comparisons`
+  that include `t_rd` or periods not in the data (all four tests), `b`
+  without `h`, an `h` that is not a single positive number, a `t_rd` not
+  in the data
+  ([`rd_typecont()`](https://dorleventer.github.io/rddid/reference/rd_typecont.md)),
+  `type_by = "pattern"` in
+  [`rd_trendcell()`](https://dorleventer.github.io/rddid/reference/rd_trendcell.md)
+  (a cell fixed across the comparison periods cannot use a comparison
+  period’s own side).
+- Named numeric `trend` weights are matched to the comparison periods by
+  name; `q` now reaches
+  [`rd_bw_cct()`](https://dorleventer.github.io/rddid/reference/rd_bw_cct.md)
+  (the pilot bandwidth used to be chosen for `q = p + 1` whatever `q`
+  was); `kernel` accepts any case; a factor `t_rd` works.
+- Untestable results (no testable contrast, or a type share whose jump
+  has a zero standard error) are reported as `statistic = NA`, `df = 0`,
+  `p = NA` instead of a chi-squared of 0 with p = 1 or a rounding-noise
+  rejection; the joint composition-stability test skips untestable
+  pairs.
+- The no-switcher guard looks only at the periods a test uses, and names
+  a repeated cross-section for what it is.
+- [`plot()`](https://rdrr.io/r/graphics/plot.default.html) of
+  `rd_homog`/`rd_trendcell` works when `t_rd` was passed as a variable
+  (the objects now carry `t_rd`); `plot(cs, pair = )` checks its index;
+  [`plot_switchers()`](https://dorleventer.github.io/rddid/reference/plot_switchers.md)
+  errors on a cross-section; more than five types get distinct colours.
+- [`rd_homog()`](https://dorleventer.github.io/rddid/reference/rd_homog.md)/[`rd_trendcell()`](https://dorleventer.github.io/rddid/reference/rd_trendcell.md)
+  choose a cell’s bandwidth only after the `min_n` check (no fallback
+  noise from skipped cells);
+  [`rd_homog()`](https://dorleventer.github.io/rddid/reference/rd_homog.md)
+  prints the skipped cells before it stops for lack of contrasts; its
+  `reference` flag is set only in periods that contributed a contrast;
+  comparison periods print in time order.
+- Tests: console snapshots (`tests/testthat/_snaps/`) and one regression
+  test per fix.
+- Also: `tidy()` of a fit honours `conf.int` and `conf.level`;
+  DESCRIPTION cites the paper and has a shorter Title; `CITATION.cff`;
+  lifecycle badge; the How-it-works article is guarded on ggplot2;
+  rdrobust skips removed from the tests.
+
+### 2026-10-08: review round on the plots, the console and the site
+
+- **Figures** (after a review against the paper’s own figures): no
+  titles, subtitles or statistics in any figure; the paper’s palette and
+  `theme_bw`; bins never straddle the cutoff; share plots clip at 0–1
+  without dropping line segments; the composition-stability axis shows
+  the running variable on both sides (folded ticks) and marks the
+  mirrored period correctly under `estimand = "atu"`;
+  [`plot.rd_trendcell()`](https://dorleventer.github.io/rddid/reference/plot.rd_trendcell.md)
+  draws the least-squares line under `trend = "linear"`; switcher
+  colours follow the side in the second period; periods in time order
+  everywhere; legends keep no internal names when a theme is replaced.
+- **Console**: [`summary()`](https://rdrr.io/r/base/summary.html)’s
+  per-period table is aligned with its (time-ordered) labels — the
+  previous commit had scrambled the numbers; `glance()` is one row under
+  every bandwidth rule (`$h` used to partial-match `h_by_period`);
+  shorter scheme labels;
+  [`summary()`](https://rdrr.io/r/base/summary.html) no longer repeats
+  the print hint; `(detected)` only when the scheme was auto-detected;
+  [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md)
+  checks `comparisons`, `level` and the period column’s type and says
+  so.
+- **Degenerate panels**: when no unit changes side of the cutoff between
+  the periods (every unit has the same type in every period,
+  e.g. `rddid_sim`), the four tests now stop with one clear message
+  instead of returning a mechanical rejection, a `chi-squared(0)` or
+  internal errors. Every other numerical result is unchanged.
+- **Site and help pages**: *Get started* reads the four test printouts
+  line by line, says what the period column may be (`trend = "linear"`
+  needs numeric periods), estimates on `rddid_sim_pv` before testing its
+  assumptions, defines a unit’s type once in a table, and shows how to
+  export a table; the ATU section moved after the tests, and “What to
+  report” became “What the paper reports”. Advice to the researcher is
+  rewritten as description across the articles and help pages, with “can
+  be biased” throughout; the joint test over pairs of
+  [`rd_compstable()`](https://dorleventer.github.io/rddid/reference/rd_compstable.md)
+  is flagged as approximate wherever it is tabulated. Articles menu: the
+  tests, the plots (now *Plots of the estimate and the checks*, with a
+  [`ggsave()`](https://ggplot2.tidyverse.org/reference/ggsave.html)
+  example), the options, then *How rddid() computes the estimate* (for
+  referees). The README links the tests and plots articles and
+  `citation("rddid")`.
+
 ### 2026-10-08: plots
 
 - [`plot()`](https://rdrr.io/r/graphics/plot.default.html) methods,
@@ -18,7 +112,7 @@
   [`plot_switchers()`](https://dorleventer.github.io/rddid/reference/plot_switchers.md)
   draws the running variable in one period against another and counts
   the units that change side. All return ggplot objects (ggplot2 in
-  Suggests). New article *Pictures of the checks*.
+  Suggests). New article *Plots of the estimate and the checks*.
 - To feed the plots, the objects now also carry what the methods read:
   `rddid()$data` (the per-period data used),
   `rd_typecont()$fits`/`$data`, each
@@ -57,11 +151,9 @@
   used as the reference in each period (the all-below type when its cell
   was fitted, else the next type in order); it used to flag the
   all-below type only, leaving some periods with no reference row.
-- Golden master re-recorded as `dev/snapshots/baseline_bugfix.rds`: the
-  only cells that moved are the `rd_homog(p = 2)` ones (first fix);
-  every other value is identical to the step-1 baseline.
+- Numerical results are unchanged except `rd_homog(p = 2)` (first fix).
 
-### 2026-10-08: UX sweep, step 4 — the source, for people who read it
+### 2026-10-08: source files renamed by what they hold
 
 - **Files are named after what they hold.** The four assumption tests
   live in `rd_typecont.R`, `rd_compstable.R`, `rd_homog.R`,
@@ -88,10 +180,10 @@
   reference-type drop, the summation order of the pair loops) and dated
   history moved here.
 - **Nothing numerical changed.** Every statement that touches a number
-  is the same, in the same order; the golden master
-  (`dev/snapshot_all.R`, 134 calls, 7,763 values) is identical before
-  and after every commit of the sweep. Column-check errors no longer
-  carry an `Error in <fn>` prefix (the message is unchanged).
+  is the same, in the same order; a snapshot of 134 calls (7,763 values)
+  is identical before and after every commit of the sweep. Column-check
+  errors no longer carry an `Error in <fn>` prefix (the message is
+  unchanged).
 
 ### 2026-10-08: UX sweep, step 3 — documentation and site
 
@@ -154,8 +246,8 @@
   units);
   [`rd_homog()`](https://dorleventer.github.io/rddid/reference/rd_homog.md)/[`rd_trendcell()`](https://dorleventer.github.io/rddid/reference/rd_trendcell.md)
   list the cells they skip for `min_n`.
-- Numerical output is unchanged: every value of the step-1 golden master
-  is identical (`dev/snapshot_compare.R`).
+- Numerical output is unchanged: every value of the step-1 snapshot is
+  identical.
 
 ### 2026-10-08: UX sweep, step 1
 
