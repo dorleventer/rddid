@@ -1,3 +1,8 @@
+# rd_period.R -- the numerical core: one period's local-linear RD (conventional and
+# bias-corrected jump, per-unit influence vectors g that the cross-period covariances use).
+# Called by rddid() for every period, by the bandwidth rules (pilot fits) and by the four
+# assumption tests (one fit per cell). Nothing here depends on other periods.
+
 #' Local-linear RD in one period (building block)
 #'
 #' The building block that [rddid()] runs in every period: the jump in the
@@ -161,4 +166,21 @@ print.rd_period <- function(x, ...) {
   cat(sprintf("  D (conventional)   = %+.5g  (se %.4g)\n", x$D, sqrt(x$V_D)))
   cat(sprintf("  D (bias-corrected) = %+.5g  (se %.4g)\n", x$D_bc, sqrt(x$V_D_bc)))
   invisible(x)
+}
+
+# ---- Cholesky inverse of a Gram matrix (used only by rd_period) -----------------------------
+#' Inverse of a weighted Gram matrix via Cholesky, given the square-root design
+#'
+#' The columns of `x` are powers of the centred running variable, so
+#' `crossprod(x)` has a condition number of order 1e4–1e6 at orders 2–3 for
+#' typical bandwidths. The inverse is computed after scaling each column of `x`
+#' to unit norm and undoing the scaling afterwards (exact algebra, `G = D G* D`),
+#' which keeps the result stable to ~1e-13 across BLAS implementations instead
+#' of ~1e-10.
+#' @keywords internal
+#' @noRd
+.qrXXinv <- function(x) {
+  s  <- sqrt(colSums(x^2))
+  Gi <- chol2inv(chol(crossprod(x / rep(s, each = nrow(x)))))
+  Gi / outer(s, s)
 }

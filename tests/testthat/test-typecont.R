@@ -1,4 +1,4 @@
-# Tests for rd_typecont() / test_helpers.R
+# Tests for rd_typecont() / assumption_tests_helpers.R
 # Three objectives:
 #  (a) package functions reproduce the standalone ll_cov_p p-value on the
 #      same simulated cross section (within tolerance)

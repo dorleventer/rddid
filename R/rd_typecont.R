@@ -1,3 +1,7 @@
+# rd_typecont.R -- rd_typecont(): test of a continuous type distribution at the cutoff, with its
+# print method. Shared pieces: assumption_tests_helpers.R (types, Wald, per-cell bandwidth),
+# sampling_scheme.R, cross_period_covariance.R.
+
 #' Test of type continuity
 #'
 #' When the running variable moves over time, some units are above the cutoff

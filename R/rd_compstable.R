@@ -1,3 +1,7 @@
+# rd_compstable.R -- rd_compstable(): test of composition stability between the RD period and
+# each comparison period (reflected-sample construction), with its print method. Shared pieces:
+# assumption_tests_helpers.R, cross_period_covariance.R.
+
 #' Test of composition stability
 #'
 #' When the running variable moves over time, some units are above the cutoff

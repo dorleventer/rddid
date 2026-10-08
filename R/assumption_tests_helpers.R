@@ -1,11 +1,6 @@
-# Internal helpers shared by rd_typecont() and rd_compstable().
-# All functions are prefixed `.` and are not exported.
-#
-# Design contract:
-#   .build_types(data, x, time, id, c)       → list($wide, $period_types, $periods)
-#   .joint_wald(thetas, Sigma)               → list(stat, df, p)
-#   .wald_eigen(Delta, Sigma)               → list(stat, df, p)
-#   .cell_bandwidth(y, x, c, kernel, ...)   → c(h, b)
+# assumption_tests_helpers.R -- internals shared by the four assumption tests: .build_types()
+# (a unit's type = its sides of the cutoff in the other periods), .cell_bandwidth() (CCT or rule of
+# thumb per cell), .joint_wald() and .wald_eigen() (two Wald statistics; see the notes on each).
 
 # ---------------------------------------------------------------------------
 # .build_types

@@ -1,13 +1,6 @@
-# Test of the constant-within-type-confounding assumption.
-#
-# The test is run in COMPARISON PERIODS ONLY.  In comparison period t0 the
-# outcome RD jump equals the pure confounding:
-#   D_{t0}(k) = alpha_{t0,0}(k),
-# where k denotes the unit's cell (fixed across comparison periods).
-# We estimate that jump separately per cell using rd_period(), then form a
-# Wald test that the per-cell jumps are flat (constant) or linear in t0
-# across comparison periods.
-#
+# rd_trendcell.R -- rd_trendcell(): test of a constant (or linear) within-type confounding jump
+# across the comparison periods, with its print method. Shared pieces: assumption_tests_helpers.R,
+# sampling_scheme.R, cross_period_covariance.R.
 
 # ---------------------------------------------------------------------------
 # Cell assignment for ass:trend-cell must be FIXED across comparison periods.

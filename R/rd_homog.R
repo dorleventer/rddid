@@ -1,11 +1,6 @@
-# Test of the homogeneous-confounding assumption.
-#
-# The test is run in COMPARISON PERIODS ONLY.  In comparison period t0 the
-# outcome RD jump equals the pure confounding:
-#   D_{t0}(v_{-t0}) = alpha_{t0,0}(v_{-t0}).
-# We estimate that jump separately per type v_{-t0} using rd_period(), then
-# form a Wald test that the jumps are equal across types.
-#
+# rd_homog.R -- rd_homog(): test of homogeneous confounding (equal confounding jump across types
+# within each comparison period), with its print method. Shared pieces: assumption_tests_helpers.R,
+# sampling_scheme.R, cross_period_covariance.R.
 
 # ---------------------------------------------------------------------------
 # This test has no local helpers: types come from the shared .build_types()

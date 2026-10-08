@@ -1,10 +1,7 @@
-# Cross-period covariance and aggregation of per-period RD fits.
-# All variances flow from the per-unit influence-times-residual vectors `g`
-# returned by rd_period(): the discontinuity variance is sum(g^2) per side, and
-# a cross-period covariance is the sum of g_t * g_s over units shared between
-# the two periods' windows. Same-side matches build C^same, opposite-side matches
-# build C^opp (eq:cross-decomp), and the sampling scheme selects which enter the
-# aggregate variance (eq:var-cs, eq:var-pc, eq:var-pv). Map: dev/appB_map.md §2.3.
+# cross_period_covariance.R -- how the per-period jumps are combined: .match_sum()/.cross_cov()
+# (covariance of two periods' jumps from their per-unit influence vectors, matched on id),
+# .cov_scheme() (which covariance terms a sampling scheme keeps) and .aggregate_fits() (the RD-DID
+# estimate with its variance under all three schemes). Used by rddid() and the assumption tests.
 
 #' Sum of g_t * g_s over units present in both windows, matched on id
 #' @keywords internal

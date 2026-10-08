@@ -1,6 +1,6 @@
 # Appendix B.4 (app:est-bw) conformance: bandwidth objectives and selectors.
 # Each test title starts with the paper object it checks; see dev/appB_map.md §2.5.
-# The hand-coded formulas below are written from the paper, not from R/bandwidth.R.
+# The hand-coded formulas below are written from the paper, not from R/bandwidth_joint.R.
 
 .b4_panel <- function(scheme = c("pc", "cs", "pv"), n = 1500, seed = 11) {
   scheme <- match.arg(scheme)

@@ -11,8 +11,8 @@
 #
 # Written *only* from the Section 4.4 prose and from the Appendix B machinery
 # already in helper-appB-reference.R (ref_period_fit / ref_sigma /
-# ref_cov_beta0 / ref_hc1 / ref_V_D).  R/test_typecont.R, R/test_compstable.R,
-# R/test_homog.R, R/test_trendcell.R and R/test_helpers.R -- the code under
+# ref_cov_beta0 / ref_hc1 / ref_V_D).  R/rd_typecont.R, R/rd_compstable.R,
+# R/rd_homog.R, R/rd_trendcell.R and R/assumption_tests_helpers.R -- the code under
 # test -- were NOT read.  Every local-linear jump below is a ref_period_fit(),
 # and every variance is an Appendix B.2 sandwich.
 #
