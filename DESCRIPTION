@@ -26,6 +26,7 @@ Imports:
     rdrobust,
     stats
 Suggests:
+    broom,
     generics,
     ggplot2,
     knitr,

@@ -174,7 +174,7 @@ periods, trend, bandwidth rule, `h`, scheme), which is what table makers read.
 With the modelsummary package installed, the two fits side by side, with
 confidence intervals:
 
-```{r modelsummary, eval = requireNamespace("modelsummary", quietly = TRUE)}
+```{r modelsummary, eval = requireNamespace("modelsummary", quietly = TRUE) && requireNamespace("broom", quietly = TRUE)}
 modelsummary::modelsummary(
   list(Constant = fit, Linear = fit_lin), statistic = "conf.int",
   gof_map = list(list(raw = "h", clean = "h", fmt = 3),
