@@ -73,7 +73,14 @@
 #' @export
 rd_period <- function(y, x, h, b = h, id = NULL, c = 0, p = 1L, q = 2L,
                       kernel = "triangular") {
-  stopifnot(length(y) == length(x), h > 0, b > 0, q > p, p >= 1L)
+  # one main and one pilot bandwidth per call: a vector would be recycled across the
+  # observations by the kernel weights below, silently giving each unit its own bandwidth
+  if (!is.numeric(h) || length(h) != 1L || !is.finite(h) || h <= 0)
+    stop("`h` must be a single positive number.", call. = FALSE)
+  if (!is.numeric(b) || length(b) != 1L || !is.finite(b) || b <= 0)
+    stop("`b` must be a single positive number (one pilot bandwidth for the period).",
+         call. = FALSE)
+  stopifnot(length(y) == length(x), q > p, p >= 1L)
   cutoff <- c                              # `c` stays the argument name, as in rdrobust
   y <- as.numeric(y)
   x <- as.numeric(x)

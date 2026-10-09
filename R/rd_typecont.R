@@ -242,7 +242,10 @@
 #'     \item{`call`}{the matched call.}
 #'     \item{`per_period`}{a list by period; each element holds `ll_wald`, that
 #'       period's own Wald test (`stat`, `df`, `p`).}
-#'     \item{`ll_wald`}{the joint test again, as a list (`stat`, `df`, `p`).}
+#'     \item{`ll_wald`}{the joint test again, as a list (`stat`, `df`, `p`). A type
+#'       share that is constant near the cutoff on both sides with no jump carries no
+#'       information and is left out (`dropped` counts them); one that jumps
+#'       deterministically makes the test undefined (`NA`).}
 #'     \item{`meta`}{a list with `periods`, `type_values` (the types, written
 #'       as the sides in the other periods in time order, e.g. `"+-"`), `h`
 #'       (the common bandwidth, `NA` with `bwselect = "cct"`), `bwselect`,

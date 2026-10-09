@@ -88,7 +88,10 @@ reads it.}
 \item{\code{call}}{the matched call.}
 \item{\code{per_period}}{a list by period; each element holds \code{ll_wald}, that
 period's own Wald test (\code{stat}, \code{df}, \code{p}).}
-\item{\code{ll_wald}}{the joint test again, as a list (\code{stat}, \code{df}, \code{p}).}
+\item{\code{ll_wald}}{the joint test again, as a list (\code{stat}, \code{df}, \code{p}). A type
+share that is constant near the cutoff on both sides with no jump carries no
+information and is left out (\code{dropped} counts them); one that jumps
+deterministically makes the test undefined (\code{NA}).}
 \item{\code{meta}}{a list with \code{periods}, \code{type_values} (the types, written
 as the sides in the other periods in time order, e.g. \code{"+-"}), \code{h}
 (the common bandwidth, \code{NA} with \code{bwselect = "cct"}), \code{bwselect},

@@ -376,7 +376,10 @@
 #'       fit on the reflected sample, `NULL` where it failed) and `sample` (the
 #'       reflected sample: `x_trd`, `type_trd`, `x_t0`, `type_t0`), which feed
 #'       [plot.rd_compstable()].}
-#'     \item{`joint`}{the joint test again, as `ll_wald` (`stat`, `df`, `p`).}
+#'     \item{`joint`}{the joint test again, as `ll_wald` (`stat`, `df`, `p`). A type
+#'       share that is constant near the cutoff on both sides with no jump carries no
+#'       information and is left out (`dropped` counts them); one that jumps
+#'       deterministically makes the test undefined (`NA`).}
 #'     \item{`meta`}{a list with `t_rd`, `comparisons`, `h` (the common
 #'       bandwidth, `NA` with `bwselect = "cct"`), `bwselect`, `c` (the cutoff
 #'       as passed, before any mirroring), `bc` and `estimand`.}

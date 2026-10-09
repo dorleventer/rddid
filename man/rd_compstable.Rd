@@ -101,7 +101,10 @@ the cutoff under \code{estimand = "atu"}); \code{fits} (each type's \code{\link[
 fit on the reflected sample, \code{NULL} where it failed) and \code{sample} (the
 reflected sample: \code{x_trd}, \code{type_trd}, \code{x_t0}, \code{type_t0}), which feed
 \code{\link[=plot.rd_compstable]{plot.rd_compstable()}}.}
-\item{\code{joint}}{the joint test again, as \code{ll_wald} (\code{stat}, \code{df}, \code{p}).}
+\item{\code{joint}}{the joint test again, as \code{ll_wald} (\code{stat}, \code{df}, \code{p}). A type
+share that is constant near the cutoff on both sides with no jump carries no
+information and is left out (\code{dropped} counts them); one that jumps
+deterministically makes the test undefined (\code{NA}).}
 \item{\code{meta}}{a list with \code{t_rd}, \code{comparisons}, \code{h} (the common
 bandwidth, \code{NA} with \code{bwselect = "cct"}), \code{bwselect}, \code{c} (the cutoff
 as passed, before any mirroring), \code{bc} and \code{estimand}.}

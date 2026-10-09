@@ -86,17 +86,32 @@
 #' @param theta numeric vector of jump estimates.
 #' @param Sigma numeric square covariance matrix (same length as theta).
 #' @return list with elements `stat` (chi-square statistic), `df` (rank of
-#'   Sigma), `p` (p-value from chi-square distribution).
+#'   Sigma), `p` (p-value from chi-square distribution); `dropped` (the number of
+#'   shares left out for having no variation near the cutoff) when it is positive.
 #' @keywords internal
 #' @noRd
 .joint_wald <- function(theta, Sigma, scale = 1) {
   if (length(theta) == 0L) return(list(stat = NA_real_, df = 0L, p = NA_real_))
-  # A share whose jump has a standard error that is zero to working precision (one switcher,
-  # a type that is deterministic near the cutoff) would give an astronomical statistic made
-  # of rounding noise: treat the test as undefined instead (the type indicators are 0/1, so
-  # the scale is 1)
-  if (any(sqrt(pmax(diag(Sigma), 0)) <= sqrt(.Machine$double.eps) * scale))
+  # A share whose jump has a standard error that is zero to working precision is constant on
+  # each side of the cutoff within the window (the type indicators are 0/1, so the scale is 1).
+  # - Its jump is not zero: the share jumps deterministically (a type defined by the side of
+  #   the cutoff in the tested period, one switcher at the edge of the window). The statistic
+  #   would be rounding noise blown up, so the test is undefined.
+  # - Its jump is zero too: the type is absent (or universal) near the cutoff on both sides.
+  #   The share carries no information and its row of Sigma is zero, so it is left out exactly
+  #   and the remaining shares are tested (2026-10-09: this case used to make the whole test
+  #   NA as well).
+  tol0    <- sqrt(.Machine$double.eps) * scale
+  zero_se <- sqrt(pmax(diag(Sigma), 0)) <= tol0
+  if (any(zero_se & abs(theta) > tol0))
     return(list(stat = NA_real_, df = 0L, p = NA_real_, degenerate = TRUE))
+  n_dropped <- sum(zero_se)
+  if (n_dropped > 0L) {
+    theta <- theta[!zero_se]
+    Sigma <- Sigma[!zero_se, !zero_se, drop = FALSE]
+    if (length(theta) == 0L)
+      return(list(stat = NA_real_, df = 0L, p = NA_real_, dropped = n_dropped))
+  }
   # Moore-Penrose pseudo-inverse via SVD, truncating near-zero singular values.
   # Sigma is structurally rank-deficient here (the per-period type indicators
   # sum to 1, so each period contributes one exact-zero direction).  Use the
@@ -112,7 +127,9 @@
   Sigma_pinv <- sv$v %*% diag(d_inv, nrow = length(d_inv)) %*% t(sv$u)
   stat <- as.numeric(t(theta) %*% Sigma_pinv %*% theta)
   p    <- stats::pchisq(stat, df = df, lower.tail = FALSE)
-  list(stat = stat, df = df, p = p)
+  out  <- list(stat = stat, df = df, p = p)
+  if (n_dropped > 0L) out$dropped <- n_dropped
+  out
 }
 
 
