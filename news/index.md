@@ -2,6 +2,25 @@
 
 ## rddid 0.4.0.9000 (development)
 
+### 2026-10-09: verification fixes (no change on the paper’s numbers)
+
+- [`rd_period()`](https://dorleventer.github.io/rddid/reference/rd_period.md)
+  requires a single main bandwidth `h` and a single pilot `b`. A vector
+  used to be recycled across the observations by the kernel weights,
+  silently giving each unit its own bandwidth (the joint rule’s
+  per-period pilots passed as one `b` did exactly that).
+- [`rd_typecont()`](https://dorleventer.github.io/rddid/reference/rd_typecont.md)
+  and
+  [`rd_compstable()`](https://dorleventer.github.io/rddid/reference/rd_compstable.md):
+  a type share that is constant near the cutoff on both sides with no
+  jump (the type is absent, or universal, in the window) carries no
+  information and is now left out of the Wald test, which is run on the
+  remaining shares; `ll_wald$dropped` counts the shares left out. A
+  share that jumps deterministically (zero standard error, jump not
+  zero) still makes the test undefined (`NA`). The 2026-10-08 guard made
+  both cases `NA`, which turned informative tests into `NA` whenever one
+  type was absent near the cutoff.
+
 ### 2026-10-08: `tidy()`/`glance()` always available; a no-Suggests check
 
 - `generics` moved from Suggests to Imports and its

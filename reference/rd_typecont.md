@@ -169,7 +169,10 @@ An object of class `"rd_typecont"`, a list with:
 
 - `ll_wald`:
 
-  the joint test again, as a list (`stat`, `df`, `p`).
+  the joint test again, as a list (`stat`, `df`, `p`). A type share that
+  is constant near the cutoff on both sides with no jump carries no
+  information and is left out (`dropped` counts them); one that jumps
+  deterministically makes the test undefined (`NA`).
 
 - `meta`:
 

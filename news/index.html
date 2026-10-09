@@ -42,6 +42,13 @@
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.4.0.9000" id="rddid-0409000-development">rddid 0.4.0.9000 (development)<a class="anchor" aria-label="anchor" href="#rddid-0409000-development"></a></h2>
 <div class="section level3">
+<h3 id="id_2026-verification-fixes-no-change-on-the-papers-numbers-0-4-0-9000">2026-10-09: verification fixes (no change on the paper’s numbers)<a class="anchor" aria-label="anchor" href="#id_2026-verification-fixes-no-change-on-the-papers-numbers-0-4-0-9000"></a></h3>
+<ul><li>
+<code><a href="../reference/rd_period.html">rd_period()</a></code> requires a single main bandwidth <code>h</code> and a single pilot <code>b</code>. A vector used to be recycled across the observations by the kernel weights, silently giving each unit its own bandwidth (the joint rule’s per-period pilots passed as one <code>b</code> did exactly that).</li>
+<li>
+<code><a href="../reference/rd_typecont.html">rd_typecont()</a></code> and <code><a href="../reference/rd_compstable.html">rd_compstable()</a></code>: a type share that is constant near the cutoff on both sides with no jump (the type is absent, or universal, in the window) carries no information and is now left out of the Wald test, which is run on the remaining shares; <code>ll_wald$dropped</code> counts the shares left out. A share that jumps deterministically (zero standard error, jump not zero) still makes the test undefined (<code>NA</code>). The 2026-10-08 guard made both cases <code>NA</code>, which turned informative tests into <code>NA</code> whenever one type was absent near the cutoff.</li>
+</ul></div>
+<div class="section level3">
 <h3 id="id_2026-tidyglance-always-available-a-no-suggests-check-0-4-0-9000">2026-10-08: <code>tidy()</code>/<code>glance()</code> always available; a no-Suggests check<a class="anchor" aria-label="anchor" href="#id_2026-tidyglance-always-available-a-no-suggests-check-0-4-0-9000"></a></h3>
 <ul><li>
 <code>generics</code> moved from Suggests to Imports and its <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code>/<code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code> are re-exported: <code>tidy(fit)</code> works after <code><a href="https://github.com/dorleventer/rddid" class="external-link">library(rddid)</a></code> without <code>generics::</code> and without installing anything else. No numerical change.</li>

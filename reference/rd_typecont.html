@@ -204,7 +204,10 @@ reads it.</p></dd>
 period's own Wald test (<code>stat</code>, <code>df</code>, <code>p</code>).</p></dd>
 
 <dt><code>ll_wald</code></dt>
-<dd><p>the joint test again, as a list (<code>stat</code>, <code>df</code>, <code>p</code>).</p></dd>
+<dd><p>the joint test again, as a list (<code>stat</code>, <code>df</code>, <code>p</code>). A type
+share that is constant near the cutoff on both sides with no jump carries no
+information and is left out (<code>dropped</code> counts them); one that jumps
+deterministically makes the test undefined (<code>NA</code>).</p></dd>
 
 <dt><code>meta</code></dt>
 <dd><p>a list with <code>periods</code>, <code>type_values</code> (the types, written

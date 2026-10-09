@@ -221,7 +221,10 @@ reflected sample: <code>x_trd</code>, <code>type_trd</code>, <code>x_t0</code>, 
 <code><a href="plot.rd_compstable.html">plot.rd_compstable()</a></code>.</p></dd>
 
 <dt><code>joint</code></dt>
-<dd><p>the joint test again, as <code>ll_wald</code> (<code>stat</code>, <code>df</code>, <code>p</code>).</p></dd>
+<dd><p>the joint test again, as <code>ll_wald</code> (<code>stat</code>, <code>df</code>, <code>p</code>). A type
+share that is constant near the cutoff on both sides with no jump carries no
+information and is left out (<code>dropped</code> counts them); one that jumps
+deterministically makes the test undefined (<code>NA</code>).</p></dd>
 
 <dt><code>meta</code></dt>
 <dd><p>a list with <code>t_rd</code>, <code>comparisons</code>, <code>h</code> (the common
