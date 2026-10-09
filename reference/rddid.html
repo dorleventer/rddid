@@ -85,6 +85,7 @@ jumps from the RD-period jump. How the weights are set is the
 <span>  <span class="va">t_rd</span>,</span>
 <span>  comparisons <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  trend <span class="op">=</span> <span class="st">"constant"</span>,</span>
+<span>  weighting <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ols"</span>, <span class="st">"min_variance"</span><span class="op">)</span>,</span>
 <span>  estimand <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"att"</span>, <span class="st">"atu"</span><span class="op">)</span>,</span>
 <span>  bwselect <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"joint"</span>, <span class="st">"iter"</span>, <span class="st">"cct"</span><span class="op">)</span>,</span>
 <span>  h <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -152,13 +153,24 @@ periods that are neither (a second RD period, say).</p></dd>
 
 
 <dt id="arg-trend">trend<a class="anchor" aria-label="anchor" href="#arg-trend"></a></dt>
-<dd><p>the confounding-trend assumption, which sets the
-comparison-period weights: <code>"constant"</code> (default; the confounding jump is
-the same in every period, equal weights) or <code>"linear"</code> (the confounding
+<dd><p>the confounding-trend assumption, which restricts the
+comparison-period weights (<code>weighting</code> picks them within it): <code>"constant"</code>
+(default; the confounding jump is the same in every period; equal weights
+under the default <code>weighting</code>) or <code>"linear"</code> (the confounding
 jump moves linearly in time; needs at least two comparison periods). A
 numeric vector gives the weights directly, one per entry of <code>comparisons</code>
 in that order. Weights that sum to one cancel a constant confounding
 jump; <code>rddid()</code> warns when they do not.</p></dd>
+
+
+<dt id="arg-weighting">weighting<a class="anchor" aria-label="anchor" href="#arg-weighting"></a></dt>
+<dd><p>how the comparison-period weights are chosen within the
+<code>trend</code> assumption: <code>"ols"</code> (default) uses the weights <code>trend</code> implies
+(equal weights for <code>"constant"</code>, the least-squares line for <code>"linear"</code>);
+<code>"min_variance"</code> uses the minimum-variance weights, the comparison-period
+weights the confounding-trend assumption allows that make the variance of
+the estimate smallest (see Details). Not available with a numeric <code>trend</code>,
+or with <code>bwselect = "iter"</code> unless <code>h</code> is given.</p></dd>
 
 
 <dt id="arg-estimand">estimand<a class="anchor" aria-label="anchor" href="#arg-estimand"></a></dt>
@@ -311,6 +323,18 @@ columns <code>y</code>, <code>x</code>, <code>id</code>), for <code><a href="plo
 <dt><code>call</code></dt>
 <dd><p>the matched call.</p></dd>
 
+<dt><code>weighting</code></dt>
+<dd><p><code>"ols"</code> or <code>"min_variance"</code>, as passed.</p></dd>
+
+<dt><code>weights_detail</code></dt>
+<dd><p><code>NULL</code> for <code>"ols"</code>; for <code>"min_variance"</code> a list
+with <code>pilot</code> (the <code>"ols"</code> weights), <code>Xi</code> (the estimated covariance
+matrix of the comparison-period jumps), <code>xi</code> (their estimated
+covariances with the RD-period jump), <code>h</code> (the main bandwidths at which
+these were estimated; under <code>"joint"</code>, the first-step bandwidths, not
+the final ones in <code>bandwidth</code>) and <code>pinned</code> (<code>TRUE</code> when the assumption
+allows only one set of weights).</p></dd>
+
 
 </dl></div>
     <div class="section level2">
@@ -339,7 +363,37 @@ linearly in time; the weights then extrapolate the least-squares line through th
 comparison-period jumps to the RD period (with two comparison periods, the
 line through them). They sum to one and can be
 negative: with comparison periods 1 and 2 and RD period 3 they are -1 and 2.
-A numeric <code>trend</code> supplies the weights directly.</p>
+A numeric <code>trend</code> supplies the weights directly. These are the weights under
+the default <code>weighting = "ols"</code>; <code>weighting = "min_variance"</code> chooses others
+the same assumption allows (see below).</p>
+</div>
+
+<div class="section">
+<h3 id="minimum-variance-weights">Minimum-variance weights<a class="anchor" aria-label="anchor" href="#minimum-variance-weights"></a></h3>
+
+
+<p>All weights the confounding-trend assumption allows estimate the same
+effect; they differ in precision. <code>weighting = "min_variance"</code> picks the ones
+with the smallest variance of the conventional estimate, using the estimated
+variances of the per-period jumps and, in a panel (<code>scheme</code> <code>"pc"</code> or
+<code>"pv"</code>), their covariances (the quantities behind the conventional standard
+error). In a
+repeated cross-section with <code>trend = "constant"</code> these are inverse-variance
+weights: a comparison period whose jump is estimated more precisely gets more
+weight. Under <code>bwselect = "joint"</code> the weights and the bandwidth are chosen in
+three steps: the common bandwidth with the <code>"ols"</code> weights, the
+minimum-variance weights at that bandwidth, and the bandwidths (common <code>h</code>
+and pilot <code>b</code>) again with those weights. With <code>"cct"</code> or a fixed <code>h</code> the
+bandwidths do not depend on the weights, so the weights are computed once.
+The same weights are used for both rows of <code>estimates</code>, so only the
+conventional standard error is minimized; the robust one uses the same
+weights. The standard errors treat the weights as known; in large samples,
+estimating them does not change the distribution of the estimate, because
+every allowed set of weights cancels the confounding jump exactly, so an
+error in the weights multiplies only the estimation error of the jumps. With
+one comparison period under <code>"constant"</code>, or two under <code>"linear"</code>, the
+assumption allows only one set of weights; <code>rddid()</code> returns it and sets
+<code>weights_detail$pinned</code> to <code>TRUE</code>.</p>
 </div>
 
 <div class="section">
@@ -493,6 +547,20 @@ example data <a href="rddid_sim.html">rddid_sim</a> and <a href="rddid_sim_pv.ht
 <span class="r-out co"><span class="r-pr">#&gt;</span>                              Estimate  Std. err.       z  p-value   95% CI</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Conventional                 0.9147     0.2582    3.54   &lt;0.001   [0.4087, 1.4207]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Robust (bias-corrected)      0.9012     0.3068    2.94    0.003   [0.3000, 1.5025]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   summary() shows the per-period fits and the s.e. under every sampling scheme.</span>
+<span class="r-in"><span><span class="co"># minimum-variance comparison-period weights</span></span></span>
+<span class="r-in"><span><span class="fu">rddid</span><span class="op">(</span><span class="va">rddid_sim</span>, y <span class="op">=</span> <span class="st">"Y"</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span>,</span></span>
+<span class="r-in"><span>      weighting <span class="op">=</span> <span class="st">"min_variance"</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> RD-DID estimate of the ATT in period 3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Comparison periods: 1, 2   (constant confounding trend; minimum-variance weights 0.452, 0.548)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Sampling scheme: panel, no unit changes side of the cutoff (detected)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Bandwidth: common h = 0.2704 (rule "joint": one bandwidth, chosen for the RD-DID estimate)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Pilot bandwidth b (period = value): 1 = 0.4151, 2 = 0.3915, 3 = 0.3998</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                              Estimate  Std. err.       z  p-value   95% CI</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Conventional                 1.0862     0.1255    8.65   &lt;0.001   [0.8402, 1.3323]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Robust (bias-corrected)      1.1329     0.1484    7.63   &lt;0.001   [0.8420, 1.4238]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   summary() shows the per-period fits and the s.e. under every sampling scheme.</span>
 <span class="r-in"><span><span class="co"># comparison periods uniformly treated: add estimand = "atu" (same numbers)</span></span></span>

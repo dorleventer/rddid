@@ -26,6 +26,7 @@ rddid(
   t_rd,
   comparisons = NULL,
   trend = "constant",
+  weighting = c("ols", "min_variance"),
   estimand = c("att", "atu"),
   bwselect = c("joint", "iter", "cct"),
   h = NULL,
@@ -96,13 +97,25 @@ rddid(
 
 - trend:
 
-  the confounding-trend assumption, which sets the comparison-period
-  weights: `"constant"` (default; the confounding jump is the same in
-  every period, equal weights) or `"linear"` (the confounding jump moves
-  linearly in time; needs at least two comparison periods). A numeric
-  vector gives the weights directly, one per entry of `comparisons` in
-  that order. Weights that sum to one cancel a constant confounding
-  jump; `rddid()` warns when they do not.
+  the confounding-trend assumption, which restricts the
+  comparison-period weights (`weighting` picks them within it):
+  `"constant"` (default; the confounding jump is the same in every
+  period; equal weights under the default `weighting`) or `"linear"`
+  (the confounding jump moves linearly in time; needs at least two
+  comparison periods). A numeric vector gives the weights directly, one
+  per entry of `comparisons` in that order. Weights that sum to one
+  cancel a constant confounding jump; `rddid()` warns when they do not.
+
+- weighting:
+
+  how the comparison-period weights are chosen within the `trend`
+  assumption: `"ols"` (default) uses the weights `trend` implies (equal
+  weights for `"constant"`, the least-squares line for `"linear"`);
+  `"min_variance"` uses the minimum-variance weights, the
+  comparison-period weights the confounding-trend assumption allows that
+  make the variance of the estimate smallest (see Details). Not
+  available with a numeric `trend`, or with `bwselect = "iter"` unless
+  `h` is given.
 
 - estimand:
 
@@ -270,6 +283,20 @@ An object of class `"rddid"`, a list with:
 
   the matched call.
 
+- `weighting`:
+
+  `"ols"` or `"min_variance"`, as passed.
+
+- `weights_detail`:
+
+  `NULL` for `"ols"`; for `"min_variance"` a list with `pilot` (the
+  `"ols"` weights), `Xi` (the estimated covariance matrix of the
+  comparison-period jumps), `xi` (their estimated covariances with the
+  RD-period jump), `h` (the main bandwidths at which these were
+  estimated; under `"joint"`, the first-step bandwidths, not the final
+  ones in `bandwidth`) and `pinned` (`TRUE` when the assumption allows
+  only one set of weights).
+
 ## Details
 
 ### The estimate
@@ -292,7 +319,35 @@ moves linearly in time; the weights then extrapolate the least-squares
 line through the comparison-period jumps to the RD period (with two
 comparison periods, the line through them). They sum to one and can be
 negative: with comparison periods 1 and 2 and RD period 3 they are -1
-and 2. A numeric `trend` supplies the weights directly.
+and 2. A numeric `trend` supplies the weights directly. These are the
+weights under the default `weighting = "ols"`;
+`weighting = "min_variance"` chooses others the same assumption allows
+(see below).
+
+### Minimum-variance weights
+
+All weights the confounding-trend assumption allows estimate the same
+effect; they differ in precision. `weighting = "min_variance"` picks the
+ones with the smallest variance of the conventional estimate, using the
+estimated variances of the per-period jumps and, in a panel (`scheme`
+`"pc"` or `"pv"`), their covariances (the quantities behind the
+conventional standard error). In a repeated cross-section with
+`trend = "constant"` these are inverse-variance weights: a comparison
+period whose jump is estimated more precisely gets more weight. Under
+`bwselect = "joint"` the weights and the bandwidth are chosen in three
+steps: the common bandwidth with the `"ols"` weights, the
+minimum-variance weights at that bandwidth, and the bandwidths (common
+`h` and pilot `b`) again with those weights. With `"cct"` or a fixed `h`
+the bandwidths do not depend on the weights, so the weights are computed
+once. The same weights are used for both rows of `estimates`, so only
+the conventional standard error is minimized; the robust one uses the
+same weights. The standard errors treat the weights as known; in large
+samples, estimating them does not change the distribution of the
+estimate, because every allowed set of weights cancels the confounding
+jump exactly, so an error in the weights multiplies only the estimation
+error of the jumps. With one comparison period under `"constant"`, or
+two under `"linear"`, the assumption allows only one set of weights;
+`rddid()` returns it and sets `weights_detail$pinned` to `TRUE`.
 
 ### Sampling schemes
 
@@ -457,6 +512,20 @@ rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
 #>                              Estimate  Std. err.       z  p-value   95% CI
 #>   Conventional                 0.9147     0.2582    3.54   <0.001   [0.4087, 1.4207]
 #>   Robust (bias-corrected)      0.9012     0.3068    2.94    0.003   [0.3000, 1.5025]
+#> 
+#>   summary() shows the per-period fits and the s.e. under every sampling scheme.
+# minimum-variance comparison-period weights
+rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
+      weighting = "min_variance")
+#> RD-DID estimate of the ATT in period 3
+#>   Comparison periods: 1, 2   (constant confounding trend; minimum-variance weights 0.452, 0.548)
+#>   Sampling scheme: panel, no unit changes side of the cutoff (detected)
+#>   Bandwidth: common h = 0.2704 (rule "joint": one bandwidth, chosen for the RD-DID estimate)
+#>   Pilot bandwidth b (period = value): 1 = 0.4151, 2 = 0.3915, 3 = 0.3998
+#> 
+#>                              Estimate  Std. err.       z  p-value   95% CI
+#>   Conventional                 1.0862     0.1255    8.65   <0.001   [0.8402, 1.3323]
+#>   Robust (bias-corrected)      1.1329     0.1484    7.63   <0.001   [0.8420, 1.4238]
 #> 
 #>   summary() shows the per-period fits and the s.e. under every sampling scheme.
 # comparison periods uniformly treated: add estimand = "atu" (same numbers)

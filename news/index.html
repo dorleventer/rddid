@@ -42,6 +42,17 @@
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.4.0.9000" id="rddid-0409000-development">rddid 0.4.0.9000 (development)<a class="anchor" aria-label="anchor" href="#rddid-0409000-development"></a></h2>
 <div class="section level3">
+<h3 id="id_2026-minimum-variance-comparison-period-weights-0-4-0-9000">2026-10-09: minimum-variance comparison-period weights<a class="anchor" aria-label="anchor" href="#id_2026-minimum-variance-comparison-period-weights-0-4-0-9000"></a></h3>
+<ul><li>New argument <code>weighting</code> in <code><a href="../reference/rddid.html">rddid()</a></code>. <code>"ols"</code> (default) keeps the weights used so far (equal under <code>trend = "constant"</code>, the least-squares line under <code>"linear"</code>). <code>"min_variance"</code> uses the minimum-variance weights: the comparison-period weights the confounding-trend assumption allows that make the variance of the conventional estimate smallest.
+<ul><li>They are computed from the per-period variances and, in a panel, covariances behind the standard error.</li>
+<li>In a repeated cross-section with a constant trend they are inverse-variance weights.</li>
+<li>Under <code>bwselect = "joint"</code> the weights and the common bandwidth are chosen in three steps; with <code>"cct"</code> or a fixed <code>h</code> the bandwidths do not depend on the weights, so the weights are computed once.</li>
+<li>Not available with a numeric <code>trend</code>, or with <code>bwselect = "iter"</code> unless <code>h</code> is given.</li>
+<li>New fields <code>weighting</code> and <code>weights_detail</code> in the returned object; <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> and <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code> report the weighting.</li>
+<li>Results with the default <code>weighting = "ols"</code> are unchanged.</li>
+</ul></li>
+</ul></div>
+<div class="section level3">
 <h3 id="id_2026-verification-fixes-no-change-on-the-papers-numbers-0-4-0-9000">2026-10-09: verification fixes (no change on the paper’s numbers)<a class="anchor" aria-label="anchor" href="#id_2026-verification-fixes-no-change-on-the-papers-numbers-0-4-0-9000"></a></h3>
 <ul><li>
 <code><a href="../reference/rd_period.html">rd_period()</a></code> requires a single main bandwidth <code>h</code> and a single pilot <code>b</code>. A vector used to be recycled across the observations by the kernel weights, silently giving each unit its own bandwidth (the joint rule’s per-period pilots passed as one <code>b</code> did exactly that).</li>

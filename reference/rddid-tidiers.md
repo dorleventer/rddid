@@ -66,7 +66,7 @@ its Details).
 [`glance()`](https://generics.r-lib.org/reference/glance.html) returns a
 one-row data frame describing the fit (`nobs`, `t_rd`, `comparisons`,
 `trend`, `weights`, `bwselect`, `h` (the common bandwidth under
-`"joint"`/fixed `h`, `NA` otherwise), `scheme`, `level`).
+`"joint"`/fixed `h`, `NA` otherwise), `scheme`, `level`, `weighting`).
 
 ## Examples
 
@@ -79,6 +79,8 @@ tidy(fit)
 glance(fit)
 #>   nobs t_rd comparisons    trend  weights bwselect         h scheme level
 #> 1 3000    3        1, 2 constant 0.5, 0.5    joint 0.2672096     pc  0.95
+#>   weighting
+#> 1       ols
 tidy(rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3))
 #>              test statistic df   p.value
 #> 1 type continuity  4.781633  9 0.8529133

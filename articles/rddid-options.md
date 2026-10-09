@@ -3,10 +3,10 @@
 This article covers the
 [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md)
 arguments that set the bandwidths, the main bandwidth `h` (for the point
-estimate) and the pilot bandwidth `b` (for the bias correction), and the
-standard error under the three sampling schemes. It uses `rddid_sim`, a
-simulated panel with RD period 3, comparison periods 1 and 2 and a true
-effect of 1; [Get
+estimate) and the pilot bandwidth `b` (for the bias correction), the
+standard error under the three sampling schemes, and the choice of the
+comparison-period weights. It uses `rddid_sim`, a simulated panel with
+RD period 3, comparison periods 1 and 2 and a true effect of 1; [Get
 started](https://dorleventer.github.io/rddid/articles/rddid-estimation.md)
 introduces the data and the estimator.
 
@@ -260,6 +260,62 @@ Treating the panel as a cross-section changes the common bandwidth and
 so the estimate. Only with a fixed `h` or `bwselect = "cct"` do the
 bandwidths not depend on the scheme; then the scheme leaves the estimate
 untouched and changes only the reported standard error.
+
+## Choosing the comparison-period weights
+
+Under `trend = "constant"` any comparison-period weights that sum to one
+remove the confounding jump, and under `"linear"` any weights that also
+extrapolate the comparison periods to the RD period do. All of them
+estimate the same effect; they differ in precision. By default
+(`weighting = "ols"`)
+[`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md) uses
+equal weights under `"constant"` and the least-squares line under
+`"linear"`. `weighting = "min_variance"` uses the minimum-variance
+weights instead: the allowed weights that make the variance of the
+conventional estimate smallest, computed from the estimated variances of
+the yearly jumps and, in a panel, their covariances (the same quantities
+behind the conventional standard error).
+
+``` r
+
+fit_ols <- rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
+fit_mv  <- rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
+                 weighting = "min_variance")
+fit_mv$weights
+#>         1         2 
+#> 0.4523365 0.5476635
+c(ols = fit_ols$estimates["Conventional", "se"],
+  min_variance = fit_mv$estimates["Conventional", "se"])
+#>          ols min_variance 
+#>    0.1264043    0.1255210
+```
+
+The weights on years 1 and 2 are 0.452 and 0.548, and the standard error
+barely moves. In `rddid_sim` the two comparison years are equally noisy
+(their jumps have the same variance), so the weights stay near one half.
+The tilt toward year 2 comes from the panel: the same units appear every
+year, and the estimated year-2 jump covaries more with the year-3 jump
+than the year-1 jump does, so weighting it more cancels more of the
+year-3 noise. The gain is larger when the comparison periods differ in
+precision, for example in sample size near the cutoff; in a repeated
+cross-section with a constant trend the minimum-variance weights are
+inverse-variance weights.
+
+Under the default bandwidth rule the weights and the common bandwidth
+are chosen in three steps: the common bandwidth with the `"ols"`
+weights, the minimum-variance weights at that bandwidth, and the
+bandwidths (common `h` and pilot `b`) again with those weights (here
+0.267 and then 0.270). With `bwselect = "cct"` or a fixed `h` the
+bandwidths do not depend on the weights, so the weights are computed
+once. The standard errors treat the weights as known; in large samples,
+estimating them does not change the distribution of the estimate,
+because every allowed set of weights cancels the confounding jump
+exactly, so an error in the weights multiplies only the estimation error
+of the jumps. `fit_mv$weights_detail` keeps the `"ols"` weights, the
+estimated variances and covariances used, and the bandwidths at which
+they were estimated. With one comparison period under `"constant"`, or
+two under `"linear"`, there is a single set of allowed weights, and
+`"min_variance"` returns it.
 
 ## References
 

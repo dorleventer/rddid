@@ -100,7 +100,7 @@ that row is the joint test over pairs, whose p-value is approximate (see its Det
 <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code> returns a
 one-row data frame describing the fit (<code>nobs</code>, <code>t_rd</code>, <code>comparisons</code>, <code>trend</code>, <code>weights</code>,
 <code>bwselect</code>, <code>h</code> (the common bandwidth under <code>"joint"</code>/fixed <code>h</code>, <code>NA</code> otherwise),
-<code>scheme</code>, <code>level</code>).</p>
+<code>scheme</code>, <code>level</code>, <code>weighting</code>).</p>
     </div>
 
     <div class="section level2">
@@ -113,6 +113,8 @@ one-row data frame describing the fit (<code>nobs</code>, <code>t_rd</code>, <co
 <span class="r-in"><span><span class="fu"><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   nobs t_rd comparisons    trend  weights bwselect         h scheme level</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1 3000    3        1, 2 constant 0.5, 0.5    joint 0.2672096     pc  0.95</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   weighting</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1       ols</span>
 <span class="r-in"><span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="fu"><a href="rd_typecont.html">rd_typecont</a></span><span class="op">(</span><span class="va">rddid_sim_pv</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              test statistic df   p.value</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1 type continuity  4.781633  9 0.8529133</span>

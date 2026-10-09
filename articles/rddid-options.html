@@ -70,11 +70,12 @@
     
 <p>This article covers the <code><a href="../reference/rddid.html">rddid()</a></code> arguments that set the
 bandwidths, the main bandwidth <code>h</code> (for the point estimate)
-and the pilot bandwidth <code>b</code> (for the bias correction), and
-the standard error under the three sampling schemes. It uses
-<code>rddid_sim</code>, a simulated panel with RD period 3, comparison
-periods 1 and 2 and a true effect of 1; <a href="rddid-estimation.html">Get started</a> introduces the data and the
-estimator.</p>
+and the pilot bandwidth <code>b</code> (for the bias correction), the
+standard error under the three sampling schemes, and the choice of the
+comparison-period weights. It uses <code>rddid_sim</code>, a simulated
+panel with RD period 3, comparison periods 1 and 2 and a true effect of
+1; <a href="rddid-estimation.html">Get started</a> introduces the data
+and the estimator.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/dorleventer/rddid" class="external-link">rddid</a></span><span class="op">)</span></span></code></pre></div>
 <div class="section level2">
@@ -376,6 +377,60 @@ and so the estimate. Only with a fixed <code>h</code> or
 <code>bwselect = "cct"</code> do the bandwidths not depend on the
 scheme; then the scheme leaves the estimate untouched and changes only
 the reported standard error.</p>
+</div>
+<div class="section level2">
+<h2 id="choosing-the-comparison-period-weights">Choosing the comparison-period weights<a class="anchor" aria-label="anchor" href="#choosing-the-comparison-period-weights"></a>
+</h2>
+<p>Under <code>trend = "constant"</code> any comparison-period weights
+that sum to one remove the confounding jump, and under
+<code>"linear"</code> any weights that also extrapolate the comparison
+periods to the RD period do. All of them estimate the same effect; they
+differ in precision. By default (<code>weighting = "ols"</code>)
+<code><a href="../reference/rddid.html">rddid()</a></code> uses equal weights under <code>"constant"</code>
+and the least-squares line under <code>"linear"</code>.
+<code>weighting = "min_variance"</code> uses the minimum-variance
+weights instead: the allowed weights that make the variance of the
+conventional estimate smallest, computed from the estimated variances of
+the yearly jumps and, in a panel, their covariances (the same quantities
+behind the conventional standard error).</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">fit_ols</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rddid.html">rddid</a></span><span class="op">(</span><span class="va">rddid_sim</span>, y <span class="op">=</span> <span class="st">"Y"</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
+<span><span class="va">fit_mv</span>  <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rddid.html">rddid</a></span><span class="op">(</span><span class="va">rddid_sim</span>, y <span class="op">=</span> <span class="st">"Y"</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span>,</span>
+<span>                 weighting <span class="op">=</span> <span class="st">"min_variance"</span><span class="op">)</span></span>
+<span><span class="va">fit_mv</span><span class="op">$</span><span class="va">weights</span></span>
+<span><span class="co">#&gt;         1         2 </span></span>
+<span><span class="co">#&gt; 0.4523365 0.5476635</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>ols <span class="op">=</span> <span class="va">fit_ols</span><span class="op">$</span><span class="va">estimates</span><span class="op">[</span><span class="st">"Conventional"</span>, <span class="st">"se"</span><span class="op">]</span>,</span>
+<span>  min_variance <span class="op">=</span> <span class="va">fit_mv</span><span class="op">$</span><span class="va">estimates</span><span class="op">[</span><span class="st">"Conventional"</span>, <span class="st">"se"</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="co">#&gt;          ols min_variance </span></span>
+<span><span class="co">#&gt;    0.1264043    0.1255210</span></span></code></pre></div>
+<p>The weights on years 1 and 2 are 0.452 and 0.548, and the standard
+error barely moves. In <code>rddid_sim</code> the two comparison years
+are equally noisy (their jumps have the same variance), so the weights
+stay near one half. The tilt toward year 2 comes from the panel: the
+same units appear every year, and the estimated year-2 jump covaries
+more with the year-3 jump than the year-1 jump does, so weighting it
+more cancels more of the year-3 noise. The gain is larger when the
+comparison periods differ in precision, for example in sample size near
+the cutoff; in a repeated cross-section with a constant trend the
+minimum-variance weights are inverse-variance weights.</p>
+<p>Under the default bandwidth rule the weights and the common bandwidth
+are chosen in three steps: the common bandwidth with the
+<code>"ols"</code> weights, the minimum-variance weights at that
+bandwidth, and the bandwidths (common <code>h</code> and pilot
+<code>b</code>) again with those weights (here 0.267 and then 0.270).
+With <code>bwselect = "cct"</code> or a fixed <code>h</code> the
+bandwidths do not depend on the weights, so the weights are computed
+once. The standard errors treat the weights as known; in large samples,
+estimating them does not change the distribution of the estimate,
+because every allowed set of weights cancels the confounding jump
+exactly, so an error in the weights multiplies only the estimation error
+of the jumps. <code>fit_mv$weights_detail</code> keeps the
+<code>"ols"</code> weights, the estimated variances and covariances
+used, and the bandwidths at which they were estimated. With one
+comparison period under <code>"constant"</code>, or two under
+<code>"linear"</code>, there is a single set of allowed weights, and
+<code>"min_variance"</code> returns it.</p>
 </div>
 <div class="section level2">
 <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
