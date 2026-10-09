@@ -13,6 +13,7 @@ rddid(
   t_rd,
   comparisons = NULL,
   trend = "constant",
+  weighting = c("ols", "min_variance"),
   estimand = c("att", "atu"),
   bwselect = c("joint", "iter", "cct"),
   h = NULL,
@@ -61,13 +62,22 @@ treatment of interest is uniform at the cutoff (nobody treated, or, with
 other than \code{t_rd}; pass the periods explicitly when the data contain
 periods that are neither (a second RD period, say).}
 
-\item{trend}{the confounding-trend assumption, which sets the
-comparison-period weights: \code{"constant"} (default; the confounding jump is
-the same in every period, equal weights) or \code{"linear"} (the confounding
+\item{trend}{the confounding-trend assumption, which restricts the
+comparison-period weights (\code{weighting} picks them within it): \code{"constant"}
+(default; the confounding jump is the same in every period; equal weights
+under the default \code{weighting}) or \code{"linear"} (the confounding
 jump moves linearly in time; needs at least two comparison periods). A
 numeric vector gives the weights directly, one per entry of \code{comparisons}
 in that order. Weights that sum to one cancel a constant confounding
 jump; \code{rddid()} warns when they do not.}
+
+\item{weighting}{how the comparison-period weights are chosen within the
+\code{trend} assumption: \code{"ols"} (default) uses the weights \code{trend} implies
+(equal weights for \code{"constant"}, the least-squares line for \code{"linear"});
+\code{"min_variance"} uses the minimum-variance weights, the comparison-period
+weights the confounding-trend assumption allows that make the variance of
+the estimate smallest (see Details). Not available with a numeric \code{trend},
+or with \code{bwselect = "iter"} unless \code{h} is given.}
 
 \item{estimand}{\code{"att"} (default) when the comparison periods are uniformly
 untreated: the ATT, the effect of the treatment on the units just above the
@@ -166,6 +176,14 @@ period first (index by name).}
 \item{\code{data}}{the per-period data used (a named list of data frames with
 columns \code{y}, \code{x}, \code{id}), for \code{\link[=plot.rddid]{plot.rddid()}}.}
 \item{\code{call}}{the matched call.}
+\item{\code{weighting}}{\code{"ols"} or \code{"min_variance"}, as passed.}
+\item{\code{weights_detail}}{\code{NULL} for \code{"ols"}; for \code{"min_variance"} a list
+with \code{pilot} (the \code{"ols"} weights), \code{Xi} (the estimated covariance
+matrix of the comparison-period jumps), \code{xi} (their estimated
+covariances with the RD-period jump), \code{h} (the main bandwidths at which
+these were estimated; under \code{"joint"}, the first-step bandwidths, not
+the final ones in \code{bandwidth}) and \code{pinned} (\code{TRUE} when the assumption
+allows only one set of weights).}
 }
 }
 \description{
@@ -201,7 +219,35 @@ linearly in time; the weights then extrapolate the least-squares line through th
 comparison-period jumps to the RD period (with two comparison periods, the
 line through them). They sum to one and can be
 negative: with comparison periods 1 and 2 and RD period 3 they are -1 and 2.
-A numeric \code{trend} supplies the weights directly.
+A numeric \code{trend} supplies the weights directly. These are the weights under
+the default \code{weighting = "ols"}; \code{weighting = "min_variance"} chooses others
+the same assumption allows (see below).
+}
+
+\subsection{Minimum-variance weights}{
+
+All weights the confounding-trend assumption allows estimate the same
+effect; they differ in precision. \code{weighting = "min_variance"} picks the ones
+with the smallest variance of the conventional estimate, using the estimated
+variances of the per-period jumps and, in a panel (\code{scheme} \code{"pc"} or
+\code{"pv"}), their covariances (the quantities behind the conventional standard
+error). In a
+repeated cross-section with \code{trend = "constant"} these are inverse-variance
+weights: a comparison period whose jump is estimated more precisely gets more
+weight. Under \code{bwselect = "joint"} the weights and the bandwidth are chosen in
+three steps: the common bandwidth with the \code{"ols"} weights, the
+minimum-variance weights at that bandwidth, and the bandwidths (common \code{h}
+and pilot \code{b}) again with those weights. With \code{"cct"} or a fixed \code{h} the
+bandwidths do not depend on the weights, so the weights are computed once.
+The same weights are used for both rows of \code{estimates}, so only the
+conventional standard error is minimized; the robust one uses the same
+weights. The standard errors treat the weights as known; in large samples,
+estimating them does not change the distribution of the estimate, because
+every allowed set of weights cancels the confounding jump exactly, so an
+error in the weights multiplies only the estimation error of the jumps. With
+one comparison period under \code{"constant"}, or two under \code{"linear"}, the
+assumption allows only one set of weights; \code{rddid()} returns it and sets
+\code{weights_detail$pinned} to \code{TRUE}.
 }
 
 \subsection{Sampling schemes}{
@@ -285,6 +331,9 @@ confint(fit, "Robust")
 # the confounding jump moves linearly in time
 rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
       trend = "linear")
+# minimum-variance comparison-period weights
+rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
+      weighting = "min_variance")
 # comparison periods uniformly treated: add estimand = "atu" (same numbers)
 }
 \references{

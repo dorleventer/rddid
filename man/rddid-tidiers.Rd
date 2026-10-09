@@ -41,7 +41,7 @@ that row is the joint test over pairs, whose p-value is approximate (see its Det
 \code{glance()} returns a
 one-row data frame describing the fit (\code{nobs}, \code{t_rd}, \code{comparisons}, \code{trend}, \code{weights},
 \code{bwselect}, \code{h} (the common bandwidth under \code{"joint"}/fixed \code{h}, \code{NA} otherwise),
-\code{scheme}, \code{level}).
+\code{scheme}, \code{level}, \code{weighting}).
 }
 \description{
 \code{tidy()} and \code{glance()} methods following the \code{broom} conventions, so that fits and tests

@@ -35,7 +35,34 @@
 #' comparison-period jumps to the RD period (with two comparison periods, the
 #' line through them). They sum to one and can be
 #' negative: with comparison periods 1 and 2 and RD period 3 they are -1 and 2.
-#' A numeric `trend` supplies the weights directly.
+#' A numeric `trend` supplies the weights directly. These are the weights under
+#' the default `weighting = "ols"`; `weighting = "min_variance"` chooses others
+#' the same assumption allows (see below).
+#'
+#' ## Minimum-variance weights
+#'
+#' All weights the confounding-trend assumption allows estimate the same
+#' effect; they differ in precision. `weighting = "min_variance"` picks the ones
+#' with the smallest variance of the conventional estimate, using the estimated
+#' variances of the per-period jumps and, in a panel (`scheme` `"pc"` or
+#' `"pv"`), their covariances (the quantities behind the conventional standard
+#' error). In a
+#' repeated cross-section with `trend = "constant"` these are inverse-variance
+#' weights: a comparison period whose jump is estimated more precisely gets more
+#' weight. Under `bwselect = "joint"` the weights and the bandwidth are chosen in
+#' three steps: the common bandwidth with the `"ols"` weights, the
+#' minimum-variance weights at that bandwidth, and the bandwidths (common `h`
+#' and pilot `b`) again with those weights. With `"cct"` or a fixed `h` the
+#' bandwidths do not depend on the weights, so the weights are computed once.
+#' The same weights are used for both rows of `estimates`, so only the
+#' conventional standard error is minimized; the robust one uses the same
+#' weights. The standard errors treat the weights as known; in large samples,
+#' estimating them does not change the distribution of the estimate, because
+#' every allowed set of weights cancels the confounding jump exactly, so an
+#' error in the weights multiplies only the estimation error of the jumps. With
+#' one comparison period under `"constant"`, or two under `"linear"`, the
+#' assumption allows only one set of weights; `rddid()` returns it and sets
+#' `weights_detail$pinned` to `TRUE`.
 #'
 #' ## Sampling schemes
 #'
@@ -127,13 +154,21 @@
 #'   `estimand = "atu"`, everybody treated). `NULL` (default) uses every period
 #'   other than `t_rd`; pass the periods explicitly when the data contain
 #'   periods that are neither (a second RD period, say).
-#' @param trend the confounding-trend assumption, which sets the
-#'   comparison-period weights: `"constant"` (default; the confounding jump is
-#'   the same in every period, equal weights) or `"linear"` (the confounding
+#' @param trend the confounding-trend assumption, which restricts the
+#'   comparison-period weights (`weighting` picks them within it): `"constant"`
+#'   (default; the confounding jump is the same in every period; equal weights
+#'   under the default `weighting`) or `"linear"` (the confounding
 #'   jump moves linearly in time; needs at least two comparison periods). A
 #'   numeric vector gives the weights directly, one per entry of `comparisons`
 #'   in that order. Weights that sum to one cancel a constant confounding
 #'   jump; `rddid()` warns when they do not.
+#' @param weighting how the comparison-period weights are chosen within the
+#'   `trend` assumption: `"ols"` (default) uses the weights `trend` implies
+#'   (equal weights for `"constant"`, the least-squares line for `"linear"`);
+#'   `"min_variance"` uses the minimum-variance weights, the comparison-period
+#'   weights the confounding-trend assumption allows that make the variance of
+#'   the estimate smallest (see Details). Not available with a numeric `trend`,
+#'   or with `bwselect = "iter"` unless `h` is given.
 #' @param estimand `"att"` (default) when the comparison periods are uniformly
 #'   untreated: the ATT, the effect of the treatment on the units just above the
 #'   cutoff that are treated in the RD period. `"atu"` when the comparison
@@ -217,6 +252,14 @@
 #'     \item{`data`}{the per-period data used (a named list of data frames with
 #'       columns `y`, `x`, `id`), for [plot.rddid()].}
 #'     \item{`call`}{the matched call.}
+#'     \item{`weighting`}{`"ols"` or `"min_variance"`, as passed.}
+#'     \item{`weights_detail`}{`NULL` for `"ols"`; for `"min_variance"` a list
+#'       with `pilot` (the `"ols"` weights), `Xi` (the estimated covariance
+#'       matrix of the comparison-period jumps), `xi` (their estimated
+#'       covariances with the RD-period jump), `h` (the main bandwidths at which
+#'       these were estimated; under `"joint"`, the first-step bandwidths, not
+#'       the final ones in `bandwidth`) and `pinned` (`TRUE` when the assumption
+#'       allows only one set of weights).}
 #'   }
 #'
 #' @references
@@ -244,10 +287,14 @@
 #' # the confounding jump moves linearly in time
 #' rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
 #'       trend = "linear")
+#' # minimum-variance comparison-period weights
+#' rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
+#'       weighting = "min_variance")
 #' # comparison periods uniformly treated: add estimand = "atu" (same numbers)
 #' @export
 rddid <- function(data, y, x, time, id = NULL, t_rd,
                   comparisons = NULL, trend = "constant",
+                  weighting = c("ols", "min_variance"),
                   estimand = c("att", "atu"),
                   bwselect = c("joint", "iter", "cct"), h = NULL, b = NULL,
                   scheme = c("auto", "cs", "pc", "pv"),
@@ -258,6 +305,7 @@ rddid <- function(data, y, x, time, id = NULL, t_rd,
   bwselect <- match.arg(bwselect)
   scheme   <- match.arg(scheme)
   estimand <- match.arg(estimand)
+  weighting <- match.arg(weighting)
   kernel   <- match.arg(tolower(kernel), c("triangular", "epanechnikov", "uniform"))
   cutoff   <- c                            # `c` stays the argument name, as in rdrobust
   if (!is.null(weights)) {                 # `weights` is the old name of `trend`
@@ -304,6 +352,14 @@ rddid <- function(data, y, x, time, id = NULL, t_rd,
   # ---- the estimator's coefficients: +1 on the RD period, minus the weight on each comparison
   comp_weights <- .rddid_weights(trend, comparisons, t_rd)
   period_coef  <- c(stats::setNames(1, as.character(t_rd)), -comp_weights)
+  if (weighting == "min_variance") {
+    if (is.numeric(trend))
+      stop("`weighting = \"min_variance\"` chooses the comparison weights and a numeric `trend` ",
+           "fixes them; use one or the other.", call. = FALSE)
+    if (is.null(h) && bwselect == "iter")
+      stop("`weighting = \"min_variance\"` works with `bwselect = \"joint\"` (the default) or ",
+           "`\"cct\"`, or with a fixed `h`; not with `bwselect = \"iter\"`.", call. = FALSE)
+  }
 
   # ---- sampling scheme (sets the standard error and, for the joint rules, the bandwidth) --
   detected   <- .detect_scheme(plist, c = cutoff)
@@ -316,12 +372,31 @@ rddid <- function(data, y, x, time, id = NULL, t_rd,
             "\" (", .scheme_label(detected), ").")
 
   # ---- bandwidths, then one local-linear fit per period at those bandwidths ---------------
-  bw <- .rddid_bandwidths(plist, period_coef, t_rd, periods, use_scheme, h, b, bwselect, start,
-                          cutoff, p, q, kernel, regularize, reg_const)
-  fits <- stats::setNames(lapply(as.character(periods), function(k)
+  fit_all <- function(bw) stats::setNames(lapply(as.character(periods), function(k)
     rd_period(plist[[k]]$y, plist[[k]]$x, h = bw$bws[[k]]["h"], b = bw$bws[[k]]["b"],
               id = plist[[k]]$id, c = cutoff, p = p, q = q, kernel = kernel)),
     as.character(periods))
+  bw <- .rddid_bandwidths(plist, period_coef, t_rd, periods, use_scheme, h, b, bwselect, start,
+                          cutoff, p, q, kernel, regularize, reg_const)
+  fits <- fit_all(bw)
+
+  # ---- minimum-variance weights: computed from these fits (the "ols" weights are the pilot);
+  # under "joint" the common bandwidth is then chosen again with them -- three steps, no
+  # iteration, as the weights do not depend on a common bandwidth to first order
+  weights_detail <- NULL
+  if (weighting == "min_variance") {
+    mv <- .mv_weights(fits, comparisons, t_rd, match.arg(trend, c("constant", "linear")),
+                      use_scheme, comp_weights)
+    weights_detail <- list(pilot = comp_weights, Xi = mv$Xi, xi = mv$xi,
+                           h = bw$info$h_by_period, pinned = mv$pinned)
+    comp_weights <- mv$w
+    period_coef  <- c(stats::setNames(1, as.character(t_rd)), -comp_weights)
+    if (is.null(h) && bwselect == "joint" && !mv$pinned) {
+      bw <- .rddid_bandwidths(plist, period_coef, t_rd, periods, use_scheme, h, b, bwselect,
+                              start, cutoff, p, q, kernel, regularize, reg_const)
+      fits <- fit_all(bw)
+    }
+  }
 
   # ---- aggregate: estimate and variance under every scheme, conventional and bias-corrected
   agg_conv <- .aggregate_fits(fits, period_coef, bc = FALSE)
@@ -338,7 +413,8 @@ rddid <- function(data, y, x, time, id = NULL, t_rd,
     p = p, q = q, kernel = kernel, c = cutoff,
     n_by_period = vapply(fits, function(f) f$n, numeric(1)),
     data = plist,
-    call = cl
+    call = cl,
+    weighting = weighting, weights_detail = weights_detail
   ), class = "rddid")
 }
 
@@ -427,8 +503,9 @@ rddid <- function(data, y, x, time, id = NULL, t_rd,
 print.rddid <- function(x, digits = 4, hint = TRUE, ...) {
   est <- if (is.null(x$estimand)) "att" else x$estimand
   cat(sprintf("RD-DID estimate of the %s in period %s\n", toupper(est), x$t_rd))
-  cat(sprintf("  Comparison periods: %s   (%s; weights %s)\n",
+  cat(sprintf("  Comparison periods: %s   (%s; %s %s)\n",
               paste(x$comparisons, collapse = ", "), .trend_label(x$weights_type),
+              if (identical(x$weighting, "min_variance")) "minimum-variance weights" else "weights",
               paste(trimws(formatC(x$weights, digits = 3, format = "g")), collapse = ", ")))
   cat(sprintf("  Sampling scheme: %s%s\n", .scheme_label(x$scheme),
               if (identical(x$scheme_requested, "auto")) " (detected)" else ""))

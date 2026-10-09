@@ -1,5 +1,22 @@
 # rddid 0.4.0.9000 (development)
 
+## 2026-10-09: minimum-variance comparison-period weights
+
+* New argument `weighting` in `rddid()`. `"ols"` (default) keeps the weights used so far (equal under
+  `trend = "constant"`, the least-squares line under `"linear"`). `"min_variance"` uses the
+  minimum-variance weights: the comparison-period weights the confounding-trend assumption allows
+  that make the variance of the conventional estimate smallest.
+  * They are computed from the per-period variances and, in a panel, covariances behind the
+    standard error.
+  * In a repeated cross-section with a constant trend they are inverse-variance weights.
+  * Under `bwselect = "joint"` the weights and the common bandwidth are chosen in three steps; with
+    `"cct"` or a fixed `h` the bandwidths do not depend on the weights, so the weights are computed
+    once.
+  * Not available with a numeric `trend`, or with `bwselect = "iter"` unless `h` is given.
+  * New fields `weighting` and `weights_detail` in the returned object; `print()` and `glance()`
+    report the weighting.
+  * Results with the default `weighting = "ols"` are unchanged.
+
 ## 2026-10-09: verification fixes (no change on the paper's numbers)
 
 * `rd_period()` requires a single main bandwidth `h` and a single pilot `b`. A vector used to be

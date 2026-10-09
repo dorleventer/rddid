@@ -154,7 +154,7 @@ nobs.rddid <- function(object, ...) as.integer(sum(object$n_by_period))
 #'   `glance()` returns a
 #'   one-row data frame describing the fit (`nobs`, `t_rd`, `comparisons`, `trend`, `weights`,
 #'   `bwselect`, `h` (the common bandwidth under `"joint"`/fixed `h`, `NA` otherwise),
-#'   `scheme`, `level`).
+#'   `scheme`, `level`, `weighting`).
 #' @examples
 #' fit <- rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 #' tidy(fit)
@@ -198,7 +198,9 @@ glance.rddid <- function(x, ...) {
              trend = x$weights_type, weights = paste(signif(x$weights, 3), collapse = ", "),
              bwselect = x$bandwidth$method,
              h = if (!is.null(x$bandwidth[["h"]])) unname(x$bandwidth[["h"]]) else NA_real_,
-             scheme = x$scheme, level = x$level, row.names = NULL, stringsAsFactors = FALSE)
+             scheme = x$scheme, level = x$level,
+             weighting = if (is.null(x$weighting)) "ols" else x$weighting,
+             row.names = NULL, stringsAsFactors = FALSE)
 }
 
 #' One-row tidy() data frame for a validation test

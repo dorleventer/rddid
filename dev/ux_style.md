@@ -25,6 +25,7 @@ Display equation (use once per document, define every symbol in words right afte
 | `bwselect = "cct"` | per-period CCT bandwidths: each period's own MSE-optimal bandwidth from `rdrobust::rdbwselect` (Calonico, Cattaneo and Titiunik, 2014) | |
 | `bwselect = "iter"` | period-specific bandwidths by coordinate descent on the aggregate's asymptotic MSE; not used in the paper, kept for simulations | preferred rule |
 | `h`, `b` | the main bandwidth (point estimate) and the pilot bandwidth (bias correction) | |
+| `weighting = "min_variance"` | the minimum-variance weights: the comparison-period weights the confounding-trend assumption allows that make the variance of the estimate smallest | GLS weights, MV, optimal weights |
 | estimates row `Conventional` | the local-linear estimate with its conventional standard error | |
 | estimates row `Robust` | the bias-corrected estimate with its robust standard error (Calonico, Cattaneo and Titiunik, 2014); printed as "Robust (bias-corrected)" | |
 | the four tests | type continuity (`rd_typecont`), composition stability (`rd_compstable`), homogeneous confounding (`rd_homog`), constant within-type confounding (`rd_trendcell`) | assumption numbers (A7–A10 — they change) |
