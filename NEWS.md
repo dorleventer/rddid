@@ -8,7 +8,8 @@
   logical), the period column numeric, character or factor; `t_rd` and `comparisons` must be
   periods in the data, not overlap, and not repeat; each unit may appear once per period; a
   factor `t_rd` or `comparisons` is read as character. The four tests say that they take one RD
-  period, and `kernel` is not case sensitive in any of them.
+  period, and `kernel` is not case sensitive in any of them. Errors name the function in their
+  header (`Error in rd_homog(...)`), not in the message (before: an `rd_homog: ` prefix in some).
 * Missing values are handled the same way everywhere: rows with a missing value in a used column
   are dropped, with a message. Before, `rd_typecont()` and `rd_compstable()` dropped them without
   a message, and `rd_homog()` and `rd_trendcell()` kept them (a missing outcome counted toward

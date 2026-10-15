@@ -12,19 +12,19 @@ calls <- list(
   rd_trendcell  = function(dat, ...) rd_trendcell(dat, y = "Y", x = "R", time = "year", id = "id", h = 0.5, ...)
 )
 
-test_that("every entry point gives the same message for the same input error", {
-  pref <- c(rddid = "rddid()", rd_typecont = "rd_typecont", rd_compstable = "rd_compstable",
-            rd_homog = "rd_homog", rd_trendcell = "rd_trendcell")
+test_that("every entry point gives the same message for the same input error, under its own name", {
   dup <- rbind(d, d[d$year == 1, ][1:2, ])
   chr <- d; chr$R <- as.character(chr$R)
+  # the error's call is the exported function's, so the header reads "Error in <fn>(...)"
+  caught <- function(expr) tryCatch(expr, error = function(e) e)
   for (fn in names(calls)) {
     f <- calls[[fn]]
-    expect_error(f(d, t_rd = 7), paste0(pref[[fn]], ": `t_rd` = 7 is not a period in `year`."), fixed = TRUE)
-    expect_error(f(d, t_rd = 3, comparisons = c(1, 9)),
-                 paste0(pref[[fn]], ": comparison period(s) not in `year`: 9"), fixed = TRUE)
+    e <- caught(f(d, t_rd = 7))
+    expect_identical(conditionMessage(e), "`t_rd` = 7 is not a period in `year`.")
+    expect_identical(as.character(conditionCall(e)[[1L]]), fn)
+    expect_error(f(d, t_rd = 3, comparisons = c(1, 9)), "^comparison period\\(s\\) not in `year`: 9$")
     expect_error(f(d, t_rd = 3, comparisons = c(1, 1)), "contains a period more than once")
-    expect_error(f(dup, t_rd = 3, comparisons = 1:2),
-                 paste0(pref[[fn]], ": 2 row(s) repeat a (id, year) pair"), fixed = TRUE)
+    expect_error(f(dup, t_rd = 3, comparisons = 1:2), "^2 row\\(s\\) repeat a \\(id, year\\) pair")
     expect_error(f(chr, t_rd = 3), "running variable column 'R' must be numeric")
     expect_error(f(as.list(d), t_rd = 3), "`data` must be a data frame")
   }

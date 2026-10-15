@@ -15,10 +15,12 @@
 #' One place for the checks every entry point needs: `data` is a data frame with the named
 #' columns, `x` (and `y`) numeric, the period column numeric, character or factor; `t_rd` and
 #' `comparisons` exist, do not overlap and do not repeat; each unit appears once per period;
-#' rows with a missing value in a used column are dropped, with a message. Errors and the
-#' message start with `fn` (e.g. `"rddid()"`, `"rd_homog"`).
+#' rows with a missing value in a used column are dropped, with a message. Errors carry the
+#' call of the exported function (`Error in rd_homog(...)`), so they name it once; the
+#' missing-value message starts with `fn` (e.g. `"rddid()"`, `"rd_homog"`).
 #'
-#' @param fn the calling function's label for messages.
+#' @param fn the calling function's label for the message.
+#' @param complete_cols the columns a row must have to be kept (default: every used column).
 #' @param y,x,time,id column names; `y` and `id` may be `NULL`.
 #' @param t_rd,comparisons the periods, as passed (factors become character).
 #' @param t_rd_required stop if `t_rd` is `NULL`.
@@ -34,7 +36,8 @@
                            comparisons = NULL, t_rd_required = TRUE, t_rd_scalar = TRUE,
                            default_comparisons = TRUE, restrict = FALSE,
                            complete_cols = base::c(y, x, time, id)) {
-  err <- function(...) stop(fn, ": ", ..., call. = FALSE)
+  caller <- sys.call(-1L)   # the exported function's call, shown in the error header
+  err <- function(...) stop(simpleError(paste0(...), caller))
   if (!is.data.frame(data)) err("`data` must be a data frame.")
   .check_columns(data, base::c(y, x, time, id))
   if (!is.null(y) && !is.numeric(data[[y]]) && !is.logical(data[[y]]))
