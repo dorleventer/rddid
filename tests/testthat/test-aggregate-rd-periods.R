@@ -105,12 +105,12 @@ test_that("linear trend: aggregated comparison weights are those of Corollary 1 
   expect_equal(unname(f$weights_by_target), rbind(c(-1, 2), c(-2, 3), c(-3, 4)), tolerance = 1e-12)
   expect_equal(f$weights, c(`1` = -2, `2` = 3), tolerance = 1e-12)      # t-bar = 4
   expect_equal(unname(f$coef), c(1, 1, 1, 6, -9) / 3, tolerance = 1e-12)
-  # shifting the period labels changes nothing, up to rounding: the least-squares extrapolation
-  # in .rddid_weights() solves the normal equations in calendar years (about 4e-9 here)
+  # shifting the period labels changes nothing (the weights are computed with time centred at
+  # the RD period, so calendar years lose no precision)
   d2 <- transform(d, year = year + 1998)
   f2 <- .fit(d2, t_rd = 2001:2003, comparisons = c(1999, 2000), trend = "linear", h = 0.4)
-  expect_equal(unname(f2$weights), c(-2, 3), tolerance = 1e-8)
-  expect_equal(f2$estimates, f$estimates, tolerance = 1e-7)   # p-values amplify it to ~2e-8
+  expect_equal(unname(f2$weights), c(-2, 3), tolerance = 1e-12)
+  expect_equal(f2$estimates, f$estimates, tolerance = 1e-10)
 })
 
 test_that("a single RD period is unchanged: rd_weights = 1 gives identical results", {
@@ -265,4 +265,17 @@ test_that("character and factor period labels give the same aggregate as numeric
              rd_weights = c(0.2, 0.3, 0.5), h = 0.4)
   expect_equal(ff$estimates, f$estimates, tolerance = 1e-12)
   expect_error(.fit(d, t_rd = .rd, comparisons = .comps, rd_weights = c(0, 0, 0)), "all zero")
+})
+
+test_that("linear-trend weights are exact with calendar years and invariant to shifting the labels", {
+  w <- function(comps, t) unname(.rddid_weights("linear", comps, t))
+  expect_equal(w(c(1999, 2000), 2004), c(-4, 5), tolerance = 1e-14)
+  expect_equal(w(c(1999, 2000), 2001), c(-1, 2), tolerance = 1e-14)
+  # three comparison periods: the OLS line, same weights whatever the origin of the time axis
+  for (shift in c(0, 1000, 1990, 1e5))
+    expect_equal(w(c(1, 2, 4) + shift, 6 + shift), w(c(1, 2, 4), 6), tolerance = 1e-12)
+  # weights sum to one and reproduce t_rd (Corollary 1's constraints)
+  ww <- w(c(1996, 1998, 1999, 2000), 2003)
+  expect_equal(sum(ww), 1, tolerance = 1e-13)
+  expect_equal(sum(ww * c(1996, 1998, 1999, 2000)), 2003, tolerance = 1e-9)
 })

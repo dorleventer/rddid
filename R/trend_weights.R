@@ -32,8 +32,11 @@
       if (!is.numeric(comps) || !is.numeric(t_rd))
         stop("trend = \"linear\" needs numeric period values (the line is fitted on the period ",
              "values); the `time` column is not numeric.")
-      X <- cbind(1, comps)               # extrapolate the line through the D_t to t_rd
-      w <- as.numeric(c(1, t_rd) %*% solve(crossprod(X), t(X)))
+      # extrapolate the line through the D_t to t_rd, with time centred at t_rd: shifting the
+      # time axis changes neither the fitted line nor its value at t_rd, but the normal
+      # equations in raw calendar years (~2000) lose ~1e-9 to cancellation
+      X <- cbind(1, comps - t_rd)
+      w <- as.numeric(c(1, 0) %*% solve(crossprod(X), t(X)))
     }
   }
   stats::setNames(w, as.character(comps))
