@@ -52,7 +52,7 @@ keep <- function(key, expr) {
 # ---- rddid() -------------------------------------------------------------------------------
 for (sc in c("cs", "pc", "pv")) {
   d <- dat[[sc]]
-  for (bw in c("joint", "iter", "cct")) {
+  for (bw in c("joint", "cct")) {
     keep(sprintf("rddid|%s|%s|constant", sc, bw),
          rddid(d, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, bwselect = bw))
     keep(sprintf("rddid|%s|%s|linear", sc, bw),
@@ -65,9 +65,6 @@ for (sc in c("cs", "pc", "pv")) {
   keep(sprintf("rddid|%s|cct|p2", sc),
        rddid(d, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, bwselect = "cct",
              p = 2L, q = 3L))
-  keep(sprintf("rddid|%s|iter|start-cct", sc),
-       rddid(d, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, bwselect = "iter",
-             start = "cct"))
   keep(sprintf("rddid|%s|joint|noreg", sc),
        rddid(d, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, bwselect = "joint",
              regularize = FALSE))

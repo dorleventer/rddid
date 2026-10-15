@@ -73,21 +73,7 @@ test_that("B.4 common h (eq:common_h_opt) — .bw_joint returns the closed form 
   }
 })
 
-test_that("B.4 common h — h* is the scalar minimizer of the iterative rule's own objective (cs and pc)", {
-  d <- .b4_panel("pc"); pl <- .b4_plist(d)
-  pb <- list(`3` = c(h = 0.40, b = 0.55), `1` = c(h = 0.30, b = 0.45), `2` = c(h = 0.50, b = 0.62))
-  for (sc in c("cs", "pc")) {
-    jb <- .bw_joint(pl, .b4_coef, "3", scheme = sc, pilot_bws = pb)
-    ib <- .bw_joint_iter(pl, .b4_coef, "3", scheme = sc, pilot_bws = pb, start = "cct")
-    f1 <- function(h) ib$amse_fun(rep(h, 3))
-    h_opt <- stats::optimize(f1, interval = c(0.02, 1), tol = 1e-10)$minimum
-    expect_equal(jb$h, h_opt, tolerance = 1e-6, info = sc)
-    # the objective at h* equals the closed-form objective of .bw_joint
-    expect_equal(f1(jb$h), (jb$h^2 / 2)^2 * (jb$B^2 + jb$reg) + jb$Veff / jb$h, tolerance = 1e-10, info = sc)
-  }
-})
-
-test_that("B.4 joint selectors do not depend on which period carries the t_rd label", {
+test_that("B.4 the joint selector does not depend on which period carries the t_rd label", {
   # an aggregate over two RD periods (3 and 2) with comparison period 1, coef (1, 1, -2):
   # the same linear combination whichever RD period is labelled t_rd
   d <- .b4_panel("pc"); pl <- .b4_plist(d)
@@ -99,12 +85,6 @@ test_that("B.4 joint selectors do not depend on which period carries the t_rd la
     expect_equal(ja$h, jb$h, tolerance = 1e-12, info = sc)
     expect_equal(ja$b[names(coef_a)], jb$b[names(coef_a)], tolerance = 1e-12, info = sc)
     expect_equal(c(ja$B, ja$Veff, ja$reg), c(jb$B, jb$Veff, jb$reg), tolerance = 1e-12, info = sc)
-    # the descent cycles periods in names(coef) order, so tighten its stopping rule
-    # to compare the two fixed points rather than two stopping points
-    ia <- .bw_joint_iter(pl, coef_a, "3", scheme = sc, tol = 1e-10, maxit = 500L)
-    ib <- .bw_joint_iter(pl, coef_b, "2", scheme = sc, tol = 1e-10, maxit = 500L)
-    expect_equal(unlist(ia$bws[names(coef_a)]), unlist(ib$bws[names(coef_a)]), tolerance = 1e-7, info = sc)
-    expect_equal(ia$objective, ib$objective, tolerance = 1e-10, info = sc)
   }
   # through rddid(): relabelling t_rd with the matching comparison weights
   ra <- rddid(d, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, comparisons = c(2, 1),
@@ -117,28 +97,24 @@ test_that("B.4 joint selectors do not depend on which period carries the t_rd la
   for (k in c("1", "2", "3")) expect_equal(ra$fits[[k]]$b, rb$fits[[k]]$b, tolerance = 1e-12)
 })
 
-test_that("B.4 scheme switch — PV drops the cross-period term (lem:cov-pv): joint and iter agree with CS", {
+test_that("B.4 scheme switch — PV drops the cross-period term (lem:cov-pv): the joint rule agrees with CS", {
   d <- .b4_panel("pv"); pl <- .b4_plist(d)
   pilot <- c(h = 0.4, b = 0.55)
   pb <- stats::setNames(rep(list(pilot), 3), names(.b4_coef))
   j_cs <- .bw_joint(pl, .b4_coef, "3", scheme = "cs", pilot_bws = pb)
   j_pv <- .bw_joint(pl, .b4_coef, "3", scheme = "pv", pilot_bws = pb)
   expect_equal(j_cs$h, j_pv$h, tolerance = 1e-12)
-  i_cs <- .bw_joint_iter(pl, .b4_coef, "3", scheme = "cs", pilot_bws = pb, start = "cct")
-  i_pv <- .bw_joint_iter(pl, .b4_coef, "3", scheme = "pv", pilot_bws = pb, start = "cct")
-  expect_equal(unlist(i_cs$bws), unlist(i_pv$bws), tolerance = 1e-10)
   # and PC differs from CS on the same data (the cross term is live)
-  i_pc <- .bw_joint_iter(pl, .b4_coef, "3", scheme = "pc", pilot_bws = pb, start = "cct")
-  expect_false(isTRUE(all.equal(unlist(i_cs$bws), unlist(i_pc$bws), tolerance = 1e-6)))
+  j_pc <- .bw_joint(pl, .b4_coef, "3", scheme = "pc", pilot_bws = pb)
+  expect_false(isTRUE(all.equal(j_cs$h, j_pc$h, tolerance = 1e-6)))
 })
 
-test_that("B.4 objective (eq:amse-att, lem:agg-var) — amse_fun equals a hand-coded objective, PC, p = 1 and 2", {
+test_that("B.4 objective (eq:amse-att, lem:agg-var) — the joint rule's objective equals a hand-coded one at a common h, PC, p = 1 and 2", {
   d <- .b4_panel("pc"); pl <- .b4_plist(d)
   for (p in 1:2) {
     q <- p + 1L
     pb <- list(`3` = c(h = 0.40, b = 0.55), `1` = c(h = 0.30, b = 0.45), `2` = c(h = 0.36, b = 0.50))
-    ib <- .bw_joint_iter(pl, .b4_coef, "3", scheme = "pc", pilot_bws = pb, start = "cct",
-                         p = p, q = q, maxit = 3L)
+    jb <- .bw_joint(pl, .b4_coef, "3", scheme = "pc", pilot_bws = pb, p = p, q = q)
     keys <- names(.b4_coef); cf <- unname(.b4_coef)
     fitp <- lapply(keys, function(k) rd_period(pl[[k]]$y, pl[[k]]$x, h = pb[[k]][["h"]], b = pb[[k]][["b"]],
                                               id = pl[[k]]$id, p = p, q = q))
@@ -169,17 +145,12 @@ test_that("B.4 objective (eq:amse-att, lem:agg-var) — amse_fun equals a hand-c
       }
       unname(Bbar^2 + pen + vv + cov)
     }
-    for (hv in list(c(0.3, 0.3, 0.3), c(0.45, 0.25, 0.33), c(0.2, 0.5, 0.4)))
-      expect_equal(ib$amse_fun(hv), hand(hv), tolerance = 1e-10)
-    # returned bandwidths are a coordinate-wise minimizer of the objective (up to optimize's tolerance)
-    h <- vapply(keys, function(k) ib$bws[[k]][["h"]], numeric(1))
-    expect_equal(ib$objective, hand(h), tolerance = 1e-10)
-    if (ib$niter < 3L) {   # converged: each coordinate is a local minimizer
-      for (j in 1:3) for (d in c(-0.02, 0.02)) {
-        hv <- h; hv[j] <- hv[j] * (1 + d)
-        expect_gte(hand(hv), hand(h) - 1e-9)
-      }
-    }
+    # the joint rule's closed-form objective at a common h equals the hand-coded one
+    obj <- function(h) (h^(p + 1) / fp1)^2 * (jb$B^2 + jb$reg) + jb$Veff / h
+    for (h in c(0.2, 0.3, 0.45)) expect_equal(obj(h), hand(rep(h, 3)), tolerance = 1e-10)
+    # and h* is the minimizer of the hand-coded objective over a common h
+    h_opt <- stats::optimize(function(h) hand(rep(h, 3)), interval = c(0.02, 1), tol = 1e-10)$minimum
+    expect_equal(jb$h, h_opt, tolerance = 1e-6)
   }
 })
 

@@ -66,7 +66,7 @@
 #'
 #' ## Sampling schemes
 #'
-#' The scheme sets the standard error and, under `"joint"` and `"iter"`, also
+#' The scheme sets the standard error and, under `"joint"`, also
 #' the bandwidth, and with it the estimate, because those rules balance bias
 #' against the variance under the scheme in use; with a fixed `h` or `"cct"` it
 #' changes only the standard error. In a repeated
@@ -88,9 +88,6 @@
 #' * `"cct"`, per-period CCT bandwidths: each period gets its own MSE-optimal
 #'   bandwidth from [rdrobust::rdbwselect()], as if it were a stand-alone RD
 #'   (Calonico, Cattaneo and Titiunik, 2014).
-#' * `"iter"`: a separate bandwidth in each period, chosen together to minimize
-#'   the asymptotic mean squared error of the RD-DID estimate; not used in the
-#'   paper, kept for simulations.
 #' * A numeric `h` is used in every period, with pilot bandwidth `b` (default
 #'   `h`).
 #'
@@ -122,9 +119,7 @@
 #' constants are estimated at that period's own CCT pilot bandwidths, not at the
 #' RD period's, so an aggregate of several RD periods gets the same bandwidth
 #' whichever of them carries the `t_rd` label.
-#' The `"iter"` rule minimizes the same objective over one bandwidth per period
-#' by coordinate descent, starting from `start`. With `regularize = TRUE` both
-#' rules add `reg_const` times the estimated variance of the bias constants to
+#' With `regularize = TRUE` the rule adds `reg_const` times the estimated variance of the bias constants to
 #' the squared bias, as \pkg{rdrobust} does, so a near-zero estimated bias
 #' cannot make the bandwidth very large. Standard errors use the HC1 convention
 #' of \pkg{rdrobust}. The derivations are in the paper's appendix on estimation
@@ -167,8 +162,7 @@
 #'   (equal weights for `"constant"`, the least-squares line for `"linear"`);
 #'   `"min_variance"` uses the minimum-variance weights, the comparison-period
 #'   weights the confounding-trend assumption allows that make the variance of
-#'   the estimate smallest (see Details). Not available with a numeric `trend`,
-#'   or with `bwselect = "iter"` unless `h` is given.
+#'   the estimate smallest (see Details). Not available with a numeric `trend`.
 #' @param estimand `"att"` (default) when the comparison periods are uniformly
 #'   untreated: the ATT, the effect of the treatment on the units just above the
 #'   cutoff that are treated in the RD period. `"atu"` when the comparison
@@ -179,9 +173,7 @@
 #'   (default; the common bandwidth, one `h` for every period, chosen to minimize
 #'   the asymptotic mean squared error of the RD-DID estimate), `"cct"`
 #'   (per-period CCT bandwidths: each period's own MSE-optimal bandwidth of
-#'   Calonico, Cattaneo and Titiunik, from [rd_bw_cct()]), or `"iter"` (a
-#'   separate bandwidth in each period, chosen together for the RD-DID
-#'   estimate; not used in the paper, kept for simulations). See "Bandwidth
+#'   Calonico, Cattaneo and Titiunik, from [rd_bw_cct()]). See "Bandwidth
 #'   rules".
 #' @param h the main bandwidth (point estimate). If given, it is used in every
 #'   period and `bwselect` is ignored.
@@ -202,12 +194,8 @@
 #' @param kernel the kernel: `"triangular"` (default), `"epanechnikov"` or
 #'   `"uniform"`.
 #' @param level confidence level of the reported intervals (default 0.95).
-#' @param start where the `"iter"` rule starts: `"hstar"` (default; the common
-#'   bandwidth in every period), `"cct"` (each period's CCT bandwidth), or a
-#'   named numeric vector or list with one starting bandwidth per period. Used
-#'   only with `bwselect = "iter"`.
-#' @param regularize logical. If `TRUE` (default), the `"joint"` and `"iter"`
-#'   rules add a regularization term to the estimated squared bias, as
+#' @param regularize logical. If `TRUE` (default), the `"joint"` rule adds a
+#'   regularization term to the estimated squared bias, as
 #'   \pkg{rdrobust} does, so that a near-zero estimated bias cannot make the
 #'   bandwidth very large. Not used with a given `h` or `bwselect = "cct"`.
 #' @param reg_const the regularization constant: the multiple of the estimated
@@ -242,8 +230,7 @@
 #'       vectors, the main and pilot bandwidth used in each period, whatever the
 #'       rule); for `"fixed"` and `"joint"`, the common main bandwidth `h` and
 #'       the pilot `b` (one number for `"fixed"`, one per period for
-#'       `"joint"`); for `"iter"`, the number of iterations `niter`; and
-#'       intermediate quantities of the rule (`bws` for `"cct"` and `"iter"`;
+#'       `"joint"`); and intermediate quantities of the rule (`bws` for `"cct"`;
 #'       `B`, `Veff`, `reg`, `pilot_bws` for `"joint"`).}
 #'     \item{`fits`}{named list of the per-period [rd_period()] fits, the RD
 #'       period first (index by name).}
@@ -296,10 +283,10 @@ rddid <- function(data, y, x, time, id = NULL, t_rd,
                   comparisons = NULL, trend = "constant",
                   weighting = c("ols", "min_variance"),
                   estimand = c("att", "atu"),
-                  bwselect = c("joint", "iter", "cct"), h = NULL, b = NULL,
+                  bwselect = c("joint", "cct"), h = NULL, b = NULL,
                   scheme = c("auto", "cs", "pc", "pv"),
                   c = 0, p = 1L, q = 2L, kernel = "triangular", level = 0.95,
-                  start = "hstar", regularize = TRUE, reg_const = 3,
+                  regularize = TRUE, reg_const = 3,
                   weights = NULL) {
   cl       <- match.call()
   bwselect <- match.arg(bwselect)
@@ -356,9 +343,6 @@ rddid <- function(data, y, x, time, id = NULL, t_rd,
     if (is.numeric(trend))
       stop("`weighting = \"min_variance\"` chooses the comparison weights and a numeric `trend` ",
            "fixes them; use one or the other.", call. = FALSE)
-    if (is.null(h) && bwselect == "iter")
-      stop("`weighting = \"min_variance\"` works with `bwselect = \"joint\"` (the default) or ",
-           "`\"cct\"`, or with a fixed `h`; not with `bwselect = \"iter\"`.", call. = FALSE)
   }
 
   # ---- sampling scheme (sets the standard error and, for the joint rules, the bandwidth) --
@@ -376,7 +360,7 @@ rddid <- function(data, y, x, time, id = NULL, t_rd,
     rd_period(plist[[k]]$y, plist[[k]]$x, h = bw$bws[[k]]["h"], b = bw$bws[[k]]["b"],
               id = plist[[k]]$id, c = cutoff, p = p, q = q, kernel = kernel)),
     as.character(periods))
-  bw <- .rddid_bandwidths(plist, period_coef, t_rd, periods, use_scheme, h, b, bwselect, start,
+  bw <- .rddid_bandwidths(plist, period_coef, t_rd, periods, use_scheme, h, b, bwselect,
                           cutoff, p, q, kernel, regularize, reg_const)
   fits <- fit_all(bw)
 
@@ -393,7 +377,7 @@ rddid <- function(data, y, x, time, id = NULL, t_rd,
     period_coef  <- c(stats::setNames(1, as.character(t_rd)), -comp_weights)
     if (is.null(h) && bwselect == "joint" && !mv$pinned) {
       bw <- .rddid_bandwidths(plist, period_coef, t_rd, periods, use_scheme, h, b, bwselect,
-                              start, cutoff, p, q, kernel, regularize, reg_const)
+                              cutoff, p, q, kernel, regularize, reg_const)
       fits <- fit_all(bw)
     }
   }
@@ -449,7 +433,7 @@ rddid <- function(data, y, x, time, id = NULL, t_rd,
 #' @keywords internal
 #' @noRd
 .rddid_bandwidths <- function(plist, period_coef, t_rd, periods, use_scheme, h, b, bwselect,
-                              start, cutoff, p, q, kernel, regularize, reg_const) {
+                              cutoff, p, q, kernel, regularize, reg_const) {
   labels <- as.character(periods)
   if (!is.null(h)) {
     if (is.null(b)) b <- h
@@ -458,13 +442,6 @@ rddid <- function(data, y, x, time, id = NULL, t_rd,
   } else if (bwselect == "cct") {
     bws  <- .bw_cct(plist, c = cutoff, p = p, q = q, kernel = kernel)
     info <- list(method = "cct", bws = bws)
-  } else if (bwselect == "iter") {
-    ib <- .bw_joint_iter(plist, period_coef, as.character(t_rd), scheme = use_scheme,
-                         start = start,
-                         c = cutoff, p = p, q = q, kernel = kernel,
-                         regularize = regularize, reg_const = reg_const)
-    bws  <- ib$bws
-    info <- list(method = "iter", bws = bws, niter = ib$niter)
   } else {
     jb <- .bw_joint(plist, period_coef, as.character(t_rd), scheme = use_scheme,
                     c = cutoff, p = p, q = q, kernel = kernel,
@@ -546,9 +523,7 @@ print.rddid <- function(x, digits = 4, hint = TRUE, ...) {
     fixed = sprintf("h = %.4g in every period (fixed), pilot b = %.4g", bw$h, bw$b),
     joint = sprintf("common h = %.4g (rule \"joint\": one bandwidth, chosen for the RD-DID estimate)\n  Pilot bandwidth b (period = value): %s",
                     bw$h, by_t(bw$b_by_period)),
-    cct   = sprintf("per-period CCT MSE-optimal (rule \"cct\"): h (period = value) %s", by_t(bw$h_by_period)),
-    iter  = sprintf("period-specific (rule \"iter\", %d iterations): h (period = value) %s", bw$niter,
-                    by_t(bw$h_by_period)))
+    cct   = sprintf("per-period CCT MSE-optimal (rule \"cct\"): h (period = value) %s", by_t(bw$h_by_period)))
 }
 #' The two-row estimate table of print.rddid
 #' @keywords internal

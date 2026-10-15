@@ -87,7 +87,7 @@ rd_period <- function(y, x, h, b = h, id = NULL, c = 0, p = 1L, q = 2L,
   x <- as.numeric(x)
   # n is the number of rows passed in, BEFORE incomplete rows are dropped: it is the n_t that
   # the bandwidth constants below are scaled by (v_const = n h V_D). Changing it would move
-  # every joint/iter bandwidth, so it is kept as it is.
+  # every joint bandwidth, so it is kept as it is.
   n <- length(y)
   if (is.null(id)) id <- seq_len(n)
   ok <- stats::complete.cases(y, x, id)

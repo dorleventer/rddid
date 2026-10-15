@@ -1,5 +1,13 @@
 # rddid 0.4.0.9000 (development)
 
+## 2026-10-15: `bwselect = "iter"` removed
+
+* The period-specific bandwidth rule `bwselect = "iter"` (one bandwidth per period, by coordinate
+  descent on the RD-DID estimate's AMSE) and its argument `start` are removed; the paper no longer
+  uses the rule. `bwselect` is now `"joint"` (default) or `"cct"`. Estimates under `"joint"`,
+  `"cct"` and a fixed `h` are unchanged. The last version with the rule is tagged
+  `v0.4.0.9000-iter`.
+
 ## 2026-10-15: size corrections for the validation tests (changes the tests' default results)
 
 A size study (clean null, n = 1,000, three periods, 5% level) found the four tests rejecting too

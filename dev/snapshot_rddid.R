@@ -1,8 +1,7 @@
 # Numerical regression snapshot of rddid outputs. Run from the package root:
 #   Rscript dev/snapshot_rddid.R out.rds > out.txt
 # before and after any change to rd_period / aggregate.R / bandwidth.R, then diff the .txt files.
-# Under the App.-B-synced package, p = 1 paths are identical to the pre-sync snapshot except the
-# PC cross term of bwselect = "iter" under scheme "pc" (see dev/appB_map.md §3).
+# The period-specific rule bwselect = "iter" was removed after tag v0.4.0.9000-iter.
 suppressMessages(pkgload::load_all(".", quiet = TRUE))
 out_path <- commandArgs(trailingOnly = TRUE)[1]
 
@@ -35,7 +34,7 @@ make_panel <- function(scheme, n = 1500, seed = 7) {
 res <- list()
 for (sc in c("cs", "pc", "pv")) {
   d <- make_panel(sc)
-  for (bw in c("joint", "iter", "cct")) for (p in c(1L, 2L)) {
+  for (bw in c("joint", "cct")) for (p in c(1L, 2L)) {
     key <- sprintf("%s|%s|p%d", sc, bw, p)
     r <- tryCatch(rddid(d, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
                         bwselect = bw, scheme = "auto", p = p, q = p + 1L),
@@ -48,22 +47,6 @@ for (sc in c("cs", "pc", "pv")) {
       bws = lapply(r$fits, function(f) c(h = f$h, b = f$b)),
       bw_info = bwi[setdiff(names(bwi), c("bws", "pilot", "pilot_bws"))],
       consts = t(sapply(r$fits, function(f) c(b_const = f$b_const, v_const = f$v_const, n = f$n))))
-  }
-  # iter seeded from cct too (p = 1)
-  key <- sprintf("%s|iter-cct|p1", sc)
-  r <- rddid(d, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
-             bwselect = "iter", start = "cct", scheme = "auto")
-  res[[key]] <- list(scheme = r$scheme, estimates = r$estimates,
-                     bws = lapply(r$fits, function(f) c(h = f$h, b = f$b)),
-                     niter = r$bandwidth$niter)
-  # forced-scheme variants of iter (p = 1): pc and cs on the same data
-  for (fs in c("cs", "pc")) {
-    key <- sprintf("%s|iter-force%s|p1", sc, fs)
-    r <- rddid(d, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
-               bwselect = "iter", scheme = fs)
-    res[[key]] <- list(estimates = r$estimates,
-                       bws = lapply(r$fits, function(f) c(h = f$h, b = f$b)),
-                       niter = r$bandwidth$niter)
   }
 }
 # rd_period constants at a fixed bandwidth, p = 1 and p = 2

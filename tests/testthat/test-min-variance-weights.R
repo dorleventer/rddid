@@ -82,9 +82,9 @@ test_that("pinned weights: as many comparison periods as restrictions gives the 
   expect_identical(one_mv$estimates, one_ols$estimates)
 })
 
-test_that("clear errors: numeric trend, iter, singular covariance", {
+test_that("clear errors: numeric trend, removed iter rule, singular covariance", {
   expect_error(run(trend = c(0.3, 0.7), weighting = "min_variance"), "fixes them")
-  expect_error(run(bwselect = "iter", weighting = "min_variance"), "not with `bwselect = \"iter\"`")
+  expect_error(run(bwselect = "iter"), "should be one of")
   expect_error(run(trend = "min_variance"), "is a value of `weighting`")
   dup <- rbind(rddid_sim_pv, transform(rddid_sim_pv[rddid_sim_pv$year == 1, ], year = 0))
   expect_error(suppressMessages(rddid(dup, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,

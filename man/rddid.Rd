@@ -15,7 +15,7 @@ rddid(
   trend = "constant",
   weighting = c("ols", "min_variance"),
   estimand = c("att", "atu"),
-  bwselect = c("joint", "iter", "cct"),
+  bwselect = c("joint", "cct"),
   h = NULL,
   b = NULL,
   scheme = c("auto", "cs", "pc", "pv"),
@@ -24,7 +24,6 @@ rddid(
   q = 2L,
   kernel = "triangular",
   level = 0.95,
-  start = "hstar",
   regularize = TRUE,
   reg_const = 3,
   weights = NULL
@@ -76,8 +75,7 @@ jump; \code{rddid()} warns when they do not.}
 (equal weights for \code{"constant"}, the least-squares line for \code{"linear"});
 \code{"min_variance"} uses the minimum-variance weights, the comparison-period
 weights the confounding-trend assumption allows that make the variance of
-the estimate smallest (see Details). Not available with a numeric \code{trend},
-or with \code{bwselect = "iter"} unless \code{h} is given.}
+the estimate smallest (see Details). Not available with a numeric \code{trend}.}
 
 \item{estimand}{\code{"att"} (default) when the comparison periods are uniformly
 untreated: the ATT, the effect of the treatment on the units just above the
@@ -90,9 +88,7 @@ either way; see "Targeting the ATU".}
 (default; the common bandwidth, one \code{h} for every period, chosen to minimize
 the asymptotic mean squared error of the RD-DID estimate), \code{"cct"}
 (per-period CCT bandwidths: each period's own MSE-optimal bandwidth of
-Calonico, Cattaneo and Titiunik, from \code{\link[=rd_bw_cct]{rd_bw_cct()}}), or \code{"iter"} (a
-separate bandwidth in each period, chosen together for the RD-DID
-estimate; not used in the paper, kept for simulations). See "Bandwidth
+Calonico, Cattaneo and Titiunik, from \code{\link[=rd_bw_cct]{rd_bw_cct()}}). See "Bandwidth
 rules".}
 
 \item{h}{the main bandwidth (point estimate). If given, it is used in every
@@ -122,13 +118,8 @@ must exceed \code{p}.}
 
 \item{level}{confidence level of the reported intervals (default 0.95).}
 
-\item{start}{where the \code{"iter"} rule starts: \code{"hstar"} (default; the common
-bandwidth in every period), \code{"cct"} (each period's CCT bandwidth), or a
-named numeric vector or list with one starting bandwidth per period. Used
-only with \code{bwselect = "iter"}.}
-
-\item{regularize}{logical. If \code{TRUE} (default), the \code{"joint"} and \code{"iter"}
-rules add a regularization term to the estimated squared bias, as
+\item{regularize}{logical. If \code{TRUE} (default), the \code{"joint"} rule adds a
+regularization term to the estimated squared bias, as
 \pkg{rdrobust} does, so that a near-zero estimated bias cannot make the
 bandwidth very large. Not used with a given \code{h} or \code{bwselect = "cct"}.}
 
@@ -166,8 +157,7 @@ when \code{h} is given); \code{h_by_period} and \code{b_by_period} (named numeri
 vectors, the main and pilot bandwidth used in each period, whatever the
 rule); for \code{"fixed"} and \code{"joint"}, the common main bandwidth \code{h} and
 the pilot \code{b} (one number for \code{"fixed"}, one per period for
-\code{"joint"}); for \code{"iter"}, the number of iterations \code{niter}; and
-intermediate quantities of the rule (\code{bws} for \code{"cct"} and \code{"iter"};
+\code{"joint"}); and intermediate quantities of the rule (\code{bws} for \code{"cct"};
 \code{B}, \code{Veff}, \code{reg}, \code{pilot_bws} for \code{"joint"}).}
 \item{\code{fits}}{named list of the per-period \code{\link[=rd_period]{rd_period()}} fits, the RD
 period first (index by name).}
@@ -252,7 +242,7 @@ assumption allows only one set of weights; \code{rddid()} returns it and sets
 
 \subsection{Sampling schemes}{
 
-The scheme sets the standard error and, under \code{"joint"} and \code{"iter"}, also
+The scheme sets the standard error and, under \code{"joint"}, also
 the bandwidth, and with it the estimate, because those rules balance bias
 against the variance under the scheme in use; with a fixed \code{h} or \code{"cct"} it
 changes only the standard error. In a repeated
@@ -275,9 +265,6 @@ of each period's jump, so the biases of the period jumps can partly cancel.
 \item \code{"cct"}, per-period CCT bandwidths: each period gets its own MSE-optimal
 bandwidth from \code{\link[rdrobust:rdbwselect]{rdrobust::rdbwselect()}}, as if it were a stand-alone RD
 (Calonico, Cattaneo and Titiunik, 2014).
-\item \code{"iter"}: a separate bandwidth in each period, chosen together to minimize
-the asymptotic mean squared error of the RD-DID estimate; not used in the
-paper, kept for simulations.
 \item A numeric \code{h} is used in every period, with pilot bandwidth \code{b} (default
 \code{h}).
 }
@@ -312,9 +299,7 @@ period's CCT ratio \eqn{b/h}{b/h}. Each period's bias and variance
 constants are estimated at that period's own CCT pilot bandwidths, not at the
 RD period's, so an aggregate of several RD periods gets the same bandwidth
 whichever of them carries the \code{t_rd} label.
-The \code{"iter"} rule minimizes the same objective over one bandwidth per period
-by coordinate descent, starting from \code{start}. With \code{regularize = TRUE} both
-rules add \code{reg_const} times the estimated variance of the bias constants to
+With \code{regularize = TRUE} the rule adds \code{reg_const} times the estimated variance of the bias constants to
 the squared bias, as \pkg{rdrobust} does, so a near-zero estimated bias
 cannot make the bandwidth very large. Standard errors use the HC1 convention
 of \pkg{rdrobust}. The derivations are in the paper's appendix on estimation

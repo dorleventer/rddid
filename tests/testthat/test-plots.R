@@ -56,7 +56,7 @@ test_that("degenerate panels (no unit changes side) give a clear error from ever
 })
 
 test_that("glance() is one row under every bandwidth rule", {
-  for (bw in c("joint", "cct", "iter")) {
+  for (bw in c("joint", "cct")) {
     g <- glance(rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
                                 bwselect = bw))
     expect_equal(nrow(g), 1L)
