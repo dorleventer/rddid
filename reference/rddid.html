@@ -279,6 +279,10 @@ in the estimate: \(\phi_t\) for each RD period (1 for a single
 RD period), minus its (aggregated) weight for each comparison period.
 <code><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef()</a></code> returns the estimate itself.</p></dd>
 
+<dt><code>coef_bc</code></dt>
+<dd><p>the same for the bias-corrected estimate; it differs
+from <code>coef</code> only under <code>weighting = "min_variance"</code>.</p></dd>
+
 <dt><code>weights</code></dt>
 <dd><p>named numeric vector of the comparison-period weights;
 with several RD periods, the aggregated weights
@@ -344,7 +348,8 @@ matrix of the comparison-period jumps), <code>xi</code> (their estimated
 covariances with the RD-period jump), <code>h</code> (the main bandwidths at which
 these were estimated; under <code>"joint"</code>, the first-step bandwidths, not
 the final ones in <code>bandwidth</code>) and <code>pinned</code> (<code>TRUE</code> when the assumption
-allows only one set of weights).</p></dd>
+allows only one set of weights), and <code>weights_bc</code>, <code>Xi_bc</code>, <code>xi_bc</code>, the
+same for the bias-corrected estimate.</p></dd>
 
 
 </dl></div>
@@ -401,8 +406,9 @@ the same assumption allows (see below).</p>
 
 
 <p>All weights the confounding-trend assumption allows estimate the same
-effect; they differ in precision. <code>weighting = "min_variance"</code> picks the ones
-with the smallest variance of the conventional estimate, using the estimated
+effect; they differ in precision. <code>weighting = "min_variance"</code> picks, for each
+row of <code>estimates</code>, the ones with the smallest variance of that estimate. For
+the conventional estimate it uses the estimated
 variances of the per-period jumps and, in a panel (<code>scheme</code> <code>"pc"</code> or
 <code>"pv"</code>), their covariances (the quantities behind the conventional standard
 error). In a
@@ -413,9 +419,11 @@ three steps: the common bandwidth with the <code>"ols"</code> weights, the
 minimum-variance weights at that bandwidth, and the bandwidths (common <code>h</code>
 and pilot <code>b</code>) again with those weights. With <code>"cct"</code> or a fixed <code>h</code> the
 bandwidths do not depend on the weights, so the weights are computed once.
-The same weights are used for both rows of <code>estimates</code>, so only the
-conventional standard error is minimized; the robust one uses the same
-weights. The standard errors treat the weights as known; in large samples,
+The bias-corrected estimate gets its own weights, computed in the same way
+from the variances and covariances of the bias-corrected jumps (those behind
+the robust standard error), at the same bandwidths; they are in
+<code>weights_detail$weights_bc</code>, and the common bandwidth is chosen with the
+conventional ones. The standard errors treat the weights as known; in large samples,
 estimating them does not change the distribution of the estimate, because
 every allowed set of weights cancels the confounding jump exactly, so an
 error in the weights multiplies only the estimation error of the jumps. With
@@ -576,14 +584,14 @@ example data <a href="rddid_sim.html">rddid_sim</a> and <a href="rddid_sim_pv.ht
 <span class="r-in"><span><span class="fu">rddid</span><span class="op">(</span><span class="va">rddid_sim</span>, y <span class="op">=</span> <span class="st">"Y"</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span>,</span></span>
 <span class="r-in"><span>      weighting <span class="op">=</span> <span class="st">"min_variance"</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> RD-DID estimate of the ATT in period 3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Comparison periods: 1, 2   (constant confounding trend; minimum-variance weights 0.452, 0.548)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Comparison periods: 1, 2   (constant confounding trend; minimum-variance weights 0.452, 0.548; bias-corrected: 0.461, 0.539)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Sampling scheme: panel, no unit changes side of the cutoff (detected)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Bandwidth: common h = 0.2704 (rule "joint": one bandwidth, chosen for the RD-DID estimate)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Pilot bandwidth b (period = value): 1 = 0.4151, 2 = 0.3915, 3 = 0.3998</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                              Estimate  Std. err.       z  p-value   95% CI</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Conventional                 1.0862     0.1255    8.65   &lt;0.001   [0.8402, 1.3323]</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Robust (bias-corrected)      1.1329     0.1484    7.63   &lt;0.001   [0.8420, 1.4238]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Robust (bias-corrected)      1.1344     0.1484    7.64   &lt;0.001   [0.8435, 1.4253]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   summary() shows the per-period fits and the s.e. under every sampling scheme.</span>
 <span class="r-in"><span><span class="co"># several RD periods: the average of their effects (year 3 copied as a</span></span></span>

@@ -2,6 +2,18 @@
 
 ## rddid 0.4.0.9000 (development)
 
+### 2026-10-15: minimum-variance weights for the bias-corrected estimate
+
+- With `weighting = "min_variance"`, the bias-corrected (robust) row of
+  `estimates` now uses its own minimum-variance weights, computed from
+  the variances and covariances of the bias-corrected jumps (the paper,
+  Section 5.5). Before, it reused the weights that minimize the
+  conventional variance. The conventional row, the bandwidths and
+  `weighting = "ols"` are unchanged.
+- New fields `coef_bc` and `weights_detail$weights_bc` (with `Xi_bc`,
+  `xi_bc`); [`print()`](https://rdrr.io/r/base/print.html) shows the
+  bias-corrected weights when they differ.
+
 ### 2026-10-15: several RD periods in `rddid()`
 
 - `t_rd` may be a vector of RD periods.

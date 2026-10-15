@@ -229,6 +229,11 @@ An object of class `"rddid"`, a list with:
   [`coef()`](https://rdrr.io/r/stats/coef.html) returns the estimate
   itself.
 
+- `coef_bc`:
+
+  the same for the bias-corrected estimate; it differs from `coef` only
+  under `weighting = "min_variance"`.
+
 - `weights`:
 
   named numeric vector of the comparison-period weights; with several RD
@@ -308,7 +313,8 @@ An object of class `"rddid"`, a list with:
   RD-period jump), `h` (the main bandwidths at which these were
   estimated; under `"joint"`, the first-step bandwidths, not the final
   ones in `bandwidth`) and `pinned` (`TRUE` when the assumption allows
-  only one set of weights).
+  only one set of weights), and `weights_bc`, `Xi_bc`, `xi_bc`, the same
+  for the bias-corrected estimate.
 
 ## Details
 
@@ -355,27 +361,30 @@ weights under the default `weighting = "ols"`;
 ### Minimum-variance weights
 
 All weights the confounding-trend assumption allows estimate the same
-effect; they differ in precision. `weighting = "min_variance"` picks the
-ones with the smallest variance of the conventional estimate, using the
-estimated variances of the per-period jumps and, in a panel (`scheme`
-`"pc"` or `"pv"`), their covariances (the quantities behind the
-conventional standard error). In a repeated cross-section with
-`trend = "constant"` these are inverse-variance weights: a comparison
-period whose jump is estimated more precisely gets more weight. Under
-`bwselect = "joint"` the weights and the bandwidth are chosen in three
-steps: the common bandwidth with the `"ols"` weights, the
-minimum-variance weights at that bandwidth, and the bandwidths (common
-`h` and pilot `b`) again with those weights. With `"cct"` or a fixed `h`
-the bandwidths do not depend on the weights, so the weights are computed
-once. The same weights are used for both rows of `estimates`, so only
-the conventional standard error is minimized; the robust one uses the
-same weights. The standard errors treat the weights as known; in large
-samples, estimating them does not change the distribution of the
-estimate, because every allowed set of weights cancels the confounding
-jump exactly, so an error in the weights multiplies only the estimation
-error of the jumps. With one comparison period under `"constant"`, or
-two under `"linear"`, the assumption allows only one set of weights;
-`rddid()` returns it and sets `weights_detail$pinned` to `TRUE`.
+effect; they differ in precision. `weighting = "min_variance"` picks,
+for each row of `estimates`, the ones with the smallest variance of that
+estimate. For the conventional estimate it uses the estimated variances
+of the per-period jumps and, in a panel (`scheme` `"pc"` or `"pv"`),
+their covariances (the quantities behind the conventional standard
+error). In a repeated cross-section with `trend = "constant"` these are
+inverse-variance weights: a comparison period whose jump is estimated
+more precisely gets more weight. Under `bwselect = "joint"` the weights
+and the bandwidth are chosen in three steps: the common bandwidth with
+the `"ols"` weights, the minimum-variance weights at that bandwidth, and
+the bandwidths (common `h` and pilot `b`) again with those weights. With
+`"cct"` or a fixed `h` the bandwidths do not depend on the weights, so
+the weights are computed once. The bias-corrected estimate gets its own
+weights, computed in the same way from the variances and covariances of
+the bias-corrected jumps (those behind the robust standard error), at
+the same bandwidths; they are in `weights_detail$weights_bc`, and the
+common bandwidth is chosen with the conventional ones. The standard
+errors treat the weights as known; in large samples, estimating them
+does not change the distribution of the estimate, because every allowed
+set of weights cancels the confounding jump exactly, so an error in the
+weights multiplies only the estimation error of the jumps. With one
+comparison period under `"constant"`, or two under `"linear"`, the
+assumption allows only one set of weights; `rddid()` returns it and sets
+`weights_detail$pinned` to `TRUE`.
 
 ### Sampling schemes
 
@@ -541,14 +550,14 @@ rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
 rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
       weighting = "min_variance")
 #> RD-DID estimate of the ATT in period 3
-#>   Comparison periods: 1, 2   (constant confounding trend; minimum-variance weights 0.452, 0.548)
+#>   Comparison periods: 1, 2   (constant confounding trend; minimum-variance weights 0.452, 0.548; bias-corrected: 0.461, 0.539)
 #>   Sampling scheme: panel, no unit changes side of the cutoff (detected)
 #>   Bandwidth: common h = 0.2704 (rule "joint": one bandwidth, chosen for the RD-DID estimate)
 #>   Pilot bandwidth b (period = value): 1 = 0.4151, 2 = 0.3915, 3 = 0.3998
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI
 #>   Conventional                 1.0862     0.1255    8.65   <0.001   [0.8402, 1.3323]
-#>   Robust (bias-corrected)      1.1329     0.1484    7.63   <0.001   [0.8420, 1.4238]
+#>   Robust (bias-corrected)      1.1344     0.1484    7.64   <0.001   [0.8435, 1.4253]
 #> 
 #>   summary() shows the per-period fits and the s.e. under every sampling scheme.
 # several RD periods: the average of their effects (year 3 copied as a
