@@ -42,6 +42,20 @@
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.4.0.9000" id="rddid-0409000-development">rddid 0.4.0.9000 (development)<a class="anchor" aria-label="anchor" href="#rddid-0409000-development"></a></h2>
 <div class="section level3">
+<h3 id="id_2026-several-rd-periods-in-rddid-0-4-0-9000">2026-10-15: several RD periods in <code>rddid()</code>
+<a class="anchor" aria-label="anchor" href="#id_2026-several-rd-periods-in-rddid-0-4-0-9000"></a></h3>
+<ul><li>
+<code>t_rd</code> may be a vector of RD periods. <code><a href="../reference/rddid.html">rddid()</a></code> then estimates the weighted average of their effects, ATT^phi = sum_t phi_t ATT(t) (the paper’s Corollary 2 and Section 5.6), with weights from the new argument <code>rd_weights</code> (equal weights by default; any finite weights). Each period’s jump is estimated once; each comparison period enters with the phi-weighted sum of the weights each RD period gives it. Standard errors include the covariances between RD periods, and <code>bwselect = "joint"</code> chooses one bandwidth for the average.</li>
+<li>New return fields <code>rd_weights</code> and <code>weights_by_target</code>; with several RD periods <code>weights</code> holds the aggregated comparison weights. A numeric matrix <code>trend</code> sets the comparison weights per RD period.</li>
+<li>
+<code>weighting = "min_variance"</code> is available for a single RD period only.</li>
+<li>Results for a single RD period are unchanged.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="id_2026-bwselect--iter-removed-0-4-0-9000">2026-10-15: <code>bwselect = "iter"</code> removed<a class="anchor" aria-label="anchor" href="#id_2026-bwselect--iter-removed-0-4-0-9000"></a></h3>
+<ul><li>The period-specific bandwidth rule <code>bwselect = "iter"</code> (one bandwidth per period, by coordinate descent on the RD-DID estimate’s AMSE) and its argument <code>start</code> are removed; the paper no longer uses the rule. <code>bwselect</code> is now <code>"joint"</code> (default) or <code>"cct"</code>. Estimates under <code>"joint"</code>, <code>"cct"</code> and a fixed <code>h</code> are unchanged. The last version with the rule is tagged <code>v0.4.0.9000-iter</code>.</li>
+</ul></div>
+<div class="section level3">
 <h3 id="id_2026-size-corrections-for-the-validation-tests-changes-the-tests-default-results-0-4-0-9000">2026-10-15: size corrections for the validation tests (changes the tests’ default results)<a class="anchor" aria-label="anchor" href="#id_2026-size-corrections-for-the-validation-tests-changes-the-tests-default-results-0-4-0-9000"></a></h3>
 <p>A size study (clean null, n = 1,000, three periods, 5% level) found the four tests rejecting too often: type continuity 9%, composition stability 9%, homogeneous confounding 8%, constant within-type confounding 8%. The defaults bring this to 6-7% (5.7% for composition stability): sup-t avoids inverting the estimated covariance, but it still uses estimated standard errors, so a variance deficit or noisy standard errors still inflate it, by less than the Wald. Estimates of <code><a href="../reference/rddid.html">rddid()</a></code> are unchanged.</p>
 <ul><li>

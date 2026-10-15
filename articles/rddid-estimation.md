@@ -222,6 +222,50 @@ precision to allow for a linear trend. A numeric vector instead of
 `"constant"` or `"linear"` sets the weights directly, one per comparison
 period.
 
+## Several RD periods
+
+When the treatment of interest is in place in several periods, `t_rd`
+can list them all.
+[`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md) then
+estimates the weighted average of their effects, with weights
+`rd_weights` (equal by default; any weights the question calls for).
+Each period’s jump is estimated once, and each comparison period enters
+with the `rd_weights`-weighted sum of the weights the RD periods would
+give it. `rddid_sim` has one RD period, so for illustration year 3 is
+copied as a second RD year, 4:
+
+``` r
+
+sim4 <- rbind(rddid_sim, transform(rddid_sim[rddid_sim$year == 3, ], year = 4))
+fit_avg <- rddid(sim4, y = "Y", x = "R", time = "year", id = "id", t_rd = c(3, 4),
+                 comparisons = c(1, 2), bwselect = "cct")
+fit_avg
+#> RD-DID estimate of the ATT averaged over RD periods 3, 4 (weights 0.5, 0.5)
+#>   Comparison periods: 1, 2   (constant confounding trend; aggregated weights 0.5, 0.5)
+#>   Sampling scheme: panel, no unit changes side of the cutoff (detected)
+#>   Bandwidth: per-period CCT MSE-optimal (rule "cct"): h (period = value) 1 = 0.2637, 2 = 0.3256, 3 = 0.4141, 4 = 0.4141
+#> 
+#>                              Estimate  Std. err.       z  p-value   95% CI
+#>   Conventional                 1.0396     0.1170    8.88   <0.001   [0.8103, 1.2689]
+#>   Robust (bias-corrected)      1.0964     0.1407    7.79   <0.001   [0.8205, 1.3722]
+#> 
+#>   summary() shows the per-period fits and the s.e. under every sampling scheme.
+fit_cct3 <- rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
+                  bwselect = "cct")
+```
+
+At the per-period CCT bandwidths the two copies get the same bandwidth,
+so the two RD-period jumps are identical and their average is the year-3
+estimate (1.040 against 1.040). The standard error does not shrink
+either (0.117 against 0.117): in a panel it includes the covariance
+between the RD-period jumps, which here are perfectly correlated; the
+cross-section formula, which leaves it out, would give 0.148. Under the
+default common bandwidth the two estimates differ slightly, because the
+rule’s regularization term adds the periods’ bias-estimate variances
+without their covariances. With RD periods that differ, the average is
+typically more precise than a single period, up to the noise of the
+comparison periods, which every RD period shares.
+
 ## A table for a paper
 
 [`tidy()`](https://generics.r-lib.org/reference/tidy.html) gives the

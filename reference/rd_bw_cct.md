@@ -1,10 +1,9 @@
 # CCT bandwidths for one period (building block)
 
 The building block behind `rddid(bwselect = "cct")`, the pilot fits of
-the `"joint"` and `"iter"` rules, and the default bandwidths of the four
-tests of the assumptions: the MSE-optimal main and pilot bandwidths of
-Calonico, Cattaneo and Titiunik (2014) for a local-linear RD in one
-period, from
+the `"joint"` rule, and the default bandwidths of the four tests of the
+assumptions: the MSE-optimal main and pilot bandwidths of Calonico,
+Cattaneo and Titiunik (2014) for a local-linear RD in one period, from
 [`rdrobust::rdbwselect()`](https://rdrr.io/pkg/rdrobust/man/rdbwselect.html)
 with `bwselect = "mserd"`. Like
 [`rd_period()`](https://dorleventer.github.io/rddid/reference/rd_period.md)

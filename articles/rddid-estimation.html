@@ -290,6 +290,47 @@ linear trend. A numeric vector instead of <code>"constant"</code> or
 period.</p>
 </div>
 <div class="section level2">
+<h2 id="several-rd-periods">Several RD periods<a class="anchor" aria-label="anchor" href="#several-rd-periods"></a>
+</h2>
+<p>When the treatment of interest is in place in several periods,
+<code>t_rd</code> can list them all. <code><a href="../reference/rddid.html">rddid()</a></code> then estimates
+the weighted average of their effects, with weights
+<code>rd_weights</code> (equal by default; any weights the question
+calls for). Each period’s jump is estimated once, and each comparison
+period enters with the <code>rd_weights</code>-weighted sum of the
+weights the RD periods would give it. <code>rddid_sim</code> has one RD
+period, so for illustration year 3 is copied as a second RD year, 4:</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">sim4</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span><span class="va">rddid_sim</span>, <span class="fu"><a href="https://rdrr.io/r/base/transform.html" class="external-link">transform</a></span><span class="op">(</span><span class="va">rddid_sim</span><span class="op">[</span><span class="va">rddid_sim</span><span class="op">$</span><span class="va">year</span> <span class="op">==</span> <span class="fl">3</span>, <span class="op">]</span>, year <span class="op">=</span> <span class="fl">4</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">fit_avg</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rddid.html">rddid</a></span><span class="op">(</span><span class="va">sim4</span>, y <span class="op">=</span> <span class="st">"Y"</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">3</span>, <span class="fl">4</span><span class="op">)</span>,</span>
+<span>                 comparisons <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span>, bwselect <span class="op">=</span> <span class="st">"cct"</span><span class="op">)</span></span>
+<span><span class="va">fit_avg</span></span>
+<span><span class="co">#&gt; RD-DID estimate of the ATT averaged over RD periods 3, 4 (weights 0.5, 0.5)</span></span>
+<span><span class="co">#&gt;   Comparison periods: 1, 2   (constant confounding trend; aggregated weights 0.5, 0.5)</span></span>
+<span><span class="co">#&gt;   Sampling scheme: panel, no unit changes side of the cutoff (detected)</span></span>
+<span><span class="co">#&gt;   Bandwidth: per-period CCT MSE-optimal (rule "cct"): h (period = value) 1 = 0.2637, 2 = 0.3256, 3 = 0.4141, 4 = 0.4141</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;                              Estimate  Std. err.       z  p-value   95% CI</span></span>
+<span><span class="co">#&gt;   Conventional                 1.0396     0.1170    8.88   &lt;0.001   [0.8103, 1.2689]</span></span>
+<span><span class="co">#&gt;   Robust (bias-corrected)      1.0964     0.1407    7.79   &lt;0.001   [0.8205, 1.3722]</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;   summary() shows the per-period fits and the s.e. under every sampling scheme.</span></span>
+<span><span class="va">fit_cct3</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rddid.html">rddid</a></span><span class="op">(</span><span class="va">rddid_sim</span>, y <span class="op">=</span> <span class="st">"Y"</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span>,</span>
+<span>                  bwselect <span class="op">=</span> <span class="st">"cct"</span><span class="op">)</span></span></code></pre></div>
+<p>At the per-period CCT bandwidths the two copies get the same
+bandwidth, so the two RD-period jumps are identical and their average is
+the year-3 estimate (1.040 against 1.040). The standard error does not
+shrink either (0.117 against 0.117): in a panel it includes the
+covariance between the RD-period jumps, which here are perfectly
+correlated; the cross-section formula, which leaves it out, would give
+0.148. Under the default common bandwidth the two estimates differ
+slightly, because the rule’s regularization term adds the periods’
+bias-estimate variances without their covariances. With RD periods that
+differ, the average is typically more precise than a single period, up
+to the noise of the comparison periods, which every RD period
+shares.</p>
+</div>
+<div class="section level2">
 <h2 id="a-table-for-a-paper">A table for a paper<a class="anchor" aria-label="anchor" href="#a-table-for-a-paper"></a>
 </h2>
 <p><code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code> gives the estimates and <code><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance()</a></code> the
@@ -297,7 +338,7 @@ design (RD period, comparison periods, trend, bandwidth rule,
 <code>h</code>, scheme), which is what table makers read. With the
 modelsummary package installed, the two fits side by side, with
 confidence intervals:</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">modelsummary</span><span class="fu">::</span><span class="fu"><a href="https://modelsummary.com/man/modelsummary.html" class="external-link">modelsummary</a></span><span class="op">(</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>Constant <span class="op">=</span> <span class="va">fit</span>, Linear <span class="op">=</span> <span class="va">fit_lin</span><span class="op">)</span>, statistic <span class="op">=</span> <span class="st">"conf.int"</span>,</span>
 <span>  gof_map <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>raw <span class="op">=</span> <span class="st">"h"</span>, clean <span class="op">=</span> <span class="st">"h"</span>, fmt <span class="op">=</span> <span class="fl">3</span><span class="op">)</span>,</span>
@@ -305,42 +346,42 @@ confidence intervals:</p>
 
     <script src="https://cdn.jsdelivr.net/gh/vincentarelbundock/tinytable@main/inst/tinytable.js"></script><script>
       // Create table-specific functions using external factory
-      const tableFns_ycbqlxpclgs9496cemwz = TinyTable.createTableFunctions("tinytable_ycbqlxpclgs9496cemwz");
+      const tableFns_98slmzb4hfvqspaooope = TinyTable.createTableFunctions("tinytable_98slmzb4hfvqspaooope");
       // tinytable span after
       window.addEventListener('load', function () {
           var cellsToStyle = [
             // tinytable style arrays after
-          { positions: [ { i: '6', j: 2 }, { i: '6', j: 3 } ], css_id: 'tinytable_css_7njo09754sdjrakliqri',}, 
-          { positions: [ { i: '4', j: 2 }, { i: '4', j: 3 } ], css_id: 'tinytable_css_rdz7ci8tkmb3u1pdm6rj',}, 
-          { positions: [ { i: '1', j: 2 }, { i: '2', j: 2 }, { i: '3', j: 2 }, { i: '5', j: 2 }, { i: '1', j: 3 }, { i: '2', j: 3 }, { i: '3', j: 3 }, { i: '5', j: 3 } ], css_id: 'tinytable_css_48x12kj4ralgvhvkktbd',}, 
-          { positions: [ { i: '0', j: 2 }, { i: '0', j: 3 } ], css_id: 'tinytable_css_pvg5e06azd74bgtsto96',}, 
-          { positions: [ { i: '6', j: 1 } ], css_id: 'tinytable_css_ofd166zr2989dddgu402',}, 
-          { positions: [ { i: '4', j: 1 } ], css_id: 'tinytable_css_fs0ia77l9qq3cbixjiis',}, 
-          { positions: [ { i: '1', j: 1 }, { i: '2', j: 1 }, { i: '3', j: 1 }, { i: '5', j: 1 } ], css_id: 'tinytable_css_jpuev0ltso2w6eize4i7',}, 
-          { positions: [ { i: '0', j: 1 } ], css_id: 'tinytable_css_218adzzt3czoce7ggyp7',}, 
+          { positions: [ { i: '6', j: 2 }, { i: '6', j: 3 } ], css_id: 'tinytable_css_jne8qbwrq28lf963a238',}, 
+          { positions: [ { i: '4', j: 2 }, { i: '4', j: 3 } ], css_id: 'tinytable_css_7t2kjhlc496e9wkwi8wf',}, 
+          { positions: [ { i: '1', j: 2 }, { i: '2', j: 2 }, { i: '3', j: 2 }, { i: '5', j: 2 }, { i: '1', j: 3 }, { i: '2', j: 3 }, { i: '3', j: 3 }, { i: '5', j: 3 } ], css_id: 'tinytable_css_naujkjeah1k4d76lh7xw',}, 
+          { positions: [ { i: '0', j: 2 }, { i: '0', j: 3 } ], css_id: 'tinytable_css_dqw9wtg7cs7yhxl6kzim',}, 
+          { positions: [ { i: '6', j: 1 } ], css_id: 'tinytable_css_m7n7c0nfx1ytkxv76ebh',}, 
+          { positions: [ { i: '4', j: 1 } ], css_id: 'tinytable_css_z3dfvx2ad81mzct0nekx',}, 
+          { positions: [ { i: '1', j: 1 }, { i: '2', j: 1 }, { i: '3', j: 1 }, { i: '5', j: 1 } ], css_id: 'tinytable_css_wms2slrlmitm8u9gp7yd',}, 
+          { positions: [ { i: '0', j: 1 } ], css_id: 'tinytable_css_8y0frtfvxmtrtpip17c7',}, 
           ];
 
           // Loop over the arrays to style the cells
           cellsToStyle.forEach(function (group) {
               group.positions.forEach(function (cell) {
-                  tableFns_ycbqlxpclgs9496cemwz.styleCell(cell.i, cell.j, group.css_id);
+                  tableFns_98slmzb4hfvqspaooope.styleCell(cell.i, cell.j, group.css_id);
               });
           });
       });
     </script><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/vincentarelbundock/tinytable@main/inst/tinytable.css">
 <style>
     /* tinytable css entries after */
-    #tinytable_ycbqlxpclgs9496cemwz td.tinytable_css_7njo09754sdjrakliqri, #tinytable_ycbqlxpclgs9496cemwz th.tinytable_css_7njo09754sdjrakliqri {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.08em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center }
-    #tinytable_ycbqlxpclgs9496cemwz td.tinytable_css_rdz7ci8tkmb3u1pdm6rj, #tinytable_ycbqlxpclgs9496cemwz th.tinytable_css_rdz7ci8tkmb3u1pdm6rj {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center }
-    #tinytable_ycbqlxpclgs9496cemwz td.tinytable_css_48x12kj4ralgvhvkktbd, #tinytable_ycbqlxpclgs9496cemwz th.tinytable_css_48x12kj4ralgvhvkktbd { text-align: center }
-    #tinytable_ycbqlxpclgs9496cemwz td.tinytable_css_pvg5e06azd74bgtsto96, #tinytable_ycbqlxpclgs9496cemwz th.tinytable_css_pvg5e06azd74bgtsto96 {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 1; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.08em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center }
-    #tinytable_ycbqlxpclgs9496cemwz td.tinytable_css_ofd166zr2989dddgu402, #tinytable_ycbqlxpclgs9496cemwz th.tinytable_css_ofd166zr2989dddgu402 {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.08em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: left }
-    #tinytable_ycbqlxpclgs9496cemwz td.tinytable_css_fs0ia77l9qq3cbixjiis, #tinytable_ycbqlxpclgs9496cemwz th.tinytable_css_fs0ia77l9qq3cbixjiis {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: left }
-    #tinytable_ycbqlxpclgs9496cemwz td.tinytable_css_jpuev0ltso2w6eize4i7, #tinytable_ycbqlxpclgs9496cemwz th.tinytable_css_jpuev0ltso2w6eize4i7 { text-align: left }
-    #tinytable_ycbqlxpclgs9496cemwz td.tinytable_css_218adzzt3czoce7ggyp7, #tinytable_ycbqlxpclgs9496cemwz th.tinytable_css_218adzzt3czoce7ggyp7 {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 1; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.08em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: left }
+    #tinytable_98slmzb4hfvqspaooope td.tinytable_css_jne8qbwrq28lf963a238, #tinytable_98slmzb4hfvqspaooope th.tinytable_css_jne8qbwrq28lf963a238 {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.08em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center }
+    #tinytable_98slmzb4hfvqspaooope td.tinytable_css_7t2kjhlc496e9wkwi8wf, #tinytable_98slmzb4hfvqspaooope th.tinytable_css_7t2kjhlc496e9wkwi8wf {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center }
+    #tinytable_98slmzb4hfvqspaooope td.tinytable_css_naujkjeah1k4d76lh7xw, #tinytable_98slmzb4hfvqspaooope th.tinytable_css_naujkjeah1k4d76lh7xw { text-align: center }
+    #tinytable_98slmzb4hfvqspaooope td.tinytable_css_dqw9wtg7cs7yhxl6kzim, #tinytable_98slmzb4hfvqspaooope th.tinytable_css_dqw9wtg7cs7yhxl6kzim {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 1; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.08em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center }
+    #tinytable_98slmzb4hfvqspaooope td.tinytable_css_m7n7c0nfx1ytkxv76ebh, #tinytable_98slmzb4hfvqspaooope th.tinytable_css_m7n7c0nfx1ytkxv76ebh {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.08em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: left }
+    #tinytable_98slmzb4hfvqspaooope td.tinytable_css_z3dfvx2ad81mzct0nekx, #tinytable_98slmzb4hfvqspaooope th.tinytable_css_z3dfvx2ad81mzct0nekx {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: left }
+    #tinytable_98slmzb4hfvqspaooope td.tinytable_css_wms2slrlmitm8u9gp7yd, #tinytable_98slmzb4hfvqspaooope th.tinytable_css_wms2slrlmitm8u9gp7yd { text-align: left }
+    #tinytable_98slmzb4hfvqspaooope td.tinytable_css_8y0frtfvxmtrtpip17c7, #tinytable_98slmzb4hfvqspaooope th.tinytable_css_8y0frtfvxmtrtpip17c7 {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 1; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.08em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: left }
     </style>
 <div class="container">
-      <table class="table tinytable" id="tinytable_ycbqlxpclgs9496cemwz" style="width: auto; margin-left: auto; margin-right: auto;" data-quarto-disable-processing="true">
+      <table class="table tinytable" id="tinytable_98slmzb4hfvqspaooope" style="width: auto; margin-left: auto; margin-right: auto;" data-quarto-disable-processing="true">
 <thead><tr>
 <th scope="col" data-row="0" data-col="1"> </th>
                 <th scope="col" data-row="0" data-col="2">Constant</th>
@@ -444,7 +485,7 @@ stable across periods or the confounding jump is the same for every type
 <code>rddid_sim_pv</code> is the <code>rddid_sim</code> design with a
 running variable that drifts between years. The estimate whose
 assumptions the four tests below check:</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fit_pv</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rddid.html">rddid</a></span><span class="op">(</span><span class="va">rddid_sim_pv</span>, y <span class="op">=</span> <span class="st">"Y"</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="va">fit_pv</span></span>
 <span><span class="co">#&gt; RD-DID estimate of the ATT in period 3</span></span>
@@ -465,7 +506,7 @@ zero at the cutoff, in every period. A rejection means units sort around
 the cutoff by their side in other periods, so the jump in the outcome
 partly reflects who the units are; the estimate can then be biased,
 whatever the other tests say.</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">tc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rd_typecont.html">rd_typecont</a></span><span class="op">(</span><span class="va">rddid_sim_pv</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="va">tc</span></span>
 <span><span class="co">#&gt; Test of type continuity  [rd_typecont()]</span></span>
@@ -500,7 +541,7 @@ in each comparison period. A rejection means the units at the cutoff in
 the RD period are a different mix of types from those in a comparison
 period; the estimate is then valid only if the next test’s null
 holds.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">cs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rd_compstable.html">rd_compstable</a></span><span class="op">(</span><span class="va">rddid_sim_pv</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="va">cs</span></span>
 <span><span class="co">#&gt; Test of composition stability  [rd_compstable()]</span></span>
@@ -530,7 +571,7 @@ confounding jump differs by type; together with a rejection of
 composition stability, the comparison-period jumps do not measure the
 confounding jump of the units at the RD-period cutoff, and the estimate
 can be biased.</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">hg</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rd_homog.html">rd_homog</a></span><span class="op">(</span><span class="va">rddid_sim_pv</span>, y <span class="op">=</span> <span class="st">"Y"</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="va">hg</span></span>
 <span><span class="co">#&gt; Test of homogeneous confounding  [rd_homog()]</span></span>
@@ -562,7 +603,7 @@ the constant-trend weights do not cancel the confounding jump.
 <code>trend = "linear"</code> allows a confounding jump that moves
 linearly in time; <code>rd_trendcell(trend = "linear")</code> tests that
 version (three or more comparison periods).</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">tr</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rd_trendcell.html">rd_trendcell</a></span><span class="op">(</span><span class="va">rddid_sim_pv</span>, y <span class="op">=</span> <span class="st">"Y"</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="va">tr</span></span>
 <span><span class="co">#&gt; Test of a constant within-type confounding discontinuity  [rd_trendcell()]</span></span>
@@ -583,7 +624,7 @@ version (three or more comparison periods).</p>
 Wald statistic has one contrast per type: year 2 against the year marked
 <code>(reference)</code>, the type’s first comparison year.</p>
 <p>One table for all four:</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">rbind</span>, <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">tc</span>, <span class="va">cs</span>, <span class="va">hg</span>, <span class="va">tr</span><span class="op">)</span>, <span class="va">tidy</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;                               test statistic df    p.value</span></span>
 <span><span class="co">#&gt; 1                  type continuity 1.2317753  9 0.86888131</span></span>
@@ -624,7 +665,7 @@ estimate, standard errors and bandwidths are the same as without it
 (among the tests, it changes only <code><a href="../reference/rd_compstable.html">rd_compstable()</a></code>). For
 illustration, make everybody treated in years 1 and 2 of
 <code>rddid_sim</code>, with the same effect of 1:</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sim_atu</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/transform.html" class="external-link">transform</a></span><span class="op">(</span><span class="va">rddid_sim</span>, W <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="va">year</span> <span class="op">&lt;</span> <span class="fl">3</span>, <span class="fl">1</span>, <span class="va">W</span><span class="op">)</span>, Y <span class="op">=</span> <span class="va">Y</span> <span class="op">+</span> <span class="op">(</span><span class="va">year</span> <span class="op">&lt;</span> <span class="fl">3</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/rddid.html">rddid</a></span><span class="op">(</span><span class="va">sim_atu</span>, y <span class="op">=</span> <span class="st">"Y"</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span>, estimand <span class="op">=</span> <span class="st">"atu"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; RD-DID estimate of the ATU in period 3</span></span>

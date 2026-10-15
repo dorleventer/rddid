@@ -75,33 +75,6 @@ the common bandwidth is optimal for the difference of jumps that
 [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md)
 reports.
 
-### Period-specific bandwidths for the aggregate: `bwselect = "iter"`
-
-``` r
-
-fit_iter <- rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
-                  bwselect = "iter")
-fit_iter$bandwidth$h_by_period
-#>         3         1         2 
-#> 0.2913714 0.2348810 0.2916165
-```
-
-One bandwidth per period, found by coordinate descent on the asymptotic
-mean squared error of the RD-DID estimate. The paper does not use this
-rule; it is kept for simulations. `start` sets where the descent starts:
-`"hstar"` (the default) starts every period at the common bandwidth,
-`"cct"` starts each period at its own CCT bandwidth, and a named vector
-gives one starting value per period.
-
-``` r
-
-fit_iter_cct <- rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
-                      bwselect = "iter", start = "cct")
-fit_iter_cct$bandwidth$h_by_period
-#>         3         1         2 
-#> 0.2913710 0.2348758 0.2916176
-```
-
 ### Fixed bandwidths
 
 ``` r
@@ -119,24 +92,23 @@ A given `h` is used in every period and bypasses bandwidth selection;
 `b` defaults to `h`.
 
 `regularize` (default `TRUE`) adds an `rdrobust`-style regularization
-term to the squared bias in the `"joint"` and `"iter"` rules, so that a
-near-zero estimated curvature does not blow the bandwidth up;
-`reg_const` (default 3) is its constant.
+term to the squared bias in the `"joint"` rule, so that a near-zero
+estimated curvature does not blow the bandwidth up; `reg_const` (default
+3) is its constant.
 
 ### The rules side by side
 
-The four fits above, with the main bandwidth in each year and the two
+The three fits above, with the main bandwidth in each year and the two
 estimates (standard errors in parentheses):
 
 | rule          | h, year 1 | h, year 2 | h, year 3 | Conventional  | Robust        |
 |:--------------|----------:|----------:|----------:|:--------------|:--------------|
 | joint         |     0.267 |     0.267 |     0.267 | 1.093 (0.126) | 1.141 (0.149) |
 | cct           |     0.264 |     0.326 |     0.414 | 1.040 (0.117) | 1.096 (0.141) |
-| iter          |     0.235 |     0.292 |     0.291 | 1.100 (0.125) | 1.141 (0.147) |
 | fixed h = 0.3 |     0.300 |     0.300 |     0.300 | 1.068 (0.120) | 1.118 (0.161) |
 
-The rules give different bandwidths, from 0.235 to 0.414, and, on these
-data, conventional estimates from 1.040 to 1.100, with standard errors
+The rules give different bandwidths, from 0.264 to 0.414, and, on these
+data, conventional estimates from 1.040 to 1.093, with standard errors
 of about 0.12; the truth is 1.
 
 ## Sampling schemes
@@ -237,12 +209,11 @@ knitr::kable(se_tab, digits = 3)
 The scheme describes how the data were sampled; the printout reports the
 column for that scheme, and the other columns show the other formulas on
 the same data. Setting `scheme` replaces the detection. The scheme sets
-which standard error is reported and, under the `"joint"` (default) and
-`"iter"` bandwidth rules, it also enters the bandwidth: these rules
-weigh bias against the asymptotic variance of the estimate, and that
-variance has a cross-period covariance term under `"pc"` only (the term
-is zero under `"cs"` and negligible in large samples under `"pv"`). On
-`rddid_sim`:
+which standard error is reported and, under the `"joint"` (default)
+bandwidth rule, it also enters the bandwidth: this rule weighs bias
+against the asymptotic variance of the estimate, and that variance has a
+cross-period covariance term under `"pc"` only (the term is zero under
+`"cs"` and negligible in large samples under `"pv"`). On `rddid_sim`:
 
 ``` r
 
