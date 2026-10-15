@@ -28,7 +28,7 @@ Goal: the pkgdown site (`https://dorleventer.github.io/rddid/`) shows how to use
 | `rd_bw_cct()` | single-period CCT bandwidths `h`, `b` | V1 |
 | `rd_period()` | per-period local-linear RD, conventional + robust bias-corrected `D_t`; per-side intercept/slope for plots | V1 |
 | `rddid()` — `weights` | `eq:est_agg_bc`, `cor:trend` (constant / linear / custom `w_t`) | V1 |
-| `rddid()` — `bwselect`, `start`, `regularize`, `h`, `b` | §5.3 rules: per-period CCT, common `h*`, iterative period-specific | V2 |
+| `rddid()` — `bwselect`, `regularize`, `h`, `b` | §5.4 rules: per-period CCT, common `h*` (the iterative rule and `start` were removed after tag `v0.4.0.9000-iter`) | V2 |
 | `rddid()` — `scheme`, `id` | `eq:var-cs/pc/pv`, auto-detection | V2 |
 | `rd_typecont()` | `ass:type-cont` test (side-share RD per period + joint Wald) | V3 |
 | `rd_compstable()` | `ass:comp-stable` test (reflected-cutoff RD) | V3 |
@@ -71,7 +71,7 @@ Conventions: `set.seed` at the top; every number in prose is inline R; true ATT 
 4. Linear confounding: regenerate; `rddid(weights = "linear")`; show `r$weights = (-1, 2)`; the slope-and-extrapolate arithmetic; numeric `weights` in one line. Descriptive note: with two comparison periods the linear trend is just-identified.
 
 ### V2 `rddid-options.Rmd` — "Bandwidth rules and sampling schemes"
-1. **Bandwidths.** DGP-A with `theta_t = (1, 6, 3)`. For each of `bwselect = "cct"`, `"joint"`, `"iter"`: one sentence on what it is (per-period CCT/IK; one common `h*` for the aggregate estimator; period-specific bandwidths from coordinate descent started at `h*`), the call, the resulting bandwidths (`r$bandwidth`, `r$fits[[t]]$h`) and estimate/SE in one table. Also `start`, `regularize`, and fixing `h`/`b` by hand.
+1. **Bandwidths.** DGP-A with `theta_t = (1, 6, 3)`. For each of `bwselect = "cct"`, `"joint"` (and, before tag `v0.4.0.9000-iter`, `"iter"`): one sentence on what it is (per-period CCT/IK; one common `h*` for the aggregate estimator; period-specific bandwidths from coordinate descent started at `h*`), the call, the resulting bandwidths (`r$bandwidth`, `r$fits[[t]]$h`) and estimate/SE in one table. Also `start`, `regularize`, and fixing `h`/`b` by hand.
 2. **Sampling schemes.** Reminder of CS / PC / PV. Same DGP sampled three ways; `scheme = "auto"` and what it detected; the three SE columns on each dataset; how to set `scheme` explicitly and what `id = NULL` means.
 
 ### V3 `rddid-validation-tests.Rmd` — "Composition validation tests"

@@ -65,6 +65,5 @@ for (k in names(res)) {
   if (!is.null(x$bws)) print(round(do.call(rbind, x$bws), 6))
   if (!is.null(x$bw_info)) str(x$bw_info)
   if (!is.null(x$consts)) print(signif(x$consts, 6))
-  if (!is.null(x$niter)) cat("  niter", x$niter, "\n")
   if (is.null(x$estimates)) print(unlist(x))
 }

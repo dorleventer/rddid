@@ -221,3 +221,48 @@ test_that("methods: summary roles, glance, print and plot with several RD period
   skip_if_not_installed("ggplot2")
   expect_s3_class(plot(f), "ggplot")
 })
+
+test_that("min_variance with one RD period scales exactly with rd_weights (pinned and not pinned)", {
+  r <- function(...) suppressMessages(rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id",
+                                            t_rd = 3, h = 0.3, weighting = "min_variance", ...))
+  for (comps in list(2, c(1, 2))) {                  # one comparison: pinned; two: not pinned
+    a1 <- r(comparisons = comps); a2 <- r(comparisons = comps, rd_weights = 2)
+    expect_equal(a2$weights_detail$pinned, length(comps) == 1L)
+    expect_equal(a2$coef, 2 * a1$coef, tolerance = 1e-12)
+    expect_equal(a2$estimates[, "est"], 2 * a1$estimates[, "est"], tolerance = 1e-12)
+    expect_equal(a2$weights_by_target, a1$weights_by_target, tolerance = 1e-12)
+    expect_equal(a2$weights_detail$pilot, a1$weights_detail$pilot, tolerance = 1e-12)
+  }
+})
+
+test_that("joint rule, PC, equal pilots: Veff / h0 = c' Sigma c with RD-RD covariances built by hand", {
+  d <- .agg_data("pc")
+  phi <- c(0.2, 0.3, 0.5)
+  coef <- c(stats::setNames(phi, .rd), stats::setNames(-rep(sum(phi) / 2, 2), .comps))
+  per <- names(coef); h0 <- 0.4; b0 <- 0.55
+  plist <- stats::setNames(lapply(per, function(k) { s <- d[d$year == as.numeric(k), ]
+    data.frame(y = s$Y, x = s$R, id = s$id) }), per)
+  pb <- stats::setNames(rep(list(c(h = h0, b = b0)), length(per)), per)
+  jb <- .bw_joint(plist, coef, scheme = "pc", pilot_bws = pb)
+  fits <- lapply(per, function(k) rd_period(plist[[k]]$y, plist[[k]]$x, h = h0, b = b0, id = plist[[k]]$id))
+  same <- function(ft, fs) sum(vapply(c("+", "-"), function(sd) {
+    a <- ft$sides[[sd]]; b <- fs$sides[[sd]]; m <- match(a$id, b$id); ok <- !is.na(m)
+    sum(a$g[ok] * b$g[m[ok]]) }, numeric(1)))
+  K <- length(per); S <- matrix(0, K, K)
+  for (i in seq_len(K)) for (j in seq_len(K)) S[i, j] <- if (i == j) fits[[i]]$V_D else same(fits[[i]], fits[[j]])
+  expect_equal(jb$Veff / h0, drop(t(coef) %*% S %*% coef), tolerance = 1e-10)
+  expect_true(abs(S[1, 2]) > 0)                                     # an RD-RD pair is live
+})
+
+test_that("character and factor period labels give the same aggregate as numeric labels", {
+  d <- .agg_data("pc")
+  f  <- .fit(d, t_rd = .rd, comparisons = .comps, rd_weights = c(0.2, 0.3, 0.5), h = 0.4)
+  dc <- transform(d, year = paste0("y", year))
+  fc <- .fit(dc, t_rd = c("y3", "y4", "y5"), comparisons = c("y1", "y2"),
+             rd_weights = c(y5 = 0.5, y3 = 0.2, y4 = 0.3), h = 0.4)
+  expect_equal(fc$estimates, f$estimates, tolerance = 1e-12)
+  ff <- .fit(dc, t_rd = factor(c("y3", "y4", "y5")), comparisons = c("y1", "y2"),
+             rd_weights = c(0.2, 0.3, 0.5), h = 0.4)
+  expect_equal(ff$estimates, f$estimates, tolerance = 1e-12)
+  expect_error(.fit(d, t_rd = .rd, comparisons = .comps, rd_weights = c(0, 0, 0)), "all zero")
+})

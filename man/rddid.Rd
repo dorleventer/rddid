@@ -72,7 +72,8 @@ numeric vector gives the weights directly, one per entry of \code{comparisons}
 in that order. Weights that sum to one cancel a constant confounding
 jump; \code{rddid()} warns when they do not. With several RD periods a numeric
 vector applies to every RD period, and a numeric matrix gives one row of
-weights per RD period (rows in \code{t_rd} order or named by period).}
+weights per RD period (rows in \code{t_rd} order or named by period; columns in
+\code{comparisons} order or named by period).}
 
 \item{rd_weights}{the weights \eqn{\phi_t}{phi_t} of the RD periods in the
 average, one per entry of \code{t_rd} (in that order, or named by period).
@@ -150,8 +151,9 @@ statistic and p-value under \code{scheme}) and \code{se_cs}, \code{se_pc}, \code
 (that row's standard error under each sampling scheme, at the same
 bandwidths).}
 \item{\code{coef}}{named numeric vector, the coefficient of each period's jump
-in the estimate: 1 for the RD period, minus its weight for each
-comparison period. \code{\link[=coef]{coef()}} returns the estimate itself.}
+in the estimate: \eqn{\phi_t}{phi_t} for each RD period (1 for a single
+RD period), minus its (aggregated) weight for each comparison period.
+\code{\link[=coef]{coef()}} returns the estimate itself.}
 \item{\code{weights}}{named numeric vector of the comparison-period weights;
 with several RD periods, the aggregated weights
 \eqn{w^\phi_{t_0}}{w^phi_t0}.}
@@ -175,7 +177,7 @@ the pilot \code{b} (one number for \code{"fixed"}, one per period for
 \code{"joint"}); and intermediate quantities of the rule (\code{bws} for \code{"cct"};
 \code{B}, \code{Veff}, \code{reg}, \code{pilot_bws} for \code{"joint"}).}
 \item{\code{fits}}{named list of the per-period \code{\link[=rd_period]{rd_period()}} fits, the RD
-period first (index by name).}
+period(s) first (index by name).}
 \item{\code{n_by_period}}{the number of observations in each period.}
 \item{\code{level}, \code{c}, \code{p}, \code{q}, \code{kernel}}{as passed.}
 \item{\code{data}}{the per-period data used (a named list of data frames with

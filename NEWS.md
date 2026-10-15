@@ -5,8 +5,8 @@
 * `t_rd` may be a vector of RD periods. `rddid()` then estimates the weighted average of their
   effects, ATT^phi = sum_t phi_t ATT(t) (the paper's Corollary 2 and Section 5.6), with weights
   from the new argument `rd_weights` (equal weights by default; any finite weights). Each
-  period's jump is estimated once; each comparison period enters with the phi-average of the
-  weights each RD period gives it. Standard errors include the covariances between RD periods,
+  period's jump is estimated once; each comparison period enters with the phi-weighted sum of
+  the weights each RD period gives it. Standard errors include the covariances between RD periods,
   and `bwselect = "joint"` chooses one bandwidth for the average.
 * New return fields `rd_weights` and `weights_by_target`; with several RD periods `weights` holds
   the aggregated comparison weights. A numeric matrix `trend` sets the comparison weights per RD

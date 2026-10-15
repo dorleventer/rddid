@@ -20,10 +20,9 @@ Display equation (use once per document, define every symbol in words right afte
 | `scheme = "cs"` | repeated cross-section: different units in each period | |
 | `scheme = "pc"` | panel, running variable fixed over time: the same units, each on the same side of the cutoff in every period | time-constant |
 | `scheme = "pv"` | panel, running variable varies over time: some units change side between periods ("switchers") | time-varying |
-| what the scheme does | sets which standard error is reported; under `"joint"`/`"iter"` it also enters the common bandwidth (so the estimate); with a fixed `h` or `"cct"` the estimate is unchanged | "only changes the s.e." |
+| what the scheme does | sets which standard error is reported; under `"joint"` it also enters the common bandwidth (so the estimate); with a fixed `h` or `"cct"` the estimate is unchanged | "only changes the s.e." |
 | `bwselect = "joint"` (default) | the common bandwidth: one `h` for every period, chosen to minimise the asymptotic mean squared error of the RD-DID estimate | AMSE-optimal (only in the Details) |
 | `bwselect = "cct"` | per-period CCT bandwidths: each period's own MSE-optimal bandwidth from `rdrobust::rdbwselect` (Calonico, Cattaneo and Titiunik, 2014) | |
-| `bwselect = "iter"` | period-specific bandwidths by coordinate descent on the aggregate's asymptotic MSE; not used in the paper, kept for simulations | preferred rule |
 | `h`, `b` | the main bandwidth (point estimate) and the pilot bandwidth (bias correction) | |
 | `weighting = "min_variance"` | the minimum-variance weights: the comparison-period weights the confounding-trend assumption allows that make the variance of the estimate smallest | GLS weights, MV, optimal weights |
 | estimates row `Conventional` | the local-linear estimate with its conventional standard error | |

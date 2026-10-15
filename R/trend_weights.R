@@ -51,6 +51,8 @@
   if (!is.numeric(rd_weights) || length(rd_weights) != J || any(!is.finite(rd_weights)))
     stop("`rd_weights` must be a finite numeric vector with one entry per RD period in `t_rd`.",
          call. = FALSE)
+  if (all(rd_weights == 0))
+    stop("`rd_weights` are all zero, so the estimand is identically zero.", call. = FALSE)
   if (!is.null(names(rd_weights)) && all(nzchar(names(rd_weights)))) {
     if (!setequal(names(rd_weights), as.character(t_rd)))
       stop("the names of `rd_weights` must be the RD periods: ", paste(t_rd, collapse = ", "),

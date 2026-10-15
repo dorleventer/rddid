@@ -174,7 +174,8 @@
 #'   in that order. Weights that sum to one cancel a constant confounding
 #'   jump; `rddid()` warns when they do not. With several RD periods a numeric
 #'   vector applies to every RD period, and a numeric matrix gives one row of
-#'   weights per RD period (rows in `t_rd` order or named by period).
+#'   weights per RD period (rows in `t_rd` order or named by period; columns in
+#'   `comparisons` order or named by period).
 #' @param rd_weights the weights \eqn{\phi_t}{phi_t} of the RD periods in the
 #'   average, one per entry of `t_rd` (in that order, or named by period).
 #'   `NULL` (default) gives equal weights. Any finite weights are allowed;
@@ -236,8 +237,9 @@
 #'       (that row's standard error under each sampling scheme, at the same
 #'       bandwidths).}
 #'     \item{`coef`}{named numeric vector, the coefficient of each period's jump
-#'       in the estimate: 1 for the RD period, minus its weight for each
-#'       comparison period. [coef()] returns the estimate itself.}
+#'       in the estimate: \eqn{\phi_t}{phi_t} for each RD period (1 for a single
+#'       RD period), minus its (aggregated) weight for each comparison period.
+#'       [coef()] returns the estimate itself.}
 #'     \item{`weights`}{named numeric vector of the comparison-period weights;
 #'       with several RD periods, the aggregated weights
 #'       \eqn{w^\phi_{t_0}}{w^phi_t0}.}
@@ -261,7 +263,7 @@
 #'       `"joint"`); and intermediate quantities of the rule (`bws` for `"cct"`;
 #'       `B`, `Veff`, `reg`, `pilot_bws` for `"joint"`).}
 #'     \item{`fits`}{named list of the per-period [rd_period()] fits, the RD
-#'       period first (index by name).}
+#'       period(s) first (index by name).}
 #'     \item{`n_by_period`}{the number of observations in each period.}
 #'     \item{`level`, `c`, `p`, `q`, `kernel`}{as passed.}
 #'     \item{`data`}{the per-period data used (a named list of data frames with
@@ -412,9 +414,11 @@ rddid <- function(data, y, x, time, id = NULL, t_rd,
   # iteration, as the weights do not depend on a common bandwidth to first order
   weights_detail <- NULL
   if (weighting == "min_variance") {
+    # the unscaled weights of the single RD period (setNames: [1, ] drops the names of a 1 x 1 matrix)
+    w_pilot <- stats::setNames(as.numeric(weights_by_target[1, ]), colnames(weights_by_target))
     mv <- .mv_weights(fits, comparisons, t_rd, match.arg(trend, c("constant", "linear")),
-                      use_scheme, comp_weights)
-    weights_detail <- list(pilot = comp_weights, Xi = mv$Xi, xi = mv$xi,
+                      use_scheme, w_pilot)
+    weights_detail <- list(pilot = w_pilot, Xi = mv$Xi, xi = mv$xi,
                            h = bw$info$h_by_period, pinned = mv$pinned)
     comp_weights <- rd_w[[1]] * mv$w
     weights_by_target[1, ] <- mv$w
@@ -527,8 +531,9 @@ print.rddid <- function(x, digits = 4, hint = TRUE, ...) {
   fmt_w <- function(w) paste(trimws(formatC(w, digits = 3, format = "g")), collapse = ", ")
   several <- length(x$t_rd) > 1L
   if (several)
-    cat(sprintf("RD-DID estimate of the %s averaged over RD periods %s (weights %s)\n",
-                toupper(est), paste(x$t_rd, collapse = ", "), fmt_w(x$rd_weights)))
+    cat(sprintf("RD-DID estimate of the %s %s RD periods %s (weights %s)\n", toupper(est),
+                if (abs(sum(x$rd_weights) - 1) < 1e-8) "averaged over" else "weighted sum over",
+                paste(x$t_rd, collapse = ", "), fmt_w(x$rd_weights)))
   else
     cat(sprintf("RD-DID estimate of the %s in period %s\n", toupper(est), x$t_rd))
   cat(sprintf("  Comparison periods: %s   (%s; %s %s)\n",

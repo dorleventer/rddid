@@ -173,7 +173,7 @@ When the treatment of interest is in place in several periods, `t_rd` can list
 them all. `rddid()` then estimates the weighted average of their effects, with
 weights `rd_weights` (equal by default; any weights the question calls for).
 Each period's jump is estimated once, and each comparison period enters with the
-average of the weights the RD periods would give it. `rddid_sim` has one RD
+`rd_weights`-weighted sum of the weights the RD periods would give it. `rddid_sim` has one RD
 period, so for illustration year 3 is copied as a second RD year, 4:
 
 ```{r}
@@ -196,7 +196,7 @@ cross-section formula, which leaves it out, would give
 `r fmt(fit_avg$estimates["Conventional", "se_cs"], 3)`. Under the default common
 bandwidth the two estimates differ slightly, because the rule's regularization
 term adds the periods' bias-estimate variances without their covariances. With RD
-periods that differ, the average is more precise than a single period, up to the
+periods that differ, the average is typically more precise than a single period, up to the
 noise of the comparison periods, which every RD period shares.
 
 ## A table for a paper
