@@ -3,11 +3,12 @@
 
 local_width <- function() testthat::local_reproducible_output(width = 100, unicode = FALSE)
 # The sup-t and sWald p-values are simulated: the draws go through an eigendecomposition whose eigenvector signs depend
-# on the platform's LAPACK, so their third decimal differs across platforms. Mask it.
+# on the platform's LAPACK, so their last digits differ across platforms. The snapshots mask them; the test at the end
+# checks their values to Monte Carlo precision.
 mask_sim_p <- function(x) {
   sim <- grepl("critical values", x)
-  x[sim] <- gsub("p = ([0-9]\\.[0-9]{2})[0-9]", "p = \\1*", x[sim])
-  x[sim] <- sub("^(\\s+\\S.*\\s[0-9.]+\\s+)([0-9]\\.[0-9]{2})[0-9](\\s+(sup-t|sWald),)", "\\1\\2*\\3", x[sim])
+  x[sim] <- gsub("p = [0-9]\\.[0-9]{3}", "p = #.###", x[sim])
+  x[sim] <- sub("^(\\s+\\S.*\\s[0-9.]+\\s+)[0-9]\\.[0-9]{3}(\\s+(sup-t|sWald),)", "\\1#.###\\2", x[sim])
   x
 }
 
@@ -43,4 +44,11 @@ test_that("print of rd_checks()", {
   skip_on_cran()
   expect_snapshot(print(rd_checks(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id",
                                   t_rd = 3)), transform = mask_sim_p)
+})
+
+test_that("simulated p-values of the printed examples, to Monte Carlo precision", {
+  tc <- rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
+  cs <- rd_compstable(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
+  expect_lt(abs(tc$p_value - 0.868), 0.01)
+  expect_lt(abs(cs$p_value - 0.016), 0.005)
 })
