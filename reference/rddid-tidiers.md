@@ -27,6 +27,9 @@ tidy(x, ...)
 
 # S3 method for class 'rd_trendcell'
 tidy(x, ...)
+
+# S3 method for class 'rd_checks'
+tidy(x, ...)
 ```
 
 ## Arguments
@@ -58,11 +61,16 @@ tidy(x, ...)
 [`tidy()`](https://generics.r-lib.org/reference/tidy.html) returns a
 data frame with one row per estimate (`term`, `estimate`, `std.error`,
 `statistic`, `p.value`, `conf.low`, `conf.high`) for a fit, and one row
-per test (`test`, `statistic`, `df`, `p.value`) for a validation test;
+per test (`test`, `statistic`, `df`, `p.value`) for a validation test:
+the test's reported statistic (the largest \|t\| under `joint = "supt"`
 for
-[`rd_compstable()`](https://dorleventer.github.io/rddid/reference/rd_compstable.md)
-that row is the joint test over pairs, whose p-value is approximate (see
-its Details).
+[`rd_typecont()`](https://dorleventer.github.io/rddid/reference/rd_typecont.md)
+and
+[`rd_compstable()`](https://dorleventer.github.io/rddid/reference/rd_compstable.md),
+whose row is the joint test over pairs; the chi-squared statistic for
+[`rd_homog()`](https://dorleventer.github.io/rddid/reference/rd_homog.md)
+and
+[`rd_trendcell()`](https://dorleventer.github.io/rddid/reference/rd_trendcell.md)).
 [`glance()`](https://generics.r-lib.org/reference/glance.html) returns a
 one-row data frame describing the fit (`nobs`, `t_rd`, `comparisons`,
 `trend`, `weights`, `bwselect`, `h` (the common bandwidth under
@@ -82,6 +90,6 @@ glance(fit)
 #>   weighting
 #> 1       ols
 tidy(rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3))
-#>              test statistic df   p.value
-#> 1 type continuity  4.781633  9 0.8529133
+#>              test statistic df   p.value                   method
+#> 1 type continuity  1.231775  9 0.8688813 sup-t, t critical values
 ```

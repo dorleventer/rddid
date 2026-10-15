@@ -93,15 +93,16 @@
 <p>When the running variable moves over time, so that units can change side of the cutoff between periods, four tests check the assumptions this adds, for example type continuity:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/rd_typecont.html">rd_typecont</a></span><span class="op">(</span><span class="va">rddid_sim_pv</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Test of a continuous type distribution  [rd_typecont()]</span></span>
+<span><span class="co">#&gt; Test of type continuity  [rd_typecont()]</span></span>
 <span><span class="co">#&gt;   H0: the share of each type jumps by zero at the cutoff, in every period</span></span>
 <span><span class="co">#&gt;   Sampling scheme: panel, some units change side of the cutoff (detected)</span></span>
 <span><span class="co">#&gt;   Periods: 1, 2, 3   Types: ++, +-, -+, --   Bandwidth: CCT MSE-optimal, chosen per cell</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Joint Wald chi-squared(9) = 4.782,  p = 0.853</span></span>
-<span><span class="co">#&gt;     Period 1: chi-squared(3) = 1.531,  p = 0.675</span></span>
-<span><span class="co">#&gt;     Period 2: chi-squared(3) = 0.382,  p = 0.944</span></span>
-<span><span class="co">#&gt;     Period 3: chi-squared(3) = 2.202,  p = 0.532</span></span></code></pre></div>
+<span><span class="co">#&gt;   Joint sup-t (t critical values) max |t| = 1.232 over 9 jumps,  p = 0.868  (largest: period:type 1:+-)</span></span>
+<span><span class="co">#&gt;     Period 1: sup-t (t critical values) max |t| = 1.232 over 3 jumps,  p = 0.500</span></span>
+<span><span class="co">#&gt;     Period 2: sup-t (t critical values) max |t| = 0.582 over 3 jumps,  p = 0.901</span></span>
+<span><span class="co">#&gt;     Period 3: sup-t (t critical values) max |t| = 1.048 over 3 jumps,  p = 0.631</span></span>
+<span><span class="co">#&gt;   All joint statistics: x$joint_tests</span></span></code></pre></div>
 <p>The other three are <code><a href="reference/rd_compstable.html">rd_compstable()</a></code>, <code><a href="reference/rd_homog.html">rd_homog()</a></code> and <code><a href="reference/rd_trendcell.html">rd_trendcell()</a></code>. <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> draws any fit or test (one RD plot per period; the binned type shares with their fitted lines; the within-type jumps), and <code><a href="reference/plot_switchers.html">plot_switchers()</a></code> shows who changes side of the cutoff between two periods.</p>
 </div>
 <div class="section level2">

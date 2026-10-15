@@ -28,6 +28,7 @@ The RD-DID estimator and what to do with a fit.
   [`tidy(`*`<rd_compstable>`*`)`](https://dorleventer.github.io/rddid/reference/rddid-tidiers.md)
   [`tidy(`*`<rd_homog>`*`)`](https://dorleventer.github.io/rddid/reference/rddid-tidiers.md)
   [`tidy(`*`<rd_trendcell>`*`)`](https://dorleventer.github.io/rddid/reference/rddid-tidiers.md)
+  [`tidy(`*`<rd_checks>`*`)`](https://dorleventer.github.io/rddid/reference/rddid-tidiers.md)
   : Tidy output for RD-DID fits and validation tests
 - [`reexports`](https://dorleventer.github.io/rddid/reference/reexports.md)
   [`tidy`](https://dorleventer.github.io/rddid/reference/reexports.md)
@@ -39,6 +40,8 @@ The RD-DID estimator and what to do with a fit.
 Tests of the identification assumptions when the running variable moves
 over time, so that units can change side of the cutoff between periods.
 
+- [`rd_checks()`](https://dorleventer.github.io/rddid/reference/rd_checks.md)
+  : Run the four tests of the identification assumptions
 - [`rd_typecont()`](https://dorleventer.github.io/rddid/reference/rd_typecont.md)
   : Test of type continuity
 - [`rd_compstable()`](https://dorleventer.github.io/rddid/reference/rd_compstable.md)

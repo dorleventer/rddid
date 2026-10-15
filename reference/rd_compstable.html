@@ -95,7 +95,9 @@ types are degenerate and the test is not informative.</p>
 <span>  bwselect <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cct"</span>, <span class="st">"rot"</span><span class="op">)</span>,</span>
 <span>  kernel <span class="op">=</span> <span class="st">"triangular"</span>,</span>
 <span>  scheme <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"auto"</span>, <span class="st">"cs"</span>, <span class="st">"pc"</span>, <span class="st">"pv"</span><span class="op">)</span>,</span>
-<span>  bc <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>  bc <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  joint <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"supt"</span>, <span class="st">"swald"</span>, <span class="st">"wald"</span><span class="op">)</span>,</span>
+<span>  studentize <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -182,13 +184,29 @@ the cutoff in both periods, <code>"cs"</code> otherwise), <code>"cs"</code>, <co
 robust variance, as in the <code>Robust</code> row of <code><a href="rddid.html">rddid()</a></code>; <code>FALSE</code>: the
 conventional jumps and variances.</p></dd>
 
+
+<dt id="arg-joint">joint<a class="anchor" aria-label="anchor" href="#arg-joint"></a></dt>
+<dd><p>the statistic of each pair's test and of the joint test:
+<code>"supt"</code> (default), <code>"swald"</code> or <code>"wald"</code>, as in <code><a href="rd_typecont.html">rd_typecont()</a></code>. See "The
+joint statistic" in Details.</p></dd>
+
+
+<dt id="arg-studentize">studentize<a class="anchor" aria-label="anchor" href="#arg-studentize"></a></dt>
+<dd><p>logical, for <code>joint = "supt"</code> or <code>"swald"</code>: t-based
+(<code>TRUE</code>, default) or normal (<code>FALSE</code>) critical values, as in
+<code><a href="rd_typecont.html">rd_typecont()</a></code>.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>An object of class <code>"rd_compstable"</code>, a list with:</p><dl><dt><code>statistic</code>, <code>df</code>, <code>p_value</code></dt>
-<dd><p>the joint test over pairs: the sum
-of the pair Wald statistics, the sum of their degrees of freedom, and
-the chi-squared p-value (approximate; see Details).</p></dd>
+<dd><p>the joint test over pairs under
+<code>joint</code>: the statistic, the number of jumps tested (the degrees of
+freedom for <code>"wald"</code>), and the p-value.</p></dd>
+
+<dt><code>joint_method</code>, <code>studentize</code></dt>
+<dd><p>as used; <code>joint_tests</code> has every joint
+statistic (<code>method</code>, <code>reference</code>, <code>statistic</code>, <code>df</code>, <code>p_value</code>).</p></dd>
 
 <dt><code>scheme</code></dt>
 <dd><p>the sampling scheme used: one value if every pair used
@@ -207,11 +225,14 @@ used.</p></dd>
 
 <dt><code>pairs</code></dt>
 <dd><p>a list with one element per pair, named
-<code>"&lt;RD period&gt;::&lt;comparison period&gt;"</code>, each holding <code>ll_wald</code> (the
-pair's Wald test: <code>stat</code>, <code>df</code>, <code>p</code>); <code>jumps</code> and <code>jump_se</code> (the
+<code>"&lt;RD period&gt;::&lt;comparison period&gt;"</code>, each holding <code>test</code> (the
+pair's test under <code>joint</code>: <code>stat</code>, <code>df</code>, <code>p</code>) and <code>ll_wald</code> (its Wald
+test); <code>jumps</code> and <code>jump_se</code> (the
 tested share jumps and their standard errors, named by type: the
 unit's sides, <code>1</code> above and <code>0</code> below the cutoff, with its side in the
 other period of the pair last);
+<code>kept</code> and <code>cov_matrix</code> (the indices of the tested types in
+<code>type_values</code> and the covariance of their jumps);
 <code>type_values</code> (the types present); <code>scheme</code> (the scheme used for the
 pair); and <code>n_trd</code>, <code>n_t0</code>, <code>n_both</code> (the number of units above the
 cutoff in the RD period, in the comparison period, and in both; below
@@ -221,15 +242,19 @@ reflected sample: <code>x_trd</code>, <code>type_trd</code>, <code>x_t0</code>, 
 <code><a href="plot.rd_compstable.html">plot.rd_compstable()</a></code>.</p></dd>
 
 <dt><code>joint</code></dt>
-<dd><p>the joint test again, as <code>ll_wald</code> (<code>stat</code>, <code>df</code>, <code>p</code>). A type
-share that is constant near the cutoff on both sides with no jump carries no
-information and is left out (<code>dropped</code> counts them); one that jumps
-deterministically makes the test undefined (<code>NA</code>).</p></dd>
+<dd><p>the joint test again: <code>test</code> (under <code>joint</code>) and <code>ll_wald</code>
+(the chi-squared Wald over the stacked jumps with their full covariance),
+each <code>stat</code>, <code>df</code>, <code>p</code>; <code>theta</code> and <code>Sigma</code> (the stacked jumps, named
+<code>"&lt;pair&gt;:&lt;type&gt;"</code>, and their covariance). A type share that is constant
+near the cutoff on both sides with no jump carries no information and is
+left out (<code>dropped</code> counts them); one that jumps deterministically makes
+the test undefined (<code>NA</code>).</p></dd>
 
 <dt><code>meta</code></dt>
 <dd><p>a list with <code>t_rd</code>, <code>comparisons</code>, <code>h</code> (the common
 bandwidth, <code>NA</code> with <code>bwselect = "cct"</code>), <code>bwselect</code>, <code>c</code> (the cutoff
-as passed, before any mirroring), <code>bc</code> and <code>estimand</code>.</p></dd>
+as passed, before any mirroring), <code>bc</code>, <code>estimand</code>, <code>joint</code> and
+<code>studentize</code>.</p></dd>
 
 
 </dl></div>
@@ -251,12 +276,24 @@ comparison-period units just above the cutoff. With two periods the type is
 the unit's side in the other period of the pair, and there is one jump per
 pair; with more periods the type also records the unit's sides in the
 remaining periods. The shares sum to one, so one reference type is dropped
-and the remaining jumps are tested jointly by a Wald statistic, one test per
-pair. The joint test over pairs adds up the pair statistics and degrees of
-freedom, which treats the pairs as independent although they share the
-RD-period units, so its p-value is approximate (the paper's test is per
-pair). A
-pair with fewer than three units in either group is skipped with a warning.</p>
+and the remaining jumps are tested jointly, one test per pair. The joint
+test over pairs stacks every pair's jumps with their full covariance: the
+pairs share the RD-period units (and, in a panel, the units above the cutoff
+in two comparison periods), and the covariances across pairs come from
+those shared units. A pair with fewer than three units in either group is
+skipped with a warning.</p>
+</div>
+
+<div class="section">
+<h3 id="the-joint-statistic">The joint statistic<a class="anchor" aria-label="anchor" href="#the-joint-statistic"></a></h3>
+
+
+<p>As in <code><a href="rd_typecont.html">rd_typecont()</a></code>: <code>joint</code> picks the statistic (<code>"supt"</code>, default;
+<code>"swald"</code>; <code>"wald"</code>) and <code>studentize</code> the reference distribution of sup-t and
+sWald (<code>TRUE</code>, default: t-based; <code>FALSE</code>: normal). The same statistic is used
+for each pair and for the joint test, and every statistic is returned in
+<code>joint_tests</code>. The simulation evidence is in the article "Checking the identification
+assumptions".</p>
 </div>
 
 <div class="section">
@@ -323,6 +360,7 @@ confidence intervals for regression-discontinuity designs. <em>Econometrica</em>
 <code><a href="plot.rd_trendcell.html">plot.rd_trendcell()</a></code>,
 <code><a href="plot.rd_typecont.html">plot.rd_typecont()</a></code>,
 <code><a href="plot_switchers.html">plot_switchers()</a></code>,
+<code><a href="rd_checks.html">rd_checks()</a></code>,
 <code><a href="rd_homog.html">rd_homog()</a></code>,
 <code><a href="rd_trendcell.html">rd_trendcell()</a></code>,
 <code><a href="rd_typecont.html">rd_typecont()</a></code></p></div>
@@ -332,7 +370,24 @@ confidence intervals for regression-discontinuity designs. <em>Econometrica</em>
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># rddid_sim_pv: the running variable moves, so some units change side</span></span></span>
 <span class="r-in"><span><span class="va">cs</span> <span class="op">&lt;-</span> <span class="fu">rd_compstable</span><span class="op">(</span><span class="va">rddid_sim_pv</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">cs</span>          <span class="co"># one Wald test per (RD period, comparison period) pair, then their sum</span></span></span>
+<span class="r-in"><span><span class="va">cs</span>          <span class="co"># one test per (RD period, comparison period) pair, then the joint test</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Test of composition stability  [rd_compstable()]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   H0: the share of each type among the units just above the cutoff is the same in the RD period and in each comparison period</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Sampling scheme: panel, some units change side of the cutoff (detected)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   RD period: 3   Comparison periods: 1, 2   Bandwidth: CCT MSE-optimal, chosen per cell</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Pair 3::1: sup-t (t critical values) max |t| = 3.086 over 3 jumps,  p = 0.009</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     n above the cutoff: 490 (RD period), 508 (comparison), 430 in both</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Pair 3::2: sup-t (t critical values) max |t| = 2.059 over 3 jumps,  p = 0.120</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     n above the cutoff: 490 (RD period), 497 (comparison), 418 in both</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Joint over pairs: sup-t (t critical values) max |t| = 3.086 over 6 jumps,  p = 0.016  (largest: pair:type 3::1:-+)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   All joint statistics: x$joint_tests</span>
+<span class="r-in"><span><span class="va">cs</span><span class="op">$</span><span class="va">pairs</span><span class="op">[[</span><span class="st">"3::1"</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">jumps</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         01         10         11 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> -0.2519944 -0.2544709  0.3613727 </span>
+<span class="r-in"><span><span class="co"># the chi-squared Wald instead of sup-t</span></span></span>
+<span class="r-in"><span><span class="fu">rd_compstable</span><span class="op">(</span><span class="va">rddid_sim_pv</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span>, joint <span class="op">=</span> <span class="st">"wald"</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Test of composition stability  [rd_compstable()]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   H0: the share of each type among the units just above the cutoff is the same in the RD period and in each comparison period</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Sampling scheme: panel, some units change side of the cutoff (detected)</span>
@@ -343,10 +398,8 @@ confidence intervals for regression-discontinuity designs. <em>Econometrica</em>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Pair 3::2: chi-squared(3) = 6.137,  p = 0.105</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     n above the cutoff: 490 (RD period), 497 (comparison), 418 in both</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Joint over pairs (sum of chi-squared): chi-squared(6) = 28.119,  p = &lt;0.001</span>
-<span class="r-in"><span><span class="va">cs</span><span class="op">$</span><span class="va">pairs</span><span class="op">[[</span><span class="st">"3::1"</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">jumps</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         01         10         11 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> -0.2519944 -0.2544709  0.3613727 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Joint over pairs: chi-squared(6) = 23.647,  p = &lt;0.001</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   All joint statistics: x$joint_tests</span>
 <span class="r-in"><span><span class="co"># comparison periods uniformly treated: the shares below the cutoff</span></span></span>
 <span class="r-in"><span><span class="fu">rd_compstable</span><span class="op">(</span><span class="va">rddid_sim_pv</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span>,</span></span>
 <span class="r-in"><span>              estimand <span class="op">=</span> <span class="st">"atu"</span><span class="op">)</span></span></span>
@@ -356,12 +409,13 @@ confidence intervals for regression-discontinuity designs. <em>Econometrica</em>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Estimand: ATU (the units below the cutoff are the ones untreated in the RD period, so the test is on their shares (mirrored design))</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   RD period: 3   Comparison periods: 1, 2   Bandwidth: CCT MSE-optimal, chosen per cell</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Pair 3::1: chi-squared(3) = 6.206,  p = 0.102</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Pair 3::1: sup-t (t critical values) max |t| = 1.901 over 3 jumps,  p = 0.166</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     n below the cutoff: 510 (RD period), 492 (comparison), 432 in both</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Pair 3::2: chi-squared(3) = 3.164,  p = 0.367</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Pair 3::2: sup-t (t critical values) max |t| = 1.705 over 3 jumps,  p = 0.240</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     n below the cutoff: 510 (RD period), 503 (comparison), 431 in both</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Joint over pairs (sum of chi-squared): chi-squared(6) = 9.370,  p = 0.154</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Joint over pairs: sup-t (t critical values) max |t| = 1.901 over 6 jumps,  p = 0.293  (largest: pair:type 3::1:++)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   All joint statistics: x$joint_tests</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

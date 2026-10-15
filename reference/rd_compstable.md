@@ -35,7 +35,9 @@ rd_compstable(
   bwselect = c("cct", "rot"),
   kernel = "triangular",
   scheme = c("auto", "cs", "pc", "pv"),
-  bc = TRUE
+  bc = TRUE,
+  joint = c("supt", "swald", "wald"),
+  studentize = TRUE
 )
 ```
 
@@ -131,15 +133,32 @@ rd_compstable(
   [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md);
   `FALSE`: the conventional jumps and variances.
 
+- joint:
+
+  the statistic of each pair's test and of the joint test: `"supt"`
+  (default), `"swald"` or `"wald"`, as in
+  [`rd_typecont()`](https://dorleventer.github.io/rddid/reference/rd_typecont.md).
+  See "The joint statistic" in Details.
+
+- studentize:
+
+  logical, for `joint = "supt"` or `"swald"`: t-based (`TRUE`, default)
+  or normal (`FALSE`) critical values, as in
+  [`rd_typecont()`](https://dorleventer.github.io/rddid/reference/rd_typecont.md).
+
 ## Value
 
 An object of class `"rd_compstable"`, a list with:
 
 - `statistic`, `df`, `p_value`:
 
-  the joint test over pairs: the sum of the pair Wald statistics, the
-  sum of their degrees of freedom, and the chi-squared p-value
-  (approximate; see Details).
+  the joint test over pairs under `joint`: the statistic, the number of
+  jumps tested (the degrees of freedom for `"wald"`), and the p-value.
+
+- `joint_method`, `studentize`:
+
+  as used; `joint_tests` has every joint statistic (`method`,
+  `reference`, `statistic`, `df`, `p_value`).
 
 - `scheme`:
 
@@ -161,11 +180,13 @@ An object of class `"rd_compstable"`, a list with:
 - `pairs`:
 
   a list with one element per pair, named
-  `"<RD period>::<comparison period>"`, each holding `ll_wald` (the
-  pair's Wald test: `stat`, `df`, `p`); `jumps` and `jump_se` (the
-  tested share jumps and their standard errors, named by type: the
-  unit's sides, `1` above and `0` below the cutoff, with its side in the
-  other period of the pair last); `type_values` (the types present);
+  `"<RD period>::<comparison period>"`, each holding `test` (the pair's
+  test under `joint`: `stat`, `df`, `p`) and `ll_wald` (its Wald test);
+  `jumps` and `jump_se` (the tested share jumps and their standard
+  errors, named by type: the unit's sides, `1` above and `0` below the
+  cutoff, with its side in the other period of the pair last); `kept`
+  and `cov_matrix` (the indices of the tested types in `type_values` and
+  the covariance of their jumps); `type_values` (the types present);
   `scheme` (the scheme used for the pair); and `n_trd`, `n_t0`, `n_both`
   (the number of units above the cutoff in the RD period, in the
   comparison period, and in both; below the cutoff under
@@ -177,8 +198,11 @@ An object of class `"rd_compstable"`, a list with:
 
 - `joint`:
 
-  the joint test again, as `ll_wald` (`stat`, `df`, `p`). A type share
-  that is constant near the cutoff on both sides with no jump carries no
+  the joint test again: `test` (under `joint`) and `ll_wald` (the
+  chi-squared Wald over the stacked jumps with their full covariance),
+  each `stat`, `df`, `p`; `theta` and `Sigma` (the stacked jumps, named
+  `"<pair>:<type>"`, and their covariance). A type share that is
+  constant near the cutoff on both sides with no jump carries no
   information and is left out (`dropped` counts them); one that jumps
   deterministically makes the test undefined (`NA`).
 
@@ -186,7 +210,7 @@ An object of class `"rd_compstable"`, a list with:
 
   a list with `t_rd`, `comparisons`, `h` (the common bandwidth, `NA`
   with `bwselect = "cct"`), `bwselect`, `c` (the cutoff as passed,
-  before any mirroring), `bc` and `estimand`.
+  before any mirroring), `bc`, `estimand`, `joint` and `studentize`.
 
 ## Details
 
@@ -203,12 +227,23 @@ its share among the comparison-period units just above the cutoff. With
 two periods the type is the unit's side in the other period of the pair,
 and there is one jump per pair; with more periods the type also records
 the unit's sides in the remaining periods. The shares sum to one, so one
-reference type is dropped and the remaining jumps are tested jointly by
-a Wald statistic, one test per pair. The joint test over pairs adds up
-the pair statistics and degrees of freedom, which treats the pairs as
-independent although they share the RD-period units, so its p-value is
-approximate (the paper's test is per pair). A pair with fewer than three
-units in either group is skipped with a warning.
+reference type is dropped and the remaining jumps are tested jointly,
+one test per pair. The joint test over pairs stacks every pair's jumps
+with their full covariance: the pairs share the RD-period units (and, in
+a panel, the units above the cutoff in two comparison periods), and the
+covariances across pairs come from those shared units. A pair with fewer
+than three units in either group is skipped with a warning.
+
+### The joint statistic
+
+As in
+[`rd_typecont()`](https://dorleventer.github.io/rddid/reference/rd_typecont.md):
+`joint` picks the statistic (`"supt"`, default; `"swald"`; `"wald"`) and
+`studentize` the reference distribution of sup-t and sWald (`TRUE`,
+default: t-based; `FALSE`: normal). The same statistic is used for each
+pair and for the joint test, and every statistic is returned in
+`joint_tests`. The simulation evidence is in the article "Checking the
+identification assumptions".
 
 ### Shared units and the sampling scheme
 
@@ -275,6 +310,7 @@ Other tests of the assumptions:
 [`plot.rd_trendcell()`](https://dorleventer.github.io/rddid/reference/plot.rd_trendcell.md),
 [`plot.rd_typecont()`](https://dorleventer.github.io/rddid/reference/plot.rd_typecont.md),
 [`plot_switchers()`](https://dorleventer.github.io/rddid/reference/plot_switchers.md),
+[`rd_checks()`](https://dorleventer.github.io/rddid/reference/rd_checks.md),
 [`rd_homog()`](https://dorleventer.github.io/rddid/reference/rd_homog.md),
 [`rd_trendcell()`](https://dorleventer.github.io/rddid/reference/rd_trendcell.md),
 [`rd_typecont()`](https://dorleventer.github.io/rddid/reference/rd_typecont.md)
@@ -284,7 +320,24 @@ Other tests of the assumptions:
 ``` r
 # rddid_sim_pv: the running variable moves, so some units change side
 cs <- rd_compstable(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
-cs          # one Wald test per (RD period, comparison period) pair, then their sum
+cs          # one test per (RD period, comparison period) pair, then the joint test
+#> Test of composition stability  [rd_compstable()]
+#>   H0: the share of each type among the units just above the cutoff is the same in the RD period and in each comparison period
+#>   Sampling scheme: panel, some units change side of the cutoff (detected)
+#>   RD period: 3   Comparison periods: 1, 2   Bandwidth: CCT MSE-optimal, chosen per cell
+#> 
+#>   Pair 3::1: sup-t (t critical values) max |t| = 3.086 over 3 jumps,  p = 0.009
+#>     n above the cutoff: 490 (RD period), 508 (comparison), 430 in both
+#>   Pair 3::2: sup-t (t critical values) max |t| = 2.059 over 3 jumps,  p = 0.120
+#>     n above the cutoff: 490 (RD period), 497 (comparison), 418 in both
+#> 
+#>   Joint over pairs: sup-t (t critical values) max |t| = 3.086 over 6 jumps,  p = 0.016  (largest: pair:type 3::1:-+)
+#>   All joint statistics: x$joint_tests
+cs$pairs[["3::1"]]$jumps
+#>         01         10         11 
+#> -0.2519944 -0.2544709  0.3613727 
+# the chi-squared Wald instead of sup-t
+rd_compstable(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3, joint = "wald")
 #> Test of composition stability  [rd_compstable()]
 #>   H0: the share of each type among the units just above the cutoff is the same in the RD period and in each comparison period
 #>   Sampling scheme: panel, some units change side of the cutoff (detected)
@@ -295,10 +348,8 @@ cs          # one Wald test per (RD period, comparison period) pair, then their 
 #>   Pair 3::2: chi-squared(3) = 6.137,  p = 0.105
 #>     n above the cutoff: 490 (RD period), 497 (comparison), 418 in both
 #> 
-#>   Joint over pairs (sum of chi-squared): chi-squared(6) = 28.119,  p = <0.001
-cs$pairs[["3::1"]]$jumps
-#>         01         10         11 
-#> -0.2519944 -0.2544709  0.3613727 
+#>   Joint over pairs: chi-squared(6) = 23.647,  p = <0.001
+#>   All joint statistics: x$joint_tests
 # comparison periods uniformly treated: the shares below the cutoff
 rd_compstable(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3,
               estimand = "atu")
@@ -308,10 +359,11 @@ rd_compstable(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3,
 #>   Estimand: ATU (the units below the cutoff are the ones untreated in the RD period, so the test is on their shares (mirrored design))
 #>   RD period: 3   Comparison periods: 1, 2   Bandwidth: CCT MSE-optimal, chosen per cell
 #> 
-#>   Pair 3::1: chi-squared(3) = 6.206,  p = 0.102
+#>   Pair 3::1: sup-t (t critical values) max |t| = 1.901 over 3 jumps,  p = 0.166
 #>     n below the cutoff: 510 (RD period), 492 (comparison), 432 in both
-#>   Pair 3::2: chi-squared(3) = 3.164,  p = 0.367
+#>   Pair 3::2: sup-t (t critical values) max |t| = 1.705 over 3 jumps,  p = 0.240
 #>     n below the cutoff: 510 (RD period), 503 (comparison), 431 in both
 #> 
-#>   Joint over pairs (sum of chi-squared): chi-squared(6) = 9.370,  p = 0.154
+#>   Joint over pairs: sup-t (t critical values) max |t| = 1.901 over 6 jumps,  p = 0.293  (largest: pair:type 3::1:++)
+#>   All joint statistics: x$joint_tests
 ```

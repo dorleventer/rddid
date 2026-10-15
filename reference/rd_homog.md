@@ -33,7 +33,7 @@ rd_homog(
   estimand = c("att", "atu"),
   c = 0,
   h = NULL,
-  bwselect = c("cct", "rot"),
+  bwselect = c("common", "cct", "rot"),
   kernel = "triangular",
   scheme = c("auto", "cs", "pc", "pv"),
   min_n = 10L,
@@ -111,11 +111,13 @@ rd_homog(
 
 - bwselect:
 
-  the bandwidth rule when `h` is not given: `"cct"` (default; each
+  the bandwidth rule when `h` is not given: `"common"` (default; one
+  bandwidth for every cell, the CCT bandwidth of the outcome on the
+  running variable with all comparison periods pooled), `"cct"` (each
   cell's own CCT bandwidths from
   [`rd_bw_cct()`](https://dorleventer.github.io/rddid/reference/rd_bw_cct.md))
   or `"rot"` (the rule of thumb `0.2` times the range of the running
-  variable within the cell).
+  variable within the cell). See "Bandwidth" in Details.
 
 - kernel:
 
@@ -172,6 +174,12 @@ An object of class `"rd_homog"`, a list with:
 - `estimand`:
 
   `"att"` or `"atu"`, as passed.
+
+- `bandwidth`:
+
+  a list with `method` (`"common"`, `"cct"`, `"rot"` or `"fixed"` for a
+  numeric `h`) and `h` (the bandwidth used in every cell, `NA` when it
+  varies by cell).
 
 - `call`:
 
@@ -243,12 +251,27 @@ lists the dropped cells; a period with fewer than two types is skipped.
 variance, as in the `Robust` row of
 [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md);
 `bc = FALSE` uses the conventional jumps and variances. With
-`bwselect = "cct"` (default) each cell gets its own CCT bandwidths from
+`bwselect = "cct"` each cell gets its own CCT bandwidths from
 [`rd_bw_cct()`](https://dorleventer.github.io/rddid/reference/rd_bw_cct.md),
 computed on that cell's outcome and running variable. With
 `bwselect = "rot"` the rule of thumb is `h = b = 0.2` times the range of
 the running variable within each cell. A numeric `h` is used as both
 bandwidths in every cell.
+
+### Bandwidth
+
+`bwselect = "common"` (default) uses one bandwidth, as main and pilot
+bandwidth, in every cell: the CCT MSE-optimal bandwidth of the outcome
+on the running variable, chosen once on all comparison periods pooled
+(every unit, every type). A bandwidth chosen on each cell's own data
+(`"cct"`) is noisier, and the variance formula treats it as fixed, so
+the cell variances come out about 10-15% too small and the test rejects
+a true null too often: about 8% at the 5% level with two comparison
+periods at n = 1,000, against 6% with the common bandwidth, in the
+package authors' simulations. The common bandwidth costs some power
+against a violation confined to one cell (about 8 points there), because
+a per-cell bandwidth adapts to the cell that moves. The common bandwidth
+is reported in `bandwidth` and in the printout.
 
 ### ATU designs
 
@@ -282,6 +305,7 @@ Other tests of the assumptions:
 [`plot.rd_trendcell()`](https://dorleventer.github.io/rddid/reference/plot.rd_trendcell.md),
 [`plot.rd_typecont()`](https://dorleventer.github.io/rddid/reference/plot.rd_typecont.md),
 [`plot_switchers()`](https://dorleventer.github.io/rddid/reference/plot_switchers.md),
+[`rd_checks()`](https://dorleventer.github.io/rddid/reference/rd_checks.md),
 [`rd_compstable()`](https://dorleventer.github.io/rddid/reference/rd_compstable.md),
 [`rd_trendcell()`](https://dorleventer.github.io/rddid/reference/rd_trendcell.md),
 [`rd_typecont()`](https://dorleventer.github.io/rddid/reference/rd_typecont.md)
@@ -295,7 +319,28 @@ hc          # the Wald test, then each type's jump in each comparison period
 #> Test of homogeneous confounding  [rd_homog()]
 #>   H0: in each comparison period the confounding jump is the same for every type
 #>   Sampling scheme: panel, some units change side of the cutoff (detected)
-#>   Comparison periods: 1, 2
+#>   Comparison periods: 1, 2   Bandwidth: h = 0.2104 in every cell (CCT on the pooled comparison periods)
+#> 
+#>   Wald chi-squared(2) = 0.247,  p = 0.884
+#> 
+#>   Per-cell local-linear jumps (comparison periods):
+#>     Period     Type               jump       s.e.       n
+#>     1          -                0.5347     0.2640     510  (reference)
+#>     1          +                0.7070     0.4047     490
+#>     2          -                1.0987     0.4183     510  (reference)
+#>     2          +                0.8699     0.5244     490
+hc$period_type_jumps
+#>   period type      jump        se   n reference
+#> 1      1    - 0.5346546 0.2639743 510      TRUE
+#> 2      1    + 0.7069579 0.4046868 490     FALSE
+#> 3      2    - 1.0987330 0.4182535 510      TRUE
+#> 4      2    + 0.8698688 0.5243519 490     FALSE
+# one CCT bandwidth per cell instead of one common bandwidth
+rd_homog(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, bwselect = "cct")
+#> Test of homogeneous confounding  [rd_homog()]
+#>   H0: in each comparison period the confounding jump is the same for every type
+#>   Sampling scheme: panel, some units change side of the cutoff (detected)
+#>   Comparison periods: 1, 2   Bandwidth: CCT MSE-optimal, chosen per cell
 #> 
 #>   Wald chi-squared(2) = 0.465,  p = 0.793
 #> 
@@ -305,10 +350,4 @@ hc          # the Wald test, then each type's jump in each comparison period
 #>     1          +                0.7374     0.3582     490
 #>     2          -                1.0282     0.4007     510  (reference)
 #>     2          +                0.7356     0.3588     490
-hc$period_type_jumps
-#>   period type      jump        se   n reference
-#> 1      1    - 0.8985337 0.2213343 510      TRUE
-#> 2      1    + 0.7373828 0.3582032 490     FALSE
-#> 3      2    - 1.0281886 0.4007468 510      TRUE
-#> 4      2    + 0.7355842 0.3588090 490     FALSE
 ```

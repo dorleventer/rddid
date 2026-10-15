@@ -319,15 +319,16 @@ the other tests say.
 
 tc <- rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
 tc
-#> Test of a continuous type distribution  [rd_typecont()]
+#> Test of type continuity  [rd_typecont()]
 #>   H0: the share of each type jumps by zero at the cutoff, in every period
 #>   Sampling scheme: panel, some units change side of the cutoff (detected)
 #>   Periods: 1, 2, 3   Types: ++, +-, -+, --   Bandwidth: CCT MSE-optimal, chosen per cell
 #> 
-#>   Joint Wald chi-squared(9) = 4.782,  p = 0.853
-#>     Period 1: chi-squared(3) = 1.531,  p = 0.675
-#>     Period 2: chi-squared(3) = 0.382,  p = 0.944
-#>     Period 3: chi-squared(3) = 2.202,  p = 0.532
+#>   Joint sup-t (t critical values) max |t| = 1.232 over 9 jumps,  p = 0.869  (largest: period:type 1:+-)
+#>     Period 1: sup-t (t critical values) max |t| = 1.232 over 3 jumps,  p = 0.499
+#>     Period 2: sup-t (t critical values) max |t| = 0.582 over 3 jumps,  p = 0.902
+#>     Period 3: sup-t (t critical values) max |t| = 1.048 over 3 jumps,  p = 0.631
+#>   All joint statistics: x$joint_tests
 ```
 
 Every test prints its null (H0) and the sampling scheme read off the
@@ -337,9 +338,14 @@ each local-linear fit the test runs (one per period and type, a *cell*)
 gets its own MSE-optimal bandwidth from
 [`rdrobust::rdbwselect`](https://rdrr.io/pkg/rdrobust/man/rdbwselect.html)
 (Calonico, Cattaneo and Titiunik, 2014; hence “CCT”).
-`Joint Wald chi-squared(9)` tests all the jumps in the type shares at
-once: in each year the four shares sum to one, so three jumps are free,
-and three years give 9. Each `Period` line tests one year alone.
+`Joint sup-t (studentized) ... over 9 jumps` tests all the jumps in the
+type shares at once: in each year the four shares sum to one, so three
+jumps are free, and three years give 9. It compares the largest \|t\| of
+the nine jumps with the sup-t critical value and names the year and type
+with the largest \|t\| (`joint = "wald"` gives the chi-squared Wald
+instead; see [Checking the identification
+assumptions](https://dorleventer.github.io/rddid/articles/rddid-validation-tests.md)
+for why sup-t is the default). Each `Period` line tests one year alone.
 
 **Composition stability.** H0: the share of each type among the units
 just above the cutoff is the same in the RD period and in each
@@ -356,21 +362,21 @@ cs
 #>   Sampling scheme: panel, some units change side of the cutoff (detected)
 #>   RD period: 3   Comparison periods: 1, 2   Bandwidth: CCT MSE-optimal, chosen per cell
 #> 
-#>   Pair 3::1: chi-squared(3) = 21.982,  p = <0.001
+#>   Pair 3::1: sup-t (t critical values) max |t| = 3.086 over 3 jumps,  p = 0.009
 #>     n above the cutoff: 490 (RD period), 508 (comparison), 430 in both
-#>   Pair 3::2: chi-squared(3) = 6.137,  p = 0.105
+#>   Pair 3::2: sup-t (t critical values) max |t| = 2.059 over 3 jumps,  p = 0.120
 #>     n above the cutoff: 490 (RD period), 497 (comparison), 418 in both
 #> 
-#>   Joint over pairs (sum of chi-squared): chi-squared(6) = 28.119,  p = <0.001
+#>   Joint over pairs: sup-t (t critical values) max |t| = 3.086 over 6 jumps,  p = 0.016  (largest: pair:type 3::1:-+)
+#>   All joint statistics: x$joint_tests
 ```
 
-`Pair 3::1` compares year 3, the RD period, with year 1; its
-`chi-squared(3)` tests the three free jumps in the type shares.
-`n above the cutoff` counts the units above the cutoff in the RD year,
-in the comparison year, and in both. `Joint over pairs` adds up the pair
-statistics and their degrees of freedom; it treats the pairs as
-independent although they share the year-3 units, so its p-value is
-approximate (the paper’s test is per pair).
+`Pair 3::1` compares year 3, the RD period, with year 1; its sup-t test
+covers the three free jumps in the type shares. `n above the cutoff`
+counts the units above the cutoff in the RD year, in the comparison
+year, and in both. `Joint over pairs` tests the jumps of both pairs
+together, with the covariance that comes from the year-3 units both
+pairs share.
 
 **Homogeneous confounding.** H0: in each comparison period the
 confounding jump is the same for every type. Here, and in the next test,
@@ -387,22 +393,24 @@ hg
 #> Test of homogeneous confounding  [rd_homog()]
 #>   H0: in each comparison period the confounding jump is the same for every type
 #>   Sampling scheme: panel, some units change side of the cutoff (detected)
-#>   Comparison periods: 1, 2
+#>   Comparison periods: 1, 2   Bandwidth: h = 0.2104 in every cell (CCT on the pooled comparison periods)
 #> 
-#>   Wald chi-squared(2) = 0.465,  p = 0.793
+#>   Wald chi-squared(2) = 0.247,  p = 0.884
 #> 
 #>   Per-cell local-linear jumps (comparison periods):
 #>     Period     Type               jump       s.e.       n
-#>     1          -                0.8985     0.2213     510  (reference)
-#>     1          +                0.7374     0.3582     490
-#>     2          -                1.0282     0.4007     510  (reference)
-#>     2          +                0.7356     0.3588     490
+#>     1          -                0.5347     0.2640     510  (reference)
+#>     1          +                0.7070     0.4047     490
+#>     2          -                1.0987     0.4183     510  (reference)
+#>     2          +                0.8699     0.5244     490
 ```
 
 The table gives the confounding jump of each type in each comparison
-year, with its standard error and number of observations. The Wald
-statistic has one contrast per year, type `+` against the type marked
-`(reference)`, so two comparison years give `chi-squared(2)`.
+year, with its standard error and number of observations, all at one
+bandwidth (`Bandwidth`: the CCT bandwidth of the outcome with the
+comparison years pooled). The Wald statistic has one contrast per year,
+type `+` against the type marked `(reference)`, so two comparison years
+give `chi-squared(2)`.
 
 **Constant within-type confounding.** H0: within each type, the
 confounding jump is the same in every comparison period. This is a
@@ -422,15 +430,16 @@ tr
 #>   H0: within each type, the confounding jump is the same in every comparison period
 #>   Sampling scheme: panel, some units change side of the cutoff (detected)
 #>   Comparison periods: 1, 2   Trend: constant
+#>   Bandwidth: h = 0.2104 in every cell (CCT on the pooled comparison periods)
 #> 
-#>   Wald chi-squared(2) = 0.078,  p = 0.962
+#>   Wald chi-squared(2) = 1.445,  p = 0.485
 #> 
 #>   Per-cell local-linear jumps (comparison periods):
 #>     Type       Period             jump       s.e.       n
-#>     +          1                0.7374     0.3582     490  (reference)
-#>     +          2                0.7356     0.3588     490
-#>     -          1                0.8985     0.2213     510  (reference)
-#>     -          2                1.0282     0.4007     510
+#>     +          1                0.7070     0.4047     490  (reference)
+#>     +          2                0.8699     0.5244     490
+#>     -          1                0.5347     0.2640     510  (reference)
+#>     -          2                1.0987     0.4183     510
 ```
 
 The jumps are those of
@@ -443,23 +452,30 @@ One table for all four:
 ``` r
 
 do.call(rbind, lapply(list(tc, cs, hg, tr), tidy))
-#>                               test   statistic df      p.value
-#> 1                  type continuity  4.78163259  9 8.529133e-01
-#> 2            composition stability 28.11902600  6 8.923469e-05
-#> 3          homogeneous confounding  0.46500200  2 7.925490e-01
-#> 4 constant within-type confounding  0.07832992  2 9.615921e-01
+#>                               test statistic df    p.value
+#> 1                  type continuity 1.2317753  9 0.86888131
+#> 2            composition stability 3.0857080  6 0.01639984
+#> 3          homogeneous confounding 0.2474976  2 0.88360178
+#> 4 constant within-type confounding 1.4453616  2 0.48544912
+#>                     method
+#> 1 sup-t, t critical values
+#> 2 sup-t, t critical values
+#> 3      Wald chi-squared(2)
+#> 4      Wald chi-squared(2)
 ```
 
-The composition-stability row is the joint-over-pairs statistic, whose
-p-value is approximate; the per-pair tests are in its printout above.
+The composition-stability row is the joint test over pairs; the per-pair
+tests are in its printout above. For the two share tests the statistic
+column holds the largest \|t\| (sup-t), for the two outcome tests the
+chi-squared statistic.
 
 In `rddid_sim_pv` three of the four nulls are true by construction:
 types are continuous at the cutoff, and the confounding jump is 0.5 for
 every unit in every year. Composition stability is false: units at the
 year-3 cutoff were mostly on the same side in years 1 and 2, while units
 at the year-1 cutoff are spread evenly over the four types. In this
-sample the four p-values are 0.853, below 0.001, 0.793 and 0.962 (in the
-order of the table). A p-value below 0.05 for a true null is a false
+sample the four p-values are 0.869, 0.016, 0.884 and 0.485 (in the order
+of the table). A p-value below 0.05 for a true null is a false
 rejection, which a test at the 5% level is designed to make in about one
 sample in twenty. Because the other three assumptions hold, homogeneous
 confounding among them, the failure of composition stability does not

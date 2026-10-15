@@ -59,13 +59,14 @@ sw <- tapply(above, rddid_sim_pv$id, function(a) length(unique(a)) > 1)
 sum(sw)
 #> [1] 176
 rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
-#> Test of a continuous type distribution  [rd_typecont()]
+#> Test of type continuity  [rd_typecont()]
 #>   H0: the share of each type jumps by zero at the cutoff, in every period
 #>   Sampling scheme: panel, some units change side of the cutoff (detected)
 #>   Periods: 1, 2, 3   Types: ++, +-, -+, --   Bandwidth: CCT MSE-optimal, chosen per cell
 #> 
-#>   Joint Wald chi-squared(9) = 4.782,  p = 0.853
-#>     Period 1: chi-squared(3) = 1.531,  p = 0.675
-#>     Period 2: chi-squared(3) = 0.382,  p = 0.944
-#>     Period 3: chi-squared(3) = 2.202,  p = 0.532
+#>   Joint sup-t (t critical values) max |t| = 1.232 over 9 jumps,  p = 0.869  (largest: period:type 1:+-)
+#>     Period 1: sup-t (t critical values) max |t| = 1.232 over 3 jumps,  p = 0.499
+#>     Period 2: sup-t (t critical values) max |t| = 0.582 over 3 jumps,  p = 0.902
+#>     Period 3: sup-t (t critical values) max |t| = 1.048 over 3 jumps,  p = 0.631
+#>   All joint statistics: x$joint_tests
 ```

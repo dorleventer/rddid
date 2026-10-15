@@ -103,7 +103,7 @@ degenerate and the test is not informative.</p>
 <span>  trend <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"constant"</span>, <span class="st">"linear"</span><span class="op">)</span>,</span>
 <span>  c <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  h <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  bwselect <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cct"</span>, <span class="st">"rot"</span><span class="op">)</span>,</span>
+<span>  bwselect <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"common"</span>, <span class="st">"cct"</span>, <span class="st">"rot"</span><span class="op">)</span>,</span>
 <span>  kernel <span class="op">=</span> <span class="st">"triangular"</span>,</span>
 <span>  scheme <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"auto"</span>, <span class="st">"cs"</span>, <span class="st">"pc"</span>, <span class="st">"pv"</span><span class="op">)</span>,</span>
 <span>  min_n <span class="op">=</span> <span class="fl">10L</span>,</span>
@@ -187,9 +187,12 @@ If given, <code>bwselect</code> is ignored.</p></dd>
 
 
 <dt id="arg-bwselect">bwselect<a class="anchor" aria-label="anchor" href="#arg-bwselect"></a></dt>
-<dd><p>the bandwidth rule when <code>h</code> is not given: <code>"cct"</code> (default;
-each cell's own CCT bandwidths from <code><a href="rd_bw_cct.html">rd_bw_cct()</a></code>) or <code>"rot"</code> (the rule of
-thumb <code>0.2</code> times the range of the running variable within the cell).</p></dd>
+<dd><p>the bandwidth rule when <code>h</code> is not given: <code>"common"</code>
+(default; one bandwidth for every cell, the CCT bandwidth of the outcome on
+the running variable with all comparison periods pooled), <code>"cct"</code> (each
+cell's own CCT bandwidths from <code><a href="rd_bw_cct.html">rd_bw_cct()</a></code>) or <code>"rot"</code> (the rule of thumb
+<code>0.2</code> times the range of the running variable within the cell). See
+"Bandwidth" in Details.</p></dd>
 
 
 <dt id="arg-kernel">kernel<a class="anchor" aria-label="anchor" href="#arg-kernel"></a></dt>
@@ -242,6 +245,11 @@ no type has jumps in three comparison periods.</p></dd>
 
 <dt><code>estimand</code></dt>
 <dd><p><code>"att"</code> or <code>"atu"</code>, as passed.</p></dd>
+
+<dt><code>bandwidth</code></dt>
+<dd><p>a list with <code>method</code> (<code>"common"</code>, <code>"cct"</code>, <code>"rot"</code> or
+<code>"fixed"</code> for a numeric <code>h</code>) and <code>h</code> (the bandwidth used in every cell,
+<code>NA</code> when it varies by cell).</p></dd>
 
 <dt><code>call</code></dt>
 <dd><p>the matched call.</p></dd>
@@ -317,11 +325,28 @@ period if <code>t_rd</code> is <code>NULL</code>). A (type, period) cell with fe
 observations on either side of the cutoff is dropped, and a message lists
 the dropped cells. <code>bc = TRUE</code> (default) tests the bias-corrected jumps with
 their robust variance, as in the <code>Robust</code> row of <code><a href="rddid.html">rddid()</a></code>; <code>bc = FALSE</code>
-uses the conventional jumps and variances. With <code>bwselect = "cct"</code> (default)
+uses the conventional jumps and variances. With <code>bwselect = "cct"</code>
 each cell gets its own CCT bandwidths from <code><a href="rd_bw_cct.html">rd_bw_cct()</a></code>, computed on that
 cell's outcome and running variable. With <code>bwselect = "rot"</code> the rule of
 thumb is <code>h = b = 0.2</code> times the range of the running variable within each
 cell. A numeric <code>h</code> is used as both bandwidths in every cell.</p>
+</div>
+
+<div class="section">
+<h3 id="bandwidth">Bandwidth<a class="anchor" aria-label="anchor" href="#bandwidth"></a></h3>
+
+
+<p><code>bwselect = "common"</code> (default) uses one bandwidth, as main and pilot
+bandwidth, in every cell: the CCT MSE-optimal bandwidth of the outcome on
+the running variable, chosen once on all comparison periods pooled (every
+unit, every type). A bandwidth chosen on each cell's own data (<code>"cct"</code>) is
+noisier, and the variance formula treats it as fixed, so the cell variances
+come out about 10-15% too small and the test rejects a true null too often:
+about 8% at the 5% level with two comparison periods at n = 1,000, against
+6% with the common bandwidth, in the package authors' simulations. The
+common bandwidth costs some power against a violation confined to one cell
+(about 8 points there), because a per-cell bandwidth adapts to the cell that
+moves. The common bandwidth is reported in <code>bandwidth</code> and in the printout.</p>
 </div>
 
 <div class="section">
@@ -353,6 +378,7 @@ confidence intervals for regression-discontinuity designs. <em>Econometrica</em>
 <code><a href="plot.rd_trendcell.html">plot.rd_trendcell()</a></code>,
 <code><a href="plot.rd_typecont.html">plot.rd_typecont()</a></code>,
 <code><a href="plot_switchers.html">plot_switchers()</a></code>,
+<code><a href="rd_checks.html">rd_checks()</a></code>,
 <code><a href="rd_compstable.html">rd_compstable()</a></code>,
 <code><a href="rd_homog.html">rd_homog()</a></code>,
 <code><a href="rd_typecont.html">rd_typecont()</a></code></p></div>
@@ -367,6 +393,23 @@ confidence intervals for regression-discontinuity designs. <em>Econometrica</em>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   H0: within each type, the confounding jump is the same in every comparison period</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Sampling scheme: panel, some units change side of the cutoff (detected)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Comparison periods: 1, 2   Trend: constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Bandwidth: h = 0.2104 in every cell (CCT on the pooled comparison periods)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Wald chi-squared(2) = 1.445,  p = 0.485</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Per-cell local-linear jumps (comparison periods):</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     Type       Period             jump       s.e.       n</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     +          1                0.7070     0.4047     490  (reference)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     +          2                0.8699     0.5244     490</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     -          1                0.5347     0.2640     510  (reference)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     -          2                1.0987     0.4183     510</span>
+<span class="r-in"><span><span class="co"># one CCT bandwidth per cell instead of one common bandwidth</span></span></span>
+<span class="r-in"><span><span class="fu">rd_trendcell</span><span class="op">(</span><span class="va">rddid_sim_pv</span>, y <span class="op">=</span> <span class="st">"Y"</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span>, bwselect <span class="op">=</span> <span class="st">"cct"</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Test of a constant within-type confounding discontinuity  [rd_trendcell()]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   H0: within each type, the confounding jump is the same in every comparison period</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Sampling scheme: panel, some units change side of the cutoff (detected)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Comparison periods: 1, 2   Trend: constant</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Bandwidth: CCT MSE-optimal, chosen per cell</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Wald chi-squared(2) = 0.078,  p = 0.962</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
@@ -384,16 +427,17 @@ confidence intervals for regression-discontinuity designs. <em>Econometrica</em>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   H0: within each type, the confounding jump moves linearly across the comparison periods</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Sampling scheme: panel, some units change side of the cutoff (detected)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Comparison periods: 1, 2   Trend: linear</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Bandwidth: h = 0.2104 in every cell (CCT on the pooled comparison periods)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Wald: not testable (df = 0)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     (a linear within-type trend needs at least 3 comparison periods to be testable)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Per-cell local-linear jumps (comparison periods):</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     Type       Period             jump       s.e.       n</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     +          1                0.7374     0.3582     490</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     +          2                0.7356     0.3588     490</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     -          1                0.8985     0.2213     510</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     -          2                1.0282     0.4007     510</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     +          1                0.7070     0.4047     490</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     +          2                0.8699     0.5244     490</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     -          1                0.5347     0.2640     510</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     -          2                1.0987     0.4183     510</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

@@ -89,7 +89,9 @@ not informative.</p>
 <span>  bwselect <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cct"</span>, <span class="st">"rot"</span><span class="op">)</span>,</span>
 <span>  kernel <span class="op">=</span> <span class="st">"triangular"</span>,</span>
 <span>  scheme <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"auto"</span>, <span class="st">"cs"</span>, <span class="st">"pc"</span>, <span class="st">"pv"</span><span class="op">)</span>,</span>
-<span>  bc <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>  bc <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  joint <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"supt"</span>, <span class="st">"swald"</span>, <span class="st">"wald"</span><span class="op">)</span>,</span>
+<span>  studentize <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -169,12 +171,36 @@ in the test: <code>"cs"</code>, <code>"pc"</code> or <code>"pv"</code> (as in <c
 robust variance, as in the <code>Robust</code> row of <code><a href="rddid.html">rddid()</a></code>; <code>FALSE</code>: the
 conventional jumps and variances.</p></dd>
 
+
+<dt id="arg-joint">joint<a class="anchor" aria-label="anchor" href="#arg-joint"></a></dt>
+<dd><p>the joint statistic: <code>"supt"</code> (default; the largest |t| against
+a sup-t critical value), <code>"swald"</code> (the sum of squared t's) or <code>"wald"</code> (the
+chi-squared Wald statistic). See "The joint statistic" in Details.</p></dd>
+
+
+<dt id="arg-studentize">studentize<a class="anchor" aria-label="anchor" href="#arg-studentize"></a></dt>
+<dd><p>logical, for <code>joint = "supt"</code> or <code>"swald"</code>. <code>TRUE</code>
+(default): t-based critical values that account for the noise in each
+jump's estimated standard error; <code>FALSE</code>: normal critical values.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>An object of class <code>"rd_typecont"</code>, a list with:</p><dl><dt><code>statistic</code>, <code>df</code>, <code>p_value</code></dt>
-<dd><p>the joint Wald statistic over all
-periods, its degrees of freedom and its chi-squared p-value.</p></dd>
+<dd><p>the joint test over all periods under
+<code>joint</code> and <code>studentize</code>: the statistic (the largest |t| for <code>"supt"</code>, the
+sum of squared t's for <code>"swald"</code>, the chi-squared statistic for <code>"wald"</code>),
+the number of jumps tested (<code>"supt"</code>, <code>"swald"</code>) or the degrees of freedom
+(<code>"wald"</code>), and the p-value.</p></dd>
+
+<dt><code>joint_method</code>, <code>studentize</code></dt>
+<dd><p>as used; <code>joint_tests</code> has every
+statistic (a data frame with <code>method</code>, <code>reference</code> (<code>"t"</code>, <code>"normal"</code> or
+<code>"chi-squared"</code>), <code>statistic</code>, <code>df</code>, <code>p_value</code>).</p></dd>
+
+<dt><code>t_stats</code>, <code>nu</code></dt>
+<dd><p>the t-statistics of the jumps tested and the
+degrees of freedom of their variances, named <code>"&lt;period&gt;:&lt;type&gt;"</code>.</p></dd>
 
 <dt><code>scheme</code></dt>
 <dd><p>the sampling scheme used; <code>scheme_requested</code> is the
@@ -200,11 +226,12 @@ reads it.</p></dd>
 <dd><p>the matched call.</p></dd>
 
 <dt><code>per_period</code></dt>
-<dd><p>a list by period; each element holds <code>ll_wald</code>, that
-period's own Wald test (<code>stat</code>, <code>df</code>, <code>p</code>).</p></dd>
+<dd><p>a list by period; each element holds <code>test</code>, that
+period's own test under <code>joint</code> (<code>stat</code>, <code>df</code>, <code>p</code>), and <code>ll_wald</code>, its
+Wald test.</p></dd>
 
 <dt><code>ll_wald</code></dt>
-<dd><p>the joint test again, as a list (<code>stat</code>, <code>df</code>, <code>p</code>). A type
+<dd><p>the joint Wald test, as a list (<code>stat</code>, <code>df</code>, <code>p</code>). A type
 share that is constant near the cutoff on both sides with no jump carries no
 information and is left out (<code>dropped</code> counts them); one that jumps
 deterministically makes the test undefined (<code>NA</code>).</p></dd>
@@ -213,7 +240,7 @@ deterministically makes the test undefined (<code>NA</code>).</p></dd>
 <dd><p>a list with <code>periods</code>, <code>type_values</code> (the types, written
 as the sides in the other periods in time order, e.g. <code>"+-"</code>), <code>h</code>
 (the common bandwidth, <code>NA</code> with <code>bwselect = "cct"</code>), <code>bwselect</code>,
-<code>scheme</code>, <code>bc</code> and <code>estimand</code>.</p></dd>
+<code>scheme</code>, <code>bc</code>, <code>estimand</code>, <code>joint</code> and <code>studentize</code>.</p></dd>
 
 
 </dl></div>
@@ -228,12 +255,37 @@ as the sides in the other periods in time order, e.g. <code>"+-"</code>), <code>
 unit is of this type" on the running variable estimates the jump in that
 type's share at the cutoff. The shares sum to one within a period, so one
 reference type per period is dropped (the type below the cutoff in every
-other period), and the remaining jumps are tested jointly by a Wald
-statistic, chi-squared with as many degrees of freedom as independent jumps
-tested. Each period's own Wald test is reported as well. A unit's type in a
+other period), and the remaining jumps are tested jointly (see "The joint
+statistic"). Each period's own test is reported as well. A unit's type in a
 period needs its side in every other period, so a unit missing from some
 period is left out of the regressions of the other periods. The test treats
 all periods alike: <code>t_rd</code> and <code>comparisons</code> only select which periods enter.</p>
+</div>
+
+<div class="section">
+<h3 id="the-joint-statistic">The joint statistic<a class="anchor" aria-label="anchor" href="#the-joint-statistic"></a></h3>
+
+
+<p>Two arguments choose it. <code>joint</code> picks the statistic: <code>"supt"</code> (default)
+rejects when the largest |t| of the jumps exceeds a sup-t critical value, and
+the printout names the (period, type) cell with the largest |t|; <code>"swald"</code>
+uses the sum of the squared t's (the sWald test of Fusejima, Ishihara and
+Sawada, 2025); <code>"wald"</code> is the chi-squared Wald statistic. <code>studentize</code>
+picks the reference distribution of sup-t and sWald: with <code>TRUE</code> (default)
+each t is compared as a t-statistic, its standard error being an estimate
+with the degrees of freedom of its robust variance (computed from the
+jump's regression weights); with <code>FALSE</code> as a standard normal. The
+critical values come from the estimated correlation of the jumps.</p>
+<p>Why these defaults: sup-t and sWald use the covariance only through its
+correlations, so they avoid inverting it, an error that grows with the
+number of jumps; t critical values account for the noise in each jump's
+estimated standard error. The simulation evidence (size and power of each
+statistic) is in the article "Checking the identification assumptions".</p>
+<p>Every statistic is reported in <code>joint_tests</code>, so any of them can be read off
+one call. The simulated critical values use 100,000 draws under a fixed
+seed, so a result is reproducible, and the caller's random-number state is
+left as it was. With one jump, sup-t and sWald are the two-sided t (or
+normal) test.</p>
 </div>
 
 <div class="section">
@@ -290,6 +342,7 @@ confidence intervals for regression-discontinuity designs. <em>Econometrica</em>
 <code><a href="plot.rd_trendcell.html">plot.rd_trendcell()</a></code>,
 <code><a href="plot.rd_typecont.html">plot.rd_typecont()</a></code>,
 <code><a href="plot_switchers.html">plot_switchers()</a></code>,
+<code><a href="rd_checks.html">rd_checks()</a></code>,
 <code><a href="rd_compstable.html">rd_compstable()</a></code>,
 <code><a href="rd_homog.html">rd_homog()</a></code>,
 <code><a href="rd_trendcell.html">rd_trendcell()</a></code></p></div>
@@ -299,8 +352,29 @@ confidence intervals for regression-discontinuity designs. <em>Econometrica</em>
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># rddid_sim_pv: the running variable moves, so some units change side</span></span></span>
 <span class="r-in"><span><span class="va">tc</span> <span class="op">&lt;-</span> <span class="fu">rd_typecont</span><span class="op">(</span><span class="va">rddid_sim_pv</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">tc</span>          <span class="co"># the null, the joint Wald test, then each period's own test</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Test of a continuous type distribution  [rd_typecont()]</span>
+<span class="r-in"><span><span class="va">tc</span>          <span class="co"># the null, the joint sup-t test, then each period's own test</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Test of type continuity  [rd_typecont()]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   H0: the share of each type jumps by zero at the cutoff, in every period</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Sampling scheme: panel, some units change side of the cutoff (detected)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Periods: 1, 2, 3   Types: ++, +-, -+, --   Bandwidth: CCT MSE-optimal, chosen per cell</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Joint sup-t (t critical values) max |t| = 1.232 over 9 jumps,  p = 0.869  (largest: period:type 1:+-)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     Period 1: sup-t (t critical values) max |t| = 1.232 over 3 jumps,  p = 0.499</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     Period 2: sup-t (t critical values) max |t| = 0.582 over 3 jumps,  p = 0.902</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     Period 3: sup-t (t critical values) max |t| = 1.048 over 3 jumps,  p = 0.631</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   All joint statistics: x$joint_tests</span>
+<span class="r-in"><span><span class="va">tc</span><span class="op">$</span><span class="va">p_value</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.8688813</span>
+<span class="r-in"><span><span class="va">tc</span><span class="op">$</span><span class="va">joint_tests</span>   <span class="co"># every statistic side by side</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   method   reference statistic df   p_value</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1   supt           t  1.231775  9 0.8688813</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2   supt      normal  1.231775  9 0.8609214</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3  swald           t  5.110313  9 0.7953520</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4  swald      normal  5.110313  9 0.7861821</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5   wald chi-squared  4.781633  9 0.8529133</span>
+<span class="r-in"><span><span class="co"># the chi-squared Wald, or sup-t with normal critical values:</span></span></span>
+<span class="r-in"><span><span class="fu">rd_typecont</span><span class="op">(</span><span class="va">rddid_sim_pv</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span>, joint <span class="op">=</span> <span class="st">"wald"</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Test of type continuity  [rd_typecont()]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   H0: the share of each type jumps by zero at the cutoff, in every period</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Sampling scheme: panel, some units change side of the cutoff (detected)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Periods: 1, 2, 3   Types: ++, +-, -+, --   Bandwidth: CCT MSE-optimal, chosen per cell</span>
@@ -309,8 +383,18 @@ confidence intervals for regression-discontinuity designs. <em>Econometrica</em>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     Period 1: chi-squared(3) = 1.531,  p = 0.675</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     Period 2: chi-squared(3) = 0.382,  p = 0.944</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     Period 3: chi-squared(3) = 2.202,  p = 0.532</span>
-<span class="r-in"><span><span class="va">tc</span><span class="op">$</span><span class="va">p_value</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.8529133</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   All joint statistics: x$joint_tests</span>
+<span class="r-in"><span><span class="fu">rd_typecont</span><span class="op">(</span><span class="va">rddid_sim_pv</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span>, studentize <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Test of type continuity  [rd_typecont()]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   H0: the share of each type jumps by zero at the cutoff, in every period</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Sampling scheme: panel, some units change side of the cutoff (detected)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Periods: 1, 2, 3   Types: ++, +-, -+, --   Bandwidth: CCT MSE-optimal, chosen per cell</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Joint sup-t (normal critical values) max |t| = 1.232 over 9 jumps,  p = 0.861  (largest: period:type 1:+-)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     Period 1: sup-t (normal critical values) max |t| = 1.232 over 3 jumps,  p = 0.490</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     Period 2: sup-t (normal critical values) max |t| = 0.582 over 3 jumps,  p = 0.900</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     Period 3: sup-t (normal critical values) max |t| = 1.048 over 3 jumps,  p = 0.628</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   All joint statistics: x$joint_tests</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

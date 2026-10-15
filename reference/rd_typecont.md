@@ -30,7 +30,9 @@ rd_typecont(
   bwselect = c("cct", "rot"),
   kernel = "triangular",
   scheme = c("auto", "cs", "pc", "pv"),
-  bc = TRUE
+  bc = TRUE,
+  joint = c("supt", "swald", "wald"),
+  studentize = TRUE
 )
 ```
 
@@ -121,14 +123,41 @@ rd_typecont(
   [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md);
   `FALSE`: the conventional jumps and variances.
 
+- joint:
+
+  the joint statistic: `"supt"` (default; the largest \|t\| against a
+  sup-t critical value), `"swald"` (the sum of squared t's) or `"wald"`
+  (the chi-squared Wald statistic). See "The joint statistic" in
+  Details.
+
+- studentize:
+
+  logical, for `joint = "supt"` or `"swald"`. `TRUE` (default): t-based
+  critical values that account for the noise in each jump's estimated
+  standard error; `FALSE`: normal critical values.
+
 ## Value
 
 An object of class `"rd_typecont"`, a list with:
 
 - `statistic`, `df`, `p_value`:
 
-  the joint Wald statistic over all periods, its degrees of freedom and
-  its chi-squared p-value.
+  the joint test over all periods under `joint` and `studentize`: the
+  statistic (the largest \|t\| for `"supt"`, the sum of squared t's for
+  `"swald"`, the chi-squared statistic for `"wald"`), the number of
+  jumps tested (`"supt"`, `"swald"`) or the degrees of freedom
+  (`"wald"`), and the p-value.
+
+- `joint_method`, `studentize`:
+
+  as used; `joint_tests` has every statistic (a data frame with
+  `method`, `reference` (`"t"`, `"normal"` or `"chi-squared"`),
+  `statistic`, `df`, `p_value`).
+
+- `t_stats`, `nu`:
+
+  the t-statistics of the jumps tested and the degrees of freedom of
+  their variances, named `"<period>:<type>"`.
 
 - `scheme`:
 
@@ -164,12 +193,12 @@ An object of class `"rd_typecont"`, a list with:
 
 - `per_period`:
 
-  a list by period; each element holds `ll_wald`, that period's own Wald
-  test (`stat`, `df`, `p`).
+  a list by period; each element holds `test`, that period's own test
+  under `joint` (`stat`, `df`, `p`), and `ll_wald`, its Wald test.
 
 - `ll_wald`:
 
-  the joint test again, as a list (`stat`, `df`, `p`). A type share that
+  the joint Wald test, as a list (`stat`, `df`, `p`). A type share that
   is constant near the cutoff on both sides with no jump carries no
   information and is left out (`dropped` counts them); one that jumps
   deterministically makes the test undefined (`NA`).
@@ -178,8 +207,8 @@ An object of class `"rd_typecont"`, a list with:
 
   a list with `periods`, `type_values` (the types, written as the sides
   in the other periods in time order, e.g. `"+-"`), `h` (the common
-  bandwidth, `NA` with `bwselect = "cct"`), `bwselect`, `scheme`, `bc`
-  and `estimand`.
+  bandwidth, `NA` with `bwselect = "cct"`), `bwselect`, `scheme`, `bc`,
+  `estimand`, `joint` and `studentize`.
 
 ## Details
 
@@ -189,13 +218,39 @@ In each period and for each type, a local-linear RD of the indicator
 "the unit is of this type" on the running variable estimates the jump in
 that type's share at the cutoff. The shares sum to one within a period,
 so one reference type per period is dropped (the type below the cutoff
-in every other period), and the remaining jumps are tested jointly by a
-Wald statistic, chi-squared with as many degrees of freedom as
-independent jumps tested. Each period's own Wald test is reported as
-well. A unit's type in a period needs its side in every other period, so
-a unit missing from some period is left out of the regressions of the
-other periods. The test treats all periods alike: `t_rd` and
-`comparisons` only select which periods enter.
+in every other period), and the remaining jumps are tested jointly (see
+"The joint statistic"). Each period's own test is reported as well. A
+unit's type in a period needs its side in every other period, so a unit
+missing from some period is left out of the regressions of the other
+periods. The test treats all periods alike: `t_rd` and `comparisons`
+only select which periods enter.
+
+### The joint statistic
+
+Two arguments choose it. `joint` picks the statistic: `"supt"` (default)
+rejects when the largest \|t\| of the jumps exceeds a sup-t critical
+value, and the printout names the (period, type) cell with the largest
+\|t\|; `"swald"` uses the sum of the squared t's (the sWald test of
+Fusejima, Ishihara and Sawada, 2025); `"wald"` is the chi-squared Wald
+statistic. `studentize` picks the reference distribution of sup-t and
+sWald: with `TRUE` (default) each t is compared as a t-statistic, its
+standard error being an estimate with the degrees of freedom of its
+robust variance (computed from the jump's regression weights); with
+`FALSE` as a standard normal. The critical values come from the
+estimated correlation of the jumps.
+
+Why these defaults: sup-t and sWald use the covariance only through its
+correlations, so they avoid inverting it, an error that grows with the
+number of jumps; t critical values account for the noise in each jump's
+estimated standard error. The simulation evidence (size and power of
+each statistic) is in the article "Checking the identification
+assumptions".
+
+Every statistic is reported in `joint_tests`, so any of them can be read
+off one call. The simulated critical values use 100,000 draws under a
+fixed seed, so a result is reproducible, and the caller's random-number
+state is left as it was. With one jump, sup-t and sWald are the
+two-sided t (or normal) test.
 
 ### Shared units and the sampling scheme
 
@@ -254,6 +309,7 @@ Other tests of the assumptions:
 [`plot.rd_trendcell()`](https://dorleventer.github.io/rddid/reference/plot.rd_trendcell.md),
 [`plot.rd_typecont()`](https://dorleventer.github.io/rddid/reference/plot.rd_typecont.md),
 [`plot_switchers()`](https://dorleventer.github.io/rddid/reference/plot_switchers.md),
+[`rd_checks()`](https://dorleventer.github.io/rddid/reference/rd_checks.md),
 [`rd_compstable()`](https://dorleventer.github.io/rddid/reference/rd_compstable.md),
 [`rd_homog()`](https://dorleventer.github.io/rddid/reference/rd_homog.md),
 [`rd_trendcell()`](https://dorleventer.github.io/rddid/reference/rd_trendcell.md)
@@ -263,8 +319,29 @@ Other tests of the assumptions:
 ``` r
 # rddid_sim_pv: the running variable moves, so some units change side
 tc <- rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
-tc          # the null, the joint Wald test, then each period's own test
-#> Test of a continuous type distribution  [rd_typecont()]
+tc          # the null, the joint sup-t test, then each period's own test
+#> Test of type continuity  [rd_typecont()]
+#>   H0: the share of each type jumps by zero at the cutoff, in every period
+#>   Sampling scheme: panel, some units change side of the cutoff (detected)
+#>   Periods: 1, 2, 3   Types: ++, +-, -+, --   Bandwidth: CCT MSE-optimal, chosen per cell
+#> 
+#>   Joint sup-t (t critical values) max |t| = 1.232 over 9 jumps,  p = 0.869  (largest: period:type 1:+-)
+#>     Period 1: sup-t (t critical values) max |t| = 1.232 over 3 jumps,  p = 0.499
+#>     Period 2: sup-t (t critical values) max |t| = 0.582 over 3 jumps,  p = 0.902
+#>     Period 3: sup-t (t critical values) max |t| = 1.048 over 3 jumps,  p = 0.631
+#>   All joint statistics: x$joint_tests
+tc$p_value
+#> [1] 0.8688813
+tc$joint_tests   # every statistic side by side
+#>   method   reference statistic df   p_value
+#> 1   supt           t  1.231775  9 0.8688813
+#> 2   supt      normal  1.231775  9 0.8609214
+#> 3  swald           t  5.110313  9 0.7953520
+#> 4  swald      normal  5.110313  9 0.7861821
+#> 5   wald chi-squared  4.781633  9 0.8529133
+# the chi-squared Wald, or sup-t with normal critical values:
+rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3, joint = "wald")
+#> Test of type continuity  [rd_typecont()]
 #>   H0: the share of each type jumps by zero at the cutoff, in every period
 #>   Sampling scheme: panel, some units change side of the cutoff (detected)
 #>   Periods: 1, 2, 3   Types: ++, +-, -+, --   Bandwidth: CCT MSE-optimal, chosen per cell
@@ -273,6 +350,16 @@ tc          # the null, the joint Wald test, then each period's own test
 #>     Period 1: chi-squared(3) = 1.531,  p = 0.675
 #>     Period 2: chi-squared(3) = 0.382,  p = 0.944
 #>     Period 3: chi-squared(3) = 2.202,  p = 0.532
-tc$p_value
-#> [1] 0.8529133
+#>   All joint statistics: x$joint_tests
+rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3, studentize = FALSE)
+#> Test of type continuity  [rd_typecont()]
+#>   H0: the share of each type jumps by zero at the cutoff, in every period
+#>   Sampling scheme: panel, some units change side of the cutoff (detected)
+#>   Periods: 1, 2, 3   Types: ++, +-, -+, --   Bandwidth: CCT MSE-optimal, chosen per cell
+#> 
+#>   Joint sup-t (normal critical values) max |t| = 1.232 over 9 jumps,  p = 0.861  (largest: period:type 1:+-)
+#>     Period 1: sup-t (normal critical values) max |t| = 1.232 over 3 jumps,  p = 0.490
+#>     Period 2: sup-t (normal critical values) max |t| = 0.582 over 3 jumps,  p = 0.900
+#>     Period 3: sup-t (normal critical values) max |t| = 1.048 over 3 jumps,  p = 0.628
+#>   All joint statistics: x$joint_tests
 ```

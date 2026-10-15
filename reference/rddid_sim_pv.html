@@ -103,15 +103,16 @@ constant within-type jump also hold.</p>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">sw</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 176</span>
 <span class="r-in"><span><span class="fu"><a href="rd_typecont.html">rd_typecont</a></span><span class="op">(</span><span class="va">rddid_sim_pv</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Test of a continuous type distribution  [rd_typecont()]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Test of type continuity  [rd_typecont()]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   H0: the share of each type jumps by zero at the cutoff, in every period</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Sampling scheme: panel, some units change side of the cutoff (detected)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Periods: 1, 2, 3   Types: ++, +-, -+, --   Bandwidth: CCT MSE-optimal, chosen per cell</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Joint Wald chi-squared(9) = 4.782,  p = 0.853</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     Period 1: chi-squared(3) = 1.531,  p = 0.675</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     Period 2: chi-squared(3) = 0.382,  p = 0.944</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     Period 3: chi-squared(3) = 2.202,  p = 0.532</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Joint sup-t (t critical values) max |t| = 1.232 over 9 jumps,  p = 0.869  (largest: period:type 1:+-)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     Period 1: sup-t (t critical values) max |t| = 1.232 over 3 jumps,  p = 0.499</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     Period 2: sup-t (t critical values) max |t| = 0.582 over 3 jumps,  p = 0.902</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     Period 3: sup-t (t critical values) max |t| = 1.048 over 3 jumps,  p = 0.631</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   All joint statistics: x$joint_tests</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

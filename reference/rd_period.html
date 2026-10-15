@@ -150,7 +150,8 @@ conventional and bias-corrected jumps, and <code>n * h * V_D</code>).</p></dd>
 <dd><p>a list with one element per side of the cutoff, <code>"+"</code>
 (above) and <code>"-"</code> (below), each holding the <code>id</code> of the observations
 used, their conventional and bias-corrected <code>g</code> vectors (<code>g</code>, <code>g_bc</code>)
-and <code>g_diff</code> (for the variance of the estimated bias), the
+and <code>g_diff</code> (for the variance of the estimated bias), the intercept
+weights <code>a</code>, <code>a_bc</code> (<code>g</code> is weight times residual), the
 conventional intercept at the cutoff <code>beta0</code>, its bias-corrected
 version <code>beta0_bc</code>, and the conventional <code>slope</code>. The fitted line on a
 side is <code>beta0 + slope * (x - c)</code>.</p></dd>

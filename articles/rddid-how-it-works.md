@@ -448,17 +448,24 @@ knitr::kable(tab_ss, digits = 3, col.names = c("scenario", "t", "jump", "SE"))
 | S3       |   2 | 0.296 | 0.045 |
 
 [`rd_typecont()`](https://dorleventer.github.io/rddid/reference/rd_typecont.md)
-computes the same jumps and combines them into a joint Wald statistic
-across periods, with the cross-period covariance of the two jumps (the
-same units enter both regressions) inside it. The statistic, its degrees
-of freedom and p-value are `$statistic`, `$df`, `$p_value`; the
-per-period versions sit in `$per_period[[t]]$ll_wald`:
+computes the same jumps and combines them into a joint test across
+periods, with the cross-period covariance of the two jumps (the same
+units enter both regressions) inside it. Its default joint statistic is
+sup-t (the largest \|t\|, studentized; see [Checking the identification
+assumptions](https://dorleventer.github.io/rddid/articles/rddid-validation-tests.md));
+with `joint = "wald"`, used here to rebuild it by hand, it is the
+chi-squared Wald statistic. The statistic, its degrees of freedom and
+p-value are `$statistic`, `$df`, `$p_value`; the per-period Wald tests
+sit in `$per_period[[t]]$ll_wald`:
 
 ``` r
 
-tc0 <- rd_typecont(S0, x = "R", time = "t", id = "id", bwselect = "cct", bc = FALSE)
-tc3 <- rd_typecont(S3, x = "R", time = "t", id = "id", bwselect = "cct", bc = FALSE)
-tc0_bc <- rd_typecont(S0, x = "R", time = "t", id = "id", bwselect = "cct", bc = TRUE)
+tc0 <- rd_typecont(S0, x = "R", time = "t", id = "id", bwselect = "cct", bc = FALSE,
+                   joint = "wald")
+tc3 <- rd_typecont(S3, x = "R", time = "t", id = "id", bwselect = "cct", bc = FALSE,
+                   joint = "wald")
+tc0_bc <- rd_typecont(S0, x = "R", time = "t", id = "id", bwselect = "cct", bc = TRUE,
+                      joint = "wald")
 ```
 
 Each per-period statistic equals the squared jump over its variance from
@@ -591,9 +598,10 @@ The other three tests are unchanged under `estimand = "atu"`:
 
 ``` r
 
-tc_att <- rd_typecont(S1, x = "R", time = "t", id = "id", bwselect = "cct", bc = FALSE)
+tc_att <- rd_typecont(S1, x = "R", time = "t", id = "id", bwselect = "cct", bc = FALSE,
+                      joint = "wald")
 tc_atu <- rd_typecont(S1, x = "R", time = "t", id = "id", bwselect = "cct", bc = FALSE,
-                      estimand = "atu")
+                      estimand = "atu", joint = "wald")
 ```
 
 [`rd_typecont()`](https://dorleventer.github.io/rddid/reference/rd_typecont.md)
@@ -697,8 +705,8 @@ the three-period designs S0_3 and S4:
 | scenario | type continuity p | composition stability p | homogeneous confounding p | rddid() est (SE) | truth |
 |:---|:---|:---|:---|:---|---:|
 | S0 | 0.659 | 0.946 | 0.948 | 0.840 (0.081) | 1 |
-| S1 | 0.861 | \< 0.001 | 0.762 | 0.909 (0.081) | 1 |
-| S2 | 0.861 | \< 0.001 | \< 0.001 | 0.369 (0.087) | 1 |
+| S1 | 0.846 | \< 0.001 | 0.762 | 0.909 (0.081) | 1 |
+| S2 | 0.846 | \< 0.001 | \< 0.001 | 0.369 (0.087) | 1 |
 | S3 | \< 0.001 | 0.290 | 0.983 | 1.304 (0.152) | 1 |
 
 | scenario | constant within-type confounding p | rddid() est (SE), constant | rddid() est (SE), linear | truth |

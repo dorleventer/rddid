@@ -35,6 +35,7 @@ Other tests of the assumptions:
 [`plot.rd_homog()`](https://dorleventer.github.io/rddid/reference/plot.rd_homog.md),
 [`plot.rd_typecont()`](https://dorleventer.github.io/rddid/reference/plot.rd_typecont.md),
 [`plot_switchers()`](https://dorleventer.github.io/rddid/reference/plot_switchers.md),
+[`rd_checks()`](https://dorleventer.github.io/rddid/reference/rd_checks.md),
 [`rd_compstable()`](https://dorleventer.github.io/rddid/reference/rd_compstable.md),
 [`rd_homog()`](https://dorleventer.github.io/rddid/reference/rd_homog.md),
 [`rd_trendcell()`](https://dorleventer.github.io/rddid/reference/rd_trendcell.md),

@@ -48,9 +48,12 @@ Every test takes the same long data frame and column names as
 [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md). By
 default each test uses the bias-corrected jumps with their robust
 variances (`bc = TRUE`), like the `Robust (bias-corrected)` row of
-[`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md), and
-picks a separate CCT bandwidth for every local-linear fit it runs
-(`bwselect = "cct"`).
+[`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md). The
+two tests on type shares pick a separate CCT bandwidth for every
+local-linear fit (`bwselect = "cct"`) and combine their jumps with a
+studentized sup-t statistic (`joint = "supt"`, `studentize = TRUE`); the
+two tests on the outcome use one bandwidth for every cell
+(`bwselect = "common"`). The last section says why.
 
 ## Type continuity: `rd_typecont()`
 
@@ -61,15 +64,16 @@ period.**
 
 tc <- rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
 tc
-#> Test of a continuous type distribution  [rd_typecont()]
+#> Test of type continuity  [rd_typecont()]
 #>   H0: the share of each type jumps by zero at the cutoff, in every period
 #>   Sampling scheme: panel, some units change side of the cutoff (detected)
 #>   Periods: 1, 2, 3   Types: ++, +-, -+, --   Bandwidth: CCT MSE-optimal, chosen per cell
 #> 
-#>   Joint Wald chi-squared(9) = 4.782,  p = 0.853
-#>     Period 1: chi-squared(3) = 1.531,  p = 0.675
-#>     Period 2: chi-squared(3) = 0.382,  p = 0.944
-#>     Period 3: chi-squared(3) = 2.202,  p = 0.532
+#>   Joint sup-t (t critical values) max |t| = 1.232 over 9 jumps,  p = 0.869  (largest: period:type 1:+-)
+#>     Period 1: sup-t (t critical values) max |t| = 1.232 over 3 jumps,  p = 0.499
+#>     Period 2: sup-t (t critical values) max |t| = 0.582 over 3 jumps,  p = 0.902
+#>     Period 3: sup-t (t critical values) max |t| = 1.048 over 3 jumps,  p = 0.631
+#>   All joint statistics: x$joint_tests
 ```
 
 - `Types: ++, +-, -+, --`: a unit’s sides of the cutoff in the other two
@@ -78,11 +82,17 @@ tc
   the indicator “the unit is of this type” on the running variable; the
   jump is the difference between the type’s share just above and just
   below the cutoff.
-- `Joint Wald chi-squared(9)`: in each year the four shares sum to one,
-  so three jumps are free; three years give 9. The `Period` lines test
-  each year alone.
+- `Joint sup-t (studentized) ... over 9 jumps`: in each year the four
+  shares sum to one, so three jumps are free; three years give 9. Each
+  jump is divided by its standard error, and the largest \|t\| is
+  compared with the sup-t critical value: the quantile of the largest
+  \|t\| when every share is continuous, from the estimated correlation
+  of the nine jumps and, since each standard error is itself an
+  estimate, with t rather than normal tails. The printout names the year
+  and type with the largest \|t\|. The `Period` lines test each year
+  alone.
 
-Here p = 0.853. Type continuity holds in `rddid_sim_pv` by construction,
+Here p = 0.869. Type continuity holds in `rddid_sim_pv` by construction,
 so a p-value below 0.05 would be a false rejection.
 
 **If it rejects:** units sort around the cutoff according to their side
@@ -104,18 +114,19 @@ cs
 #>   Sampling scheme: panel, some units change side of the cutoff (detected)
 #>   RD period: 3   Comparison periods: 1, 2   Bandwidth: CCT MSE-optimal, chosen per cell
 #> 
-#>   Pair 3::1: chi-squared(3) = 21.982,  p = <0.001
+#>   Pair 3::1: sup-t (t critical values) max |t| = 3.086 over 3 jumps,  p = 0.009
 #>     n above the cutoff: 490 (RD period), 508 (comparison), 430 in both
-#>   Pair 3::2: chi-squared(3) = 6.137,  p = 0.105
+#>   Pair 3::2: sup-t (t critical values) max |t| = 2.059 over 3 jumps,  p = 0.120
 #>     n above the cutoff: 490 (RD period), 497 (comparison), 418 in both
 #> 
-#>   Joint over pairs (sum of chi-squared): chi-squared(6) = 28.119,  p = <0.001
+#>   Joint over pairs: sup-t (t critical values) max |t| = 3.086 over 6 jumps,  p = 0.016  (largest: pair:type 3::1:-+)
+#>   All joint statistics: x$joint_tests
 ```
 
 - One block per pair of the RD period and a comparison period:
   `Pair 3::1` compares year 3 with year 1. The types are those of type
   continuity (a unit’s sides in the other two years), so there are four
-  types and three free shares (`chi-squared(3)`).
+  types and three free shares (`over 3 jumps`).
 - The test stacks the units above the cutoff in the two years, with the
   comparison year’s running variable reflected below an artificial
   cutoff, and tests the jump in each type share there.
@@ -123,12 +134,13 @@ cs
   the comparison year, and in both. Units above the cutoff in both years
   appear on both sides of the stacked regression; the standard error
   accounts for them.
-- `Joint over pairs`: the sum of the pair statistics and degrees of
-  freedom. It treats the pairs as independent although they share the
-  RD-period units, so its p-value is approximate; the paper’s test is
-  per pair.
+- `Joint over pairs`: one sup-t test over the jumps of both pairs (six
+  here), with their full covariance. The pairs share the RD-period
+  units, and in a panel also the units above the cutoff in both
+  comparison years, so their jumps are correlated; the covariance across
+  pairs comes from those shared units.
 
-Here p \< 0.001. Composition stability is false in `rddid_sim_pv` by
+Here p = 0.016. Composition stability is false in `rddid_sim_pv` by
 construction: the units at the year-3 cutoff were mostly on the same
 side in years 1 and 2, while the units at the year-1 cutoff are spread
 evenly over the four types. A rejection here is a correct detection;
@@ -157,16 +169,16 @@ hg
 #> Test of homogeneous confounding  [rd_homog()]
 #>   H0: in each comparison period the confounding jump is the same for every type
 #>   Sampling scheme: panel, some units change side of the cutoff (detected)
-#>   Comparison periods: 1, 2
+#>   Comparison periods: 1, 2   Bandwidth: h = 0.2104 in every cell (CCT on the pooled comparison periods)
 #> 
-#>   Wald chi-squared(2) = 0.465,  p = 0.793
+#>   Wald chi-squared(2) = 0.247,  p = 0.884
 #> 
 #>   Per-cell local-linear jumps (comparison periods):
 #>     Period     Type               jump       s.e.       n
-#>     1          -                0.8985     0.2213     510  (reference)
-#>     1          +                0.7374     0.3582     490
-#>     2          -                1.0282     0.4007     510  (reference)
-#>     2          +                0.7356     0.3588     490
+#>     1          -                0.5347     0.2640     510  (reference)
+#>     1          +                0.7070     0.4047     490
+#>     2          -                1.0987     0.4183     510  (reference)
+#>     2          +                0.8699     0.5244     490
 ```
 
 - The table gives, in each comparison year, the jump in the outcome at
@@ -175,11 +187,13 @@ hg
   these are the confounding jumps by type.
 - `Wald chi-squared(2)`: one contrast (type `+` against the reference
   type `-`) per comparison year.
+- `Bandwidth`: one bandwidth in every cell, the CCT bandwidth of the
+  outcome with both comparison years pooled.
 
-Here p = 0.793. The null is true in `rddid_sim_pv` (the confounding jump
+Here p = 0.884. The null is true in `rddid_sim_pv` (the confounding jump
 is 0.5 for every unit), so a p-value below 0.05 would be a false
-rejection. The per-type jumps are imprecise (standard errors 0.22 to
-0.40).
+rejection. The per-type jumps are imprecise (standard errors 0.26 to
+0.52).
 
 **If it rejects:** the confounding jump differs across types. If
 composition stability holds, a confounding jump that differs across
@@ -199,15 +213,16 @@ tr
 #>   H0: within each type, the confounding jump is the same in every comparison period
 #>   Sampling scheme: panel, some units change side of the cutoff (detected)
 #>   Comparison periods: 1, 2   Trend: constant
+#>   Bandwidth: h = 0.2104 in every cell (CCT on the pooled comparison periods)
 #> 
-#>   Wald chi-squared(2) = 0.078,  p = 0.962
+#>   Wald chi-squared(2) = 1.445,  p = 0.485
 #> 
 #>   Per-cell local-linear jumps (comparison periods):
 #>     Type       Period             jump       s.e.       n
-#>     +          1                0.7374     0.3582     490  (reference)
-#>     +          2                0.7356     0.3588     490
-#>     -          1                0.8985     0.2213     510  (reference)
-#>     -          2                1.0282     0.4007     510
+#>     +          1                0.7070     0.4047     490  (reference)
+#>     +          2                0.8699     0.5244     490
+#>     -          1                0.5347     0.2640     510  (reference)
+#>     -          2                1.0987     0.4183     510
 ```
 
 - The per-cell jumps are those of
@@ -223,7 +238,7 @@ This is a pre-trends check. The assumption concerns the RD period, where
 the confounding jump cannot be separated from the effect, so the test
 asks whether the within-type confounding jump is stable across the
 comparison periods. Not rejecting does not establish the assumption in
-the RD period. Here p = 0.962.
+the RD period. Here p = 0.485.
 
 With `trend = "linear"` the null is that the within-type confounding
 jump moves linearly across the comparison periods. That needs at least
@@ -256,40 +271,48 @@ rd_compstable(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3, estiman
 #>   Estimand: ATU (the units below the cutoff are the ones untreated in the RD period, so the test is on their shares (mirrored design))
 #>   RD period: 3   Comparison periods: 1, 2   Bandwidth: CCT MSE-optimal, chosen per cell
 #> 
-#>   Pair 3::1: chi-squared(3) = 6.206,  p = 0.102
+#>   Pair 3::1: sup-t (t critical values) max |t| = 1.901 over 3 jumps,  p = 0.166
 #>     n below the cutoff: 510 (RD period), 492 (comparison), 432 in both
-#>   Pair 3::2: chi-squared(3) = 3.164,  p = 0.367
+#>   Pair 3::2: sup-t (t critical values) max |t| = 1.705 over 3 jumps,  p = 0.240
 #>     n below the cutoff: 510 (RD period), 503 (comparison), 431 in both
 #> 
-#>   Joint over pairs (sum of chi-squared): chi-squared(6) = 9.370,  p = 0.154
+#>   Joint over pairs: sup-t (t critical values) max |t| = 1.901 over 6 jumps,  p = 0.293  (largest: pair:type 3::1:++)
+#>   All joint statistics: x$joint_tests
 ```
 
 In this printout the H0 line and the counts refer to the units below the
 cutoff: under the ATU design those are the units untreated in the RD
 period, whose composition the estimate relies on.
 
-## Run all four and tabulate
+## Run all four at once: `rd_checks()`
 
 ``` r
 
-tests <- list(
-  rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3),
-  rd_compstable(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3),
-  rd_homog(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3),
-  rd_trendcell(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
-)
-do.call(rbind, lapply(tests, tidy))
-#>                               test   statistic df      p.value
-#> 1                  type continuity  4.78163259  9 8.529133e-01
-#> 2            composition stability 28.11902600  6 8.923469e-05
-#> 3          homogeneous confounding  0.46500200  2 7.925490e-01
-#> 4 constant within-type confounding  0.07832992  2 9.615921e-01
+ch <- rd_checks(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
+ch
+#> Tests of the identification assumptions  [rd_checks()]
+#> 
+#>   Assumption                          Statistic        p   Statistic type             Bandwidth
+#>   type continuity                         1.232    0.869   sup-t, t critical values   CCT per cell
+#>   composition stability                   3.086    0.016   sup-t, t critical values   CCT per cell
+#>   homogeneous confounding                 0.247    0.884   Wald chi-squared(2)        common (pooled CCT), h = 0.21
+#>   constant within-type confounding        1.445    0.485   Wald chi-squared(2)        common (pooled CCT), h = 0.21
+#> 
+#>   Reading at the 5% level (not rejecting does not establish an assumption):
+#>     type continuity                    not rejected
+#>     composition stability              rejected     } identification needs
+#>     homogeneous confounding            not rejected } only one of these two
+#>     constant within-type confounding   not rejected (checked in the comparison periods)
+#>   Each test's details: x$typecont, x$compstable, x$homog, x$trendcell.
 ```
 
-[`tidy()`](https://generics.r-lib.org/reference/tidy.html) returns one
-row per test, so the four stack into one table for a paper or a table
-maker such as modelsummary. The composition-stability row is the
-joint-over-pairs statistic, whose p-value is approximate.
+[`rd_checks()`](https://dorleventer.github.io/rddid/reference/rd_checks.md)
+runs the four tests with one set of options and prints one row per test,
+with the statistic, its type and the bandwidth rule. The four results
+are inside (`ch$typecont`, …), and `tidy(ch)` returns the table for a
+paper or a table maker such as modelsummary. The statistic column holds
+the largest \|t\| for the two share tests (sup-t) and the chi-squared
+statistic for the two outcome tests.
 
 Together, the four results map onto the list at the top. A rejection of
 type continuity, or of constant within-type confounding, would call the
@@ -318,11 +341,96 @@ rddid(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 
 The true effect is 1.
 
+## Why sup-t, and a common bandwidth for the outcome tests
+
+In simulations with a clean null (every assumption true, 1,000 units,
+three periods, 5% level), the chi-squared Wald statistics with per-cell
+bandwidths rejected a true null too often: 9% for the share tests and 8%
+for the outcome tests. The excess comes from the estimated covariance of
+the jumps, not from the jumps themselves, in two ways.
+
+- A bandwidth chosen on each cell’s own data is noisy, and the variance
+  formula treats it as fixed, so each variance comes out 10-15% too
+  small. For the outcome tests, whose cells are thin, one bandwidth
+  chosen on the pooled comparison periods removes this: 6% instead of
+  8%, at about 8 points of power against a violation confined to one
+  cell.
+- A chi-squared Wald inverts a 6-by-6 or 9-by-9 covariance estimated
+  from a few hundred units near the cutoff, and the error in that
+  inverse grows with the number of jumps (15% at 28 jumps, four
+  periods). sup-t and sWald use the covariance only through its
+  correlations, so they avoid that inversion: 6-7% at three periods,
+  4-5% at four. They still divide each jump by its estimated standard
+  error, so a variance that is too small, or noisy, inflates them as
+  well, by less than the Wald; that is why the share tests stay slightly
+  above 5% at three periods. For the share tests the per-fit bandwidth
+  is kept, because it adapts to a sorting window and every common
+  bandwidth tried halved the power against local sorting.
+
+The default sup-t is studentized: each standard error is an estimate,
+with the degrees of freedom of its robust variance (about 50-150 here,
+computed from each jump’s regression weights), and the critical value
+accounts for that noise. With the same simulations the studentized sup-t
+rejected a true null about 6% of the time at three periods and 4-5% at
+four, against 7% and 5-6% for sup-t with normal critical values, with
+the same power once the sizes are matched.
+
+With two periods (one jump per test and period) the statistics are the
+same two-sided test, and the share tests did not over-reject.
+
+## Switching options
+
+The defaults are the settings recommended above; every alternative is
+one argument away, in each test and in
+[`rd_checks()`](https://dorleventer.github.io/rddid/reference/rd_checks.md).
+
+``` r
+
+# share tests: the chi-squared Wald, or sup-t with normal critical values
+rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3, joint = "wald")
+rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3, studentize = FALSE)
+# outcome tests: one bandwidth per cell instead of one common bandwidth
+rd_homog(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, bwselect = "cct")
+# all four at once, and one test differently from the others
+rd_checks(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
+          joint = "wald", outcome_bwselect = "cct", homog = list(min_n = 20))
+```
+
+Every statistic of a share test is also in `$joint_tests`, so the
+alternatives can be compared without running the test again:
+
+``` r
+
+ch$typecont$joint_tests
+#>   method   reference statistic df   p_value
+#> 1   supt           t  1.231775  9 0.8688813
+#> 2   supt      normal  1.231775  9 0.8609214
+#> 3  swald           t  5.110313  9 0.7953520
+#> 4  swald      normal  5.110313  9 0.7861821
+#> 5   wald chi-squared  4.781633  9 0.8529133
+```
+
 ## Options
 
-- `bwselect`: `"cct"` (default) chooses a CCT bandwidth for every
-  local-linear fit the test runs; `"rot"` uses a rule of thumb. `h`
-  fixes the bandwidth.
+- `bwselect`: for
+  [`rd_typecont()`](https://dorleventer.github.io/rddid/reference/rd_typecont.md)
+  and
+  [`rd_compstable()`](https://dorleventer.github.io/rddid/reference/rd_compstable.md),
+  `"cct"` (default) chooses a CCT bandwidth for every local-linear fit
+  and `"rot"` uses a rule of thumb; for
+  [`rd_homog()`](https://dorleventer.github.io/rddid/reference/rd_homog.md)
+  and
+  [`rd_trendcell()`](https://dorleventer.github.io/rddid/reference/rd_trendcell.md),
+  `"common"` (default) uses the CCT bandwidth of the outcome on the
+  pooled comparison periods in every cell, `"cct"` one per cell, `"rot"`
+  a rule of thumb. `h` fixes the bandwidth.
+- `joint`
+  ([`rd_typecont()`](https://dorleventer.github.io/rddid/reference/rd_typecont.md),
+  [`rd_compstable()`](https://dorleventer.github.io/rddid/reference/rd_compstable.md)):
+  `"supt"` (default), `"swald"` (the sum of squared t’s) or `"wald"`
+  (the chi-squared Wald); `studentize`: `TRUE` (default, t-based
+  critical values for sup-t and sWald) or `FALSE` (normal). Every
+  combination is in `$joint_tests`.
 - `bc`: `TRUE` (default) tests the bias-corrected jumps with their
   robust variances; `FALSE` uses the conventional ones.
 - `scheme`: detected from the data as in
