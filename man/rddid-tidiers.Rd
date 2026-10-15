@@ -8,6 +8,7 @@
 \alias{tidy.rd_compstable}
 \alias{tidy.rd_homog}
 \alias{tidy.rd_trendcell}
+\alias{tidy.rd_checks}
 \title{Tidy output for RD-DID fits and validation tests}
 \usage{
 \method{tidy}{rddid}(x, conf.int = TRUE, conf.level = NULL, ...)
@@ -21,6 +22,8 @@
 \method{tidy}{rd_homog}(x, ...)
 
 \method{tidy}{rd_trendcell}(x, ...)
+
+\method{tidy}{rd_checks}(x, ...)
 }
 \arguments{
 \item{x}{an object returned by \code{\link[=rddid]{rddid()}}, \code{\link[=rd_typecont]{rd_typecont()}}, \code{\link[=rd_compstable]{rd_compstable()}},
@@ -37,7 +40,7 @@ makers pass them.}
 \code{tidy()} returns a data frame with one row per estimate (\code{term}, \code{estimate},
 \code{std.error}, \code{statistic}, \code{p.value}, \code{conf.low}, \code{conf.high}) for a fit, and one row per
 test (\code{test}, \code{statistic}, \code{df}, \code{p.value}) for a validation test: the test's reported
-statistic (the largest |z| under \code{joint = "supt"} for \code{\link[=rd_typecont]{rd_typecont()}} and
+statistic (the largest |t| under \code{joint = "supt"} for \code{\link[=rd_typecont]{rd_typecont()}} and
 \code{\link[=rd_compstable]{rd_compstable()}}, whose row is the joint test over pairs; the chi-squared statistic for
 \code{\link[=rd_homog]{rd_homog()}} and \code{\link[=rd_trendcell]{rd_trendcell()}}).
 \code{glance()} returns a

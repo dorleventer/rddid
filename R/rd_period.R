@@ -50,7 +50,8 @@
 #'     \item{`sides`}{a list with one element per side of the cutoff, `"+"`
 #'       (above) and `"-"` (below), each holding the `id` of the observations
 #'       used, their conventional and bias-corrected `g` vectors (`g`, `g_bc`)
-#'       and `g_diff` (for the variance of the estimated bias), the
+#'       and `g_diff` (for the variance of the estimated bias), the intercept
+#'       weights `a`, `a_bc` (`g` is weight times residual), the
 #'       conventional intercept at the cutoff `beta0`, its bias-corrected
 #'       version `beta0_bc`, and the conventional `slope`. The fitted line on a
 #'       side is `beta0 + slope * (x - c)`.}
@@ -131,7 +132,8 @@ rd_period <- function(y, x, h, b = h, id = NULL, c = 0, p = 1L, q = 2L,
 #' @return list: `beta0`, `beta0_bc` (intercepts), `slope`, `id` (units in the active set),
 #'   `g`, `g_bc` (influence x residual, conventional and bias-corrected), `g_diff` (influence of
 #'   conventional minus bias-corrected, paired with the pilot residuals; feeds Var(B-hat) in the
-#'   bandwidth regularization).
+#'   bandwidth regularization), `a`, `a_bc` (the conventional and bias-corrected intercept
+#'   weights).
 #' @keywords internal
 #' @noRd
 .rd_side_fit <- function(ys, xs, ids, cutoff, h, b, p, q, kernel) {
@@ -194,7 +196,11 @@ rd_period <- function(y, x, h, b = h, id = NULL, c = 0, p = 1L, q = 2L,
     # influence on (conventional - bias-corrected): both are linear in the same y, so the
     # difference has per-unit weight (a_c - a_bc), paired with the pilot residuals like g_bc.
     # Used for Var(B-hat) in the bandwidth regularization.
-    g_diff   = (a_c - a_bc) * as.numeric(res_b)
+    g_diff   = (a_c - a_bc) * as.numeric(res_b),
+    # the intercept weights themselves (g = weight x residual): the degrees of freedom of the
+    # variance of a jump (.jump_df(), the studentized joint tests) are a function of them
+    a        = a_c,
+    a_bc     = a_bc
   )
 }
 

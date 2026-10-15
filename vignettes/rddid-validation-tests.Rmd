@@ -55,8 +55,8 @@ Every test takes the same long data frame and column names as `rddid()`. By
 default each test uses the bias-corrected jumps with their robust variances
 (`bc = TRUE`), like the `Robust (bias-corrected)` row of `rddid()`. The two
 tests on type shares pick a separate CCT bandwidth for every local-linear fit
-(`bwselect = "cct"`) and combine their jumps with a sup-t statistic
-(`joint = "supt"`); the two tests on the outcome use one bandwidth for every
+(`bwselect = "cct"`) and combine their jumps with a studentized sup-t statistic
+(`joint = "supt"`, `studentize = TRUE`); the two tests on the outcome use one bandwidth for every
 cell (`bwselect = "common"`). The last section says why.
 
 ## Type continuity: `rd_typecont()`
@@ -73,12 +73,14 @@ tc
 - The test runs, in each year and for each type, a local-linear RD of the
   indicator "the unit is of this type" on the running variable; the jump is the
   difference between the type's share just above and just below the cutoff.
-- `Joint sup-t ... over 9 jumps`: in each year the four shares sum to one, so
-  three jumps are free; three years give 9. Each jump is divided by its
-  standard error, and the largest |z| is compared with the sup-t critical
-  value, the quantile of the largest |z| when every share is continuous (from
-  the estimated correlation of the nine jumps). The printout names the year and
-  type with the largest |z|. The `Period` lines test each year alone.
+- `Joint sup-t (studentized) ... over 9 jumps`: in each year the four shares
+  sum to one, so three jumps are free; three years give 9. Each jump is divided
+  by its standard error, and the largest |t| is compared with the sup-t
+  critical value: the quantile of the largest |t| when every share is
+  continuous, from the estimated correlation of the nine jumps and, since each
+  standard error is itself an estimate, with t rather than normal tails. The
+  printout names the year and type with the largest |t|. The `Period` lines
+  test each year alone.
 
 Here `r pv(tc$p_value)`. Type continuity holds in `rddid_sim_pv` by
 construction, so a p-value below 0.05 would be a false rejection.
@@ -207,22 +209,19 @@ In this printout the H0 line and the counts refer to the units below the cutoff:
 under the ATU design those are the units untreated in the RD period, whose
 composition the estimate relies on.
 
-## Run all four and tabulate
+## Run all four at once: `rd_checks()`
 
 ```{r}
-tests <- list(
-  rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3),
-  rd_compstable(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3),
-  rd_homog(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3),
-  rd_trendcell(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
-)
-do.call(rbind, lapply(tests, tidy))
+ch <- rd_checks(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
+ch
 ```
 
-`tidy()` returns one row per test, so the four stack
-into one table for a paper or a table maker such as modelsummary. The
-statistic column holds the largest |z| for the two share tests (sup-t) and the
-chi-squared statistic for the two outcome tests.
+`rd_checks()` runs the four tests with one set of options and prints one row
+per test, with the statistic, its type and the bandwidth rule. The four
+results are inside (`ch$typecont`, ...), and `tidy(ch)` returns the table for a
+paper or a table maker such as modelsummary. The statistic column holds the
+largest |t| for the two share tests (sup-t) and the chi-squared statistic for
+the two outcome tests.
 
 Together, the four results map onto the list at the top. A rejection of type
 continuity, or of constant within-type confounding, would call the estimate into
@@ -262,8 +261,39 @@ the jumps rather than in the jumps themselves.
   because it adapts to a sorting window and every common bandwidth tried
   halved the power against local sorting.
 
-With two periods (one jump per test and period) the three statistics are the
-same two-sided normal test, and the share tests did not over-reject.
+The default sup-t is studentized: each standard error is an estimate, with
+the degrees of freedom of its robust variance (about 50-150 here, computed
+from each jump's regression weights), and the critical value accounts for
+that noise. With the same simulations the studentized sup-t rejected a true
+null about 6% of the time at three periods and 4-5% at four, against 7% and
+5-6% for sup-t with normal critical values, with the same power once the
+sizes are matched.
+
+With two periods (one jump per test and period) the statistics are the same
+two-sided test, and the share tests did not over-reject.
+
+## Switching options
+
+The defaults are the settings recommended above; every alternative is one
+argument away, in each test and in `rd_checks()`.
+
+```{r, eval = FALSE}
+# share tests: the chi-squared Wald, or sup-t with normal critical values
+rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3, joint = "wald")
+rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3, studentize = FALSE)
+# outcome tests: one bandwidth per cell instead of one common bandwidth
+rd_homog(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, bwselect = "cct")
+# all four at once, and one test differently from the others
+rd_checks(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
+          joint = "wald", outcome_bwselect = "cct", homog = list(min_n = 20))
+```
+
+Every statistic of a share test is also in `$joint_tests`, so the alternatives
+can be compared without running the test again:
+
+```{r}
+ch$typecont$joint_tests
+```
 
 ## Options
 
@@ -273,8 +303,9 @@ same two-sided normal test, and the share tests did not over-reject.
   CCT bandwidth of the outcome on the pooled comparison periods in every cell,
   `"cct"` one per cell, `"rot"` a rule of thumb. `h` fixes the bandwidth.
 - `joint` (`rd_typecont()`, `rd_compstable()`): `"supt"` (default), `"swald"`
-  (the sum of squared z's) or `"wald"` (the chi-squared Wald). All three are in
-  `$joint_tests`.
+  (the sum of squared t's) or `"wald"` (the chi-squared Wald); `studentize`:
+  `TRUE` (default, t-based critical values for sup-t and sWald) or `FALSE`
+  (normal). Every combination is in `$joint_tests`.
 - `bc`: `TRUE` (default) tests the bias-corrected jumps with their robust
   variances; `FALSE` uses the conventional ones.
 - `scheme`: detected from the data as in `rddid()`; set it to override.

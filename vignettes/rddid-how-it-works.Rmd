@@ -404,7 +404,7 @@ knitr::kable(tab_ss, digits = 3, col.names = c("scenario", "t", "jump", "SE"))
 `rd_typecont()` computes the same jumps and combines them into a joint test
 across periods, with the cross-period covariance of the two jumps (the same
 units enter both regressions) inside it. Its default joint statistic is sup-t
-(the largest |z|; see [Checking the identification
+(the largest |t|, studentized; see [Checking the identification
 assumptions](rddid-validation-tests.html)); with `joint = "wald"`, used here to
 rebuild it by hand, it is the chi-squared Wald statistic. The statistic, its
 degrees of freedom and p-value are `$statistic`, `$df`, `$p_value`; the

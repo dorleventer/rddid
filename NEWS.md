@@ -9,9 +9,15 @@ sup-t avoids inverting the estimated covariance, but it still uses estimated sta
 a variance deficit or noisy standard errors still inflate it, by less than the Wald. Estimates of
 `rddid()` are unchanged.
 
-* `rd_typecont()` and `rd_compstable()`: new argument `joint = c("supt", "swald", "wald")`.
-  * The default `"supt"` compares the largest |z| of the tested jumps with a sup-t critical value
+* `rd_typecont()` and `rd_compstable()`: new arguments `joint = c("supt", "swald", "wald")` and
+  `studentize = TRUE`.
+  * The default `"supt"` compares the largest |t| of the tested jumps with a sup-t critical value
     simulated from their estimated correlation.
+  * `studentize = TRUE` (default) makes that critical value t-based. Each standard error is an
+    estimate, with the degrees of freedom of its robust variance: Satterthwaite / Bell-McCaffrey,
+    from the jump's regression weights. With normal critical values (`studentize = FALSE`) sup-t
+    rejected a true null 7% of the time at three periods; studentized, 6%, at the same
+    size-adjusted power.
   * `"swald"` uses the sum of squared z's (Fusejima, Ishihara and Sawada, 2025).
   * `"wald"` is the chi-squared Wald statistic used so far, which inverts the estimated covariance
     and over-rejects as the number of jumps grows (7-9% at 9 jumps, 15% at 28).
@@ -19,7 +25,8 @@ a variance deficit or noisy standard errors still inflate it, by less than the W
     caller's random-number state is restored).
   * With one jump all three are the same two-sided normal test, so two-period calls give the
     Wald's p-value.
-  * New fields `joint_method`, `joint_tests` (all three statistics) and, for `rd_typecont()`, `z`.
+  * New fields `joint_method`, `studentize`, `joint_tests` (every statistic, normal and
+    studentized) and, for `rd_typecont()`, `z` and `nu`.
     `ll_wald` and the per-period/per-pair `ll_wald` keep the Wald; the per-period/per-pair `test`
     holds the test under `joint`.
 * `rd_compstable()`: the joint test over pairs no longer adds up the pair statistics as if the
@@ -29,6 +36,11 @@ a variance deficit or noisy standard errors still inflate it, by less than the W
   * `joint$ll_wald` is now the Wald over the stacked jumps, and `joint$theta` / `joint$Sigma`
     hold them.
   * Each pair's `kept` and `cov_matrix` are returned.
+* New `rd_checks()` runs the four tests with one set of options and prints one table, ending with
+  which assumptions are rejected. Options for one test only go in that test's list, for example
+  `homog = list(bwselect = "cct")`. `tidy()` returns the table.
+* `rd_period()`: the side lists keep the intercept weights `a` and `a_bc`. This is append-only;
+  no number changes.
 * `rd_homog()` and `rd_trendcell()`: new default `bwselect = "common"`.
   * It uses one bandwidth in every cell: the CCT bandwidth of the outcome on the running variable
     with all comparison periods pooled.

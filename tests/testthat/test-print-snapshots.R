@@ -28,3 +28,9 @@ test_that("the main error and message texts", {
   expect_snapshot(error = TRUE, rd_typecont(rddid_sim, x = "R", time = "year", id = "id"))
   expect_snapshot(rddid(rddid_sim, y = "Y", x = "R", time = "year", t_rd = 3, bwselect = "cct")$scheme)
 })
+
+test_that("print of rd_checks()", {
+  skip_on_cran()
+  expect_snapshot(print(rd_checks(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id",
+                                  t_rd = 3)))
+})

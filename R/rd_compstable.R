@@ -195,7 +195,7 @@
 #' returns the pair's element of `pairs` (test, ll_wald, jumps, jump_se, kept, cov_matrix,
 #' type_values, scheme, n_trd, n_t0, n_both, fits, sample).
 #' @noRd
-.compstable_pair_test <- function(refl, scheme, kernel, h, bwselect, bc, joint) {
+.compstable_pair_test <- function(refl, scheme, kernel, h, bwselect, bc, joint, studentize) {
   # radix: a locale-independent order, so the reference type dropped is the same on every machine
   type_values <- sort(unique(base::c(refl$type_trd, refl$type_t0)), method = "radix")
   n_types     <- length(type_values)
@@ -212,10 +212,11 @@
   ok_idx <- .compstable_kept_types(theta, n_types)
   wald   <- if (length(ok_idx) == 0L) list(stat = NA_real_, df = 0L, p = NA_real_) else
     .joint_wald(theta[ok_idx], Sigma[ok_idx, ok_idx, drop = FALSE])
-  tests  <- .joint_tests(theta[ok_idx], Sigma[ok_idx, ok_idx, drop = FALSE])
+  nu     <- vapply(fit$fits[ok_idx], function(f) .jump_df(f, bc), numeric(1))
+  tests  <- .joint_tests(theta[ok_idx], Sigma[ok_idx, ok_idx, drop = FALSE], nu = nu)
 
   list(
-    test        = tests[[joint]],
+    test        = .pick_joint(tests, joint, studentize),
     ll_wald     = wald,
     # binary types: the single share jump pi_{tRD,(+)}(1) - pi_{t0,(+)}(1); the standard errors
     # are the square roots of the diagonal of Sigma (dependence-adjusted under "pv")
@@ -232,6 +233,7 @@
     # the tested types (indices into type_values) and their covariance, for the joint test
     kept        = ok_idx,
     cov_matrix  = Sigma[ok_idx, ok_idx, drop = FALSE],
+    nu          = stats::setNames(nu, type_values[ok_idx]),
     type_values = type_values,
     scheme      = use_scheme,
     n_trd       = refl$n_trd,
@@ -261,9 +263,10 @@
 
 #' Joint test over pairs: every testable pair's kept jumps stacked, with the full covariance
 #' (each pair's own block, and the blocks across pairs from the shared units); returns
-#' list(ll_wald = the Wald test, test = the test under `joint`, tests = all three, theta, Sigma).
+#' list(ll_wald = the Wald test, test = the test under `joint` and `studentize`, tests = all of
+#' them, theta, Sigma, nu).
 #' @noRd
-.compstable_joint <- function(pairs_out, scheme, bc, joint) {
+.compstable_joint <- function(pairs_out, scheme, bc, joint, studentize) {
   # 2026-10-15 (T1652/T1678): this used to add up the pair Wald statistics as if the pairs were
   # independent, though every pair's "+" group is the same RD-period set; with two comparison
   # periods that test rejected a true null 8.7% of the time at n = 1,000. Even the full-covariance
@@ -272,10 +275,9 @@
   usable <- Filter(function(pair) pair$ll_wald$df > 0L, pairs_out)   # an untestable pair adds nothing
   theta  <- unlist(lapply(usable, function(pair) unname(pair$jumps)))
   if (length(theta) == 0L) {
-    empty <- list(stat = NA_real_, df = 0L, p = NA_real_)
-    tests <- list(wald = empty, supt = c(empty, list(cell = NA_integer_)), swald = empty)
-    return(list(ll_wald = empty, test = tests[[joint]], tests = tests, theta = theta,
-                Sigma = matrix(0, 0, 0)))
+    tests <- .joint_tests(numeric(0), matrix(0, 0, 0))
+    return(list(ll_wald = tests$wald, test = .pick_joint(tests, joint, studentize), tests = tests,
+                theta = theta, Sigma = matrix(0, 0, 0), nu = numeric(0)))
   }
   fits  <- unlist(lapply(usable, function(pair) pair$fits[pair$kept]), recursive = FALSE)
   owner <- rep(seq_along(usable), vapply(usable, function(pair) length(pair$kept), integer(1)))
@@ -292,8 +294,10 @@
     Sigma[i, j] <- .compstable_cross_cov(fits[[i]], fits[[j]], scheme, bc)
   }
   Sigma <- (Sigma + t(Sigma)) / 2
-  tests <- .joint_tests(theta, Sigma)
-  list(ll_wald = tests$wald, test = tests[[joint]], tests = tests, theta = theta, Sigma = Sigma)
+  nu    <- stats::setNames(unlist(lapply(usable, function(pair) unname(pair$nu))), names(theta))
+  tests <- .joint_tests(theta, Sigma, nu = nu)
+  list(ll_wald = tests$wald, test = .pick_joint(tests, joint, studentize), tests = tests,
+       theta = theta, Sigma = Sigma, nu = nu)
 }
 
 #' Test of composition stability
@@ -335,14 +339,14 @@
 #'
 #' ## The joint statistic
 #'
-#' As in [rd_typecont()]: `joint = "supt"` (default) rejects when the largest
-#' |z| of the tested jumps exceeds the sup-t critical value (simulated from the
-#' estimated correlation of the jumps); `"swald"` uses the sum of squared z's;
-#' `"wald"` the chi-squared Wald statistic. The same statistic is used for each
-#' pair and for the joint test, and all three joint statistics are returned in
-#' `joint_tests`. With two comparison periods at n = 1,000 the Wald over the
-#' stacked jumps rejects a true null 8-10% of the time and sup-t and sWald 6%;
-#' the former summed statistic (versions up to 0.4) rejected 8.7%.
+#' As in [rd_typecont()]: `joint` picks the statistic (`"supt"`, default;
+#' `"swald"`; `"wald"`) and `studentize` the reference distribution of sup-t and
+#' sWald (`TRUE`, default: t-based; `FALSE`: normal). The same statistic is used
+#' for each pair and for the joint test, and every statistic is returned in
+#' `joint_tests`. With two comparison periods at n = 1,000 and a true null, the
+#' Wald over the stacked jumps rejected 8-9% of the time, the normal sup-t 7%
+#' and the studentized sup-t 6%; the former summed statistic (versions up to
+#' 0.4) rejected 8.7%.
 #'
 #' ## Shared units and the sampling scheme
 #'
@@ -403,6 +407,9 @@
 #' @param joint the statistic of each pair's test and of the joint test:
 #'   `"supt"` (default), `"swald"` or `"wald"`, as in [rd_typecont()]. See "The
 #'   joint statistic" in Details.
+#' @param studentize logical, for `joint = "supt"` or `"swald"`: t-based
+#'   (`TRUE`, default) or normal (`FALSE`) critical values, as in
+#'   [rd_typecont()].
 #' @inheritParams rddid
 #'
 #' @return An object of class `"rd_compstable"`, a list with:
@@ -410,8 +417,8 @@
 #'     \item{`statistic`, `df`, `p_value`}{the joint test over pairs under
 #'       `joint`: the statistic, the number of jumps tested (the degrees of
 #'       freedom for `"wald"`), and the p-value.}
-#'     \item{`joint_method`}{the statistic used; `joint_tests` has all three
-#'       joint statistics (`method`, `statistic`, `df`, `p_value`).}
+#'     \item{`joint_method`, `studentize`}{as used; `joint_tests` has every joint
+#'       statistic (`method`, `reference`, `statistic`, `df`, `p_value`).}
 #'     \item{`scheme`}{the sampling scheme used: one value if every pair used
 #'       the same, `"mixed"` otherwise; `scheme_requested` is the argument as
 #'       passed.}
@@ -444,7 +451,8 @@
 #'       the test undefined (`NA`).}
 #'     \item{`meta`}{a list with `t_rd`, `comparisons`, `h` (the common
 #'       bandwidth, `NA` with `bwselect = "cct"`), `bwselect`, `c` (the cutoff
-#'       as passed, before any mirroring), `bc`, `estimand` and `joint`.}
+#'       as passed, before any mirroring), `bc`, `estimand`, `joint` and
+#'       `studentize`.}
 #'   }
 #'
 #' @references
@@ -478,7 +486,8 @@ rd_compstable <- function(data, x, time, id, t_rd,
                           kernel = "triangular",
                           scheme = c("auto", "cs", "pc", "pv"),
                           bc = TRUE,
-                          joint = c("supt", "swald", "wald")) {
+                          joint = c("supt", "swald", "wald"),
+                          studentize = TRUE) {
   cl       <- match.call()
   scheme   <- match.arg(scheme)
   joint    <- match.arg(joint)
@@ -529,10 +538,11 @@ rd_compstable <- function(data, x, time, id, t_rd,
               " has too few above-cutoff observations; skipping.")
       next
     }
-    pairs_out[[pair_key]] <- .compstable_pair_test(refl, scheme, kernel, h, bwselect, bc, joint)
+    pairs_out[[pair_key]] <- .compstable_pair_test(refl, scheme, kernel, h, bwselect, bc, joint,
+                                                   studentize)
   }
 
-  joint_out    <- .compstable_joint(pairs_out, scheme, bc, joint)
+  joint_out    <- .compstable_joint(pairs_out, scheme, bc, joint, studentize)
   pair_schemes <- vapply(pairs_out, function(pair) pair$scheme, character(1))
   structure(
     list(
@@ -540,6 +550,7 @@ rd_compstable <- function(data, x, time, id, t_rd,
       df               = joint_out$test$df,
       p_value          = joint_out$test$p,
       joint_method     = joint,
+      studentize       = studentize,
       joint_tests      = .joint_tests_df(joint_out$tests),
       scheme           = if (length(unique(pair_schemes)) == 1L) unique(pair_schemes) else "mixed",
       scheme_requested = scheme,
@@ -547,7 +558,7 @@ rd_compstable <- function(data, x, time, id, t_rd,
       t_rd             = t_rd,
       comparisons      = comparisons,
       pairs            = pairs_out,
-      joint            = joint_out[c("test", "ll_wald", "theta", "Sigma")],
+      joint            = joint_out[c("test", "ll_wald", "theta", "Sigma", "nu")],
       call             = cl,
       meta = list(
         t_rd        = t_rd,
@@ -558,7 +569,8 @@ rd_compstable <- function(data, x, time, id, t_rd,
         c           = c_orig,
         bc          = bc,
         estimand    = estimand,
-        joint       = joint
+        joint       = joint,
+        studentize  = studentize
       )
     ),
     class = "rd_compstable"
@@ -580,10 +592,12 @@ print.rd_compstable <- function(x, ...) {
               x$t_rd, paste(.period_order(as.character(x$comparisons)), collapse = ", "),
               .bw_label_test(x$meta$h, x$meta$bwselect)))
   method <- x$joint_method %||% "wald"
+  stud   <- isTRUE(x$studentize %||% FALSE)
   for (key in names(x$pairs)) {
     pair <- x$pairs[[key]]
     .print_joint(if (is.null(pair$test)) pair$ll_wald else pair$test,
-                 if (is.null(pair$test)) "wald" else method, sprintf("Pair %s:", key))
+                 if (is.null(pair$test)) "wald" else method, sprintf("Pair %s:", key),
+                 studentize = stud)
     cat(sprintf("    n %s the cutoff: %d (RD period), %d (comparison), %d in both\n",
                 side, pair$n_trd, pair$n_t0, pair$n_both))
   }
@@ -595,7 +609,7 @@ print.rd_compstable <- function(x, ...) {
       if (any(is.finite(z))) names(th)[which.max(abs(z))]
     }
     .print_joint(list(stat = x$statistic, df = x$df, p = x$p_value), method,
-                 "Joint over pairs:", cell_label = largest)
+                 "Joint over pairs:", cell_label = largest, studentize = stud)
   }
   invisible(x)
 }

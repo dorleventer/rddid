@@ -18,7 +18,8 @@ rd_compstable(
   kernel = "triangular",
   scheme = c("auto", "cs", "pc", "pv"),
   bc = TRUE,
-  joint = c("supt", "swald", "wald")
+  joint = c("supt", "swald", "wald"),
+  studentize = TRUE
 )
 }
 \arguments{
@@ -79,6 +80,10 @@ conventional jumps and variances.}
 \item{joint}{the statistic of each pair's test and of the joint test:
 \code{"supt"} (default), \code{"swald"} or \code{"wald"}, as in \code{\link[=rd_typecont]{rd_typecont()}}. See "The
 joint statistic" in Details.}
+
+\item{studentize}{logical, for \code{joint = "supt"} or \code{"swald"}: t-based
+(\code{TRUE}, default) or normal (\code{FALSE}) critical values, as in
+\code{\link[=rd_typecont]{rd_typecont()}}.}
 }
 \value{
 An object of class \code{"rd_compstable"}, a list with:
@@ -86,8 +91,8 @@ An object of class \code{"rd_compstable"}, a list with:
 \item{\code{statistic}, \code{df}, \code{p_value}}{the joint test over pairs under
 \code{joint}: the statistic, the number of jumps tested (the degrees of
 freedom for \code{"wald"}), and the p-value.}
-\item{\code{joint_method}}{the statistic used; \code{joint_tests} has all three
-joint statistics (\code{method}, \code{statistic}, \code{df}, \code{p_value}).}
+\item{\code{joint_method}, \code{studentize}}{as used; \code{joint_tests} has every joint
+statistic (\code{method}, \code{reference}, \code{statistic}, \code{df}, \code{p_value}).}
 \item{\code{scheme}}{the sampling scheme used: one value if every pair used
 the same, \code{"mixed"} otherwise; \code{scheme_requested} is the argument as
 passed.}
@@ -120,7 +125,8 @@ left out (\code{dropped} counts them); one that jumps deterministically makes
 the test undefined (\code{NA}).}
 \item{\code{meta}}{a list with \code{t_rd}, \code{comparisons}, \code{h} (the common
 bandwidth, \code{NA} with \code{bwselect = "cct"}), \code{bwselect}, \code{c} (the cutoff
-as passed, before any mirroring), \code{bc}, \code{estimand} and \code{joint}.}
+as passed, before any mirroring), \code{bc}, \code{estimand}, \code{joint} and
+\code{studentize}.}
 }
 }
 \description{
@@ -162,14 +168,14 @@ skipped with a warning.
 
 \subsection{The joint statistic}{
 
-As in \code{\link[=rd_typecont]{rd_typecont()}}: \code{joint = "supt"} (default) rejects when the largest
-|z| of the tested jumps exceeds the sup-t critical value (simulated from the
-estimated correlation of the jumps); \code{"swald"} uses the sum of squared z's;
-\code{"wald"} the chi-squared Wald statistic. The same statistic is used for each
-pair and for the joint test, and all three joint statistics are returned in
-\code{joint_tests}. With two comparison periods at n = 1,000 the Wald over the
-stacked jumps rejects a true null 8-10\% of the time and sup-t and sWald 6\%;
-the former summed statistic (versions up to 0.4) rejected 8.7\%.
+As in \code{\link[=rd_typecont]{rd_typecont()}}: \code{joint} picks the statistic (\code{"supt"}, default;
+\code{"swald"}; \code{"wald"}) and \code{studentize} the reference distribution of sup-t and
+sWald (\code{TRUE}, default: t-based; \code{FALSE}: normal). The same statistic is used
+for each pair and for the joint test, and every statistic is returned in
+\code{joint_tests}. With two comparison periods at n = 1,000 and a true null, the
+Wald over the stacked jumps rejected 8-9\% of the time, the normal sup-t 7\%
+and the studentized sup-t 6\%; the former summed statistic (versions up to
+0.4) rejected 8.7\%.
 }
 
 \subsection{Shared units and the sampling scheme}{
@@ -238,6 +244,7 @@ Other tests of the assumptions:
 \code{\link{plot.rd_trendcell}()},
 \code{\link{plot.rd_typecont}()},
 \code{\link{plot_switchers}()},
+\code{\link{rd_checks}()},
 \code{\link{rd_homog}()},
 \code{\link{rd_trendcell}()},
 \code{\link{rd_typecont}()}

@@ -249,24 +249,48 @@
   expr
 }
 
-#' sup-t and sWald tests of theta = 0 from the standardized jumps
+#' Degrees of freedom of the robust variance of a jump (studentized joint tests)
 #'
-#' t_k = theta_k / se_k with se = sqrt(diag(Sigma)). sup-t: max_k |t_k| against max_k |Z_k|;
-#' sWald: sum_k t_k^2 against sum_k Z_k^2; Z ~ N(0, R), R the correlation matrix of Sigma (its
-#' negative eigenvalues, from an indefinite estimate, set to zero). With one jump both are the
-#' two-sided normal test, computed exactly. Otherwise the null distributions are simulated with
-#' `n_sim` draws under a fixed seed (reproducible; the caller's RNG state is restored) and
-#' p = (1 + #{draws >= observed}) / (n_sim + 1). Zero-SE jumps are handled as in .joint_wald().
-#' @return list(supt = list(stat, df, p, cell), swald = list(stat, df, p)); `df` is the number
-#'   of jumps tested, `cell` the index in `theta` of the largest |t|.
+#' The variance of D = (+) intercept - (-) intercept is a sum of squared weighted residuals,
+#' sum_i a_i^2 e_i^2. Under a homoskedastic working model its degrees of freedom are
+#' (sum_i a_i^2)^2 / sum_i a_i^4 (Satterthwaite; the Bell and McCaffrey 2002 small-sample df
+#' without the residual-maker correction, which changed nu by under 1% in a check). `a` are the
+#' intercept weights of rd_period() on both sides (bias-corrected weights when `bc`).
 #' @keywords internal
 #' @noRd
-.gauss_joint <- function(theta, Sigma, scale = 1, n_sim = 100000L, seed = 20261015L) {
+.jump_df <- function(fit, bc = TRUE) {
+  a  <- c(if (bc) fit$sides$`+`$a_bc else fit$sides$`+`$a,
+          if (bc) fit$sides$`-`$a_bc else fit$sides$`-`$a)
+  a2 <- a^2
+  sum(a2)^2 / sum(a2^2)
+}
+
+#' sup-t and sWald tests of theta = 0 from the standardized jumps, normal and studentized
+#'
+#' t_k = theta_k / se_k with se = sqrt(diag(Sigma)). sup-t: max_k |t_k|; sWald: sum_k t_k^2. Each
+#' is compared with its distribution when Z ~ N(0, R), R the correlation matrix of Sigma (negative
+#' eigenvalues of an indefinite estimate set to zero), under two references:
+#'   normal       T_k = Z_k;
+#'   studentized  T_k = Z_k / sqrt(S_k), S_k ~ chisq(nu_k) / nu_k independent: the estimated
+#'                standard error of each jump is itself noisy (T1682/T1687: this noise, with
+#'                nu ~ 50-120, is what leaves the normal sup-t at 6-7% instead of 5%).
+#' With one jump both are exact: the two-sided normal test, and the two-sided t(nu) test. Otherwise
+#' the references are simulated with `n_sim` draws under a fixed seed (reproducible; the caller's
+#' RNG state is restored), p = (1 + #{draws >= observed}) / (n_sim + 1). Zero-SE jumps are handled
+#' as in .joint_wald().
+#' @param nu degrees of freedom of each jump's variance (.jump_df()); NULL = no studentized version.
+#' @return list(supt_t, supt_normal, swald_t, swald_normal), each list(stat, df, p) and, for the
+#'   sup-t ones, `cell` (the index in `theta` of the largest |t|); `df` is the number of jumps.
+#' @keywords internal
+#' @noRd
+.gauss_joint <- function(theta, Sigma, nu = NULL, scale = 1, n_sim = 100000L, seed = 20261015L) {
+  empty <- function(extra = list()) c(list(stat = NA_real_, df = 0L, p = NA_real_), extra)
   na_out <- function(extra = list()) {
-    r <- c(list(stat = NA_real_, df = 0L, p = NA_real_), extra)
-    list(supt = c(r, list(cell = NA_integer_)), swald = r)
+    s <- empty(c(list(cell = NA_integer_), extra)); w <- empty(extra)
+    list(supt_t = s, supt_normal = s, swald_t = w, swald_normal = w)
   }
   if (length(theta) == 0L) return(na_out())
+  if (is.null(nu)) nu <- rep(Inf, length(theta))
   tol0    <- sqrt(.Machine$double.eps) * scale
   se      <- sqrt(pmax(diag(Sigma), 0))
   zero_se <- se <= tol0
@@ -274,64 +298,82 @@
   idx <- which(!zero_se)
   if (length(idx) == 0L) return(na_out(list(dropped = sum(zero_se))))
   tt <- theta[idx] / se[idx]
+  nu <- nu[idx]
   K  <- length(tt)
+  m_obs <- max(abs(tt))
+  s_obs <- sum(tt^2)
+  cell  <- idx[which.max(abs(tt))]
   if (K == 1L) {
-    p1 <- 2 * stats::pnorm(-abs(tt))
-    supt  <- list(stat = abs(tt), df = 1L, p = p1, cell = idx)
-    swald <- list(stat = tt^2,    df = 1L, p = p1)
+    p_n <- 2 * stats::pnorm(-abs(tt))
+    p_t <- 2 * stats::pt(-abs(tt), df = nu)
+    out <- list(supt_t = list(stat = m_obs, df = 1L, p = p_t, cell = cell),
+                supt_normal = list(stat = m_obs, df = 1L, p = p_n, cell = cell),
+                swald_t = list(stat = s_obs, df = 1L, p = p_t),
+                swald_normal = list(stat = s_obs, df = 1L, p = p_n))
   } else {
     R <- Sigma[idx, idx, drop = FALSE] / tcrossprod(se[idx])
     e <- eigen((R + t(R)) / 2, symmetric = TRUE)
     L <- e$vectors %*% diag(sqrt(pmax(e$values, 0)), K)
-    m_obs <- max(abs(tt))
-    s_obs <- sum(tt^2)
-    n_ge_max <- 0
-    n_ge_sum <- 0
+    n_max_n <- n_max_t <- n_sum_n <- n_sum_t <- 0
     .with_seed(seed, {
       left <- n_sim
       while (left > 0) {   # in chunks, so K x n_sim never sits in memory at once
-        b <- min(left, 20000L)
-        Z <- L %*% matrix(stats::rnorm(K * b), K, b)
-        m <- abs(Z[1L, ])
-        for (k in seq_len(K)[-1L]) m <- pmax(m, abs(Z[k, ]))
-        n_ge_max <- n_ge_max + sum(m >= m_obs)
-        n_ge_sum <- n_ge_sum + sum(colSums(Z^2) >= s_obs)
+        b  <- min(left, 20000L)
+        Z  <- L %*% matrix(stats::rnorm(K * b), K, b)
+        S  <- matrix(stats::rchisq(K * b, df = rep(nu, b)), K, b) / nu
+        Zt <- Z / sqrt(S)
+        mn <- abs(Z[1L, ]);  for (k in seq_len(K)[-1L]) mn <- pmax(mn, abs(Z[k, ]))
+        mt <- abs(Zt[1L, ]); for (k in seq_len(K)[-1L]) mt <- pmax(mt, abs(Zt[k, ]))
+        n_max_n <- n_max_n + sum(mn >= m_obs)
+        n_max_t <- n_max_t + sum(mt >= m_obs)
+        n_sum_n <- n_sum_n + sum(colSums(Z^2) >= s_obs)
+        n_sum_t <- n_sum_t + sum(colSums(Zt^2) >= s_obs)
         left <- left - b
       }
     })
-    supt  <- list(stat = m_obs, df = K, p = (1 + n_ge_max) / (n_sim + 1),
-                  cell = idx[which.max(abs(tt))])
-    swald <- list(stat = s_obs, df = K, p = (1 + n_ge_sum) / (n_sim + 1))
+    pp <- function(n) (1 + n) / (n_sim + 1)
+    out <- list(supt_t = list(stat = m_obs, df = K, p = pp(n_max_t), cell = cell),
+                supt_normal = list(stat = m_obs, df = K, p = pp(n_max_n), cell = cell),
+                swald_t = list(stat = s_obs, df = K, p = pp(n_sum_t)),
+                swald_normal = list(stat = s_obs, df = K, p = pp(n_sum_n)))
   }
-  if (any(zero_se)) {
-    supt$dropped  <- sum(zero_se)
-    swald$dropped <- sum(zero_se)
-  }
-  list(supt = supt, swald = swald)
+  if (any(zero_se)) out <- lapply(out, function(z) c(z, list(dropped = sum(zero_se))))
+  out
 }
 
-#' The three joint tests of theta = 0: the chi-squared Wald (.joint_wald()), sup-t and sWald
-#' (.gauss_joint()); returns list(wald, supt, swald), each list(stat, df, p, ...).
+#' The joint tests of theta = 0: the chi-squared Wald (.joint_wald()) and sup-t / sWald with normal
+#' and studentized references (.gauss_joint()); returns a named list of list(stat, df, p, ...).
 #' @keywords internal
 #' @noRd
-.joint_tests <- function(theta, Sigma, scale = 1) {
+.joint_tests <- function(theta, Sigma, nu = NULL, scale = 1) {
   if (length(theta) == 0L) {
     empty <- list(stat = NA_real_, df = 0L, p = NA_real_)
-    return(list(wald = empty, supt = c(empty, list(cell = NA_integer_)), swald = empty))
+    return(list(wald = empty, supt_t = c(empty, list(cell = NA_integer_)),
+                supt_normal = c(empty, list(cell = NA_integer_)), swald_t = empty,
+                swald_normal = empty))
   }
-  g <- .gauss_joint(theta, Sigma, scale = scale)
-  list(wald = .joint_wald(theta, Sigma, scale = scale), supt = g$supt, swald = g$swald)
+  c(list(wald = .joint_wald(theta, Sigma, scale = scale)),
+    .gauss_joint(theta, Sigma, nu = nu, scale = scale))
 }
 
-#' The three joint tests as a data frame (method, statistic, df, p_value), for the result objects
+#' The element of .joint_tests() for a choice of `joint` and `studentize`
+#' @keywords internal
+#' @noRd
+.pick_joint <- function(tests, joint, studentize) {
+  if (joint == "wald") return(tests$wald)
+  tests[[paste0(joint, if (studentize) "_t" else "_normal")]]
+}
+
+#' The joint tests as a data frame (method, reference, statistic, df, p_value), for the results
 #' @keywords internal
 #' @noRd
 .joint_tests_df <- function(tests) {
-  data.frame(method    = c("supt", "swald", "wald"),
-             statistic = vapply(tests[c("supt", "swald", "wald")], function(z) z$stat, numeric(1)),
-             df        = vapply(tests[c("supt", "swald", "wald")], function(z) as.integer(z$df),
-                                integer(1)),
-             p_value   = vapply(tests[c("supt", "swald", "wald")], function(z) z$p, numeric(1)),
+  keys <- c("supt_t", "supt_normal", "swald_t", "swald_normal", "wald")
+  data.frame(method    = c("supt", "supt", "swald", "swald", "wald"),
+             reference = c("t", "normal", "t", "normal", "chi-squared"),
+             statistic = vapply(tests[keys], function(z) z$stat, numeric(1)),
+             df        = vapply(tests[keys], function(z) as.integer(z$df), integer(1)),
+             p_value   = vapply(tests[keys], function(z) z$p, numeric(1)),
              row.names = NULL, stringsAsFactors = FALSE)
 }
 

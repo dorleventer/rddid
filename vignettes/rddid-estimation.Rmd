@@ -239,10 +239,10 @@ Every test prints its null (H0) and the sampling scheme read off the data.
 `Bandwidth: CCT MSE-optimal, chosen per cell` means that each local-linear fit
 the test runs (one per period and type, a *cell*) gets its own MSE-optimal
 bandwidth from `rdrobust::rdbwselect` (Calonico, Cattaneo and Titiunik, 2014;
-hence "CCT"). `Joint sup-t ... over 9 jumps` tests all the jumps in the type
+hence "CCT"). `Joint sup-t (studentized) ... over 9 jumps` tests all the jumps in the type
 shares at once: in each year the four shares sum to one, so three jumps are
-free, and three years give 9. It compares the largest |z| of the nine jumps with
-the sup-t critical value and names the year and type with the largest |z|
+free, and three years give 9. It compares the largest |t| of the nine jumps with
+the sup-t critical value and names the year and type with the largest |t|
 (`joint = "wald"` gives the chi-squared Wald instead; see [Checking the
 identification assumptions](rddid-validation-tests.html) for why sup-t is the
 default). Each `Period` line tests one year alone.
@@ -309,7 +309,7 @@ do.call(rbind, lapply(list(tc, cs, hg, tr), tidy))
 
 The composition-stability row is the joint test over pairs; the per-pair tests
 are in its printout above. For the two share tests the statistic column holds
-the largest |z| (sup-t), for the two outcome tests the chi-squared statistic.
+the largest |t| (sup-t), for the two outcome tests the chi-squared statistic.
 
 In `rddid_sim_pv` three of the four nulls are true by construction: types are
 continuous at the cutoff, and the confounding jump is 0.5 for every unit in

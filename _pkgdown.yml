@@ -53,6 +53,7 @@ reference:
       Tests of the identification assumptions when the running variable moves
       over time, so that units can change side of the cutoff between periods.
     contents:
+      - rd_checks
       - rd_typecont
       - rd_compstable
       - rd_homog

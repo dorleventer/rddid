@@ -131,17 +131,19 @@
 }
 
 #' Each period's own tests on its kept jumps: a list by period of list(ll_wald = the Wald test,
-#' test = the test under `joint`).
+#' test = the test under `joint` and `studentize`).
 #' @noRd
-.typecont_per_period <- function(theta, Sigma, keep, period_labels, n_types, joint) {
+.typecont_per_period <- function(theta, Sigma, nu, keep, period_labels, n_types, joint,
+                                 studentize) {
   # With two types this is the single type-share jump of the period, chi^2(1) (sup-t and sWald
   # are then the same two-sided normal test). The joint test is not the sum of these: it also
   # carries the covariance across periods.
   stats::setNames(lapply(seq_along(period_labels), function(idx_t) {
     rows_t <- (idx_t - 1L) * n_types + seq_len(n_types)
     keep_t <- rows_t[keep[rows_t]]
-    tests  <- .joint_tests(theta[keep_t], Sigma[keep_t, keep_t, drop = FALSE])
-    list(ll_wald = .typecont_wald(theta, Sigma, keep_t), test = tests[[joint]])
+    tests  <- .joint_tests(theta[keep_t], Sigma[keep_t, keep_t, drop = FALSE], nu = nu[keep_t])
+    list(ll_wald = .typecont_wald(theta, Sigma, keep_t),
+         test = .pick_joint(tests, joint, studentize))
   }), period_labels)
 }
 
@@ -174,24 +176,30 @@
 #'
 #' ## The joint statistic
 #'
-#' `joint = "supt"` (default) standardizes each jump by its standard error and
-#' rejects when the largest |z| exceeds the sup-t critical value: the quantile
-#' of max |Z_k| for Z normal with the estimated correlation of the jumps. The
-#' printout names the (period, type) cell with the largest |z|. `"swald"` sums
-#' the squared z's and compares the sum with its distribution under the same
-#' normal (the sWald test of Fusejima, Ishihara and Sawada, 2025). `"wald"` is
-#' the chi-squared Wald statistic, which inverts the estimated covariance. Both
-#' sup-t and sWald use the covariance only through its correlations, so they
-#' avoid the error of inverting it, which grows fastest with the number of
-#' jumps. They still divide each jump by its estimated standard error, so a
-#' variance that is too small, or noisy, inflates them too, but less: at
-#' n = 1,000 the Wald rejects a true null 7-9% of the time at 9 jumps (three
-#' periods) and 15% at 28 (four periods), sup-t 6-7% and 4-5%, in the package
-#' authors' simulations. The critical values of sup-t and sWald are simulated with 100,000
-#' normal draws under a fixed seed, so a result is reproducible, and the
-#' caller's random-number state is left as it was. With one jump all three are
-#' the same two-sided normal test. All three are always returned in
-#' `joint_tests`.
+#' Two arguments choose it. `joint` picks the statistic: `"supt"` (default)
+#' rejects when the largest |t| of the jumps exceeds a sup-t critical value, and
+#' the printout names the (period, type) cell with the largest |t|; `"swald"`
+#' uses the sum of the squared t's (the sWald test of Fusejima, Ishihara and
+#' Sawada, 2025); `"wald"` is the chi-squared Wald statistic. `studentize`
+#' picks the reference distribution of sup-t and sWald: with `TRUE` (default)
+#' each t is compared as a t-statistic, its standard error being an estimate
+#' with the degrees of freedom of its robust variance (computed from the
+#' jump's regression weights); with `FALSE` as a standard normal. The
+#' critical values come from the estimated correlation of the jumps.
+#'
+#' Why these defaults: sup-t and sWald use the covariance only through its
+#' correlations, so they avoid inverting it, the error that grows fastest with
+#' the number of jumps. Studentizing accounts for the noise in each jump's
+#' standard error. In the package authors' simulations (n = 1,000, true null,
+#' 5% level) the Wald rejected 7-8% of the time at 9 jumps (three periods) and
+#' 16% at 28 (four periods), sup-t with normal critical values 7% and 6%, and
+#' the studentized sup-t 6% and 5%, at the same size-adjusted power.
+#'
+#' Every statistic is reported in `joint_tests`, so any of them can be read off
+#' one call. The simulated critical values use 100,000 draws under a fixed
+#' seed, so a result is reproducible, and the caller's random-number state is
+#' left as it was. With one jump, sup-t and sWald are the two-sided t (or
+#' normal) test.
 #'
 #' ## Shared units and the sampling scheme
 #'
@@ -242,21 +250,26 @@
 #' @param bc logical. `TRUE` (default): test the bias-corrected jumps with their
 #'   robust variance, as in the `Robust` row of [rddid()]; `FALSE`: the
 #'   conventional jumps and variances.
-#' @param joint the joint statistic: `"supt"` (default; the largest |z| against
-#'   a sup-t critical value), `"swald"` (the sum of squared z's) or `"wald"` (the
+#' @param joint the joint statistic: `"supt"` (default; the largest |t| against
+#'   a sup-t critical value), `"swald"` (the sum of squared t's) or `"wald"` (the
 #'   chi-squared Wald statistic). See "The joint statistic" in Details.
+#' @param studentize logical, for `joint = "supt"` or `"swald"`. `TRUE`
+#'   (default): t-based critical values that account for the noise in each
+#'   jump's estimated standard error; `FALSE`: normal critical values.
 #' @inheritParams rddid
 #'
 #' @return An object of class `"rd_typecont"`, a list with:
 #'   \describe{
 #'     \item{`statistic`, `df`, `p_value`}{the joint test over all periods under
-#'       `joint`: the statistic (the largest |z| for `"supt"`, the sum of squared
-#'       z's for `"swald"`, the chi-squared statistic for `"wald"`), the number of
-#'       jumps tested (`"supt"`, `"swald"`) or the degrees of freedom (`"wald"`),
-#'       and the p-value.}
-#'     \item{`joint_method`}{the joint statistic used; `joint_tests` has all three
-#'       (a data frame with `method`, `statistic`, `df`, `p_value`).}
-#'     \item{`z`}{the z-statistics of the jumps tested, named `"<period>:<type>"`.}
+#'       `joint` and `studentize`: the statistic (the largest |t| for `"supt"`, the
+#'       sum of squared t's for `"swald"`, the chi-squared statistic for `"wald"`),
+#'       the number of jumps tested (`"supt"`, `"swald"`) or the degrees of freedom
+#'       (`"wald"`), and the p-value.}
+#'     \item{`joint_method`, `studentize`}{as used; `joint_tests` has every
+#'       statistic (a data frame with `method`, `reference` (`"t"`, `"normal"` or
+#'       `"chi-squared"`), `statistic`, `df`, `p_value`).}
+#'     \item{`z`, `nu`}{the t-statistics of the jumps tested and the degrees of
+#'       freedom of their variances, named `"<period>:<type>"`.}
 #'     \item{`scheme`}{the sampling scheme used; `scheme_requested` is the
 #'       argument as passed.}
 #'     \item{`estimand`}{`"att"` or `"atu"`, as passed.}
@@ -278,7 +291,7 @@
 #'     \item{`meta`}{a list with `periods`, `type_values` (the types, written
 #'       as the sides in the other periods in time order, e.g. `"+-"`), `h`
 #'       (the common bandwidth, `NA` with `bwselect = "cct"`), `bwselect`,
-#'       `scheme`, `bc`, `estimand` and `joint`.}
+#'       `scheme`, `bc`, `estimand`, `joint` and `studentize`.}
 #'   }
 #'
 #' @references
@@ -299,7 +312,10 @@
 #' tc <- rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
 #' tc          # the null, the joint sup-t test, then each period's own test
 #' tc$p_value
-#' tc$joint_tests   # sup-t, sWald and the chi-squared Wald side by side
+#' tc$joint_tests   # every statistic side by side
+#' # the original chi-squared Wald, or sup-t with normal critical values:
+#' rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3, joint = "wald")
+#' rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3, studentize = FALSE)
 #' @export
 rd_typecont <- function(data, x, time, id,
                         t_rd = NULL, comparisons = NULL,
@@ -310,7 +326,8 @@ rd_typecont <- function(data, x, time, id,
                         kernel = "triangular",
                         scheme = c("auto", "cs", "pc", "pv"),
                         bc = TRUE,
-                        joint = c("supt", "swald", "wald")) {
+                        joint = c("supt", "swald", "wald"),
+                        studentize = TRUE) {
   cl       <- match.call()
   scheme   <- match.arg(scheme)
   joint    <- match.arg(joint)
@@ -357,11 +374,17 @@ rd_typecont <- function(data, x, time, id,
   # ----- tests: joint over all periods, then each period's own -----
   keep        <- .typecont_keep_rows(theta, period_labels, n_types)
   rows        <- which(keep)
+  # degrees of freedom of each jump's robust variance (the studentized joint tests)
+  nu <- vapply(seq_along(theta), function(k) {
+    f <- cells$fits[[(k - 1L) %% n_types + 1L, (k - 1L) %/% n_types + 1L]]
+    if (is.null(f)) NA_real_ else .jump_df(f, bc)
+  }, numeric(1))
   wald_joint  <- .typecont_wald(theta, Sigma, rows)
-  joint_tests <- .joint_tests(theta[rows], Sigma[rows, rows, drop = FALSE])
-  chosen      <- joint_tests[[joint]]
-  per_period  <- .typecont_per_period(theta, Sigma, keep, period_labels, n_types, joint)
-  # z of each tested jump, named period:type (the type index runs fastest in theta)
+  joint_tests <- .joint_tests(theta[rows], Sigma[rows, rows, drop = FALSE], nu = nu[rows])
+  chosen      <- .pick_joint(joint_tests, joint, studentize)
+  per_period  <- .typecont_per_period(theta, Sigma, nu, keep, period_labels, n_types, joint,
+                                      studentize)
+  # t of each tested jump, named period:type (the type index runs fastest in theta)
   cell_names  <- paste0(period_labels[(rows - 1L) %/% n_types + 1L], ":",
                         type_values[(rows - 1L) %% n_types + 1L])
   z           <- stats::setNames(theta[rows] / sqrt(pmax(diag(Sigma)[rows], 0)), cell_names)
@@ -372,8 +395,10 @@ rd_typecont <- function(data, x, time, id,
       df         = chosen$df,
       p_value    = chosen$p,
       joint_method = joint,
+      studentize = studentize,
       joint_tests = .joint_tests_df(joint_tests),
       z          = z,
+      nu         = stats::setNames(nu[rows], cell_names),
       scheme     = use_scheme,
       scheme_requested = scheme,
       estimand   = estimand,
@@ -394,7 +419,8 @@ rd_typecont <- function(data, x, time, id,
         scheme       = use_scheme,
         bc           = bc,
         estimand     = estimand,
-        joint        = joint
+        joint        = joint,
+        studentize   = studentize
       )
     ),
     class = "rd_typecont"
@@ -414,13 +440,15 @@ print.rd_typecont <- function(x, ...) {
   method <- x$joint_method %||% "wald"
   largest <- if (method == "supt" && length(x$z) && any(is.finite(x$z)))
     names(x$z)[which.max(abs(x$z))] else NULL
+  stud <- isTRUE(x$studentize %||% FALSE)
   .print_joint(list(stat = x$statistic, df = x$df, p = x$p_value), method, "Joint",
-               cell_label = if (!is.null(largest)) sprintf("period:type %s", largest))
+               cell_label = if (!is.null(largest)) sprintf("period:type %s", largest),
+               studentize = stud)
   for (k in names(x$per_period)) {
     period_test <- x$per_period[[k]]$test %||% x$per_period[[k]]$ll_wald
     if (!is.null(period_test)) {
       .print_joint(period_test, if (is.null(x$per_period[[k]]$test)) "wald" else method,
-                   sprintf("Period %s:", k), indent = "    ")
+                   sprintf("Period %s:", k), indent = "    ", studentize = stud)
     }
   }
   invisible(x)

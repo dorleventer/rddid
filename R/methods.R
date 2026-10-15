@@ -150,7 +150,7 @@ nobs.rddid <- function(object, ...) as.integer(sum(object$n_by_period))
 #' @return `tidy()` returns a data frame with one row per estimate (`term`, `estimate`,
 #'   `std.error`, `statistic`, `p.value`, `conf.low`, `conf.high`) for a fit, and one row per
 #'   test (`test`, `statistic`, `df`, `p.value`) for a validation test: the test's reported
-#'   statistic (the largest |z| under `joint = "supt"` for [rd_typecont()] and
+#'   statistic (the largest |t| under `joint = "supt"` for [rd_typecont()] and
 #'   [rd_compstable()], whose row is the joint test over pairs; the chi-squared statistic for
 #'   [rd_homog()] and [rd_trendcell()]).
 #'   `glance()` returns a
@@ -253,12 +253,14 @@ tidy.rd_trendcell <- function(x, ...) .tidy_test(x, "constant within-type confou
 #' a prefix such as "Period 1:"; the Wald line is .print_wald()'s ("Joint Wald chi-squared(...)").
 #' @keywords internal
 #' @noRd
-.print_joint <- function(test, method, label = "Joint", indent = "  ", cell_label = NULL) {
+.print_joint <- function(test, method, label = "Joint", indent = "  ", cell_label = NULL,
+                         studentize = FALSE) {
   if (method == "wald")
     return(.print_wald(test$stat, test$df, test$p,
                        label = if (identical(label, "Joint")) "Joint Wald" else label,
                        indent = indent))
-  name <- if (method == "supt") "sup-t" else "sWald"
+  name <- sprintf("%s (%s)", if (method == "supt") "sup-t" else "sWald",
+                  if (studentize) "studentized" else "normal")
   if (is.null(test$stat) || is.na(test$stat)) {
     cat(sprintf("%s%s %s: not testable\n", indent, label, name))
     return(invisible())
@@ -266,11 +268,11 @@ tidy.rd_trendcell <- function(x, ...) .tidy_test(x, "constant within-type confou
   pf    <- if (test$p < 1e-3) "<0.001" else formatC(test$p, digits = 3, format = "f")
   jumps <- sprintf("%d jump%s", as.integer(test$df), if (test$df == 1L) "" else "s")
   if (method == "supt") {
-    cat(sprintf("%s%s sup-t max |z| = %.3f over %s,  p = %s%s\n", indent, label, test$stat, jumps,
-                pf, if (!is.null(cell_label) && test$df > 1L)
-                      sprintf("  (largest: %s)", cell_label) else ""))
+    cat(sprintf("%s%s %s max |t| = %.3f over %s,  p = %s%s\n", indent, label, name, test$stat,
+                jumps, pf, if (!is.null(cell_label) && test$df > 1L)
+                             sprintf("  (largest: %s)", cell_label) else ""))
   } else {
-    cat(sprintf("%s%s sWald sum of z^2 = %.3f over %s,  p = %s\n", indent, label, test$stat,
+    cat(sprintf("%s%s %s sum of t^2 = %.3f over %s,  p = %s\n", indent, label, name, test$stat,
                 jumps, pf))
   }
 }
@@ -299,3 +301,10 @@ tidy.rd_trendcell <- function(x, ...) .tidy_test(x, "constant within-type confou
 #' @keywords internal
 #' @noRd
 `%||%` <- function(a, b) if (is.null(a)) b else a
+#' @rdname rddid-tidiers
+#' @export
+tidy.rd_checks <- function(x, ...) {
+  out <- x$table
+  names(out)[names(out) == "p_value"] <- "p.value"
+  out
+}

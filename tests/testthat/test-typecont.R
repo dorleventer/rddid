@@ -169,14 +169,15 @@ test_that("rd_typecont returns an rd_typecont object with expected fields", {
                      c = 0, h = 0.5)
 
   expect_s3_class(out, "rd_typecont")
-  expect_named(out, c("statistic", "df", "p_value", "joint_method", "joint_tests", "z", "scheme",
-                      "scheme_requested", "estimand", "ll_wald", "per_period", "fits", "data",
-                      "sides", "call", "meta"))
+  expect_named(out, c("statistic", "df", "p_value", "joint_method", "studentize", "joint_tests",
+                      "z", "nu", "scheme", "scheme_requested", "estimand", "ll_wald", "per_period",
+                      "fits", "data", "sides", "call", "meta"))
   expect_identical(out$joint_method, "supt")
-  expect_identical(out$joint_tests$method, c("supt", "swald", "wald"))
+  expect_identical(out$joint_tests$method, c("supt", "supt", "swald", "swald", "wald"))
+  expect_identical(out$joint_tests$reference, c("t", "normal", "t", "normal", "chi-squared"))
   # the default reports sup-t; the Wald is kept in ll_wald and joint_tests
   expect_equal(out$p_value, out$joint_tests$p_value[1])
-  expect_equal(out$ll_wald$stat, out$joint_tests$statistic[3])
+  expect_equal(out$ll_wald$stat, out$joint_tests$statistic[5])
   expect_named(out$ll_wald, c("stat", "df", "p"))
   # per_period: one entry per period, each with its own LL-Wald
   expect_named(out$per_period, out$meta$periods)
@@ -196,7 +197,7 @@ test_that("print.rd_typecont runs without error", {
   panel <- xsec_to_panel(d)
   out   <- rd_typecont(panel, x = "R", time = "time", id = "id",
                        c = 0, h = 0.5)
-  expect_output(print(out), "Joint sup-t max \\|z\\|")
+  expect_output(print(out), "Joint sup-t \\(studentized\\) max \\|t\\|")
   expect_output(print(rd_typecont(panel, x = "R", time = "time", id = "id", c = 0, h = 0.5,
                                   joint = "wald")), "Wald chi-squared")
 })
