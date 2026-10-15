@@ -130,19 +130,18 @@
   .joint_wald(theta[rows], Sigma[rows, rows, drop = FALSE])
 }
 
-#' Each period's own Wald test on its kept jumps: a list by period of list(ll_wald = ...).
+#' Each period's own tests on its kept jumps: a list by period of list(ll_wald = the Wald test,
+#' test = the test under `joint`).
 #' @noRd
-.typecont_per_period <- function(theta, Sigma, keep, period_labels, n_types) {
-  # With two types this is the single type-share jump of the period, chi^2(1). The joint test
-  # is not the sum of these: it also carries the covariance across periods.
-  per_period_wald <- stats::setNames(vector("list", length(period_labels)), period_labels)
-  for (idx_t in seq_along(period_labels)) {
+.typecont_per_period <- function(theta, Sigma, keep, period_labels, n_types, joint) {
+  # With two types this is the single type-share jump of the period, chi^2(1) (sup-t and sWald
+  # are then the same two-sided normal test). The joint test is not the sum of these: it also
+  # carries the covariance across periods.
+  stats::setNames(lapply(seq_along(period_labels), function(idx_t) {
     rows_t <- (idx_t - 1L) * n_types + seq_len(n_types)
     keep_t <- rows_t[keep[rows_t]]
-    per_period_wald[[idx_t]] <- .typecont_wald(theta, Sigma, keep_t)
-  }
-  stats::setNames(lapply(seq_along(period_labels), function(idx_t) {
-    list(ll_wald = per_period_wald[[idx_t]])
+    tests  <- .joint_tests(theta[keep_t], Sigma[keep_t, keep_t, drop = FALSE])
+    list(ll_wald = .typecont_wald(theta, Sigma, keep_t), test = tests[[joint]])
   }), period_labels)
 }
 
@@ -167,12 +166,32 @@
 #' unit is of this type" on the running variable estimates the jump in that
 #' type's share at the cutoff. The shares sum to one within a period, so one
 #' reference type per period is dropped (the type below the cutoff in every
-#' other period), and the remaining jumps are tested jointly by a Wald
-#' statistic, chi-squared with as many degrees of freedom as independent jumps
-#' tested. Each period's own Wald test is reported as well. A unit's type in a
+#' other period), and the remaining jumps are tested jointly (see "The joint
+#' statistic"). Each period's own test is reported as well. A unit's type in a
 #' period needs its side in every other period, so a unit missing from some
 #' period is left out of the regressions of the other periods. The test treats
 #' all periods alike: `t_rd` and `comparisons` only select which periods enter.
+#'
+#' ## The joint statistic
+#'
+#' `joint = "supt"` (default) standardizes each jump by its standard error and
+#' rejects when the largest |z| exceeds the sup-t critical value: the quantile
+#' of max |Z_k| for Z normal with the estimated correlation of the jumps. The
+#' printout names the (period, type) cell with the largest |z|. `"swald"` sums
+#' the squared z's and compares the sum with its distribution under the same
+#' normal (the sWald test of Fusejima, Ishihara and Sawada, 2025). `"wald"` is
+#' the chi-squared Wald statistic, which inverts the estimated covariance. Both
+#' sup-t and sWald use the covariance only through its correlations, so they
+#' avoid the error of inverting it, which grows fastest with the number of
+#' jumps. They still divide each jump by its estimated standard error, so a
+#' variance that is too small, or noisy, inflates them too, but less: at
+#' n = 1,000 the Wald rejects a true null 7-9% of the time at 9 jumps (three
+#' periods) and 15% at 28 (four periods), sup-t 6-7% and 4-5%, in the package
+#' authors' simulations. The critical values of sup-t and sWald are simulated with 100,000
+#' normal draws under a fixed seed, so a result is reproducible, and the
+#' caller's random-number state is left as it was. With one jump all three are
+#' the same two-sided normal test. All three are always returned in
+#' `joint_tests`.
 #'
 #' ## Shared units and the sampling scheme
 #'
@@ -223,12 +242,21 @@
 #' @param bc logical. `TRUE` (default): test the bias-corrected jumps with their
 #'   robust variance, as in the `Robust` row of [rddid()]; `FALSE`: the
 #'   conventional jumps and variances.
+#' @param joint the joint statistic: `"supt"` (default; the largest |z| against
+#'   a sup-t critical value), `"swald"` (the sum of squared z's) or `"wald"` (the
+#'   chi-squared Wald statistic). See "The joint statistic" in Details.
 #' @inheritParams rddid
 #'
 #' @return An object of class `"rd_typecont"`, a list with:
 #'   \describe{
-#'     \item{`statistic`, `df`, `p_value`}{the joint Wald statistic over all
-#'       periods, its degrees of freedom and its chi-squared p-value.}
+#'     \item{`statistic`, `df`, `p_value`}{the joint test over all periods under
+#'       `joint`: the statistic (the largest |z| for `"supt"`, the sum of squared
+#'       z's for `"swald"`, the chi-squared statistic for `"wald"`), the number of
+#'       jumps tested (`"supt"`, `"swald"`) or the degrees of freedom (`"wald"`),
+#'       and the p-value.}
+#'     \item{`joint_method`}{the joint statistic used; `joint_tests` has all three
+#'       (a data frame with `method`, `statistic`, `df`, `p_value`).}
+#'     \item{`z`}{the z-statistics of the jumps tested, named `"<period>:<type>"`.}
 #'     \item{`scheme`}{the sampling scheme used; `scheme_requested` is the
 #'       argument as passed.}
 #'     \item{`estimand`}{`"att"` or `"atu"`, as passed.}
@@ -240,16 +268,17 @@
 #'       the cutoff (`side_<period>`, `"+"`/`"-"`) in every period; [plot.rd_typecont()]
 #'       reads it.}
 #'     \item{`call`}{the matched call.}
-#'     \item{`per_period`}{a list by period; each element holds `ll_wald`, that
-#'       period's own Wald test (`stat`, `df`, `p`).}
-#'     \item{`ll_wald`}{the joint test again, as a list (`stat`, `df`, `p`). A type
+#'     \item{`per_period`}{a list by period; each element holds `test`, that
+#'       period's own test under `joint` (`stat`, `df`, `p`), and `ll_wald`, its
+#'       Wald test.}
+#'     \item{`ll_wald`}{the joint Wald test, as a list (`stat`, `df`, `p`). A type
 #'       share that is constant near the cutoff on both sides with no jump carries no
 #'       information and is left out (`dropped` counts them); one that jumps
 #'       deterministically makes the test undefined (`NA`).}
 #'     \item{`meta`}{a list with `periods`, `type_values` (the types, written
 #'       as the sides in the other periods in time order, e.g. `"+-"`), `h`
 #'       (the common bandwidth, `NA` with `bwselect = "cct"`), `bwselect`,
-#'       `scheme`, `bc` and `estimand`.}
+#'       `scheme`, `bc`, `estimand` and `joint`.}
 #'   }
 #'
 #' @references
@@ -268,8 +297,9 @@
 #' @examples
 #' # rddid_sim_pv: the running variable moves, so some units change side
 #' tc <- rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
-#' tc          # the null, the joint Wald test, then each period's own test
+#' tc          # the null, the joint sup-t test, then each period's own test
 #' tc$p_value
+#' tc$joint_tests   # sup-t, sWald and the chi-squared Wald side by side
 #' @export
 rd_typecont <- function(data, x, time, id,
                         t_rd = NULL, comparisons = NULL,
@@ -279,9 +309,11 @@ rd_typecont <- function(data, x, time, id,
                         bwselect = c("cct", "rot"),
                         kernel = "triangular",
                         scheme = c("auto", "cs", "pc", "pv"),
-                        bc = TRUE) {
+                        bc = TRUE,
+                        joint = c("supt", "swald", "wald")) {
   cl       <- match.call()
   scheme   <- match.arg(scheme)
+  joint    <- match.arg(joint)
   bwselect <- match.arg(bwselect)
   estimand <- match.arg(estimand)
   kernel   <- match.arg(kernel, c("triangular", "epanechnikov", "uniform"))
@@ -322,16 +354,26 @@ rd_typecont <- function(data, x, time, id,
   Sigma <- .typecont_sigma(cells$fits, period_labels, type_values, n_periods, n_types,
                            use_scheme, bc)
 
-  # ----- Wald tests: joint over all periods, then each period's own -----
-  keep       <- .typecont_keep_rows(theta, period_labels, n_types)
-  wald_joint <- .typecont_wald(theta, Sigma, which(keep))
-  per_period <- .typecont_per_period(theta, Sigma, keep, period_labels, n_types)
+  # ----- tests: joint over all periods, then each period's own -----
+  keep        <- .typecont_keep_rows(theta, period_labels, n_types)
+  rows        <- which(keep)
+  wald_joint  <- .typecont_wald(theta, Sigma, rows)
+  joint_tests <- .joint_tests(theta[rows], Sigma[rows, rows, drop = FALSE])
+  chosen      <- joint_tests[[joint]]
+  per_period  <- .typecont_per_period(theta, Sigma, keep, period_labels, n_types, joint)
+  # z of each tested jump, named period:type (the type index runs fastest in theta)
+  cell_names  <- paste0(period_labels[(rows - 1L) %/% n_types + 1L], ":",
+                        type_values[(rows - 1L) %% n_types + 1L])
+  z           <- stats::setNames(theta[rows] / sqrt(pmax(diag(Sigma)[rows], 0)), cell_names)
 
   structure(
     list(
-      statistic  = wald_joint$stat,
-      df         = wald_joint$df,
-      p_value    = wald_joint$p,
+      statistic  = chosen$stat,
+      df         = chosen$df,
+      p_value    = chosen$p,
+      joint_method = joint,
+      joint_tests = .joint_tests_df(joint_tests),
+      z          = z,
       scheme     = use_scheme,
       scheme_requested = scheme,
       estimand   = estimand,
@@ -351,7 +393,8 @@ rd_typecont <- function(data, x, time, id,
         bwselect     = bwselect,
         scheme       = use_scheme,
         bc           = bc,
-        estimand     = estimand
+        estimand     = estimand,
+        joint        = joint
       )
     ),
     class = "rd_typecont"
@@ -368,12 +411,16 @@ print.rd_typecont <- function(x, ...) {
               paste(x$meta$periods, collapse = ", "),
               paste(x$meta$type_values, collapse = ", "),
               .bw_label_test(x$meta$h, x$meta$bwselect)))
-  .print_wald(x$statistic, x$df, x$p_value, label = "Joint Wald")
+  method <- x$joint_method %||% "wald"
+  largest <- if (method == "supt" && length(x$z) && any(is.finite(x$z)))
+    names(x$z)[which.max(abs(x$z))] else NULL
+  .print_joint(list(stat = x$statistic, df = x$df, p = x$p_value), method, "Joint",
+               cell_label = if (!is.null(largest)) sprintf("period:type %s", largest))
   for (k in names(x$per_period)) {
-    period_wald <- x$per_period[[k]]$ll_wald
-    if (!is.null(period_wald)) {
-      .print_wald(period_wald$stat, period_wald$df, period_wald$p,
-                  label = sprintf("Period %s:", k), indent = "    ")
+    period_test <- x$per_period[[k]]$test %||% x$per_period[[k]]$ll_wald
+    if (!is.null(period_test)) {
+      .print_joint(period_test, if (is.null(x$per_period[[k]]$test)) "wald" else method,
+                   sprintf("Period %s:", k), indent = "    ")
     }
   }
   invisible(x)

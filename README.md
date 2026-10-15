@@ -91,10 +91,10 @@ rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
 #>   Sampling scheme: panel, some units change side of the cutoff (detected)
 #>   Periods: 1, 2, 3   Types: ++, +-, -+, --   Bandwidth: CCT MSE-optimal, chosen per cell
 #> 
-#>   Joint Wald chi-squared(9) = 4.782,  p = 0.853
-#>     Period 1: chi-squared(3) = 1.531,  p = 0.675
-#>     Period 2: chi-squared(3) = 0.382,  p = 0.944
-#>     Period 3: chi-squared(3) = 2.202,  p = 0.532
+#>   Joint sup-t max |z| = 1.232 over 9 jumps,  p = 0.863  (largest: period:type 1:+-)
+#>     Period 1: sup-t max |z| = 1.232 over 3 jumps,  p = 0.492
+#>     Period 2: sup-t max |z| = 0.582 over 3 jumps,  p = 0.901
+#>     Period 3: sup-t max |z| = 1.048 over 3 jumps,  p = 0.630
 ```
 
 The other three are `rd_compstable()`, `rd_homog()` and

@@ -149,8 +149,10 @@ nobs.rddid <- function(object, ...) as.integer(sum(object$n_by_period))
 #' @param ... unused.
 #' @return `tidy()` returns a data frame with one row per estimate (`term`, `estimate`,
 #'   `std.error`, `statistic`, `p.value`, `conf.low`, `conf.high`) for a fit, and one row per
-#'   test (`test`, `statistic`, `df`, `p.value`) for a validation test; for [rd_compstable()]
-#'   that row is the joint test over pairs, whose p-value is approximate (see its Details).
+#'   test (`test`, `statistic`, `df`, `p.value`) for a validation test: the test's reported
+#'   statistic (the largest |z| under `joint = "supt"` for [rd_typecont()] and
+#'   [rd_compstable()], whose row is the joint test over pairs; the chi-squared statistic for
+#'   [rd_homog()] and [rd_trendcell()]).
 #'   `glance()` returns a
 #'   one-row data frame describing the fit (`nobs`, `t_rd`, `comparisons`, `trend`, `weights`,
 #'   `bwselect`, `h` (the common bandwidth under `"joint"`/fixed `h`, `NA` otherwise),
@@ -247,11 +249,38 @@ tidy.rd_trendcell <- function(x, ...) .tidy_test(x, "constant within-type confou
                 if (p < 1e-3) "<0.001" else formatC(p, digits = 3, format = "f")))
   }
 }
+#' One line for a joint test under `method` ("supt", "swald" or "wald"). `label` is "Joint" or
+#' a prefix such as "Period 1:"; the Wald line is .print_wald()'s ("Joint Wald chi-squared(...)").
+#' @keywords internal
+#' @noRd
+.print_joint <- function(test, method, label = "Joint", indent = "  ", cell_label = NULL) {
+  if (method == "wald")
+    return(.print_wald(test$stat, test$df, test$p,
+                       label = if (identical(label, "Joint")) "Joint Wald" else label,
+                       indent = indent))
+  name <- if (method == "supt") "sup-t" else "sWald"
+  if (is.null(test$stat) || is.na(test$stat)) {
+    cat(sprintf("%s%s %s: not testable\n", indent, label, name))
+    return(invisible())
+  }
+  pf    <- if (test$p < 1e-3) "<0.001" else formatC(test$p, digits = 3, format = "f")
+  jumps <- sprintf("%d jump%s", as.integer(test$df), if (test$df == 1L) "" else "s")
+  if (method == "supt") {
+    cat(sprintf("%s%s sup-t max |z| = %.3f over %s,  p = %s%s\n", indent, label, test$stat, jumps,
+                pf, if (!is.null(cell_label) && test$df > 1L)
+                      sprintf("  (largest: %s)", cell_label) else ""))
+  } else {
+    cat(sprintf("%s%s sWald sum of z^2 = %.3f over %s,  p = %s\n", indent, label, test$stat,
+                jumps, pf))
+  }
+}
 #' Bandwidth description for the tests' printouts
 #' @keywords internal
 #' @noRd
 .bw_label_test <- function(h, bwselect) {
-  if (!is.null(h) && !is.na(h)) sprintf("h = %.4g in every cell", h)
+  if (identical(bwselect, "common") && !is.null(h) && !is.na(h))
+    sprintf("h = %.4g in every cell (CCT on the pooled comparison periods)", h)
+  else if (!is.null(h) && !is.na(h)) sprintf("h = %.4g in every cell", h)
   else if (bwselect == "cct") "CCT MSE-optimal, chosen per cell"
   else "rule of thumb, per cell"
 }

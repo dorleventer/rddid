@@ -401,16 +401,22 @@ tab_ss <- data.frame(
 knitr::kable(tab_ss, digits = 3, col.names = c("scenario", "t", "jump", "SE"))
 ```
 
-`rd_typecont()` computes the same jumps and combines them into a joint Wald
-statistic across periods, with the cross-period covariance of the two jumps
-(the same units enter both regressions) inside it. The statistic, its degrees of
-freedom and p-value are `$statistic`, `$df`, `$p_value`; the per-period
-versions sit in `$per_period[[t]]$ll_wald`:
+`rd_typecont()` computes the same jumps and combines them into a joint test
+across periods, with the cross-period covariance of the two jumps (the same
+units enter both regressions) inside it. Its default joint statistic is sup-t
+(the largest |z|; see [Checking the identification
+assumptions](rddid-validation-tests.html)); with `joint = "wald"`, used here to
+rebuild it by hand, it is the chi-squared Wald statistic. The statistic, its
+degrees of freedom and p-value are `$statistic`, `$df`, `$p_value`; the
+per-period Wald tests sit in `$per_period[[t]]$ll_wald`:
 
 ```{r typecont-wald}
-tc0 <- rd_typecont(S0, x = "R", time = "t", id = "id", bwselect = "cct", bc = FALSE)
-tc3 <- rd_typecont(S3, x = "R", time = "t", id = "id", bwselect = "cct", bc = FALSE)
-tc0_bc <- rd_typecont(S0, x = "R", time = "t", id = "id", bwselect = "cct", bc = TRUE)
+tc0 <- rd_typecont(S0, x = "R", time = "t", id = "id", bwselect = "cct", bc = FALSE,
+                   joint = "wald")
+tc3 <- rd_typecont(S3, x = "R", time = "t", id = "id", bwselect = "cct", bc = FALSE,
+                   joint = "wald")
+tc0_bc <- rd_typecont(S0, x = "R", time = "t", id = "id", bwselect = "cct", bc = TRUE,
+                      joint = "wald")
 ```
 
 ```{r check-typecont, include = FALSE}
@@ -545,9 +551,10 @@ the `"att"` call. Both reject under S1's drift.
 The other three tests are unchanged under `estimand = "atu"`:
 
 ```{r typecont-atu}
-tc_att <- rd_typecont(S1, x = "R", time = "t", id = "id", bwselect = "cct", bc = FALSE)
+tc_att <- rd_typecont(S1, x = "R", time = "t", id = "id", bwselect = "cct", bc = FALSE,
+                      joint = "wald")
 tc_atu <- rd_typecont(S1, x = "R", time = "t", id = "id", bwselect = "cct", bc = FALSE,
-                      estimand = "atu")
+                      estimand = "atu", joint = "wald")
 ```
 
 `rd_typecont()` on S1 gives the same joint statistic either way,

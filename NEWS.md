@@ -1,5 +1,43 @@
 # rddid 0.4.0.9000 (development)
 
+## 2026-10-15: size corrections for the validation tests (changes the tests' default results)
+
+A size study (clean null, n = 1,000, three periods, 5% level) found the four tests rejecting too
+often: type continuity 9%, composition stability 9%, homogeneous confounding 8%, constant
+within-type confounding 8%. The defaults bring this to 6-7% (5.7% for composition stability):
+sup-t avoids inverting the estimated covariance, but it still uses estimated standard errors, so
+a variance deficit or noisy standard errors still inflate it, by less than the Wald. Estimates of
+`rddid()` are unchanged.
+
+* `rd_typecont()` and `rd_compstable()`: new argument `joint = c("supt", "swald", "wald")`.
+  * The default `"supt"` compares the largest |z| of the tested jumps with a sup-t critical value
+    simulated from their estimated correlation.
+  * `"swald"` uses the sum of squared z's (Fusejima, Ishihara and Sawada, 2025).
+  * `"wald"` is the chi-squared Wald statistic used so far, which inverts the estimated covariance
+    and over-rejects as the number of jumps grows (7-9% at 9 jumps, 15% at 28).
+  * The critical values are simulated with 100,000 draws under a fixed seed (reproducible; the
+    caller's random-number state is restored).
+  * With one jump all three are the same two-sided normal test, so two-period calls give the
+    Wald's p-value.
+  * New fields `joint_method`, `joint_tests` (all three statistics) and, for `rd_typecont()`, `z`.
+    `ll_wald` and the per-period/per-pair `ll_wald` keep the Wald; the per-period/per-pair `test`
+    holds the test under `joint`.
+* `rd_compstable()`: the joint test over pairs no longer adds up the pair statistics as if the
+  pairs were independent; they share the RD-period units.
+  * It now tests all pairs' jumps together, with their full covariance.
+  * The covariance across pairs comes from the shared units, matched on id, following `scheme`.
+  * `joint$ll_wald` is now the Wald over the stacked jumps, and `joint$theta` / `joint$Sigma`
+    hold them.
+  * Each pair's `kept` and `cov_matrix` are returned.
+* `rd_homog()` and `rd_trendcell()`: new default `bwselect = "common"`.
+  * It uses one bandwidth in every cell: the CCT bandwidth of the outcome on the running variable
+    with all comparison periods pooled.
+  * Per-cell CCT bandwidths (`"cct"`, the former default) made every cell variance 10-15% too
+    small.
+  * The common bandwidth gives about 6% instead of 8%, at about 8 points of power against a
+    violation confined to one cell.
+  * New field `bandwidth` (`method`, `h`); the printout reports it.
+
 ## 2026-10-09: minimum-variance comparison-period weights
 
 * New argument `weighting` in `rddid()`. `"ols"` (default) keeps the weights used so far (equal under

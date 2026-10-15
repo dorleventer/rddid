@@ -114,14 +114,17 @@ test_that("rd_compstable returns expected structure", {
   expect_s3_class(out, "rd_compstable")
 
   # Top-level names
-  expect_named(out, c("statistic", "df", "p_value", "scheme", "scheme_requested", "estimand",
-                      "t_rd", "comparisons", "pairs", "joint", "call", "meta"))
+  expect_named(out, c("statistic", "df", "p_value", "joint_method", "joint_tests", "scheme",
+                      "scheme_requested", "estimand", "t_rd", "comparisons", "pairs", "joint",
+                      "call", "meta"))
 
   # Pair result
   pr <- out$pairs[["2::1"]]
   expect_false(is.null(pr))
-  expect_named(pr, c("ll_wald", "jumps", "jump_se", "type_values",
+  expect_named(pr, c("test", "ll_wald", "jumps", "jump_se", "kept", "cov_matrix", "type_values",
                       "scheme", "n_trd", "n_t0", "n_both", "fits", "sample"))
+  # one jump: sup-t is the two-sided normal test, the same p-value as the chi-square(1) Wald
+  expect_equal(pr$test$p, pr$ll_wald$p, tolerance = 1e-12)
   # binary types: the single kept jump reproduces the chi-square(1) Wald statistic
   expect_equal(length(pr$jumps), 1L)
   expect_equal(unname((pr$jumps / pr$jump_se)^2), pr$ll_wald$stat, tolerance = 1e-10)

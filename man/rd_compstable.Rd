@@ -17,7 +17,8 @@ rd_compstable(
   bwselect = c("cct", "rot"),
   kernel = "triangular",
   scheme = c("auto", "cs", "pc", "pv"),
-  bc = TRUE
+  bc = TRUE,
+  joint = c("supt", "swald", "wald")
 )
 }
 \arguments{
@@ -74,13 +75,19 @@ the cutoff in both periods, \code{"cs"} otherwise), \code{"cs"}, \code{"pc"} or 
 \item{bc}{logical. \code{TRUE} (default): test the bias-corrected jumps with their
 robust variance, as in the \code{Robust} row of \code{\link[=rddid]{rddid()}}; \code{FALSE}: the
 conventional jumps and variances.}
+
+\item{joint}{the statistic of each pair's test and of the joint test:
+\code{"supt"} (default), \code{"swald"} or \code{"wald"}, as in \code{\link[=rd_typecont]{rd_typecont()}}. See "The
+joint statistic" in Details.}
 }
 \value{
 An object of class \code{"rd_compstable"}, a list with:
 \describe{
-\item{\code{statistic}, \code{df}, \code{p_value}}{the joint test over pairs: the sum
-of the pair Wald statistics, the sum of their degrees of freedom, and
-the chi-squared p-value (approximate; see Details).}
+\item{\code{statistic}, \code{df}, \code{p_value}}{the joint test over pairs under
+\code{joint}: the statistic, the number of jumps tested (the degrees of
+freedom for \code{"wald"}), and the p-value.}
+\item{\code{joint_method}}{the statistic used; \code{joint_tests} has all three
+joint statistics (\code{method}, \code{statistic}, \code{df}, \code{p_value}).}
 \item{\code{scheme}}{the sampling scheme used: one value if every pair used
 the same, \code{"mixed"} otherwise; \code{scheme_requested} is the argument as
 passed.}
@@ -89,11 +96,14 @@ passed.}
 \item{\code{t_rd}, \code{comparisons}}{the RD period and the comparison periods
 used.}
 \item{\code{pairs}}{a list with one element per pair, named
-\code{"<RD period>::<comparison period>"}, each holding \code{ll_wald} (the
-pair's Wald test: \code{stat}, \code{df}, \code{p}); \code{jumps} and \code{jump_se} (the
+\code{"<RD period>::<comparison period>"}, each holding \code{test} (the
+pair's test under \code{joint}: \code{stat}, \code{df}, \code{p}) and \code{ll_wald} (its Wald
+test); \code{jumps} and \code{jump_se} (the
 tested share jumps and their standard errors, named by type: the
 unit's sides, \code{1} above and \code{0} below the cutoff, with its side in the
 other period of the pair last);
+\code{kept} and \code{cov_matrix} (the indices of the tested types in
+\code{type_values} and the covariance of their jumps);
 \code{type_values} (the types present); \code{scheme} (the scheme used for the
 pair); and \code{n_trd}, \code{n_t0}, \code{n_both} (the number of units above the
 cutoff in the RD period, in the comparison period, and in both; below
@@ -101,13 +111,16 @@ the cutoff under \code{estimand = "atu"}); \code{fits} (each type's \code{\link[
 fit on the reflected sample, \code{NULL} where it failed) and \code{sample} (the
 reflected sample: \code{x_trd}, \code{type_trd}, \code{x_t0}, \code{type_t0}), which feed
 \code{\link[=plot.rd_compstable]{plot.rd_compstable()}}.}
-\item{\code{joint}}{the joint test again, as \code{ll_wald} (\code{stat}, \code{df}, \code{p}). A type
-share that is constant near the cutoff on both sides with no jump carries no
-information and is left out (\code{dropped} counts them); one that jumps
-deterministically makes the test undefined (\code{NA}).}
+\item{\code{joint}}{the joint test again: \code{test} (under \code{joint}) and \code{ll_wald}
+(the chi-squared Wald over the stacked jumps with their full covariance),
+each \code{stat}, \code{df}, \code{p}; \code{theta} and \code{Sigma} (the stacked jumps, named
+\code{"<pair>:<type>"}, and their covariance). A type share that is constant
+near the cutoff on both sides with no jump carries no information and is
+left out (\code{dropped} counts them); one that jumps deterministically makes
+the test undefined (\code{NA}).}
 \item{\code{meta}}{a list with \code{t_rd}, \code{comparisons}, \code{h} (the common
 bandwidth, \code{NA} with \code{bwselect = "cct"}), \code{bwselect}, \code{c} (the cutoff
-as passed, before any mirroring), \code{bc} and \code{estimand}.}
+as passed, before any mirroring), \code{bc}, \code{estimand} and \code{joint}.}
 }
 }
 \description{
@@ -139,12 +152,24 @@ comparison-period units just above the cutoff. With two periods the type is
 the unit's side in the other period of the pair, and there is one jump per
 pair; with more periods the type also records the unit's sides in the
 remaining periods. The shares sum to one, so one reference type is dropped
-and the remaining jumps are tested jointly by a Wald statistic, one test per
-pair. The joint test over pairs adds up the pair statistics and degrees of
-freedom, which treats the pairs as independent although they share the
-RD-period units, so its p-value is approximate (the paper's test is per
-pair). A
-pair with fewer than three units in either group is skipped with a warning.
+and the remaining jumps are tested jointly, one test per pair. The joint
+test over pairs stacks every pair's jumps with their full covariance: the
+pairs share the RD-period units (and, in a panel, the units above the cutoff
+in two comparison periods), and the covariances across pairs come from
+those shared units. A pair with fewer than three units in either group is
+skipped with a warning.
+}
+
+\subsection{The joint statistic}{
+
+As in \code{\link[=rd_typecont]{rd_typecont()}}: \code{joint = "supt"} (default) rejects when the largest
+|z| of the tested jumps exceeds the sup-t critical value (simulated from the
+estimated correlation of the jumps); \code{"swald"} uses the sum of squared z's;
+\code{"wald"} the chi-squared Wald statistic. The same statistic is used for each
+pair and for the joint test, and all three joint statistics are returned in
+\code{joint_tests}. With two comparison periods at n = 1,000 the Wald over the
+stacked jumps rejects a true null 8-10\% of the time and sup-t and sWald 6\%;
+the former summed statistic (versions up to 0.4) rejected 8.7\%.
 }
 
 \subsection{Shared units and the sampling scheme}{
@@ -188,7 +213,7 @@ support points (e.g. \code{c = 4999.5} for integer populations).
 \examples{
 # rddid_sim_pv: the running variable moves, so some units change side
 cs <- rd_compstable(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
-cs          # one Wald test per (RD period, comparison period) pair, then their sum
+cs          # one test per (RD period, comparison period) pair, then the joint test
 cs$pairs[["3::1"]]$jumps
 # comparison periods uniformly treated: the shares below the cutoff
 rd_compstable(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3,

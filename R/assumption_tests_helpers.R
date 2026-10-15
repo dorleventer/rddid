@@ -1,6 +1,8 @@
 # assumption_tests_helpers.R -- internals shared by the four assumption tests: .build_types()
 # (a unit's type = its sides of the cutoff in the other periods), .cell_bandwidth() (CCT or rule of
-# thumb per cell), .joint_wald() and .wald_eigen() (two Wald statistics; see the notes on each).
+# thumb per cell), .joint_wald() and .wald_eigen() (two Wald statistics; see the notes on each),
+# .gauss_joint() / .joint_tests() (sup-t and sWald, which do not invert the covariance) and
+# .common_bandwidth() (one pooled CCT bandwidth for the outcome tests).
 # The code-to-paper map for the tests is dev/tests_map.md (developer material, not shipped).
 
 # ---------------------------------------------------------------------------
@@ -218,6 +220,134 @@
   W  <- as.numeric(t(Delta) %*% Sigma_inv %*% Delta)
   pv <- stats::pchisq(W, df = df, lower.tail = FALSE)
   list(stat = W, df = df, p = pv)
+}
+
+# ---------------------------------------------------------------------------
+# .gauss_joint, .joint_tests: joint tests that do not invert the estimated covariance
+# ---------------------------------------------------------------------------
+# Why (T1652 size study, rd-did/docs/test_size_morning_briefing.md): with many contrasts the
+# chi-squared Wald over-rejects because it inverts a noisy estimated covariance (7% at 9 df,
+# 15% at 28 df, n = 1,000). The max-|z| test with a sup-t critical value and the sum of squared
+# t-statistics (sWald, Fusejima, Ishihara & Sawada 2025, J. Econometrics) use the covariance only
+# through the correlations of the standardized jumps, never its inverse, and hold size.
+
+#' Run `expr` under a fixed seed and RNG kind, leaving the caller's RNG state untouched
+#' @keywords internal
+#' @noRd
+.with_seed <- function(seed, expr) {
+  genv     <- globalenv()
+  had_seed <- exists(".Random.seed", envir = genv, inherits = FALSE)
+  old_seed <- if (had_seed) get(".Random.seed", envir = genv, inherits = FALSE)
+  old_kind <- RNGkind()
+  on.exit({
+    RNGkind(old_kind[1], old_kind[2], old_kind[3])
+    if (had_seed) assign(".Random.seed", old_seed, envir = genv)
+    else if (exists(".Random.seed", envir = genv, inherits = FALSE))
+      rm(".Random.seed", envir = genv)
+  })
+  set.seed(seed, kind = "Mersenne-Twister", normal.kind = "Inversion", sample.kind = "Rejection")
+  expr
+}
+
+#' sup-t and sWald tests of theta = 0 from the standardized jumps
+#'
+#' t_k = theta_k / se_k with se = sqrt(diag(Sigma)). sup-t: max_k |t_k| against max_k |Z_k|;
+#' sWald: sum_k t_k^2 against sum_k Z_k^2; Z ~ N(0, R), R the correlation matrix of Sigma (its
+#' negative eigenvalues, from an indefinite estimate, set to zero). With one jump both are the
+#' two-sided normal test, computed exactly. Otherwise the null distributions are simulated with
+#' `n_sim` draws under a fixed seed (reproducible; the caller's RNG state is restored) and
+#' p = (1 + #{draws >= observed}) / (n_sim + 1). Zero-SE jumps are handled as in .joint_wald().
+#' @return list(supt = list(stat, df, p, cell), swald = list(stat, df, p)); `df` is the number
+#'   of jumps tested, `cell` the index in `theta` of the largest |t|.
+#' @keywords internal
+#' @noRd
+.gauss_joint <- function(theta, Sigma, scale = 1, n_sim = 100000L, seed = 20261015L) {
+  na_out <- function(extra = list()) {
+    r <- c(list(stat = NA_real_, df = 0L, p = NA_real_), extra)
+    list(supt = c(r, list(cell = NA_integer_)), swald = r)
+  }
+  if (length(theta) == 0L) return(na_out())
+  tol0    <- sqrt(.Machine$double.eps) * scale
+  se      <- sqrt(pmax(diag(Sigma), 0))
+  zero_se <- se <= tol0
+  if (any(zero_se & abs(theta) > tol0)) return(na_out(list(degenerate = TRUE)))
+  idx <- which(!zero_se)
+  if (length(idx) == 0L) return(na_out(list(dropped = sum(zero_se))))
+  tt <- theta[idx] / se[idx]
+  K  <- length(tt)
+  if (K == 1L) {
+    p1 <- 2 * stats::pnorm(-abs(tt))
+    supt  <- list(stat = abs(tt), df = 1L, p = p1, cell = idx)
+    swald <- list(stat = tt^2,    df = 1L, p = p1)
+  } else {
+    R <- Sigma[idx, idx, drop = FALSE] / tcrossprod(se[idx])
+    e <- eigen((R + t(R)) / 2, symmetric = TRUE)
+    L <- e$vectors %*% diag(sqrt(pmax(e$values, 0)), K)
+    m_obs <- max(abs(tt))
+    s_obs <- sum(tt^2)
+    n_ge_max <- 0
+    n_ge_sum <- 0
+    .with_seed(seed, {
+      left <- n_sim
+      while (left > 0) {   # in chunks, so K x n_sim never sits in memory at once
+        b <- min(left, 20000L)
+        Z <- L %*% matrix(stats::rnorm(K * b), K, b)
+        m <- abs(Z[1L, ])
+        for (k in seq_len(K)[-1L]) m <- pmax(m, abs(Z[k, ]))
+        n_ge_max <- n_ge_max + sum(m >= m_obs)
+        n_ge_sum <- n_ge_sum + sum(colSums(Z^2) >= s_obs)
+        left <- left - b
+      }
+    })
+    supt  <- list(stat = m_obs, df = K, p = (1 + n_ge_max) / (n_sim + 1),
+                  cell = idx[which.max(abs(tt))])
+    swald <- list(stat = s_obs, df = K, p = (1 + n_ge_sum) / (n_sim + 1))
+  }
+  if (any(zero_se)) {
+    supt$dropped  <- sum(zero_se)
+    swald$dropped <- sum(zero_se)
+  }
+  list(supt = supt, swald = swald)
+}
+
+#' The three joint tests of theta = 0: the chi-squared Wald (.joint_wald()), sup-t and sWald
+#' (.gauss_joint()); returns list(wald, supt, swald), each list(stat, df, p, ...).
+#' @keywords internal
+#' @noRd
+.joint_tests <- function(theta, Sigma, scale = 1) {
+  if (length(theta) == 0L) {
+    empty <- list(stat = NA_real_, df = 0L, p = NA_real_)
+    return(list(wald = empty, supt = c(empty, list(cell = NA_integer_)), swald = empty))
+  }
+  g <- .gauss_joint(theta, Sigma, scale = scale)
+  list(wald = .joint_wald(theta, Sigma, scale = scale), supt = g$supt, swald = g$swald)
+}
+
+#' The three joint tests as a data frame (method, statistic, df, p_value), for the result objects
+#' @keywords internal
+#' @noRd
+.joint_tests_df <- function(tests) {
+  data.frame(method    = c("supt", "swald", "wald"),
+             statistic = vapply(tests[c("supt", "swald", "wald")], function(z) z$stat, numeric(1)),
+             df        = vapply(tests[c("supt", "swald", "wald")], function(z) as.integer(z$df),
+                                integer(1)),
+             p_value   = vapply(tests[c("supt", "swald", "wald")], function(z) z$p, numeric(1)),
+             row.names = NULL, stringsAsFactors = FALSE)
+}
+
+#' Common bandwidth of rd_homog() and rd_trendcell() under bwselect = "common": the CCT
+#' MSE-optimal h of the outcome on the running variable, pooling every comparison period (all
+#' units, all types), used as main and pilot bandwidth in every cell.
+#' @keywords internal
+#' @noRd
+.common_bandwidth <- function(data, y, x, time, comparisons, cutoff, kernel, p) {
+  # Why (T1652): a bandwidth chosen on each thin cell's own data makes every cell variance
+  # 10-15% too small (the variance formula treats h as fixed), so the tests reject 7-8% at
+  # n = 1,000; one h chosen on the pooled comparison periods (n(T - 1) rows instead of ~n/2) is
+  # far less noisy and gives nominal size (5.6% / 5.9%), at about 8 points of power.
+  pooled <- data[data[[time]] %in% comparisons, , drop = FALSE]
+  pooled <- pooled[is.finite(pooled[[y]]) & is.finite(pooled[[x]]), , drop = FALSE]
+  unname(rd_bw_cct(pooled[[y]], pooled[[x]], c = cutoff, p = p, kernel = kernel)[["h"]])
 }
 
 #' Rule-of-thumb bandwidth of rd_typecont() and rd_compstable(): half the IQR of the running
