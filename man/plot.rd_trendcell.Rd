@@ -30,6 +30,7 @@ Other tests of the assumptions:
 \code{\link{plot.rd_homog}()},
 \code{\link{plot.rd_typecont}()},
 \code{\link{plot_switchers}()},
+\code{\link{rd_checks}()},
 \code{\link{rd_compstable}()},
 \code{\link{rd_homog}()},
 \code{\link{rd_trendcell}()},

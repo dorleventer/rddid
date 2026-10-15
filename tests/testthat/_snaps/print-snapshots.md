@@ -61,15 +61,16 @@
     Code
       print(rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3))
     Output
-      Test of a continuous type distribution  [rd_typecont()]
+      Test of type continuity  [rd_typecont()]
         H0: the share of each type jumps by zero at the cutoff, in every period
         Sampling scheme: panel, some units change side of the cutoff (detected)
         Periods: 1, 2, 3   Types: ++, +-, -+, --   Bandwidth: CCT MSE-optimal, chosen per cell
       
-        Joint Wald chi-squared(9) = 4.782,  p = 0.853
-          Period 1: chi-squared(3) = 1.531,  p = 0.675
-          Period 2: chi-squared(3) = 0.382,  p = 0.944
-          Period 3: chi-squared(3) = 2.202,  p = 0.532
+        Joint sup-t (t critical values) max |t| = 1.232 over 9 jumps,  p = #.###  (largest: period:type 1:+-)
+          Period 1: sup-t (t critical values) max |t| = 1.232 over 3 jumps,  p = #.###
+          Period 2: sup-t (t critical values) max |t| = 0.582 over 3 jumps,  p = #.###
+          Period 3: sup-t (t critical values) max |t| = 1.048 over 3 jumps,  p = #.###
+        All joint statistics: x$joint_tests
 
 ---
 
@@ -81,12 +82,13 @@
         Sampling scheme: panel, some units change side of the cutoff (detected)
         RD period: 3   Comparison periods: 1, 2   Bandwidth: CCT MSE-optimal, chosen per cell
       
-        Pair 3::1: chi-squared(3) = 21.982,  p = <0.001
+        Pair 3::1: sup-t (t critical values) max |t| = 3.086 over 3 jumps,  p = #.###
           n above the cutoff: 490 (RD period), 508 (comparison), 430 in both
-        Pair 3::2: chi-squared(3) = 6.137,  p = 0.105
+        Pair 3::2: sup-t (t critical values) max |t| = 2.059 over 3 jumps,  p = #.###
           n above the cutoff: 490 (RD period), 497 (comparison), 418 in both
       
-        Joint over pairs (sum of chi-squared): chi-squared(6) = 28.119,  p = <0.001
+        Joint over pairs: sup-t (t critical values) max |t| = 3.086 over 6 jumps,  p = #.###  (largest: pair:type 3::1:-+)
+        All joint statistics: x$joint_tests
 
 ---
 
@@ -96,16 +98,16 @@
       Test of homogeneous confounding  [rd_homog()]
         H0: in each comparison period the confounding jump is the same for every type
         Sampling scheme: panel, some units change side of the cutoff (detected)
-        Comparison periods: 1, 2
+        Comparison periods: 1, 2   Bandwidth: h = 0.2104 in every cell (CCT on the pooled comparison periods)
       
-        Wald chi-squared(2) = 0.465,  p = 0.793
+        Wald chi-squared(2) = 0.247,  p = 0.884
       
         Per-cell local-linear jumps (comparison periods):
           Period     Type               jump       s.e.       n
-          1          -                0.8985     0.2213     510  (reference)
-          1          +                0.7374     0.3582     490
-          2          -                1.0282     0.4007     510  (reference)
-          2          +                0.7356     0.3588     490
+          1          -                0.5347     0.2640     510  (reference)
+          1          +                0.7070     0.4047     490
+          2          -                1.0987     0.4183     510  (reference)
+          2          +                0.8699     0.5244     490
 
 ---
 
@@ -117,15 +119,16 @@
         H0: within each type, the confounding jump is the same in every comparison period
         Sampling scheme: panel, some units change side of the cutoff (detected)
         Comparison periods: 1, 2   Trend: constant
+        Bandwidth: h = 0.2104 in every cell (CCT on the pooled comparison periods)
       
-        Wald chi-squared(2) = 0.078,  p = 0.962
+        Wald chi-squared(2) = 1.445,  p = 0.485
       
         Per-cell local-linear jumps (comparison periods):
           Type       Period             jump       s.e.       n
-          +          1                0.7374     0.3582     490  (reference)
-          +          2                0.7356     0.3588     490
-          -          1                0.8985     0.2213     510  (reference)
-          -          2                1.0282     0.4007     510
+          +          1                0.7070     0.4047     490  (reference)
+          +          2                0.8699     0.5244     490
+          -          1                0.5347     0.2640     510  (reference)
+          -          2                1.0987     0.4183     510
 
 # the main error and message texts
 
@@ -161,4 +164,24 @@
       rddid(): no `id` given, so every row is treated as a different unit (repeated cross-section standard errors).
     Output
       [1] "cs"
+
+# print of rd_checks()
+
+    Code
+      print(rd_checks(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3))
+    Output
+      Tests of the identification assumptions  [rd_checks()]
+      
+        Assumption                          Statistic        p   Statistic type             Bandwidth
+        type continuity                         1.232    #.###   sup-t, t critical values   CCT per cell
+        composition stability                   3.086    #.###   sup-t, t critical values   CCT per cell
+        homogeneous confounding                 0.247    0.884   Wald chi-squared(2)        common (pooled CCT), h = 0.21
+        constant within-type confounding        1.445    0.485   Wald chi-squared(2)        common (pooled CCT), h = 0.21
+      
+        Reading at the 5% level (not rejecting does not establish an assumption):
+          type continuity                    not rejected
+          composition stability              rejected     } identification needs
+          homogeneous confounding            not rejected } only one of these two
+          constant within-type confounding   not rejected (checked in the comparison periods)
+        Each test's details: x$typecont, x$compstable, x$homog, x$trendcell.
 

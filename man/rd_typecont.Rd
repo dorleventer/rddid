@@ -17,7 +17,9 @@ rd_typecont(
   bwselect = c("cct", "rot"),
   kernel = "triangular",
   scheme = c("auto", "cs", "pc", "pv"),
-  bc = TRUE
+  bc = TRUE,
+  joint = c("supt", "swald", "wald"),
+  studentize = TRUE
 )
 }
 \arguments{
@@ -69,12 +71,28 @@ in the test: \code{"cs"}, \code{"pc"} or \code{"pv"} (as in \code{\link[=rddid]{
 \item{bc}{logical. \code{TRUE} (default): test the bias-corrected jumps with their
 robust variance, as in the \code{Robust} row of \code{\link[=rddid]{rddid()}}; \code{FALSE}: the
 conventional jumps and variances.}
+
+\item{joint}{the joint statistic: \code{"supt"} (default; the largest |t| against
+a sup-t critical value), \code{"swald"} (the sum of squared t's) or \code{"wald"} (the
+chi-squared Wald statistic). See "The joint statistic" in Details.}
+
+\item{studentize}{logical, for \code{joint = "supt"} or \code{"swald"}. \code{TRUE}
+(default): t-based critical values that account for the noise in each
+jump's estimated standard error; \code{FALSE}: normal critical values.}
 }
 \value{
 An object of class \code{"rd_typecont"}, a list with:
 \describe{
-\item{\code{statistic}, \code{df}, \code{p_value}}{the joint Wald statistic over all
-periods, its degrees of freedom and its chi-squared p-value.}
+\item{\code{statistic}, \code{df}, \code{p_value}}{the joint test over all periods under
+\code{joint} and \code{studentize}: the statistic (the largest |t| for \code{"supt"}, the
+sum of squared t's for \code{"swald"}, the chi-squared statistic for \code{"wald"}),
+the number of jumps tested (\code{"supt"}, \code{"swald"}) or the degrees of freedom
+(\code{"wald"}), and the p-value.}
+\item{\code{joint_method}, \code{studentize}}{as used; \code{joint_tests} has every
+statistic (a data frame with \code{method}, \code{reference} (\code{"t"}, \code{"normal"} or
+\code{"chi-squared"}), \code{statistic}, \code{df}, \code{p_value}).}
+\item{\code{t_stats}, \code{nu}}{the t-statistics of the jumps tested and the
+degrees of freedom of their variances, named \code{"<period>:<type>"}.}
 \item{\code{scheme}}{the sampling scheme used; \code{scheme_requested} is the
 argument as passed.}
 \item{\code{estimand}}{\code{"att"} or \code{"atu"}, as passed.}
@@ -86,16 +104,17 @@ period (\code{NULL} where a cell could not be fitted).}
 the cutoff (\verb{side_<period>}, \code{"+"}/\code{"-"}) in every period; \code{\link[=plot.rd_typecont]{plot.rd_typecont()}}
 reads it.}
 \item{\code{call}}{the matched call.}
-\item{\code{per_period}}{a list by period; each element holds \code{ll_wald}, that
-period's own Wald test (\code{stat}, \code{df}, \code{p}).}
-\item{\code{ll_wald}}{the joint test again, as a list (\code{stat}, \code{df}, \code{p}). A type
+\item{\code{per_period}}{a list by period; each element holds \code{test}, that
+period's own test under \code{joint} (\code{stat}, \code{df}, \code{p}), and \code{ll_wald}, its
+Wald test.}
+\item{\code{ll_wald}}{the joint Wald test, as a list (\code{stat}, \code{df}, \code{p}). A type
 share that is constant near the cutoff on both sides with no jump carries no
 information and is left out (\code{dropped} counts them); one that jumps
 deterministically makes the test undefined (\code{NA}).}
 \item{\code{meta}}{a list with \code{periods}, \code{type_values} (the types, written
 as the sides in the other periods in time order, e.g. \code{"+-"}), \code{h}
 (the common bandwidth, \code{NA} with \code{bwselect = "cct"}), \code{bwselect},
-\code{scheme}, \code{bc} and \code{estimand}.}
+\code{scheme}, \code{bc}, \code{estimand}, \code{joint} and \code{studentize}.}
 }
 }
 \description{
@@ -118,12 +137,37 @@ In each period and for each type, a local-linear RD of the indicator "the
 unit is of this type" on the running variable estimates the jump in that
 type's share at the cutoff. The shares sum to one within a period, so one
 reference type per period is dropped (the type below the cutoff in every
-other period), and the remaining jumps are tested jointly by a Wald
-statistic, chi-squared with as many degrees of freedom as independent jumps
-tested. Each period's own Wald test is reported as well. A unit's type in a
+other period), and the remaining jumps are tested jointly (see "The joint
+statistic"). Each period's own test is reported as well. A unit's type in a
 period needs its side in every other period, so a unit missing from some
 period is left out of the regressions of the other periods. The test treats
 all periods alike: \code{t_rd} and \code{comparisons} only select which periods enter.
+}
+
+\subsection{The joint statistic}{
+
+Two arguments choose it. \code{joint} picks the statistic: \code{"supt"} (default)
+rejects when the largest |t| of the jumps exceeds a sup-t critical value, and
+the printout names the (period, type) cell with the largest |t|; \code{"swald"}
+uses the sum of the squared t's (the sWald test of Fusejima, Ishihara and
+Sawada, 2025); \code{"wald"} is the chi-squared Wald statistic. \code{studentize}
+picks the reference distribution of sup-t and sWald: with \code{TRUE} (default)
+each t is compared as a t-statistic, its standard error being an estimate
+with the degrees of freedom of its robust variance (computed from the
+jump's regression weights); with \code{FALSE} as a standard normal. The
+critical values come from the estimated correlation of the jumps.
+
+Why these defaults: sup-t and sWald use the covariance only through its
+correlations, so they avoid inverting it, an error that grows with the
+number of jumps; t critical values account for the noise in each jump's
+estimated standard error. The simulation evidence (size and power of each
+statistic) is in the article "Checking the identification assumptions".
+
+Every statistic is reported in \code{joint_tests}, so any of them can be read off
+one call. The simulated critical values use 100,000 draws under a fixed
+seed, so a result is reproducible, and the caller's random-number state is
+left as it was. With one jump, sup-t and sWald are the two-sided t (or
+normal) test.
 }
 
 \subsection{Shared units and the sampling scheme}{
@@ -157,8 +201,12 @@ under \code{estimand = "att"} and \code{"atu"}; \code{estimand} only labels the 
 \examples{
 # rddid_sim_pv: the running variable moves, so some units change side
 tc <- rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
-tc          # the null, the joint Wald test, then each period's own test
+tc          # the null, the joint sup-t test, then each period's own test
 tc$p_value
+tc$joint_tests   # every statistic side by side
+# the chi-squared Wald, or sup-t with normal critical values:
+rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3, joint = "wald")
+rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3, studentize = FALSE)
 }
 \references{
 Leventer, D. and D. Nevo (2024). \emph{Correcting Invalid Regression Discontinuity
@@ -179,6 +227,7 @@ Other tests of the assumptions:
 \code{\link{plot.rd_trendcell}()},
 \code{\link{plot.rd_typecont}()},
 \code{\link{plot_switchers}()},
+\code{\link{rd_checks}()},
 \code{\link{rd_compstable}()},
 \code{\link{rd_homog}()},
 \code{\link{rd_trendcell}()}

@@ -15,7 +15,7 @@ rd_homog(
   estimand = c("att", "atu"),
   c = 0,
   h = NULL,
-  bwselect = c("cct", "rot"),
+  bwselect = c("common", "cct", "rot"),
   kernel = "triangular",
   scheme = c("auto", "cs", "pc", "pv"),
   min_n = 10L,
@@ -64,9 +64,12 @@ the test is the same either way.}
 \item{h}{a bandwidth to use, as both main and pilot bandwidth, in every cell.
 If given, \code{bwselect} is ignored.}
 
-\item{bwselect}{the bandwidth rule when \code{h} is not given: \code{"cct"} (default;
-each cell's own CCT bandwidths from \code{\link[=rd_bw_cct]{rd_bw_cct()}}) or \code{"rot"} (the rule of
-thumb \code{0.2} times the range of the running variable within the cell).}
+\item{bwselect}{the bandwidth rule when \code{h} is not given: \code{"common"}
+(default; one bandwidth for every cell, the CCT bandwidth of the outcome on
+the running variable with all comparison periods pooled), \code{"cct"} (each
+cell's own CCT bandwidths from \code{\link[=rd_bw_cct]{rd_bw_cct()}}) or \code{"rot"} (the rule of thumb
+\code{0.2} times the range of the running variable within the cell). See
+"Bandwidth" in Details.}
 
 \item{kernel}{the kernel: \code{"triangular"} (default), \code{"epanechnikov"} or
 \code{"uniform"}.}
@@ -100,6 +103,9 @@ freedom (the number of positive directions of the covariance used) and
 its chi-squared p-value.}
 \item{\code{scheme}}{the sampling scheme used.}
 \item{\code{estimand}}{\code{"att"} or \code{"atu"}, as passed.}
+\item{\code{bandwidth}}{a list with \code{method} (\code{"common"}, \code{"cct"}, \code{"rot"} or
+\code{"fixed"} for a numeric \code{h}) and \code{h} (the bandwidth used in every cell,
+\code{NA} when it varies by cell).}
 \item{\code{call}}{the matched call.}
 \item{\code{period_type_jumps}}{a data frame with one row per (comparison
 period, type) cell that was fitted: \code{period}, \code{type} (the unit's
@@ -168,11 +174,26 @@ side of the cutoff is dropped, and a message lists the dropped cells; a
 period with fewer than two types is skipped. \code{bc = TRUE} (default) tests the
 bias-corrected jumps with their robust variance, as in the \code{Robust} row of
 \code{\link[=rddid]{rddid()}}; \code{bc = FALSE} uses the conventional jumps and variances. With
-\code{bwselect = "cct"} (default) each cell gets its own CCT bandwidths from
+\code{bwselect = "cct"} each cell gets its own CCT bandwidths from
 \code{\link[=rd_bw_cct]{rd_bw_cct()}}, computed on that cell's outcome and running variable. With
 \code{bwselect = "rot"} the rule of thumb is \code{h = b = 0.2} times the range of the
 running variable within each cell. A numeric \code{h} is used as both bandwidths
 in every cell.
+}
+
+\subsection{Bandwidth}{
+
+\code{bwselect = "common"} (default) uses one bandwidth, as main and pilot
+bandwidth, in every cell: the CCT MSE-optimal bandwidth of the outcome on
+the running variable, chosen once on all comparison periods pooled (every
+unit, every type). A bandwidth chosen on each cell's own data (\code{"cct"}) is
+noisier, and the variance formula treats it as fixed, so the cell variances
+come out about 10-15\% too small and the test rejects a true null too often:
+about 8\% at the 5\% level with two comparison periods at n = 1,000, against
+6\% with the common bandwidth, in the package authors' simulations. The
+common bandwidth costs some power against a violation confined to one cell
+(about 8 points there), because a per-cell bandwidth adapts to the cell that
+moves. The common bandwidth is reported in \code{bandwidth} and in the printout.
 }
 
 \subsection{ATU designs}{
@@ -187,6 +208,8 @@ same, so \code{estimand} only labels the output.
 hc <- rd_homog(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 hc          # the Wald test, then each type's jump in each comparison period
 hc$period_type_jumps
+# one CCT bandwidth per cell instead of one common bandwidth
+rd_homog(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, bwselect = "cct")
 }
 \references{
 Leventer, D. and D. Nevo (2024). \emph{Correcting Invalid Regression Discontinuity
@@ -207,6 +230,7 @@ Other tests of the assumptions:
 \code{\link{plot.rd_trendcell}()},
 \code{\link{plot.rd_typecont}()},
 \code{\link{plot_switchers}()},
+\code{\link{rd_checks}()},
 \code{\link{rd_compstable}()},
 \code{\link{rd_trendcell}()},
 \code{\link{rd_typecont}()}

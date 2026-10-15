@@ -255,11 +255,25 @@
 #' period with fewer than two types is skipped. `bc = TRUE` (default) tests the
 #' bias-corrected jumps with their robust variance, as in the `Robust` row of
 #' [rddid()]; `bc = FALSE` uses the conventional jumps and variances. With
-#' `bwselect = "cct"` (default) each cell gets its own CCT bandwidths from
+#' `bwselect = "cct"` each cell gets its own CCT bandwidths from
 #' [rd_bw_cct()], computed on that cell's outcome and running variable. With
 #' `bwselect = "rot"` the rule of thumb is `h = b = 0.2` times the range of the
 #' running variable within each cell. A numeric `h` is used as both bandwidths
 #' in every cell.
+#'
+#' ## Bandwidth
+#'
+#' `bwselect = "common"` (default) uses one bandwidth, as main and pilot
+#' bandwidth, in every cell: the CCT MSE-optimal bandwidth of the outcome on
+#' the running variable, chosen once on all comparison periods pooled (every
+#' unit, every type). A bandwidth chosen on each cell's own data (`"cct"`) is
+#' noisier, and the variance formula treats it as fixed, so the cell variances
+#' come out about 10-15% too small and the test rejects a true null too often:
+#' about 8% at the 5% level with two comparison periods at n = 1,000, against
+#' 6% with the common bandwidth, in the package authors' simulations. The
+#' common bandwidth costs some power against a violation confined to one cell
+#' (about 8 points there), because a per-cell bandwidth adapts to the cell that
+#' moves. The common bandwidth is reported in `bandwidth` and in the printout.
 #'
 #' ## ATU designs
 #'
@@ -283,9 +297,12 @@
 #'   the test is the same either way.
 #' @param h a bandwidth to use, as both main and pilot bandwidth, in every cell.
 #'   If given, `bwselect` is ignored.
-#' @param bwselect the bandwidth rule when `h` is not given: `"cct"` (default;
-#'   each cell's own CCT bandwidths from [rd_bw_cct()]) or `"rot"` (the rule of
-#'   thumb `0.2` times the range of the running variable within the cell).
+#' @param bwselect the bandwidth rule when `h` is not given: `"common"`
+#'   (default; one bandwidth for every cell, the CCT bandwidth of the outcome on
+#'   the running variable with all comparison periods pooled), `"cct"` (each
+#'   cell's own CCT bandwidths from [rd_bw_cct()]) or `"rot"` (the rule of thumb
+#'   `0.2` times the range of the running variable within the cell). See
+#'   "Bandwidth" in Details.
 #' @param min_n the minimum number of observations on each side of the cutoff
 #'   for a (period, type) cell to enter the test (default 10). Smaller cells
 #'   are dropped, with a message listing them.
@@ -311,6 +328,9 @@
 #'       its chi-squared p-value.}
 #'     \item{`scheme`}{the sampling scheme used.}
 #'     \item{`estimand`}{`"att"` or `"atu"`, as passed.}
+#'     \item{`bandwidth`}{a list with `method` (`"common"`, `"cct"`, `"rot"` or
+#'       `"fixed"` for a numeric `h`) and `h` (the bandwidth used in every cell,
+#'       `NA` when it varies by cell).}
 #'     \item{`call`}{the matched call.}
 #'     \item{`period_type_jumps`}{a data frame with one row per (comparison
 #'       period, type) cell that was fitted: `period`, `type` (the unit's
@@ -345,12 +365,14 @@
 #' hc <- rd_homog(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 #' hc          # the Wald test, then each type's jump in each comparison period
 #' hc$period_type_jumps
+#' # one CCT bandwidth per cell instead of one common bandwidth
+#' rd_homog(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, bwselect = "cct")
 #' @export
 rd_homog <- function(data, y, x, time, id,
                      t_rd = NULL, comparisons = NULL,
                      estimand = c("att", "atu"),
                      c = 0, h = NULL,
-                     bwselect = c("cct", "rot"),
+                     bwselect = c("common", "cct", "rot"),
                      kernel = "triangular",
                      scheme = c("auto", "cs", "pc", "pv"),
                      min_n = 10L,
@@ -361,6 +383,7 @@ rd_homog <- function(data, y, x, time, id,
   scheme   <- match.arg(scheme)
   type_by  <- match.arg(type_by)
   bwselect <- match.arg(bwselect)
+  h_given  <- !is.null(h)
   estimand <- match.arg(estimand)
   kernel   <- match.arg(kernel, c("triangular", "epanechnikov", "uniform"))
   cutoff   <- c   # the cutoff; `c` stays the argument name for rdrobust users
@@ -395,6 +418,13 @@ rd_homog <- function(data, y, x, time, id,
       stop("RD period '", t_rd, "' has no side column; cannot define rd_side types.")
     type_list <- .homog_rd_side_types(type_list, types$wide, side_col)
   }
+
+  # "common" (default): one bandwidth for every cell, the CCT h of the outcome on the pooled
+  # comparison periods (.common_bandwidth()); "cct": each cell's own; "rot": rule of thumb
+  if (!h_given && bwselect == "common")
+    h <- .common_bandwidth(data, y, x, time, comparisons, cutoff, kernel, p)
+  bandwidth <- list(method = if (h_given) "fixed" else bwselect,
+                    h      = if (is.null(h)) NA_real_ else unname(h))
 
   detected_scheme <- .detect_scheme_comparisons(data, x, time, id, comparisons, cutoff)
   cells <- .homog_fit_cells(data, y, x, time, id, comparisons, type_list, cutoff, kernel,
@@ -445,6 +475,7 @@ rd_homog <- function(data, y, x, time, id,
       bc                = bc,
       estimand          = estimand,
       comparisons       = names(cells$contrast_keys),
+      bandwidth         = bandwidth,
       call              = cl
     ),
     class = "rd_homog"
@@ -456,7 +487,9 @@ print.rd_homog <- function(x, ...) {
   .print_test_header("homogeneous confounding", "rd_homog",
                      "in each comparison period the confounding jump is the same for every type",
                      x$scheme, identical(x$scheme_requested, "auto"), x$estimand)
-  cat(sprintf("  Comparison periods: %s\n\n", paste(.period_order(as.character(x$comparisons)), collapse = ", ")))
+  cat(sprintf("  Comparison periods: %s%s\n\n", paste(.period_order(as.character(x$comparisons)), collapse = ", "),
+              if (is.null(x$bandwidth)) "" else
+                sprintf("   Bandwidth: %s", .bw_label_test(x$bandwidth$h, x$bandwidth$method))))
   .print_wald(x$statistic, x$df, x$p_value, label = "Wald")
   .print_jump_table(x$period_type_jumps, c("period", "type"), c("Period", "Type"))
   invisible(x)
