@@ -13,6 +13,7 @@ rddid(
   t_rd,
   comparisons = NULL,
   trend = "constant",
+  rd_weights = NULL,
   weighting = c("ols", "min_variance"),
   estimand = c("att", "atu"),
   bwselect = c("joint", "cct"),
@@ -53,7 +54,8 @@ standard errors. With \code{NULL} (default) every row is treated as a different
 unit, which gives repeated cross-section standard errors (with a message).}
 
 \item{t_rd}{the RD period: the value of \code{time} in which the treatment of
-interest switches on at the cutoff.}
+interest switches on at the cutoff. A vector of several RD periods estimates
+the weighted average of their effects (see "Several RD periods").}
 
 \item{comparisons}{the comparison periods: values of \code{time} in which the
 treatment of interest is uniform at the cutoff (nobody treated, or, with
@@ -68,7 +70,14 @@ under the default \code{weighting}) or \code{"linear"} (the confounding
 jump moves linearly in time; needs at least two comparison periods). A
 numeric vector gives the weights directly, one per entry of \code{comparisons}
 in that order. Weights that sum to one cancel a constant confounding
-jump; \code{rddid()} warns when they do not.}
+jump; \code{rddid()} warns when they do not. With several RD periods a numeric
+vector applies to every RD period, and a numeric matrix gives one row of
+weights per RD period (rows in \code{t_rd} order or named by period).}
+
+\item{rd_weights}{the weights \eqn{\phi_t}{phi_t} of the RD periods in the
+average, one per entry of \code{t_rd} (in that order, or named by period).
+\code{NULL} (default) gives equal weights. Any finite weights are allowed;
+weights that sum to one make the estimand a weighted average.}
 
 \item{weighting}{how the comparison-period weights are chosen within the
 \code{trend} assumption: \code{"ols"} (default) uses the weights \code{trend} implies
@@ -143,12 +152,18 @@ bandwidths).}
 \item{\code{coef}}{named numeric vector, the coefficient of each period's jump
 in the estimate: 1 for the RD period, minus its weight for each
 comparison period. \code{\link[=coef]{coef()}} returns the estimate itself.}
-\item{\code{weights}}{named numeric vector of the comparison-period weights.}
+\item{\code{weights}}{named numeric vector of the comparison-period weights;
+with several RD periods, the aggregated weights
+\eqn{w^\phi_{t_0}}{w^phi_t0}.}
+\item{\code{rd_weights}}{named numeric vector of the RD-period weights
+\eqn{\phi_t}{phi_t} (1 for a single RD period).}
+\item{\code{weights_by_target}}{numeric matrix of the comparison-period
+weights for each RD period, one row per RD period.}
 \item{\code{weights_type}}{\code{"constant"}, \code{"linear"}, or \code{"custom"} for numeric
 weights.}
 \item{\code{estimand}}{\code{"att"} or \code{"atu"}, as passed.}
-\item{\code{t_rd}, \code{comparisons}}{the RD period and the comparison periods
-used.}
+\item{\code{t_rd}, \code{comparisons}}{the RD period(s) and the comparison
+periods used.}
 \item{\code{scheme}}{the sampling scheme behind \code{se}, \code{ci_l}, \code{ci_u}, \code{z} and
 \code{p}; \code{scheme_detected} is the scheme read off the data and
 \code{scheme_requested} the argument as passed.}
@@ -198,6 +213,21 @@ estimated by a local-linear RD on that period's observations;
 \eqn{t_{\mathrm{RD}}}{t_RD} is the RD period (\code{t_rd}); the sum runs over the
 comparison periods; and \eqn{w_t} is the weight of comparison period
 \eqn{t}. \code{summary()} lists every \eqn{D_t} with its coefficient in the sum.
+}
+
+\subsection{Several RD periods}{
+
+With a vector \code{t_rd}, \code{rddid()} estimates the weighted average of the RD
+periods' effects, \eqn{\mathrm{ATT}^\phi = \sum_t \phi_t \mathrm{ATT}(t)}{ATT^phi = sum_t phi_t ATT(t)},
+with weights \eqn{\phi_t}{phi_t} from \code{rd_weights} (equal by default; any
+finite weights are allowed, as they define the estimand). Each period's jump
+is estimated once: the RD periods enter with \eqn{\phi_t}{phi_t} and the
+comparison periods with the aggregated weights
+\eqn{w^\phi_{t_0} = \sum_t \phi_t w_{t_0}(t)}{w^phi_t0 = sum_t phi_t w_t0(t)}, where
+\eqn{w_{t_0}(t)}{w_t0(t)} are the weights the trend assumption gives for RD
+period \eqn{t} (the paper's Corollary 2 and Section 5.6). The standard errors
+include the covariances between RD periods, and \code{"joint"} chooses one
+bandwidth for the average, not for any single RD period. \code{weighting = "min_variance"} is available for a single RD period only.
 }
 
 \subsection{The confounding-trend assumption}{
@@ -319,6 +349,11 @@ rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
 # minimum-variance comparison-period weights
 rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
       weighting = "min_variance")
+# several RD periods: the average of their effects (year 3 copied as a
+# second RD year, 4, for illustration)
+sim4 <- rbind(rddid_sim, transform(rddid_sim[rddid_sim$year == 3, ], year = 4))
+rddid(sim4, y = "Y", x = "R", time = "year", id = "id", t_rd = c(3, 4),
+      comparisons = c(1, 2))
 # comparison periods uniformly treated: add estimand = "atu" (same numbers)
 }
 \references{

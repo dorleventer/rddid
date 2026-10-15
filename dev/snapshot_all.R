@@ -93,6 +93,15 @@ keep("rddid|pc|no-id",
 keep("rddid|pv4|joint|linear-3comp",
      rddid(dat$pv4, y = "Y", x = "R", time = "year", id = "id", t_rd = 4, bwselect = "joint",
            weights = "linear"))
+# aggregate over RD periods 3 and 4 (comparisons 1, 2): Corollary cor:agg, Section 5.6
+for (bw in c("joint", "cct")) {
+  keep(sprintf("rddid|pv4|agg|%s|constant", bw),
+       rddid(dat$pv4, y = "Y", x = "R", time = "year", id = "id", t_rd = c(3, 4),
+             comparisons = c(1, 2), bwselect = bw))
+  keep(sprintf("rddid|pv4|agg|%s|linear-phi", bw),
+       rddid(dat$pv4, y = "Y", x = "R", time = "year", id = "id", t_rd = c(3, 4),
+             comparisons = c(1, 2), trend = "linear", rd_weights = c(0.3, 0.7), bwselect = bw))
+}
 
 # ---- rd_period(), rd_bw_cct() --------------------------------------------------------------
 d3 <- dat$pv[dat$pv$year == 3, ]

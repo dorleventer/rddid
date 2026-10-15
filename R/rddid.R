@@ -26,6 +26,21 @@
 #' comparison periods; and \eqn{w_t} is the weight of comparison period
 #' \eqn{t}. `summary()` lists every \eqn{D_t} with its coefficient in the sum.
 #'
+#' ## Several RD periods
+#'
+#' With a vector `t_rd`, `rddid()` estimates the weighted average of the RD
+#' periods' effects, \eqn{\mathrm{ATT}^\phi = \sum_t \phi_t \mathrm{ATT}(t)}{ATT^phi = sum_t phi_t ATT(t)},
+#' with weights \eqn{\phi_t}{phi_t} from `rd_weights` (equal by default; any
+#' finite weights are allowed, as they define the estimand). Each period's jump
+#' is estimated once: the RD periods enter with \eqn{\phi_t}{phi_t} and the
+#' comparison periods with the aggregated weights
+#' \eqn{w^\phi_{t_0} = \sum_t \phi_t w_{t_0}(t)}{w^phi_t0 = sum_t phi_t w_t0(t)}, where
+#' \eqn{w_{t_0}(t)}{w_t0(t)} are the weights the trend assumption gives for RD
+#' period \eqn{t} (the paper's Corollary 2 and Section 5.6). The standard errors
+#' include the covariances between RD periods, and `"joint"` chooses one
+#' bandwidth for the average, not for any single RD period. `weighting =
+#' "min_variance"` is available for a single RD period only.
+#'
 #' ## The confounding-trend assumption
 #'
 #' With `trend = "constant"` the confounding jump is the same in every period,
@@ -143,7 +158,8 @@
 #'   standard errors. With `NULL` (default) every row is treated as a different
 #'   unit, which gives repeated cross-section standard errors (with a message).
 #' @param t_rd the RD period: the value of `time` in which the treatment of
-#'   interest switches on at the cutoff.
+#'   interest switches on at the cutoff. A vector of several RD periods estimates
+#'   the weighted average of their effects (see "Several RD periods").
 #' @param comparisons the comparison periods: values of `time` in which the
 #'   treatment of interest is uniform at the cutoff (nobody treated, or, with
 #'   `estimand = "atu"`, everybody treated). `NULL` (default) uses every period
@@ -156,7 +172,13 @@
 #'   jump moves linearly in time; needs at least two comparison periods). A
 #'   numeric vector gives the weights directly, one per entry of `comparisons`
 #'   in that order. Weights that sum to one cancel a constant confounding
-#'   jump; `rddid()` warns when they do not.
+#'   jump; `rddid()` warns when they do not. With several RD periods a numeric
+#'   vector applies to every RD period, and a numeric matrix gives one row of
+#'   weights per RD period (rows in `t_rd` order or named by period).
+#' @param rd_weights the weights \eqn{\phi_t}{phi_t} of the RD periods in the
+#'   average, one per entry of `t_rd` (in that order, or named by period).
+#'   `NULL` (default) gives equal weights. Any finite weights are allowed;
+#'   weights that sum to one make the estimand a weighted average.
 #' @param weighting how the comparison-period weights are chosen within the
 #'   `trend` assumption: `"ols"` (default) uses the weights `trend` implies
 #'   (equal weights for `"constant"`, the least-squares line for `"linear"`);
@@ -216,12 +238,18 @@
 #'     \item{`coef`}{named numeric vector, the coefficient of each period's jump
 #'       in the estimate: 1 for the RD period, minus its weight for each
 #'       comparison period. [coef()] returns the estimate itself.}
-#'     \item{`weights`}{named numeric vector of the comparison-period weights.}
+#'     \item{`weights`}{named numeric vector of the comparison-period weights;
+#'       with several RD periods, the aggregated weights
+#'       \eqn{w^\phi_{t_0}}{w^phi_t0}.}
+#'     \item{`rd_weights`}{named numeric vector of the RD-period weights
+#'       \eqn{\phi_t}{phi_t} (1 for a single RD period).}
+#'     \item{`weights_by_target`}{numeric matrix of the comparison-period
+#'       weights for each RD period, one row per RD period.}
 #'     \item{`weights_type`}{`"constant"`, `"linear"`, or `"custom"` for numeric
 #'       weights.}
 #'     \item{`estimand`}{`"att"` or `"atu"`, as passed.}
-#'     \item{`t_rd`, `comparisons`}{the RD period and the comparison periods
-#'       used.}
+#'     \item{`t_rd`, `comparisons`}{the RD period(s) and the comparison
+#'       periods used.}
 #'     \item{`scheme`}{the sampling scheme behind `se`, `ci_l`, `ci_u`, `z` and
 #'       `p`; `scheme_detected` is the scheme read off the data and
 #'       `scheme_requested` the argument as passed.}
@@ -277,10 +305,15 @@
 #' # minimum-variance comparison-period weights
 #' rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
 #'       weighting = "min_variance")
+#' # several RD periods: the average of their effects (year 3 copied as a
+#' # second RD year, 4, for illustration)
+#' sim4 <- rbind(rddid_sim, transform(rddid_sim[rddid_sim$year == 3, ], year = 4))
+#' rddid(sim4, y = "Y", x = "R", time = "year", id = "id", t_rd = c(3, 4),
+#'       comparisons = c(1, 2))
 #' # comparison periods uniformly treated: add estimand = "atu" (same numbers)
 #' @export
 rddid <- function(data, y, x, time, id = NULL, t_rd,
-                  comparisons = NULL, trend = "constant",
+                  comparisons = NULL, trend = "constant", rd_weights = NULL,
                   weighting = c("ols", "min_variance"),
                   estimand = c("att", "atu"),
                   bwselect = c("joint", "cct"), h = NULL, b = NULL,
@@ -305,10 +338,14 @@ rddid <- function(data, y, x, time, id = NULL, t_rd,
   # ---- periods and data -------------------------------------------------------------------
   .check_columns(data, c(y, x, time, id))
   time_col <- data[[time]]
-  if (!t_rd %in% time_col) stop("t_rd = ", t_rd, " not present in `", time, "`.")
+  if (length(t_rd) < 1L) stop("`t_rd` must give at least one RD period.")
+  if (anyDuplicated(t_rd)) stop("`t_rd` contains a period more than once.")
+  missing_rd <- t_rd[!t_rd %in% time_col]
+  if (length(missing_rd))
+    stop("t_rd = ", paste(missing_rd, collapse = ", "), " not present in `", time, "`.")
   if (is.null(comparisons)) comparisons <- sort(setdiff(unique(time_col), t_rd))
   if (length(comparisons) < 1L) stop("need at least one comparison period.")
-  if (t_rd %in% comparisons) stop("`t_rd` must not be one of the `comparisons`.")
+  if (any(t_rd %in% comparisons)) stop("`t_rd` must not be one of the `comparisons`.")
   if (anyDuplicated(comparisons)) stop("`comparisons` contains a period more than once.")
   if (!is.null(id)) {
     dup <- duplicated(data[, c(id, time)]) & !is.na(data[[id]]) & !is.na(time_col)
@@ -336,13 +373,19 @@ rddid <- function(data, y, x, time, id = NULL, t_rd,
   periods <- c(t_rd, comparisons)          # the RD period first, then the comparisons
   plist   <- .rddid_period_frames(data, y, x, id, time_col, periods)
 
-  # ---- the estimator's coefficients: +1 on the RD period, minus the weight on each comparison
-  comp_weights <- .rddid_weights(trend, comparisons, t_rd)
-  period_coef  <- c(stats::setNames(1, as.character(t_rd)), -comp_weights)
+  # ---- the estimator's coefficients: phi_t on each RD period (1 for a single one), minus the
+  # aggregated weight w^phi_t0 = sum_t phi_t w_t0(t) on each comparison period (Cor. cor:agg)
+  rd_w <- .rddid_rd_weights(rd_weights, t_rd)
+  weights_by_target <- .rddid_weights_by_target(trend, comparisons, t_rd)
+  comp_weights <- colSums(rd_w * weights_by_target)
+  period_coef  <- c(rd_w, -comp_weights)
   if (weighting == "min_variance") {
     if (is.numeric(trend))
       stop("`weighting = \"min_variance\"` chooses the comparison weights and a numeric `trend` ",
            "fixes them; use one or the other.", call. = FALSE)
+    if (length(t_rd) > 1L)
+      stop("`weighting = \"min_variance\"` is available for a single RD period; with several ",
+           "RD periods use the default `weighting = \"ols\"`.", call. = FALSE)
   }
 
   # ---- sampling scheme (sets the standard error and, for the joint rules, the bandwidth) --
@@ -373,8 +416,9 @@ rddid <- function(data, y, x, time, id = NULL, t_rd,
                       use_scheme, comp_weights)
     weights_detail <- list(pilot = comp_weights, Xi = mv$Xi, xi = mv$xi,
                            h = bw$info$h_by_period, pinned = mv$pinned)
-    comp_weights <- mv$w
-    period_coef  <- c(stats::setNames(1, as.character(t_rd)), -comp_weights)
+    comp_weights <- rd_w[[1]] * mv$w
+    weights_by_target[1, ] <- mv$w
+    period_coef  <- c(rd_w, -comp_weights)
     if (is.null(h) && bwselect == "joint" && !mv$pinned) {
       bw <- .rddid_bandwidths(plist, period_coef, t_rd, periods, use_scheme, h, b, bwselect,
                               cutoff, p, q, kernel, regularize, reg_const)
@@ -389,6 +433,7 @@ rddid <- function(data, y, x, time, id = NULL, t_rd,
   structure(list(
     estimates = .rddid_estimate_table(agg_conv, agg_bc, use_scheme, level),
     coef = period_coef, weights = comp_weights,
+    rd_weights = rd_w, weights_by_target = weights_by_target,
     weights_type = if (is.numeric(trend)) "custom" else match.arg(trend, c("constant", "linear")),
     estimand = estimand,
     t_rd = t_rd, comparisons = comparisons,
@@ -479,10 +524,17 @@ rddid <- function(data, y, x, time, id = NULL, t_rd,
 #' @export
 print.rddid <- function(x, digits = 4, hint = TRUE, ...) {
   est <- if (is.null(x$estimand)) "att" else x$estimand
-  cat(sprintf("RD-DID estimate of the %s in period %s\n", toupper(est), x$t_rd))
+  fmt_w <- function(w) paste(trimws(formatC(w, digits = 3, format = "g")), collapse = ", ")
+  several <- length(x$t_rd) > 1L
+  if (several)
+    cat(sprintf("RD-DID estimate of the %s averaged over RD periods %s (weights %s)\n",
+                toupper(est), paste(x$t_rd, collapse = ", "), fmt_w(x$rd_weights)))
+  else
+    cat(sprintf("RD-DID estimate of the %s in period %s\n", toupper(est), x$t_rd))
   cat(sprintf("  Comparison periods: %s   (%s; %s %s)\n",
               paste(x$comparisons, collapse = ", "), .trend_label(x$weights_type),
-              if (identical(x$weighting, "min_variance")) "minimum-variance weights" else "weights",
+              if (identical(x$weighting, "min_variance")) "minimum-variance weights"
+              else if (several) "aggregated weights" else "weights",
               paste(trimws(formatC(x$weights, digits = 3, format = "g")), collapse = ", ")))
   cat(sprintf("  Sampling scheme: %s%s\n", .scheme_label(x$scheme),
               if (identical(x$scheme_requested, "auto")) " (detected)" else ""))

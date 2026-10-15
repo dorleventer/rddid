@@ -408,6 +408,8 @@
 #' @param studentize logical, for `joint = "supt"` or `"swald"`: t-based
 #'   (`TRUE`, default) or normal (`FALSE`) critical values, as in
 #'   [rd_typecont()].
+#' @param t_rd the RD period: the value of `time` in which the treatment of
+#'   interest switches on at the cutoff.
 #' @inheritParams rddid
 #'
 #' @return An object of class `"rd_compstable"`, a list with:

@@ -155,7 +155,7 @@ plot.rddid <- function(x, bins = 20L, ...) {
   .need_ggplot2()
   cutoff  <- x$c
   periods <- .period_order(names(x$fits))      # panels in time order
-  role_of <- function(k) if (k == as.character(x$t_rd)) "RD period" else "Comparison period"
+  role_of <- function(k) if (k %in% as.character(x$t_rd)) "RD period" else "Comparison period"
   pts <- do.call(rbind, lapply(periods, function(k) {
     b <- .bin_sides(x$data[[k]]$x, x$data[[k]]$y, cutoff, bins = bins)
     if (!is.null(b) && nrow(b)) cbind(b, period = k, role = role_of(k)) else NULL
