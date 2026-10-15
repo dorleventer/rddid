@@ -106,20 +106,22 @@
 #' L w = l the constraints (dates centred at the RD period, which leaves the weights unchanged
 #' and keeps L Xi^{-1} L' well conditioned with calendar years). When the constraints pin the
 #' weights (as many comparison periods as constraint rows) the `w_pilot` weights are returned.
+#' With `bc = TRUE` the same objects for the bias-corrected jumps (the quantities behind the
+#' robust standard error), which gives the minimum-variance weights of the bias-corrected estimate.
 #' @return list: `w` (named weights), `Xi`, `xi`, `pinned`.
 #' @keywords internal
 #' @noRd
-.mv_weights <- function(fits, comps, t_rd, trend, scheme, w_pilot) {
+.mv_weights <- function(fits, comps, t_rd, trend, scheme, w_pilot, bc = FALSE) {
   keys <- as.character(comps)
   rd <- as.character(t_rd)
   m <- length(keys)
   Xi <- matrix(0, m, m, dimnames = list(keys, keys))
   xi <- stats::setNames(numeric(m), keys)
   for (i in seq_len(m)) {
-    Xi[i, i] <- fits[[keys[i]]]$V_D
-    xi[i] <- .cov_scheme(fits[[keys[i]]], fits[[rd]], scheme)
+    Xi[i, i] <- if (bc) fits[[keys[i]]]$V_D_bc else fits[[keys[i]]]$V_D
+    xi[i] <- .cov_scheme(fits[[keys[i]]], fits[[rd]], scheme, bc = bc)
     if (i < m) for (j in (i + 1L):m)
-      Xi[i, j] <- Xi[j, i] <- .cov_scheme(fits[[keys[i]]], fits[[keys[j]]], scheme)
+      Xi[i, j] <- Xi[j, i] <- .cov_scheme(fits[[keys[i]]], fits[[keys[j]]], scheme, bc = bc)
   }
   k <- if (trend == "constant") 1L else 2L          # number of constraint rows
   if (m == k)                                        # a single admissible weight vector

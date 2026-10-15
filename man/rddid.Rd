@@ -154,6 +154,8 @@ bandwidths).}
 in the estimate: \eqn{\phi_t}{phi_t} for each RD period (1 for a single
 RD period), minus its (aggregated) weight for each comparison period.
 \code{\link[=coef]{coef()}} returns the estimate itself.}
+\item{\code{coef_bc}}{the same for the bias-corrected estimate; it differs
+from \code{coef} only under \code{weighting = "min_variance"}.}
 \item{\code{weights}}{named numeric vector of the comparison-period weights;
 with several RD periods, the aggregated weights
 \eqn{w^\phi_{t_0}}{w^phi_t0}.}
@@ -190,7 +192,8 @@ matrix of the comparison-period jumps), \code{xi} (their estimated
 covariances with the RD-period jump), \code{h} (the main bandwidths at which
 these were estimated; under \code{"joint"}, the first-step bandwidths, not
 the final ones in \code{bandwidth}) and \code{pinned} (\code{TRUE} when the assumption
-allows only one set of weights).}
+allows only one set of weights), and \code{weights_bc}, \code{Xi_bc}, \code{xi_bc}, the
+same for the bias-corrected estimate.}
 }
 }
 \description{
@@ -249,8 +252,9 @@ the same assumption allows (see below).
 \subsection{Minimum-variance weights}{
 
 All weights the confounding-trend assumption allows estimate the same
-effect; they differ in precision. \code{weighting = "min_variance"} picks the ones
-with the smallest variance of the conventional estimate, using the estimated
+effect; they differ in precision. \code{weighting = "min_variance"} picks, for each
+row of \code{estimates}, the ones with the smallest variance of that estimate. For
+the conventional estimate it uses the estimated
 variances of the per-period jumps and, in a panel (\code{scheme} \code{"pc"} or
 \code{"pv"}), their covariances (the quantities behind the conventional standard
 error). In a
@@ -261,9 +265,11 @@ three steps: the common bandwidth with the \code{"ols"} weights, the
 minimum-variance weights at that bandwidth, and the bandwidths (common \code{h}
 and pilot \code{b}) again with those weights. With \code{"cct"} or a fixed \code{h} the
 bandwidths do not depend on the weights, so the weights are computed once.
-The same weights are used for both rows of \code{estimates}, so only the
-conventional standard error is minimized; the robust one uses the same
-weights. The standard errors treat the weights as known; in large samples,
+The bias-corrected estimate gets its own weights, computed in the same way
+from the variances and covariances of the bias-corrected jumps (those behind
+the robust standard error), at the same bandwidths; they are in
+\code{weights_detail$weights_bc}, and the common bandwidth is chosen with the
+conventional ones. The standard errors treat the weights as known; in large samples,
 estimating them does not change the distribution of the estimate, because
 every allowed set of weights cancels the confounding jump exactly, so an
 error in the weights multiplies only the estimation error of the jumps. With

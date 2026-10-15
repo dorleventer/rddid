@@ -93,6 +93,11 @@ keep("rddid|pc|no-id",
 keep("rddid|pv4|joint|linear-3comp",
      rddid(dat$pv4, y = "Y", x = "R", time = "year", id = "id", t_rd = 4, bwselect = "joint",
            weights = "linear"))
+# minimum-variance weights (each row its own weights), PV data, constant trend, two comparisons
+for (bw in c("joint", "cct"))
+  keep(sprintf("rddid|pv|%s|min_variance", bw),
+       rddid(dat$pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, bwselect = bw,
+             weighting = "min_variance"))
 # aggregate over RD periods 3 and 4 (comparisons 1, 2): Corollary cor:agg, Section 5.6
 for (bw in c("joint", "cct")) {
   keep(sprintf("rddid|pv4|agg|%s|constant", bw),
