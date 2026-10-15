@@ -65,7 +65,7 @@ print.summary.rddid <- function(x, digits = 4, ...) {
   f   <- x$fits[per]                       # ... and every column taken in that same order
   data.frame(
     period  = per,
-    role    = ifelse(per == as.character(x$t_rd), "RD", "comparison"),
+    role    = ifelse(per %in% as.character(x$t_rd), "RD", "comparison"),
     coef    = unname(x$coef[per]),
     n       = vapply(f, function(z) as.integer(z$n), integer(1)),
     h       = vapply(f, function(z) unname(z$h), numeric(1)),
@@ -195,7 +195,8 @@ tidy.rddid <- function(x, conf.int = TRUE, conf.level = NULL, ...) {
 #' @rdname rddid-tidiers
 #' @export
 glance.rddid <- function(x, ...) {
-  data.frame(nobs = nobs.rddid(x), t_rd = x$t_rd,
+  data.frame(nobs = nobs.rddid(x),
+             t_rd = if (length(x$t_rd) == 1L) x$t_rd else paste(x$t_rd, collapse = ", "),
              comparisons = paste(x$comparisons, collapse = ", "),
              trend = x$weights_type, weights = paste(signif(x$weights, 3), collapse = ", "),
              bwselect = x$bandwidth$method,

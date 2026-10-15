@@ -73,7 +73,7 @@ cat("A 20 seeds: const mean est", round(mean(res[,1]),3), "sd", round(sd(res[,1]
 
 cat("\n--- V2 bandwidths, theta=(1,6,3) ---\n")
 a3 <- dgp_a(theta = c(1, 6, 3))
-for (rule in c("cct", "joint", "iter")) { tic()
+for (rule in c("cct", "joint")) { tic()
   r <- rddid(a3, y = "Y", x = "R", time = "t", id = "id", t_rd = 3, bwselect = rule)
   hs <- vapply(r$fits, function(f) unname(f$h), 1); hs <- hs[order(as.numeric(names(hs)))]  # r$fits lists the RD period first
   e <- r$estimates

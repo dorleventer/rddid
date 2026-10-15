@@ -107,8 +107,7 @@
 ## Both rules are used in VECTORISED form: a rule returns its nodes x and weights
 ## w on [a, b], and every integral below is a weighted matrix product over the
 ## nodes (sum_k w_k g(x_k) r_p(x_k) r_p(y_k)' = crossprod(R1 * (w g), R2)). This
-## is what makes c(rho) cheap enough to sit inside the coordinate-descent loop of
-## .bw_joint_iter(), where rho = h_t/h_s changes at every objective evaluation.
+## keeps c(rho) cheap when it is evaluated at many bandwidth ratios rho = h_t/h_s.
 
 ## Gauss-Legendre nodes/weights on [-1, 1] by the Golub-Welsch construction:
 ## eigen-decomposition of the symmetric tridiagonal Jacobi matrix of the

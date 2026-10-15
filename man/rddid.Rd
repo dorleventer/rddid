@@ -13,9 +13,10 @@ rddid(
   t_rd,
   comparisons = NULL,
   trend = "constant",
+  rd_weights = NULL,
   weighting = c("ols", "min_variance"),
   estimand = c("att", "atu"),
-  bwselect = c("joint", "iter", "cct"),
+  bwselect = c("joint", "cct"),
   h = NULL,
   b = NULL,
   scheme = c("auto", "cs", "pc", "pv"),
@@ -24,7 +25,6 @@ rddid(
   q = 2L,
   kernel = "triangular",
   level = 0.95,
-  start = "hstar",
   regularize = TRUE,
   reg_const = 3,
   weights = NULL
@@ -54,7 +54,8 @@ standard errors. With \code{NULL} (default) every row is treated as a different
 unit, which gives repeated cross-section standard errors (with a message).}
 
 \item{t_rd}{the RD period: the value of \code{time} in which the treatment of
-interest switches on at the cutoff.}
+interest switches on at the cutoff. A vector of several RD periods estimates
+the weighted average of their effects (see "Several RD periods").}
 
 \item{comparisons}{the comparison periods: values of \code{time} in which the
 treatment of interest is uniform at the cutoff (nobody treated, or, with
@@ -69,15 +70,22 @@ under the default \code{weighting}) or \code{"linear"} (the confounding
 jump moves linearly in time; needs at least two comparison periods). A
 numeric vector gives the weights directly, one per entry of \code{comparisons}
 in that order. Weights that sum to one cancel a constant confounding
-jump; \code{rddid()} warns when they do not.}
+jump; \code{rddid()} warns when they do not. With several RD periods a numeric
+vector applies to every RD period, and a numeric matrix gives one row of
+weights per RD period (rows in \code{t_rd} order or named by period; columns in
+\code{comparisons} order or named by period).}
+
+\item{rd_weights}{the weights \eqn{\phi_t}{phi_t} of the RD periods in the
+average, one per entry of \code{t_rd} (in that order, or named by period).
+\code{NULL} (default) gives equal weights. Any finite weights are allowed;
+weights that sum to one make the estimand a weighted average.}
 
 \item{weighting}{how the comparison-period weights are chosen within the
 \code{trend} assumption: \code{"ols"} (default) uses the weights \code{trend} implies
 (equal weights for \code{"constant"}, the least-squares line for \code{"linear"});
 \code{"min_variance"} uses the minimum-variance weights, the comparison-period
 weights the confounding-trend assumption allows that make the variance of
-the estimate smallest (see Details). Not available with a numeric \code{trend},
-or with \code{bwselect = "iter"} unless \code{h} is given.}
+the estimate smallest (see Details). Not available with a numeric \code{trend}.}
 
 \item{estimand}{\code{"att"} (default) when the comparison periods are uniformly
 untreated: the ATT, the effect of the treatment on the units just above the
@@ -90,9 +98,7 @@ either way; see "Targeting the ATU".}
 (default; the common bandwidth, one \code{h} for every period, chosen to minimize
 the asymptotic mean squared error of the RD-DID estimate), \code{"cct"}
 (per-period CCT bandwidths: each period's own MSE-optimal bandwidth of
-Calonico, Cattaneo and Titiunik, from \code{\link[=rd_bw_cct]{rd_bw_cct()}}), or \code{"iter"} (a
-separate bandwidth in each period, chosen together for the RD-DID
-estimate; not used in the paper, kept for simulations). See "Bandwidth
+Calonico, Cattaneo and Titiunik, from \code{\link[=rd_bw_cct]{rd_bw_cct()}}). See "Bandwidth
 rules".}
 
 \item{h}{the main bandwidth (point estimate). If given, it is used in every
@@ -122,13 +128,8 @@ must exceed \code{p}.}
 
 \item{level}{confidence level of the reported intervals (default 0.95).}
 
-\item{start}{where the \code{"iter"} rule starts: \code{"hstar"} (default; the common
-bandwidth in every period), \code{"cct"} (each period's CCT bandwidth), or a
-named numeric vector or list with one starting bandwidth per period. Used
-only with \code{bwselect = "iter"}.}
-
-\item{regularize}{logical. If \code{TRUE} (default), the \code{"joint"} and \code{"iter"}
-rules add a regularization term to the estimated squared bias, as
+\item{regularize}{logical. If \code{TRUE} (default), the \code{"joint"} rule adds a
+regularization term to the estimated squared bias, as
 \pkg{rdrobust} does, so that a near-zero estimated bias cannot make the
 bandwidth very large. Not used with a given \code{h} or \code{bwselect = "cct"}.}
 
@@ -150,14 +151,21 @@ statistic and p-value under \code{scheme}) and \code{se_cs}, \code{se_pc}, \code
 (that row's standard error under each sampling scheme, at the same
 bandwidths).}
 \item{\code{coef}}{named numeric vector, the coefficient of each period's jump
-in the estimate: 1 for the RD period, minus its weight for each
-comparison period. \code{\link[=coef]{coef()}} returns the estimate itself.}
-\item{\code{weights}}{named numeric vector of the comparison-period weights.}
+in the estimate: \eqn{\phi_t}{phi_t} for each RD period (1 for a single
+RD period), minus its (aggregated) weight for each comparison period.
+\code{\link[=coef]{coef()}} returns the estimate itself.}
+\item{\code{weights}}{named numeric vector of the comparison-period weights;
+with several RD periods, the aggregated weights
+\eqn{w^\phi_{t_0}}{w^phi_t0}.}
+\item{\code{rd_weights}}{named numeric vector of the RD-period weights
+\eqn{\phi_t}{phi_t} (1 for a single RD period).}
+\item{\code{weights_by_target}}{numeric matrix of the comparison-period
+weights for each RD period, one row per RD period.}
 \item{\code{weights_type}}{\code{"constant"}, \code{"linear"}, or \code{"custom"} for numeric
 weights.}
 \item{\code{estimand}}{\code{"att"} or \code{"atu"}, as passed.}
-\item{\code{t_rd}, \code{comparisons}}{the RD period and the comparison periods
-used.}
+\item{\code{t_rd}, \code{comparisons}}{the RD period(s) and the comparison
+periods used.}
 \item{\code{scheme}}{the sampling scheme behind \code{se}, \code{ci_l}, \code{ci_u}, \code{z} and
 \code{p}; \code{scheme_detected} is the scheme read off the data and
 \code{scheme_requested} the argument as passed.}
@@ -166,11 +174,10 @@ when \code{h} is given); \code{h_by_period} and \code{b_by_period} (named numeri
 vectors, the main and pilot bandwidth used in each period, whatever the
 rule); for \code{"fixed"} and \code{"joint"}, the common main bandwidth \code{h} and
 the pilot \code{b} (one number for \code{"fixed"}, one per period for
-\code{"joint"}); for \code{"iter"}, the number of iterations \code{niter}; and
-intermediate quantities of the rule (\code{bws} for \code{"cct"} and \code{"iter"};
+\code{"joint"}); and intermediate quantities of the rule (\code{bws} for \code{"cct"};
 \code{B}, \code{Veff}, \code{reg}, \code{pilot_bws} for \code{"joint"}).}
 \item{\code{fits}}{named list of the per-period \code{\link[=rd_period]{rd_period()}} fits, the RD
-period first (index by name).}
+period(s) first (index by name).}
 \item{\code{n_by_period}}{the number of observations in each period.}
 \item{\code{level}, \code{c}, \code{p}, \code{q}, \code{kernel}}{as passed.}
 \item{\code{data}}{the per-period data used (a named list of data frames with
@@ -208,6 +215,21 @@ estimated by a local-linear RD on that period's observations;
 \eqn{t_{\mathrm{RD}}}{t_RD} is the RD period (\code{t_rd}); the sum runs over the
 comparison periods; and \eqn{w_t} is the weight of comparison period
 \eqn{t}. \code{summary()} lists every \eqn{D_t} with its coefficient in the sum.
+}
+
+\subsection{Several RD periods}{
+
+With a vector \code{t_rd}, \code{rddid()} estimates the weighted average of the RD
+periods' effects, \eqn{\mathrm{ATT}^\phi = \sum_t \phi_t \mathrm{ATT}(t)}{ATT^phi = sum_t phi_t ATT(t)},
+with weights \eqn{\phi_t}{phi_t} from \code{rd_weights} (equal by default; any
+finite weights are allowed, as they define the estimand). Each period's jump
+is estimated once: the RD periods enter with \eqn{\phi_t}{phi_t} and the
+comparison periods with the aggregated weights
+\eqn{w^\phi_{t_0} = \sum_t \phi_t w_{t_0}(t)}{w^phi_t0 = sum_t phi_t w_t0(t)}, where
+\eqn{w_{t_0}(t)}{w_t0(t)} are the weights the trend assumption gives for RD
+period \eqn{t} (the paper's Corollary 2 and Section 5.6). The standard errors
+include the covariances between RD periods, and \code{"joint"} chooses one
+bandwidth for the average, not for any single RD period. \code{weighting = "min_variance"} is available for a single RD period only.
 }
 
 \subsection{The confounding-trend assumption}{
@@ -252,7 +274,7 @@ assumption allows only one set of weights; \code{rddid()} returns it and sets
 
 \subsection{Sampling schemes}{
 
-The scheme sets the standard error and, under \code{"joint"} and \code{"iter"}, also
+The scheme sets the standard error and, under \code{"joint"}, also
 the bandwidth, and with it the estimate, because those rules balance bias
 against the variance under the scheme in use; with a fixed \code{h} or \code{"cct"} it
 changes only the standard error. In a repeated
@@ -275,9 +297,6 @@ of each period's jump, so the biases of the period jumps can partly cancel.
 \item \code{"cct"}, per-period CCT bandwidths: each period gets its own MSE-optimal
 bandwidth from \code{\link[rdrobust:rdbwselect]{rdrobust::rdbwselect()}}, as if it were a stand-alone RD
 (Calonico, Cattaneo and Titiunik, 2014).
-\item \code{"iter"}: a separate bandwidth in each period, chosen together to minimize
-the asymptotic mean squared error of the RD-DID estimate; not used in the
-paper, kept for simulations.
 \item A numeric \code{h} is used in every period, with pilot bandwidth \code{b} (default
 \code{h}).
 }
@@ -312,9 +331,7 @@ period's CCT ratio \eqn{b/h}{b/h}. Each period's bias and variance
 constants are estimated at that period's own CCT pilot bandwidths, not at the
 RD period's, so an aggregate of several RD periods gets the same bandwidth
 whichever of them carries the \code{t_rd} label.
-The \code{"iter"} rule minimizes the same objective over one bandwidth per period
-by coordinate descent, starting from \code{start}. With \code{regularize = TRUE} both
-rules add \code{reg_const} times the estimated variance of the bias constants to
+With \code{regularize = TRUE} the rule adds \code{reg_const} times the estimated variance of the bias constants to
 the squared bias, as \pkg{rdrobust} does, so a near-zero estimated bias
 cannot make the bandwidth very large. Standard errors use the HC1 convention
 of \pkg{rdrobust}. The derivations are in the paper's appendix on estimation
@@ -334,6 +351,11 @@ rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
 # minimum-variance comparison-period weights
 rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
       weighting = "min_variance")
+# several RD periods: the average of their effects (year 3 copied as a
+# second RD year, 4, for illustration)
+sim4 <- rbind(rddid_sim, transform(rddid_sim[rddid_sim$year == 3, ], year = 4))
+rddid(sim4, y = "Y", x = "R", time = "year", id = "id", t_rd = c(3, 4),
+      comparisons = c(1, 2))
 # comparison periods uniformly treated: add estimand = "atu" (same numbers)
 }
 \references{

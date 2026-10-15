@@ -67,26 +67,6 @@ Each period gets its own MSE-optimal bandwidth from `rdrobust::rdbwselect`
 other periods. Each bandwidth is optimal for its own jump; the common bandwidth
 is optimal for the difference of jumps that `rddid()` reports.
 
-### Period-specific bandwidths for the aggregate: `bwselect = "iter"`
-
-```{r}
-fit_iter <- rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
-                  bwselect = "iter")
-fit_iter$bandwidth$h_by_period
-```
-
-One bandwidth per period, found by coordinate descent on the asymptotic mean
-squared error of the RD-DID estimate. The paper does not use this rule; it is
-kept for simulations. `start` sets where the descent starts: `"hstar"` (the
-default) starts every period at the common bandwidth, `"cct"` starts each period
-at its own CCT bandwidth, and a named vector gives one starting value per period.
-
-```{r}
-fit_iter_cct <- rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
-                      bwselect = "iter", start = "cct")
-fit_iter_cct$bandwidth$h_by_period
-```
-
 ### Fixed bandwidths
 
 ```{r}
@@ -100,18 +80,18 @@ A given `h` is used in every period and bypasses bandwidth selection; `b`
 defaults to `h`.
 
 `regularize` (default `TRUE`) adds an `rdrobust`-style regularization term to
-the squared bias in the `"joint"` and `"iter"` rules, so that a near-zero
+the squared bias in the `"joint"` rule, so that a near-zero
 estimated curvature does not blow the bandwidth up; `reg_const` (default
 `r eval(formals(rddid)$reg_const)`) is its constant.
 
 ### The rules side by side
 
-The four fits above, with the main bandwidth in each year and the two
+The three fits above, with the main bandwidth in each year and the two
 estimates (standard errors in parentheses):
 
 ```{r, echo = FALSE}
 estse <- function(f, row) paste0(fmt(f$estimates[row, "est"]), " (", fmt(f$estimates[row, "se"]), ")")
-fits <- list(joint = fit_joint, cct = fit_cct, iter = fit_iter, "fixed h = 0.3" = fit_fixed)
+fits <- list(joint = fit_joint, cct = fit_cct, "fixed h = 0.3" = fit_fixed)
 tab <- data.frame(
   rule = names(fits),
   t(sapply(fits, function(f) f$bandwidth$h_by_period[c("1", "2", "3")])),
@@ -214,8 +194,8 @@ stopifnot(
 The scheme describes how the data were sampled; the printout reports the
 column for that scheme, and the other columns show the other formulas on the
 same data. Setting `scheme` replaces the detection. The scheme sets which
-standard error is reported and, under the `"joint"` (default) and `"iter"`
-bandwidth rules, it also enters the bandwidth: these rules weigh bias against
+standard error is reported and, under the `"joint"` (default) bandwidth rule,
+it also enters the bandwidth: this rule weighs bias against
 the asymptotic variance of the estimate, and that variance
 has a cross-period covariance term under `"pc"` only (the term is zero under
 `"cs"` and negligible in large samples under `"pv"`). On `rddid_sim`:

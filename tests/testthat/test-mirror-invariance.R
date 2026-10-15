@@ -57,7 +57,7 @@ check_rddid_invariance <- function(cfg, bwselect, weights = "constant") {
 }
 
 for (cfg in rddid_configs) {
-  for (bw in c("cct", "joint", "iter")) {
+  for (bw in c("cct", "joint")) {
     test_that(sprintf("rddid() mirror invariance: %s, bwselect=%s", cfg$name, bw), {
       check_rddid_invariance(cfg, bw)
     })

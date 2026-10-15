@@ -27,7 +27,7 @@ estimate) and the pilot bandwidth (bias correction).
 }
 \description{
 The building block behind \code{rddid(bwselect = "cct")}, the pilot fits of the
-\code{"joint"} and \code{"iter"} rules, and the default bandwidths of the four tests
+\code{"joint"} rule, and the default bandwidths of the four tests
 of the assumptions: the MSE-optimal main and pilot bandwidths of Calonico,
 Cattaneo and Titiunik (2014) for a local-linear RD in one period, from
 \code{\link[rdrobust:rdbwselect]{rdrobust::rdbwselect()}} with \code{bwselect = "mserd"}. Like \code{\link[=rd_period]{rd_period()}} it
