@@ -179,7 +179,7 @@ test_that("comparisons may not include t_rd, and must exist, in every test", {
   expect_error(rd_homog(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
                         comparisons = c(1, 3)), "must not be one of")
   expect_error(rd_trendcell(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
-                            comparisons = c(1, 9)), "not in `data`")
+                            comparisons = c(1, 9)), "comparison period(s) not in `year`: 9", fixed = TRUE)
   expect_error(rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 7),
                "not a period")
 })

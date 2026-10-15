@@ -349,7 +349,9 @@
 #' @param data a data frame in long format, one row per unit and period, from a
 #'   panel (it need not be balanced). A unit's type is read from the periods in
 #'   which it is observed; a unit missing from a period that its type needs is
-#'   left out of the cells that use that type.
+#'   left out of the cells that use that type. Rows with a missing running
+#'   variable, period or id are dropped, with a message; a row with a missing
+#'   outcome still gives its unit's side of the cutoff and is left out of the fits.
 #' @param id name of the unit-identifier column (a string). Required: types are
 #'   read across periods.
 #' @param t_rd the RD period. Required with `type_by = "rd_side"` (the
@@ -463,25 +465,17 @@ rd_trendcell <- function(data, y, x, time, id,
   bwselect <- match.arg(bwselect)
   h_given  <- !is.null(h)
   estimand <- match.arg(estimand)
-  kernel   <- match.arg(kernel, c("triangular", "epanechnikov", "uniform"))
+  kernel   <- match.arg(tolower(kernel), c("triangular", "epanechnikov", "uniform"))
   cutoff   <- c   # the cutoff; `c` stays the argument name for rdrobust users
 
-  .check_columns(data, c(y, x, time, id))
-
-  times_all <- sort(unique(data[[time]]))
-  if (is.null(comparisons))
-    comparisons <- if (!is.null(t_rd)) setdiff(times_all, t_rd) else times_all
-  if (!is.null(t_rd) && !t_rd %in% times_all)
-    stop("rd_trendcell: `t_rd` (", t_rd, ") is not a period in `data`.")
-  if (!is.null(t_rd) && t_rd %in% comparisons)
-    stop("rd_trendcell: `t_rd` must not be one of the `comparisons`.")
-  if (!all(comparisons %in% times_all))
-    stop("rd_trendcell: comparison period(s) not in `data`: ",
-         paste(setdiff(comparisons, times_all), collapse = ", "))
-  if (anyDuplicated(comparisons)) stop("rd_trendcell: `comparisons` contains a period more than once.")
+  # ----- inputs and periods: the shared prepare step (input_checks.R) -----
+  # a unit's type depends on its running variable only, so rows are dropped here for a missing
+  # x, time or id; rows with a missing outcome are dropped from the fits once the types exist
+  prep <- .prepare_input(data, "rd_trendcell", x = x, time = time, id = id, y = y, t_rd = t_rd,
+                         comparisons = comparisons, t_rd_required = FALSE,
+                         complete_cols = c(x, time, id))
+  data <- prep$data; t_rd <- prep$t_rd; comparisons <- prep$comparisons
   comparisons <- sort(comparisons)   # the contrasts below are in time order
-  if (length(comparisons) < 1L)
-    stop("need at least one comparison period.")
 
   types    <- .build_types(data, x = x, time = time, id = id, c = cutoff)
 
@@ -491,6 +485,12 @@ rd_trendcell <- function(data, y, x, time, id,
          "the comparison periods cannot use a comparison period's own side of the cutoff, so ",
          "every cell would lie on one side only. Use the default type_by = \"rd_side\".")
   cell_map <- .trendcell_cell_map(types, type_by, t_rd, comparisons)
+
+  na_y <- is.na(data[[y]])
+  if (any(na_y)) {
+    message("rd_trendcell: ", sum(na_y), " row(s) with a missing `", y, "` dropped from the fits.")
+    data <- data[!na_y, , drop = FALSE]
+  }
 
   # "common" (default): one bandwidth for every cell, the CCT h of the outcome on the pooled
   # comparison periods (.common_bandwidth()); "cct": each cell's own; "rot": rule of thumb

@@ -145,7 +145,9 @@
 #'
 #' @param data a data frame in long format, one row per unit and period: a
 #'   repeated cross-section (different units in each period) or a panel (the
-#'   same units in several periods; it need not be balanced).
+#'   same units in several periods; it need not be balanced). Only the rows of
+#'   `t_rd` and `comparisons` are used; among them, rows with a missing outcome,
+#'   running variable, period or id are dropped, with a message.
 #' @param y name of the outcome column (a string).
 #' @param x name of the running-variable column (a string).
 #' @param time name of the period column (a string). The column is usually
@@ -344,37 +346,20 @@ rddid <- function(data, y, x, time, id = NULL, t_rd,
   }
 
   # ---- periods and data -------------------------------------------------------------------
-  .check_columns(data, c(y, x, time, id))
+  # one shared prepare step (input_checks.R): checks, factor periods, duplicates, missing rows.
+  # Without an id every row is its own unit, numbered by its row in the data as passed.
+  if (is.null(id)) data$.rddid_row_id <- seq_len(nrow(data))
+  if (missing(t_rd)) t_rd <- NULL
+  prep <- .prepare_input(data, "rddid()", x = x, time = time, id = id, y = y, t_rd = t_rd,
+                         comparisons = comparisons, t_rd_scalar = FALSE, restrict = TRUE)
+  data <- prep$data; t_rd <- prep$t_rd; comparisons <- prep$comparisons
   time_col <- data[[time]]
-  if (length(t_rd) < 1L) stop("`t_rd` must give at least one RD period.")
-  if (anyDuplicated(t_rd)) stop("`t_rd` contains a period more than once.")
-  missing_rd <- t_rd[!t_rd %in% time_col]
-  if (length(missing_rd))
-    stop("t_rd = ", paste(missing_rd, collapse = ", "), " not present in `", time, "`.")
-  if (is.null(comparisons)) comparisons <- sort(setdiff(unique(time_col), t_rd))
-  if (length(comparisons) < 1L) stop("need at least one comparison period.")
-  if (any(t_rd %in% comparisons)) stop("`t_rd` must not be one of the `comparisons`.")
-  if (anyDuplicated(comparisons)) stop("`comparisons` contains a period more than once.")
-  if (!is.null(id)) {
-    dup <- duplicated(data[, c(id, time)]) & !is.na(data[[id]]) & !is.na(time_col)
-    if (any(dup))
-      stop(sum(dup), " row(s) repeat a (", id, ", ", time, ") pair: each unit may appear once ",
-           "per period (aggregate or deduplicate first).")
-  }
-  missing_comp <- setdiff(comparisons, time_col)
-  if (length(missing_comp))
-    stop("comparison period(s) not in `", time, "`: ", paste(missing_comp, collapse = ", "))
-  if (!is.numeric(time_col) && !is.character(time_col) && !is.factor(time_col))
-    stop("the period column `", time, "` must be numeric, character or factor (a Date can be ",
-         "converted with as.numeric(format(x, \"%Y\")) or similar).")
   if (!is.numeric(level) || length(level) != 1L || level <= 0 || level >= 1)
     stop("`level` must be a single number strictly between 0 and 1 (e.g. 0.95).")
   if (!is.null(b) && is.null(h))
     stop("`b` is the pilot bandwidth that goes with a fixed `h`; supply `h` too, or neither.")
   if (!is.null(h) && (!is.numeric(h) || length(h) != 1L || !is.finite(h) || h <= 0))
     stop("`h` must be a single positive number.")
-  if (is.factor(t_rd)) t_rd <- as.character(t_rd)
-  if (is.factor(comparisons)) comparisons <- as.character(comparisons)
   if (is.null(id) && scheme == "auto")
     message("rddid(): no `id` given, so every row is treated as a different unit ",
             "(repeated cross-section standard errors).")
@@ -467,7 +452,7 @@ rddid <- function(data, y, x, time, id = NULL, t_rd,
 #' @keywords internal
 #' @noRd
 .rddid_period_frames <- function(data, y, x, id, time_col, periods) {
-  unit_id <- if (is.null(id)) seq_len(nrow(data)) else data[[id]]
+  unit_id <- if (is.null(id)) data$.rddid_row_id else data[[id]]
   frames <- stats::setNames(lapply(periods, function(tv) {
     rows <- which(time_col == tv)
     data.frame(y = data[[y]][rows], x = data[[x]][rows], id = unit_id[rows])

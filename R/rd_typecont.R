@@ -227,7 +227,8 @@
 #' @param data a data frame in long format, one row per unit and period, from a
 #'   panel (it need not be balanced). A unit's type is read from the periods in
 #'   which it is observed; a unit missing from a period that its type needs is
-#'   left out of the cells that use that type.
+#'   left out of the cells that use that type. Rows with a missing running
+#'   variable, period or id are dropped, with a message.
 #' @param id name of the unit-identifier column (a string). Required: types are
 #'   read across periods.
 #' @param t_rd,comparisons optional: the RD period and the comparison periods,
@@ -332,21 +333,14 @@ rd_typecont <- function(data, x, time, id,
   .check_studentize(studentize, "rd_typecont")
   bwselect <- match.arg(bwselect)
   estimand <- match.arg(estimand)
-  kernel   <- match.arg(kernel, c("triangular", "epanechnikov", "uniform"))
+  kernel   <- match.arg(tolower(kernel), c("triangular", "epanechnikov", "uniform"))
   cutoff   <- c   # the cutoff; `c` stays the argument name for rdrobust users
 
-  # ----- inputs and periods (the stops stay here so that errors name rd_typecont()) -----
-  .check_columns(data, c(x, time, id))
+  # ----- inputs and periods: the shared prepare step (input_checks.R) -----
   # `t_rd`/`comparisons` only select which periods enter: the test treats every period alike
-  if (!is.null(t_rd) && !t_rd %in% data[[time]])
-    stop("`t_rd` (", t_rd, ") is not a period in `data`.")
-  if (!is.null(comparisons)) {
-    use_periods <- c(t_rd, comparisons)
-    if (!all(use_periods %in% data[[time]]))
-      stop("periods not in `data`: ", paste(setdiff(use_periods, data[[time]]), collapse = ", "))
-    data <- data[data[[time]] %in% use_periods, , drop = FALSE]
-  }
-  data          <- data[stats::complete.cases(data[, c(x, time, id)]), , drop = FALSE]
+  data <- .prepare_input(data, "rd_typecont", x = x, time = time, id = id, t_rd = t_rd,
+                         comparisons = comparisons, t_rd_required = FALSE,
+                         default_comparisons = FALSE, restrict = !is.null(comparisons))$data
   periods       <- sort(unique(data[[time]]))
   period_labels <- as.character(periods)
   n_periods     <- length(periods)

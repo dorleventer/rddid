@@ -384,7 +384,8 @@
 #' @param data a data frame in long format, one row per unit and period, from a
 #'   panel (it need not be balanced). A unit's type is read from the periods in
 #'   which it is observed; a unit missing from a period that its type needs is
-#'   left out of the cells that use that type.
+#'   left out of the cells that use that type. Rows with a missing running
+#'   variable, period or id are dropped, with a message.
 #' @param id name of the unit-identifier column (a string). Required: types are
 #'   read across periods.
 #' @param estimand `"att"` (default) or `"atu"`, as in [rddid()]. Under `"atu"`
@@ -496,11 +497,14 @@ rd_compstable <- function(data, x, time, id, t_rd,
   .check_studentize(studentize, "rd_compstable")
   bwselect <- match.arg(bwselect)
   estimand <- match.arg(estimand)
-  kernel   <- match.arg(kernel, c("triangular", "epanechnikov", "uniform"))
+  kernel   <- match.arg(tolower(kernel), c("triangular", "epanechnikov", "uniform"))
   cutoff   <- c   # the cutoff; `c` stays the argument name for rdrobust users
 
-  # ----- inputs and periods (the stops stay here so that errors name rd_compstable()) -----
-  .check_columns(data, c(x, time, id))
+  # ----- inputs and periods: the shared prepare step (input_checks.R) -----
+  if (missing(t_rd)) t_rd <- NULL
+  prep <- .prepare_input(data, "rd_compstable", x = x, time = time, id = id, t_rd = t_rd,
+                         comparisons = comparisons)
+  data <- prep$data; t_rd <- prep$t_rd; comparisons <- prep$comparisons
   c_orig <- cutoff
   if (estimand == "atu") {
     if (any(data[[x]] == cutoff, na.rm = TRUE))
@@ -513,17 +517,8 @@ rd_compstable <- function(data, x, time, id, t_rd,
     data[[x]] <- cutoff - data[[x]]
     cutoff    <- 0
   }
-  data <- data[stats::complete.cases(data[, base::c(x, time, id)]), , drop = FALSE]
 
   all_periods <- sort(unique(data[[time]]))
-  if (!t_rd %in% all_periods) stop("`t_rd` (", t_rd, ") is not a period in `data`.")
-  if (is.null(comparisons)) comparisons <- setdiff(all_periods, t_rd)
-  if (length(comparisons) == 0L) stop("no comparison periods found.")
-  if (t_rd %in% comparisons) stop("`t_rd` must not be one of the `comparisons`.")
-  if (anyDuplicated(comparisons)) stop("`comparisons` contains a period more than once.")
-  missing_comp <- setdiff(comparisons, all_periods)
-  if (length(missing_comp) > 0L)
-    stop("comparison periods not in data: ", paste(missing_comp, collapse = ", "))
 
   # bwselect = "cct" leaves h NULL: each type regression then gets its own CCT bandwidths
   if (is.null(h) && bwselect == "rot") h <- .rot_bandwidth_iqr(data[[x]])
