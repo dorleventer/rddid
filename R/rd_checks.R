@@ -30,10 +30,17 @@
 #' @param t_rd the RD period (required).
 #' @param comparisons,estimand,c,kernel,scheme,bc shared by the four tests;
 #'   defaults as in each test.
-#' @param joint,studentize the joint statistic of [rd_typecont()] and
-#'   [rd_compstable()] (defaults `"supt"`, `TRUE`).
+#' @param joint the joint statistic of [rd_typecont()] and [rd_compstable()]:
+#'   `"supt"` (default), `"swald"` or `"wald"` (the chi-squared Wald).
+#' @param studentize for `joint = "supt"` or `"swald"`: `TRUE` (default; t
+#'   critical values) or `FALSE` (normal critical values).
 #' @param outcome_bwselect the bandwidth rule of [rd_homog()] and
-#'   [rd_trendcell()] (default `"common"`).
+#'   [rd_trendcell()]: `"common"` (default; one bandwidth for every cell, the
+#'   CCT bandwidth of the outcome on the pooled comparison periods), `"cct"`
+#'   (one CCT bandwidth per cell) or `"rot"` (a rule of thumb per cell). The
+#'   share tests' own `bwselect` (per-fit CCT by default) can be changed in
+#'   `typecont` / `compstable`; their rule of thumb is a different one
+#'   (`0.5 * IQR(x)` in every regression).
 #' @param typecont,compstable,homog,trendcell lists of further arguments for
 #'   one test, which override the shared ones.
 #' @param level the level of the reading in the printout (default 0.05).
@@ -75,12 +82,15 @@ rd_checks <- function(data, y, x, time, id, t_rd,
                  scheme = scheme, bc = bc)
   share  <- list(joint = joint, studentize = studentize)
   outc   <- list(y = y, bwselect = outcome_bwselect)
+  .check_studentize(studentize, "rd_checks")
   run <- function(fun, args) tryCatch(do.call(fun, args), error = function(e) e)
+  # a test's own list replaces the shared values (not merged: `data` may itself be a list)
+  over <- function(base, own) { base[names(own)] <- own; base }
   res <- list(
-    typecont   = run(rd_typecont,   utils::modifyList(c(shared, share), typecont)),
-    compstable = run(rd_compstable, utils::modifyList(c(shared, share), compstable)),
-    homog      = run(rd_homog,      utils::modifyList(c(shared, outc), homog)),
-    trendcell  = run(rd_trendcell,  utils::modifyList(c(shared, outc), trendcell)))
+    typecont   = run(rd_typecont,   over(c(shared, share), typecont)),
+    compstable = run(rd_compstable, over(c(shared, share), compstable)),
+    homog      = run(rd_homog,      over(c(shared, outc), homog)),
+    trendcell  = run(rd_trendcell,  over(c(shared, outc), trendcell)))
 
   labels <- c(typecont = "type continuity", compstable = "composition stability",
               homog = "homogeneous confounding", trendcell = "constant within-type confounding")
@@ -89,7 +99,7 @@ rd_checks <- function(data, y, x, time, id, t_rd,
     if (inherits(r, "error"))
       return(data.frame(test = paste0("rd_", k), assumption = labels[[k]], statistic = NA_real_,
                         p_value = NA_real_, method = NA_character_, bandwidth = NA_character_,
-                        error = sub("^([^.]*\\.).*$", "\\1", conditionMessage(r)),
+                        error = sub("^(.+?\\.)(\\s.*)?$", "\\1", conditionMessage(r), perl = TRUE),
                         stringsAsFactors = FALSE))
     data.frame(test = paste0("rd_", k), assumption = labels[[k]], statistic = r$statistic,
                p_value = r$p_value, method = .checks_method(r), bandwidth = .checks_bw(r),
@@ -110,8 +120,8 @@ rd_checks <- function(data, y, x, time, id, t_rd,
 .checks_method <- function(r) {
   m <- r$joint_method %||% "wald"
   if (m == "wald") return(sprintf("Wald chi-squared(%d)", as.integer(r$df)))
-  sprintf("%s, %s", if (m == "supt") "sup-t" else "sWald",
-          if (isTRUE(r$studentize)) "studentized" else "normal")
+  sprintf("%s, %s critical values", if (m == "supt") "sup-t" else "sWald",
+          if (isTRUE(r$studentize)) "t" else "normal")
 }
 
 #' The bandwidth rule of a test result, in words (for the rd_checks table)
@@ -120,13 +130,14 @@ rd_checks <- function(data, y, x, time, id, t_rd,
 .checks_bw <- function(r) {
   if (!is.null(r$bandwidth)) {
     return(switch(r$bandwidth$method,
-                  common = sprintf("common, h = %.3g", r$bandwidth$h),
+                  common = sprintf("common (pooled CCT), h = %.3g", r$bandwidth$h),
                   fixed  = sprintf("fixed, h = %.3g", r$bandwidth$h),
                   cct    = "CCT per cell",
                   rot    = "rule of thumb per cell"))
   }
+  if (identical(r$meta$bwselect, "rot")) return(sprintf("rule of thumb, h = %.3g", r$meta$h))
   if (!is.null(r$meta$h) && !is.na(r$meta$h)) return(sprintf("fixed, h = %.3g", r$meta$h))
-  if (identical(r$meta$bwselect, "rot")) "rule of thumb" else "CCT per cell"
+  "CCT per cell"
 }
 
 #' @export
@@ -146,17 +157,14 @@ print.rd_checks <- function(x, ...) {
   }
   rej <- function(k) { p <- tab$p_value[tab$test == paste0("rd_", k)]
     if (!length(p) || is.na(p)) NA else p < x$level }
-  r_tc <- rej("typecont"); r_cs <- rej("compstable"); r_hg <- rej("homog"); r_tr <- rej("trendcell")
   word <- function(r) if (is.na(r)) "not tested" else if (r) "rejected" else "not rejected"
-  cat(sprintf("\n  Reading at the %g%% level: type continuity %s; constant within-type confounding %s\n",
-              100 * x$level, word(r_tc), word(r_tr)))
-  cat(sprintf("  (comparison periods only); composition stability %s, homogeneous confounding %s",
-              word(r_cs), word(r_hg)))
-  if (isTRUE(r_cs) && isTRUE(r_hg)) {
-    cat(" -- both rejected, so neither route to identification is supported.\n")
-  } else if (isTRUE(r_cs) || isTRUE(r_hg)) {
-    cat(" -- one is enough for identification.\n")
-  } else cat(".\n")
+  cat(sprintf("\n  Reading at the %g%% level (not rejecting does not establish an assumption):\n",
+              100 * x$level))
+  cat(sprintf("    %-34s %s\n", "type continuity", word(rej("typecont"))))
+  cat(sprintf("    %-34s %-13s} identification needs\n", "composition stability", word(rej("compstable"))))
+  cat(sprintf("    %-34s %-13s} only one of these two\n", "homogeneous confounding", word(rej("homog"))))
+  cat(sprintf("    %-34s %s\n", "constant within-type confounding",
+              paste(word(rej("trendcell")), "(checked in the comparison periods)")))
   cat("  Each test's details: x$typecont, x$compstable, x$homog, x$trendcell.\n")
   invisible(x)
 }

@@ -343,10 +343,8 @@
 #' `"swald"`; `"wald"`) and `studentize` the reference distribution of sup-t and
 #' sWald (`TRUE`, default: t-based; `FALSE`: normal). The same statistic is used
 #' for each pair and for the joint test, and every statistic is returned in
-#' `joint_tests`. With two comparison periods at n = 1,000 and a true null, the
-#' Wald over the stacked jumps rejected 8-9% of the time, the normal sup-t 7%
-#' and the studentized sup-t 6%; the former summed statistic (versions up to
-#' 0.4) rejected 8.7%.
+#' `joint_tests`. The simulation evidence is in the article "Checking the identification
+#' assumptions".
 #'
 #' ## Shared units and the sampling scheme
 #'
@@ -473,6 +471,8 @@
 #' cs <- rd_compstable(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
 #' cs          # one test per (RD period, comparison period) pair, then the joint test
 #' cs$pairs[["3::1"]]$jumps
+#' # the chi-squared Wald instead of sup-t
+#' rd_compstable(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3, joint = "wald")
 #' # comparison periods uniformly treated: the shares below the cutoff
 #' rd_compstable(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3,
 #'               estimand = "atu")
@@ -491,6 +491,7 @@ rd_compstable <- function(data, x, time, id, t_rd,
   cl       <- match.call()
   scheme   <- match.arg(scheme)
   joint    <- match.arg(joint)
+  .check_studentize(studentize, "rd_compstable")
   bwselect <- match.arg(bwselect)
   estimand <- match.arg(estimand)
   kernel   <- match.arg(kernel, c("triangular", "epanechnikov", "uniform"))
@@ -606,10 +607,15 @@ print.rd_compstable <- function(x, ...) {
     th <- x$joint$theta
     largest <- if (method == "supt" && length(th)) {
       z <- th / sqrt(pmax(diag(x$joint$Sigma), 0))
-      if (any(is.finite(z))) names(th)[which.max(abs(z))]
+      if (any(is.finite(z))) {
+        lab <- names(th)[which.max(abs(z))]                   # "<t_rd>::<t0>:<sides as 0/1>"
+        type <- sub("^.*:", "", lab)
+        sprintf("pair:type %s:%s", sub(":[^:]*$", "", lab), chartr("01", "-+", type))
+      }
     }
     .print_joint(list(stat = x$statistic, df = x$df, p = x$p_value), method,
                  "Joint over pairs:", cell_label = largest, studentize = stud)
   }
+  if (!is.null(x$joint_tests)) cat("  All joint statistics: x$joint_tests\n")
   invisible(x)
 }

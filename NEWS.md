@@ -25,12 +25,15 @@ a variance deficit or noisy standard errors still inflate it, by less than the W
     caller's random-number state is restored).
   * With one jump all three are the same two-sided normal test, so two-period calls give the
     Wald's p-value.
-  * New fields `joint_method`, `studentize`, `joint_tests` (every statistic, normal and
-    studentized) and, for `rd_typecont()`, `z` and `nu`.
+  * New fields `joint_method`, `studentize`, `joint_tests` (every statistic, with t, normal or
+    chi-squared critical values) and, for `rd_typecont()`, `t_stats` and `nu`. The printouts name the
+    statistic and its critical values, and point to `x$joint_tests`.
     `ll_wald` and the per-period/per-pair `ll_wald` keep the Wald; the per-period/per-pair `test`
     holds the test under `joint`.
 * `rd_compstable()`: the joint test over pairs no longer adds up the pair statistics as if the
   pairs were independent; they share the RD-period units.
+  * With `joint = "wald"` each pair's test is unchanged, but the joint test over pairs differs from
+    the old summed statistic. It is now the Wald over all pairs' jumps with their full covariance.
   * It now tests all pairs' jumps together, with their full covariance.
   * The covariance across pairs comes from the shared units, matched on id, following `scheme`.
   * `joint$ll_wald` is now the Wald over the stacked jumps, and `joint$theta` / `joint$Sigma`

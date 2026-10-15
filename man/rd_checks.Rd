@@ -35,11 +35,19 @@ rd_checks(
 \item{comparisons, estimand, c, kernel, scheme, bc}{shared by the four tests;
 defaults as in each test.}
 
-\item{joint, studentize}{the joint statistic of \code{\link[=rd_typecont]{rd_typecont()}} and
-\code{\link[=rd_compstable]{rd_compstable()}} (defaults \code{"supt"}, \code{TRUE}).}
+\item{joint}{the joint statistic of \code{\link[=rd_typecont]{rd_typecont()}} and \code{\link[=rd_compstable]{rd_compstable()}}:
+\code{"supt"} (default), \code{"swald"} or \code{"wald"} (the chi-squared Wald).}
+
+\item{studentize}{for \code{joint = "supt"} or \code{"swald"}: \code{TRUE} (default; t
+critical values) or \code{FALSE} (normal critical values).}
 
 \item{outcome_bwselect}{the bandwidth rule of \code{\link[=rd_homog]{rd_homog()}} and
-\code{\link[=rd_trendcell]{rd_trendcell()}} (default \code{"common"}).}
+\code{\link[=rd_trendcell]{rd_trendcell()}}: \code{"common"} (default; one bandwidth for every cell, the
+CCT bandwidth of the outcome on the pooled comparison periods), \code{"cct"}
+(one CCT bandwidth per cell) or \code{"rot"} (a rule of thumb per cell). The
+share tests' own \code{bwselect} (per-fit CCT by default) can be changed in
+\code{typecont} / \code{compstable}; their rule of thumb is a different one
+(\code{0.5 * IQR(x)} in every regression).}
 
 \item{typecont, compstable, homog, trendcell}{lists of further arguments for
 one test, which override the shared ones.}

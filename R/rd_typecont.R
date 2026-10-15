@@ -188,12 +188,10 @@
 #' critical values come from the estimated correlation of the jumps.
 #'
 #' Why these defaults: sup-t and sWald use the covariance only through its
-#' correlations, so they avoid inverting it, the error that grows fastest with
-#' the number of jumps. Studentizing accounts for the noise in each jump's
-#' standard error. In the package authors' simulations (n = 1,000, true null,
-#' 5% level) the Wald rejected 7-8% of the time at 9 jumps (three periods) and
-#' 16% at 28 (four periods), sup-t with normal critical values 7% and 6%, and
-#' the studentized sup-t 6% and 5%, at the same size-adjusted power.
+#' correlations, so they avoid inverting it, an error that grows with the
+#' number of jumps; t critical values account for the noise in each jump's
+#' estimated standard error. The simulation evidence (size and power of each
+#' statistic) is in the article "Checking the identification assumptions".
 #'
 #' Every statistic is reported in `joint_tests`, so any of them can be read off
 #' one call. The simulated critical values use 100,000 draws under a fixed
@@ -268,8 +266,8 @@
 #'     \item{`joint_method`, `studentize`}{as used; `joint_tests` has every
 #'       statistic (a data frame with `method`, `reference` (`"t"`, `"normal"` or
 #'       `"chi-squared"`), `statistic`, `df`, `p_value`).}
-#'     \item{`z`, `nu`}{the t-statistics of the jumps tested and the degrees of
-#'       freedom of their variances, named `"<period>:<type>"`.}
+#'     \item{`t_stats`, `nu`}{the t-statistics of the jumps tested and the
+#'       degrees of freedom of their variances, named `"<period>:<type>"`.}
 #'     \item{`scheme`}{the sampling scheme used; `scheme_requested` is the
 #'       argument as passed.}
 #'     \item{`estimand`}{`"att"` or `"atu"`, as passed.}
@@ -313,7 +311,7 @@
 #' tc          # the null, the joint sup-t test, then each period's own test
 #' tc$p_value
 #' tc$joint_tests   # every statistic side by side
-#' # the original chi-squared Wald, or sup-t with normal critical values:
+#' # the chi-squared Wald, or sup-t with normal critical values:
 #' rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3, joint = "wald")
 #' rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3, studentize = FALSE)
 #' @export
@@ -331,6 +329,7 @@ rd_typecont <- function(data, x, time, id,
   cl       <- match.call()
   scheme   <- match.arg(scheme)
   joint    <- match.arg(joint)
+  .check_studentize(studentize, "rd_typecont")
   bwselect <- match.arg(bwselect)
   estimand <- match.arg(estimand)
   kernel   <- match.arg(kernel, c("triangular", "epanechnikov", "uniform"))
@@ -397,7 +396,7 @@ rd_typecont <- function(data, x, time, id,
       joint_method = joint,
       studentize = studentize,
       joint_tests = .joint_tests_df(joint_tests),
-      z          = z,
+      t_stats    = z,
       nu         = stats::setNames(nu[rows], cell_names),
       scheme     = use_scheme,
       scheme_requested = scheme,
@@ -430,7 +429,7 @@ rd_typecont <- function(data, x, time, id,
 
 #' @export
 print.rd_typecont <- function(x, ...) {
-  .print_test_header("a continuous type distribution", "rd_typecont",
+  .print_test_header("type continuity", "rd_typecont",
                      "the share of each type jumps by zero at the cutoff, in every period",
                      x$scheme, identical(x$scheme_requested, "auto"), x$estimand)
   cat(sprintf("  Periods: %s   Types: %s   Bandwidth: %s\n\n",
@@ -438,8 +437,9 @@ print.rd_typecont <- function(x, ...) {
               paste(x$meta$type_values, collapse = ", "),
               .bw_label_test(x$meta$h, x$meta$bwselect)))
   method <- x$joint_method %||% "wald"
-  largest <- if (method == "supt" && length(x$z) && any(is.finite(x$z)))
-    names(x$z)[which.max(abs(x$z))] else NULL
+  tt <- x$t_stats %||% x$z
+  largest <- if (method == "supt" && length(tt) && any(is.finite(tt)))
+    names(tt)[which.max(abs(tt))] else NULL
   stud <- isTRUE(x$studentize %||% FALSE)
   .print_joint(list(stat = x$statistic, df = x$df, p = x$p_value), method, "Joint",
                cell_label = if (!is.null(largest)) sprintf("period:type %s", largest),
@@ -451,5 +451,6 @@ print.rd_typecont <- function(x, ...) {
                    sprintf("Period %s:", k), indent = "    ", studentize = stud)
     }
   }
+  if (!is.null(x$joint_tests)) cat("  All joint statistics: x$joint_tests\n")
   invisible(x)
 }

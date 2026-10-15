@@ -208,6 +208,8 @@ same, so \code{estimand} only labels the output.
 hc <- rd_homog(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 hc          # the Wald test, then each type's jump in each comparison period
 hc$period_type_jumps
+# one CCT bandwidth per cell instead of one common bandwidth
+rd_homog(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, bwselect = "cct")
 }
 \references{
 Leventer, D. and D. Nevo (2024). \emph{Correcting Invalid Regression Discontinuity

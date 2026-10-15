@@ -61,15 +61,16 @@
     Code
       print(rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3))
     Output
-      Test of a continuous type distribution  [rd_typecont()]
+      Test of type continuity  [rd_typecont()]
         H0: the share of each type jumps by zero at the cutoff, in every period
         Sampling scheme: panel, some units change side of the cutoff (detected)
         Periods: 1, 2, 3   Types: ++, +-, -+, --   Bandwidth: CCT MSE-optimal, chosen per cell
       
-        Joint sup-t (studentized) max |t| = 1.232 over 9 jumps,  p = 0.868  (largest: period:type 1:+-)
-          Period 1: sup-t (studentized) max |t| = 1.232 over 3 jumps,  p = 0.500
-          Period 2: sup-t (studentized) max |t| = 0.582 over 3 jumps,  p = 0.901
-          Period 3: sup-t (studentized) max |t| = 1.048 over 3 jumps,  p = 0.631
+        Joint sup-t (t critical values) max |t| = 1.232 over 9 jumps,  p = 0.868  (largest: period:type 1:+-)
+          Period 1: sup-t (t critical values) max |t| = 1.232 over 3 jumps,  p = 0.500
+          Period 2: sup-t (t critical values) max |t| = 0.582 over 3 jumps,  p = 0.901
+          Period 3: sup-t (t critical values) max |t| = 1.048 over 3 jumps,  p = 0.631
+        All joint statistics: x$joint_tests
 
 ---
 
@@ -81,12 +82,13 @@
         Sampling scheme: panel, some units change side of the cutoff (detected)
         RD period: 3   Comparison periods: 1, 2   Bandwidth: CCT MSE-optimal, chosen per cell
       
-        Pair 3::1: sup-t (studentized) max |t| = 3.086 over 3 jumps,  p = 0.009
+        Pair 3::1: sup-t (t critical values) max |t| = 3.086 over 3 jumps,  p = 0.009
           n above the cutoff: 490 (RD period), 508 (comparison), 430 in both
-        Pair 3::2: sup-t (studentized) max |t| = 2.059 over 3 jumps,  p = 0.120
+        Pair 3::2: sup-t (t critical values) max |t| = 2.059 over 3 jumps,  p = 0.120
           n above the cutoff: 490 (RD period), 497 (comparison), 418 in both
       
-        Joint over pairs: sup-t (studentized) max |t| = 3.086 over 6 jumps,  p = 0.016  (largest: 3::1:01)
+        Joint over pairs: sup-t (t critical values) max |t| = 3.086 over 6 jumps,  p = 0.016  (largest: pair:type 3::1:-+)
+        All joint statistics: x$joint_tests
 
 ---
 
@@ -171,12 +173,15 @@
       Tests of the identification assumptions  [rd_checks()]
       
         Assumption                          Statistic        p   Statistic type             Bandwidth
-        type continuity                         1.232    0.868   sup-t, studentized         CCT per cell
-        composition stability                   3.086    0.016   sup-t, studentized         CCT per cell
-        homogeneous confounding                 0.247    0.884   Wald chi-squared(2)        common, h = 0.21
-        constant within-type confounding        1.445    0.485   Wald chi-squared(2)        common, h = 0.21
+        type continuity                         1.232    0.868   sup-t, t critical values   CCT per cell
+        composition stability                   3.086    0.016   sup-t, t critical values   CCT per cell
+        homogeneous confounding                 0.247    0.884   Wald chi-squared(2)        common (pooled CCT), h = 0.21
+        constant within-type confounding        1.445    0.485   Wald chi-squared(2)        common (pooled CCT), h = 0.21
       
-        Reading at the 5% level: type continuity not rejected; constant within-type confounding not rejected
-        (comparison periods only); composition stability rejected, homogeneous confounding not rejected -- one is enough for identification.
+        Reading at the 5% level (not rejecting does not establish an assumption):
+          type continuity                    not rejected
+          composition stability              rejected     } identification needs
+          homogeneous confounding            not rejected } only one of these two
+          constant within-type confounding   not rejected (checked in the comparison periods)
         Each test's details: x$typecont, x$compstable, x$homog, x$trendcell.
 

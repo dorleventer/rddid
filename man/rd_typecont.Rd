@@ -91,8 +91,8 @@ the number of jumps tested (\code{"supt"}, \code{"swald"}) or the degrees of fre
 \item{\code{joint_method}, \code{studentize}}{as used; \code{joint_tests} has every
 statistic (a data frame with \code{method}, \code{reference} (\code{"t"}, \code{"normal"} or
 \code{"chi-squared"}), \code{statistic}, \code{df}, \code{p_value}).}
-\item{\code{z}, \code{nu}}{the t-statistics of the jumps tested and the degrees of
-freedom of their variances, named \code{"<period>:<type>"}.}
+\item{\code{t_stats}, \code{nu}}{the t-statistics of the jumps tested and the
+degrees of freedom of their variances, named \code{"<period>:<type>"}.}
 \item{\code{scheme}}{the sampling scheme used; \code{scheme_requested} is the
 argument as passed.}
 \item{\code{estimand}}{\code{"att"} or \code{"atu"}, as passed.}
@@ -158,12 +158,10 @@ jump's regression weights); with \code{FALSE} as a standard normal. The
 critical values come from the estimated correlation of the jumps.
 
 Why these defaults: sup-t and sWald use the covariance only through its
-correlations, so they avoid inverting it, the error that grows fastest with
-the number of jumps. Studentizing accounts for the noise in each jump's
-standard error. In the package authors' simulations (n = 1,000, true null,
-5\% level) the Wald rejected 7-8\% of the time at 9 jumps (three periods) and
-16\% at 28 (four periods), sup-t with normal critical values 7\% and 6\%, and
-the studentized sup-t 6\% and 5\%, at the same size-adjusted power.
+correlations, so they avoid inverting it, an error that grows with the
+number of jumps; t critical values account for the noise in each jump's
+estimated standard error. The simulation evidence (size and power of each
+statistic) is in the article "Checking the identification assumptions".
 
 Every statistic is reported in \code{joint_tests}, so any of them can be read off
 one call. The simulated critical values use 100,000 draws under a fixed
@@ -206,7 +204,7 @@ tc <- rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
 tc          # the null, the joint sup-t test, then each period's own test
 tc$p_value
 tc$joint_tests   # every statistic side by side
-# the original chi-squared Wald, or sup-t with normal critical values:
+# the chi-squared Wald, or sup-t with normal critical values:
 rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3, joint = "wald")
 rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3, studentize = FALSE)
 }

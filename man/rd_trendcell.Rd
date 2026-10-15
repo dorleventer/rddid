@@ -222,6 +222,8 @@ same, so \code{estimand} only labels the output.
 # rddid_sim_pv: the running variable moves, so some units change side
 tr <- rd_trendcell(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 tr          # the Wald test, then each type's jump in each comparison period
+# one CCT bandwidth per cell instead of one common bandwidth
+rd_trendcell(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, bwselect = "cct")
 # trend = "linear" needs three comparison periods; with two it is not testable
 rd_trendcell(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
              trend = "linear")

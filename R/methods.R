@@ -210,7 +210,7 @@ glance.rddid <- function(x, ...) {
 #' @noRd
 .tidy_test <- function(x, name) {
   data.frame(test = name, statistic = x$statistic, df = x$df, p.value = x$p_value,
-             row.names = NULL, stringsAsFactors = FALSE)
+             method = .checks_method(x), row.names = NULL, stringsAsFactors = FALSE)
 }
 #' @rdname rddid-tidiers
 #' @export
@@ -259,8 +259,8 @@ tidy.rd_trendcell <- function(x, ...) .tidy_test(x, "constant within-type confou
     return(.print_wald(test$stat, test$df, test$p,
                        label = if (identical(label, "Joint")) "Joint Wald" else label,
                        indent = indent))
-  name <- sprintf("%s (%s)", if (method == "supt") "sup-t" else "sWald",
-                  if (studentize) "studentized" else "normal")
+  name <- sprintf("%s (%s critical values)", if (method == "supt") "sup-t" else "sWald",
+                  if (studentize) "t" else "normal")
   if (is.null(test$stat) || is.na(test$stat)) {
     cat(sprintf("%s%s %s: not testable\n", indent, label, name))
     return(invisible())

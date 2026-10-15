@@ -240,10 +240,14 @@
   old_seed <- if (had_seed) get(".Random.seed", envir = genv, inherits = FALSE)
   old_kind <- RNGkind()
   on.exit({
-    RNGkind(old_kind[1], old_kind[2], old_kind[3])
-    if (had_seed) assign(".Random.seed", old_seed, envir = genv)
-    else if (exists(".Random.seed", envir = genv, inherits = FALSE))
-      rm(".Random.seed", envir = genv)
+    # .Random.seed encodes the RNG kinds, so restoring it restores them; without a seed the kinds
+    # are reset explicitly (quietly: an old "Rounding" sampler would warn on every call)
+    if (had_seed) {
+      assign(".Random.seed", old_seed, envir = genv)
+    } else {
+      suppressWarnings(RNGkind(old_kind[1], old_kind[2], old_kind[3]))
+      if (exists(".Random.seed", envir = genv, inherits = FALSE)) rm(".Random.seed", envir = genv)
+    }
   })
   set.seed(seed, kind = "Mersenne-Twister", normal.kind = "Inversion", sample.kind = "Rejection")
   expr
@@ -305,7 +309,7 @@
   cell  <- idx[which.max(abs(tt))]
   if (K == 1L) {
     p_n <- 2 * stats::pnorm(-abs(tt))
-    p_t <- 2 * stats::pt(-abs(tt), df = nu)
+    p_t <- if (is.finite(nu)) 2 * stats::pt(-abs(tt), df = nu) else p_n
     out <- list(supt_t = list(stat = m_obs, df = 1L, p = p_t, cell = cell),
                 supt_normal = list(stat = m_obs, df = 1L, p = p_n, cell = cell),
                 swald_t = list(stat = s_obs, df = 1L, p = p_t),
@@ -320,7 +324,10 @@
       while (left > 0) {   # in chunks, so K x n_sim never sits in memory at once
         b  <- min(left, 20000L)
         Z  <- L %*% matrix(stats::rnorm(K * b), K, b)
-        S  <- matrix(stats::rchisq(K * b, df = rep(nu, b)), K, b) / nu
+        fin <- is.finite(nu)          # nu = Inf: the standard error is taken as known (S = 1)
+        S  <- matrix(1, K, b)
+        if (any(fin))
+          S[fin, ] <- matrix(stats::rchisq(sum(fin) * b, df = rep(nu[fin], b)), sum(fin), b) / nu[fin]
         Zt <- Z / sqrt(S)
         mn <- abs(Z[1L, ]);  for (k in seq_len(K)[-1L]) mn <- pmax(mn, abs(Z[k, ]))
         mt <- abs(Zt[1L, ]); for (k in seq_len(K)[-1L]) mt <- pmax(mt, abs(Zt[k, ]))
@@ -354,6 +361,15 @@
   }
   c(list(wald = .joint_wald(theta, Sigma, scale = scale)),
     .gauss_joint(theta, Sigma, nu = nu, scale = scale))
+}
+
+#' Stop unless `studentize` is a single TRUE or FALSE
+#' @keywords internal
+#' @noRd
+.check_studentize <- function(studentize, fn) {
+  if (!is.logical(studentize) || length(studentize) != 1L || is.na(studentize))
+    stop(fn, ": `studentize` must be TRUE or FALSE.", call. = FALSE)
+  invisible(TRUE)
 }
 
 #' The element of .joint_tests() for a choice of `joint` and `studentize`

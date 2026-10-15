@@ -172,10 +172,8 @@ As in \code{\link[=rd_typecont]{rd_typecont()}}: \code{joint} picks the statisti
 \code{"swald"}; \code{"wald"}) and \code{studentize} the reference distribution of sup-t and
 sWald (\code{TRUE}, default: t-based; \code{FALSE}: normal). The same statistic is used
 for each pair and for the joint test, and every statistic is returned in
-\code{joint_tests}. With two comparison periods at n = 1,000 and a true null, the
-Wald over the stacked jumps rejected 8-9\% of the time, the normal sup-t 7\%
-and the studentized sup-t 6\%; the former summed statistic (versions up to
-0.4) rejected 8.7\%.
+\code{joint_tests}. The simulation evidence is in the article "Checking the identification
+assumptions".
 }
 
 \subsection{Shared units and the sampling scheme}{
@@ -221,6 +219,8 @@ support points (e.g. \code{c = 4999.5} for integer populations).
 cs <- rd_compstable(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
 cs          # one test per (RD period, comparison period) pair, then the joint test
 cs$pairs[["3::1"]]$jumps
+# the chi-squared Wald instead of sup-t
+rd_compstable(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3, joint = "wald")
 # comparison periods uniformly treated: the shares below the cutoff
 rd_compstable(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3,
               estimand = "atu")

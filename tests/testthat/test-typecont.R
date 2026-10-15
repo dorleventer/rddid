@@ -170,7 +170,7 @@ test_that("rd_typecont returns an rd_typecont object with expected fields", {
 
   expect_s3_class(out, "rd_typecont")
   expect_named(out, c("statistic", "df", "p_value", "joint_method", "studentize", "joint_tests",
-                      "z", "nu", "scheme", "scheme_requested", "estimand", "ll_wald", "per_period",
+                      "t_stats", "nu", "scheme", "scheme_requested", "estimand", "ll_wald", "per_period",
                       "fits", "data", "sides", "call", "meta"))
   expect_identical(out$joint_method, "supt")
   expect_identical(out$joint_tests$method, c("supt", "supt", "swald", "swald", "wald"))
@@ -197,7 +197,7 @@ test_that("print.rd_typecont runs without error", {
   panel <- xsec_to_panel(d)
   out   <- rd_typecont(panel, x = "R", time = "time", id = "id",
                        c = 0, h = 0.5)
-  expect_output(print(out), "Joint sup-t \\(studentized\\) max \\|t\\|")
+  expect_output(print(out), "Joint sup-t \\(t critical values\\) max \\|t\\|")
   expect_output(print(rd_typecont(panel, x = "R", time = "time", id = "id", c = 0, h = 0.5,
                                   joint = "wald")), "Wald chi-squared")
 })

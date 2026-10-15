@@ -44,6 +44,11 @@ test_that(".gauss_joint is reproducible and leaves the caller's RNG state alone"
   expect_false(exists(".Random.seed", envir = globalenv()))
 })
 
+test_that(".gauss_joint with nu = NULL gives the normal reference for both versions, quietly", {
+  expect_silent(g <- .gauss_joint(c(1.5, 2), matrix(c(1, 0.3, 0.3, 1), 2)))
+  expect_equal(g$supt_t$p, g$supt_normal$p, tolerance = 0.01)
+})
+
 test_that(".gauss_joint drops zero-SE jumps without information and flags deterministic ones", {
   Sigma <- diag(c(1, 0, 1))
   g <- .gauss_joint(c(1, 0, 2), Sigma, nu = c(50, 50, 50))
@@ -82,12 +87,12 @@ test_that("rd_typecont: joint = 'wald' reproduces the Wald, and all three are re
   expect_equal(tc_s$joint_tests, tc_w$joint_tests)
   expect_identical(tc_s$joint_method, "supt")
   expect_true(tc_s$studentize)
-  expect_equal(tc_s$statistic, max(abs(tc_s$z)))
+  expect_equal(tc_s$statistic, max(abs(tc_s$t_stats)))
   expect_equal(tc_s$p_value, tc_s$joint_tests$p_value[1])
   tc_n <- rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3, studentize = FALSE)
   expect_equal(tc_n$p_value, tc_s$joint_tests$p_value[2])
   sw <- rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3, joint = "swald")
-  expect_equal(sw$statistic, sum(sw$z^2))
+  expect_equal(sw$statistic, sum(sw$t_stats^2))
 })
 
 test_that("rd_compstable: the joint test stacks the pairs with their cross-pair covariance", {
@@ -158,4 +163,13 @@ test_that("rd_checks() equals the four separate calls and passes options through
   ch3 <- rd_checks(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
   expect_true(all(!is.na(ch3$table$error)))                    # no switchers: every test says why
   expect_output(print(ch), "Reading at the 5% level")
+  # a per-test `data` replaces the shared one (not merged; the code review's bug)
+  d2 <- rddid_sim_pv[rddid_sim_pv$id <= 600, ]
+  ch4 <- rd_checks(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
+                   homog = list(data = d2))
+  expect_true(is.na(ch4$table$error[3]))
+  expect_identical(ch4$homog$p_value,
+                   rd_homog(d2, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)$p_value)
+  expect_error(rd_checks(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
+                         studentize = NA), "TRUE or FALSE")
 })

@@ -239,11 +239,10 @@ The true effect is 1.
 ## Why sup-t, and a common bandwidth for the outcome tests
 
 In simulations with a clean null (every assumption true, 1,000 units, three
-periods, 5% level), the tests as first written rejected too often: the share
-tests' chi-squared Wald statistics 9% (type continuity) and 9% (composition
-stability, which then added the two pair statistics as if independent), the
-outcome tests 8%. Two things went wrong, both in the estimated covariance of
-the jumps rather than in the jumps themselves.
+periods, 5% level), the chi-squared Wald statistics with per-cell bandwidths
+rejected a true null too often: 9% for the share tests and 8% for the outcome
+tests. The excess comes from the estimated covariance of the jumps, not from
+the jumps themselves, in two ways.
 
 - A bandwidth chosen on each cell's own data is noisy, and the variance
   formula treats it as fixed, so each variance comes out 10-15% too small.
