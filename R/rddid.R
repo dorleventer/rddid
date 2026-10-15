@@ -57,8 +57,9 @@
 #' ## Minimum-variance weights
 #'
 #' All weights the confounding-trend assumption allows estimate the same
-#' effect; they differ in precision. `weighting = "min_variance"` picks the ones
-#' with the smallest variance of the conventional estimate, using the estimated
+#' effect; they differ in precision. `weighting = "min_variance"` picks, for each
+#' row of `estimates`, the ones with the smallest variance of that estimate. For
+#' the conventional estimate it uses the estimated
 #' variances of the per-period jumps and, in a panel (`scheme` `"pc"` or
 #' `"pv"`), their covariances (the quantities behind the conventional standard
 #' error). In a
@@ -69,9 +70,11 @@
 #' minimum-variance weights at that bandwidth, and the bandwidths (common `h`
 #' and pilot `b`) again with those weights. With `"cct"` or a fixed `h` the
 #' bandwidths do not depend on the weights, so the weights are computed once.
-#' The same weights are used for both rows of `estimates`, so only the
-#' conventional standard error is minimized; the robust one uses the same
-#' weights. The standard errors treat the weights as known; in large samples,
+#' The bias-corrected estimate gets its own weights, computed in the same way
+#' from the variances and covariances of the bias-corrected jumps (those behind
+#' the robust standard error), at the same bandwidths; they are in
+#' `weights_detail$weights_bc`, and the common bandwidth is chosen with the
+#' conventional ones. The standard errors treat the weights as known; in large samples,
 #' estimating them does not change the distribution of the estimate, because
 #' every allowed set of weights cancels the confounding jump exactly, so an
 #' error in the weights multiplies only the estimation error of the jumps. With
@@ -240,6 +243,8 @@
 #'       in the estimate: \eqn{\phi_t}{phi_t} for each RD period (1 for a single
 #'       RD period), minus its (aggregated) weight for each comparison period.
 #'       [coef()] returns the estimate itself.}
+#'     \item{`coef_bc`}{the same for the bias-corrected estimate; it differs
+#'       from `coef` only under `weighting = "min_variance"`.}
 #'     \item{`weights`}{named numeric vector of the comparison-period weights;
 #'       with several RD periods, the aggregated weights
 #'       \eqn{w^\phi_{t_0}}{w^phi_t0}.}
@@ -276,7 +281,8 @@
 #'       covariances with the RD-period jump), `h` (the main bandwidths at which
 #'       these were estimated; under `"joint"`, the first-step bandwidths, not
 #'       the final ones in `bandwidth`) and `pinned` (`TRUE` when the assumption
-#'       allows only one set of weights).}
+#'       allows only one set of weights), and `weights_bc`, `Xi_bc`, `xi_bc`, the
+#'       same for the bias-corrected estimate.}
 #'   }
 #'
 #' @references
@@ -413,16 +419,21 @@ rddid <- function(data, y, x, time, id = NULL, t_rd,
   # under "joint" the common bandwidth is then chosen again with them -- three steps, no
   # iteration, as the weights do not depend on a common bandwidth to first order
   weights_detail <- NULL
+  period_coef_bc <- NULL                       # the bias-corrected row's coefficients, if different
   if (weighting == "min_variance") {
     # the unscaled weights of the single RD period (setNames: [1, ] drops the names of a 1 x 1 matrix)
     w_pilot <- stats::setNames(as.numeric(weights_by_target[1, ]), colnames(weights_by_target))
-    mv <- .mv_weights(fits, comparisons, t_rd, match.arg(trend, c("constant", "linear")),
-                      use_scheme, w_pilot)
+    trend_type <- match.arg(trend, c("constant", "linear"))
+    mv    <- .mv_weights(fits, comparisons, t_rd, trend_type, use_scheme, w_pilot)
+    # the bias-corrected estimate minimizes its own (robust) variance, from the same fits
+    mv_bc <- .mv_weights(fits, comparisons, t_rd, trend_type, use_scheme, w_pilot, bc = TRUE)
     weights_detail <- list(pilot = w_pilot, Xi = mv$Xi, xi = mv$xi,
-                           h = bw$info$h_by_period, pinned = mv$pinned)
+                           h = bw$info$h_by_period, pinned = mv$pinned,
+                           weights_bc = rd_w[[1]] * mv_bc$w, Xi_bc = mv_bc$Xi, xi_bc = mv_bc$xi)
     comp_weights <- rd_w[[1]] * mv$w
     weights_by_target[1, ] <- mv$w
-    period_coef  <- c(rd_w, -comp_weights)
+    period_coef    <- c(rd_w, -comp_weights)
+    period_coef_bc <- c(rd_w, -rd_w[[1]] * mv_bc$w)
     if (is.null(h) && bwselect == "joint" && !mv$pinned) {
       bw <- .rddid_bandwidths(plist, period_coef, t_rd, periods, use_scheme, h, b, bwselect,
                               cutoff, p, q, kernel, regularize, reg_const)
@@ -432,12 +443,13 @@ rddid <- function(data, y, x, time, id = NULL, t_rd,
 
   # ---- aggregate: estimate and variance under every scheme, conventional and bias-corrected
   agg_conv <- .aggregate_fits(fits, period_coef, bc = FALSE)
-  agg_bc   <- .aggregate_fits(fits, period_coef, bc = TRUE)
+  if (is.null(period_coef_bc)) period_coef_bc <- period_coef
+  agg_bc   <- .aggregate_fits(fits, period_coef_bc, bc = TRUE)
 
   structure(list(
     estimates = .rddid_estimate_table(agg_conv, agg_bc, use_scheme, level),
     coef = period_coef, weights = comp_weights,
-    rd_weights = rd_w, weights_by_target = weights_by_target,
+    rd_weights = rd_w, weights_by_target = weights_by_target, coef_bc = period_coef_bc,
     weights_type = if (is.numeric(trend)) "custom" else match.arg(trend, c("constant", "linear")),
     estimand = estimand,
     t_rd = t_rd, comparisons = comparisons,
@@ -540,7 +552,10 @@ print.rddid <- function(x, digits = 4, hint = TRUE, ...) {
               paste(x$comparisons, collapse = ", "), .trend_label(x$weights_type),
               if (identical(x$weighting, "min_variance")) "minimum-variance weights"
               else if (several) "aggregated weights" else "weights",
-              paste(trimws(formatC(x$weights, digits = 3, format = "g")), collapse = ", ")))
+              paste0(fmt_w(x$weights),
+                     if (!is.null(x$weights_detail$weights_bc) &&
+                         !isTRUE(all.equal(x$weights_detail$weights_bc, x$weights)))
+                       paste0("; bias-corrected: ", fmt_w(x$weights_detail$weights_bc)) else "")))
   cat(sprintf("  Sampling scheme: %s%s\n", .scheme_label(x$scheme),
               if (identical(x$scheme_requested, "auto")) " (detected)" else ""))
   cat(sprintf("  Bandwidth: %s\n\n", .bandwidth_label(x$bandwidth)))

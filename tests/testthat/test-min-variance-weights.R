@@ -8,13 +8,14 @@ kkt_weights <- function(Xi, xi, L, l) {
   solve(A, c(2 * xi, l))[seq_len(m)]
 }
 # the plug-in blocks, built from a fit's per-period fits as the standard errors use them
-blocks_of <- function(fit) {
+blocks_of <- function(fit, bc = FALSE) {
   comps <- as.character(fit$comparisons); rd <- as.character(fit$t_rd); m <- length(comps)
   Xi <- matrix(0, m, m); xi <- numeric(m)
   for (i in seq_len(m)) {
-    Xi[i, i] <- fit$fits[[comps[i]]]$V_D
-    xi[i] <- rddid:::.cov_scheme(fit$fits[[comps[i]]], fit$fits[[rd]], fit$scheme)
-    for (j in seq_len(m)[-i]) Xi[i, j] <- rddid:::.cov_scheme(fit$fits[[comps[i]]], fit$fits[[comps[j]]], fit$scheme)
+    Xi[i, i] <- if (bc) fit$fits[[comps[i]]]$V_D_bc else fit$fits[[comps[i]]]$V_D
+    xi[i] <- rddid:::.cov_scheme(fit$fits[[comps[i]]], fit$fits[[rd]], fit$scheme, bc = bc)
+    for (j in seq_len(m)[-i])
+      Xi[i, j] <- rddid:::.cov_scheme(fit$fits[[comps[i]]], fit$fits[[comps[j]]], fit$scheme, bc = bc)
   }
   list(Xi = Xi, xi = xi)
 }
@@ -51,6 +52,17 @@ test_that("fixed h: weights, estimate and standard error match a computation by 
   expect_equal(mv$estimates["Conventional", "se"]^2, v, tolerance = 1e-10)
   expect_false(mv$weights_detail$pinned)
   expect_equal(unname(mv$weights_detail$pilot), c(0.5, 0.5))
+  # the bias-corrected row: its own minimum-variance weights, from the bias-corrected blocks
+  bb <- blocks_of(ols, bc = TRUE); wb <- kkt_weights(bb$Xi, bb$xi, matrix(1, 1, 2), 1)
+  expect_equal(unname(mv$weights_detail$weights_bc), wb, tolerance = 1e-10)
+  expect_equal(unname(mv$coef_bc), c(1, -wb), tolerance = 1e-10)
+  Db <- vapply(c("3", "1", "2"), function(k) ols$fits[[k]]$D_bc, numeric(1))
+  expect_equal(mv$estimates["Robust", "est"], Db[["3"]] - sum(wb * Db[c("1", "2")]), tolerance = 1e-12)
+  vb <- function(w) ols$fits[["3"]]$V_D_bc - 2 * sum(w * bb$xi) + c(t(w) %*% bb$Xi %*% w)
+  expect_equal(mv$estimates["Robust", "se"]^2, vb(wb), tolerance = 1e-10)
+  # ... which is no larger than with the conventional minimum-variance weights
+  expect_lte(vb(wb), vb(w) + 1e-14)
+  expect_false(isTRUE(all.equal(wb, w, tolerance = 1e-6)))     # the two sets differ here
 })
 
 test_that("joint: the three steps reproduce by hand", {
@@ -59,16 +71,24 @@ test_that("joint: the three steps reproduce by hand", {
   b <- blocks_of(step1); w <- kkt_weights(b$Xi, b$xi, matrix(1, 1, 2), 1)
   step3 <- run(trend = stats::setNames(w, c("1", "2")))              # common h with those weights
   expect_equal(unname(mv$weights), w, tolerance = 1e-10)
-  expect_equal(mv$estimates, step3$estimates, tolerance = 1e-10)
+  expect_equal(mv$estimates["Conventional", ], step3$estimates["Conventional", ], tolerance = 1e-10)
   expect_equal(mv$bandwidth$h, step3$bandwidth$h, tolerance = 1e-10)
   expect_equal(mv$weights_detail$h, step1$bandwidth$h_by_period)
+  # bias-corrected weights from the step-1 fits, applied at the final (step-3) fits
+  bb <- blocks_of(step1, bc = TRUE); wb <- kkt_weights(bb$Xi, bb$xi, matrix(1, 1, 2), 1)
+  expect_equal(unname(mv$weights_detail$weights_bc), wb, tolerance = 1e-10)
+  Db <- vapply(c("3", "1", "2"), function(k) mv$fits[[k]]$D_bc, numeric(1))
+  expect_equal(mv$estimates["Robust", "est"], Db[["3"]] - sum(wb * Db[c("1", "2")]), tolerance = 1e-12)
 })
 
 test_that("cct: weights computed once at the per-period CCT bandwidths", {
   mv <- run(bwselect = "cct", weighting = "min_variance"); ols <- run(bwselect = "cct")
   b <- blocks_of(ols); w <- kkt_weights(b$Xi, b$xi, matrix(1, 1, 2), 1)
   manual <- run(bwselect = "cct", trend = stats::setNames(w, c("1", "2")))
-  expect_equal(mv$estimates, manual$estimates, tolerance = 1e-10)
+  expect_equal(mv$estimates["Conventional", ], manual$estimates["Conventional", ], tolerance = 1e-10)
+  bb <- blocks_of(ols, bc = TRUE); wb <- kkt_weights(bb$Xi, bb$xi, matrix(1, 1, 2), 1)
+  manual_bc <- run(bwselect = "cct", trend = stats::setNames(wb, c("1", "2")))
+  expect_equal(mv$estimates["Robust", ], manual_bc$estimates["Robust", ], tolerance = 1e-10)
   expect_equal(mv$bandwidth$h_by_period, ols$bandwidth$h_by_period)
 })
 
