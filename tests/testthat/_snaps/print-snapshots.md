@@ -66,10 +66,10 @@
         Sampling scheme: panel, some units change side of the cutoff (detected)
         Periods: 1, 2, 3   Types: ++, +-, -+, --   Bandwidth: CCT MSE-optimal, chosen per cell
       
-        Joint sup-t (t critical values) max |t| = 1.232 over 9 jumps,  p = 0.868  (largest: period:type 1:+-)
-          Period 1: sup-t (t critical values) max |t| = 1.232 over 3 jumps,  p = 0.500
-          Period 2: sup-t (t critical values) max |t| = 0.582 over 3 jumps,  p = 0.901
-          Period 3: sup-t (t critical values) max |t| = 1.048 over 3 jumps,  p = 0.631
+        Joint sup-t (t critical values) max |t| = 1.232 over 9 jumps,  p = 0.86*  (largest: period:type 1:+-)
+          Period 1: sup-t (t critical values) max |t| = 1.232 over 3 jumps,  p = 0.50*
+          Period 2: sup-t (t critical values) max |t| = 0.582 over 3 jumps,  p = 0.90*
+          Period 3: sup-t (t critical values) max |t| = 1.048 over 3 jumps,  p = 0.63*
         All joint statistics: x$joint_tests
 
 ---
@@ -82,12 +82,12 @@
         Sampling scheme: panel, some units change side of the cutoff (detected)
         RD period: 3   Comparison periods: 1, 2   Bandwidth: CCT MSE-optimal, chosen per cell
       
-        Pair 3::1: sup-t (t critical values) max |t| = 3.086 over 3 jumps,  p = 0.009
+        Pair 3::1: sup-t (t critical values) max |t| = 3.086 over 3 jumps,  p = 0.00*
           n above the cutoff: 490 (RD period), 508 (comparison), 430 in both
-        Pair 3::2: sup-t (t critical values) max |t| = 2.059 over 3 jumps,  p = 0.120
+        Pair 3::2: sup-t (t critical values) max |t| = 2.059 over 3 jumps,  p = 0.12*
           n above the cutoff: 490 (RD period), 497 (comparison), 418 in both
       
-        Joint over pairs: sup-t (t critical values) max |t| = 3.086 over 6 jumps,  p = 0.016  (largest: pair:type 3::1:-+)
+        Joint over pairs: sup-t (t critical values) max |t| = 3.086 over 6 jumps,  p = 0.01*  (largest: pair:type 3::1:-+)
         All joint statistics: x$joint_tests
 
 ---
@@ -173,8 +173,8 @@
       Tests of the identification assumptions  [rd_checks()]
       
         Assumption                          Statistic        p   Statistic type             Bandwidth
-        type continuity                         1.232    0.868   sup-t, t critical values   CCT per cell
-        composition stability                   3.086    0.016   sup-t, t critical values   CCT per cell
+        type continuity                         1.232    0.86*   sup-t, t critical values   CCT per cell
+        composition stability                   3.086    0.01*   sup-t, t critical values   CCT per cell
         homogeneous confounding                 0.247    0.884   Wald chi-squared(2)        common (pooled CCT), h = 0.21
         constant within-type confounding        1.445    0.485   Wald chi-squared(2)        common (pooled CCT), h = 0.21
       
