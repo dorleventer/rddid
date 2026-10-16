@@ -382,8 +382,8 @@
 #' support points (e.g. `c = 4999.5` for integer populations).
 #'
 #' @param data a data frame in long format, one row per unit and period, from a
-#'   panel (it need not be balanced). A unit's type is read from the periods in
-#'   which it is observed; a unit missing from a period that its type needs is
+#'   panel (it need not be balanced). Only the rows of `t_rd` and `comparisons`
+#'   are used: a unit's type is read from those periods; a unit missing from a period that its type needs is
 #'   left out of the cells that use that type. Rows with a missing running
 #'   variable, period or id are dropped, with a message.
 #' @param id name of the unit-identifier column (a string). Required: types are
@@ -503,7 +503,7 @@ rd_compstable <- function(data, x, time, id, t_rd,
   # ----- inputs and periods: the shared prepare step (input_checks.R) -----
   if (missing(t_rd)) t_rd <- NULL
   prep <- .prepare_input(data, "rd_compstable", x = x, time = time, id = id, t_rd = t_rd,
-                         comparisons = comparisons)
+                         comparisons = comparisons, restrict = TRUE)
   data <- prep$data; t_rd <- prep$t_rd; comparisons <- prep$comparisons
   c_orig <- cutoff
   if (estimand == "atu") {

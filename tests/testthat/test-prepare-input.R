@@ -79,3 +79,14 @@ test_that("the kernel name is not case sensitive in any entry point", {
     expect_equal(no_call(suppressMessages(calls[[fn]](d, t_rd = 3, kernel = "Triangular"))),
                  no_call(suppressMessages(calls[[fn]](d, t_rd = 3))), tolerance = 0)
 })
+
+test_that("a period outside t_rd and comparisons does not change any test", {
+  # a year 4 that only half the units have: before, the tests built types from every period in
+  # the data, so the units missing from year 4 were dropped (rd_homog: 1000 -> 500 units)
+  d4 <- rbind(d, transform(d[d$year == 3 & d$id <= 500, ], year = 4))
+  for (fn in c("rd_compstable", "rd_homog", "rd_trendcell")) {
+    set.seed(1); r  <- suppressMessages(calls[[fn]](d,  t_rd = 3, comparisons = 1:2))
+    set.seed(1); r4 <- suppressMessages(calls[[fn]](d4, t_rd = 3, comparisons = 1:2))
+    expect_equal(no_call(r4), no_call(r), tolerance = 0)
+  }
+})
