@@ -79,12 +79,12 @@ detail stays available.</p>
 <span>  bc <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  joint <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"supt"</span>, <span class="st">"swald"</span>, <span class="st">"wald"</span><span class="op">)</span>,</span>
 <span>  studentize <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  outcome_bwselect <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"common"</span>, <span class="st">"cct"</span>, <span class="st">"rot"</span><span class="op">)</span>,</span>
+<span>  outcome_bwselect <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"pooled"</span>, <span class="st">"cct"</span>, <span class="st">"rot"</span><span class="op">)</span>,</span>
 <span>  typecont <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  compstable <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  homog <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  trendcell <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span>  level <span class="op">=</span> <span class="fl">0.05</span></span>
+<span>  level <span class="op">=</span> <span class="fl">0.95</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -117,7 +117,7 @@ critical values) or <code>FALSE</code> (normal critical values).</p></dd>
 
 <dt id="arg-outcome-bwselect">outcome_bwselect<a class="anchor" aria-label="anchor" href="#arg-outcome-bwselect"></a></dt>
 <dd><p>the bandwidth rule of <code><a href="rd_homog.html">rd_homog()</a></code> and
-<code><a href="rd_trendcell.html">rd_trendcell()</a></code>: <code>"common"</code> (default; one bandwidth for every cell, the
+<code><a href="rd_trendcell.html">rd_trendcell()</a></code>: <code>"pooled"</code> (default; one bandwidth for every cell, the
 CCT bandwidth of the outcome on the pooled comparison periods), <code>"cct"</code>
 (one CCT bandwidth per cell) or <code>"rot"</code> (a rule of thumb per cell). The
 share tests' own <code>bwselect</code> (per-fit CCT by default) can be changed in
@@ -131,7 +131,8 @@ one test, which override the shared ones.</p></dd>
 
 
 <dt id="arg-level">level<a class="anchor" aria-label="anchor" href="#arg-level"></a></dt>
-<dd><p>the level of the reading in the printout (default 0.05).</p></dd>
+<dd><p>the confidence level of the reading in the printout (default
+0.95, as in <code><a href="rddid.html">rddid()</a></code>): a test rejects when its p-value is below <code>1 - level</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -151,8 +152,9 @@ different value for one test only, goes in that test's list, for example
 <code>typecont = list(joint = "wald")</code> or <code>homog = list(bwselect = "cct", min_n = 20)</code>.
 A test that cannot run on the data (for example, no unit changes side of
 the cutoff) gives a row with its error message and <code>NA</code> results.</p>
-<p>The printout ends with the reading at the level <code>level</code>: which assumptions
-a test rejects. Not rejecting an assumption does not establish it; constant
+<p>The printout ends with a reading at the confidence level <code>level</code>, as in
+<code><a href="rddid.html">rddid()</a></code>: a test rejects its assumption when its p-value is below
+<code>1 - level</code>. Not rejecting an assumption does not establish it; constant
 within-type confounding concerns the RD period and is checked in the
 comparison periods only (a pre-trends check).</p>
     </div>
@@ -181,10 +183,10 @@ comparison periods only (a pre-trends check).</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Assumption                          Statistic        p   Statistic type             Bandwidth</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   type continuity                         1.232    0.869   sup-t, t critical values   CCT per cell</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   composition stability                   3.086    0.016   sup-t, t critical values   CCT per cell</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   homogeneous confounding                 0.247    0.884   Wald chi-squared(2)        common (pooled CCT), h = 0.21</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   constant within-type confounding        1.445    0.485   Wald chi-squared(2)        common (pooled CCT), h = 0.21</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   homogeneous confounding                 0.247    0.884   Wald chi-squared(2)        pooled CCT, h = 0.21</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   constant within-type confounding        1.445    0.485   Wald chi-squared(2)        pooled CCT, h = 0.21</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Reading at the 5% level (not rejecting does not establish an assumption):</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Reading at level 0.95, rejecting when p &lt; 0.05 (not rejecting does not establish an assumption):</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     type continuity                    not rejected</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     composition stability              rejected     } identification needs</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     homogeneous confounding            not rejected } only one of these two</span>
@@ -201,7 +203,7 @@ comparison periods only (a pre-trends check).</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   homogeneous confounding                 0.465    0.793   Wald chi-squared(2)        CCT per cell</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   constant within-type confounding        0.078    0.962   Wald chi-squared(2)        CCT per cell</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Reading at the 5% level (not rejecting does not establish an assumption):</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Reading at level 0.95, rejecting when p &lt; 0.05 (not rejecting does not establish an assumption):</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     type continuity                    not rejected</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     composition stability              rejected     } identification needs</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     homogeneous confounding            not rejected } only one of these two</span>

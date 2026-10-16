@@ -268,7 +268,8 @@ instead):</p>
 <code class="sourceCode R"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rddid.html">rddid</a></span><span class="op">(</span><span class="va">dat</span>, y <span class="op">=</span> <span class="st">"Y"</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"t"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span>, bwselect <span class="op">=</span> <span class="st">"cct"</span><span class="op">)</span></span>
 <span><span class="va">res</span></span>
 <span><span class="co">#&gt; RD-DID estimate of the ATT in period 3</span></span>
-<span><span class="co">#&gt;   Comparison periods: 1, 2   (constant confounding trend; weights 0.5, 0.5)</span></span>
+<span><span class="co">#&gt;   Comparison periods: 1, 2   (constant confounding trend)</span></span>
+<span><span class="co">#&gt;   Comparison weights: 1: 0.500, 2: 0.500</span></span>
 <span><span class="co">#&gt;   Sampling scheme: panel, no unit changes side of the cutoff (detected)</span></span>
 <span><span class="co">#&gt;   Bandwidth: per-period CCT MSE-optimal (rule "cct"): h (period = value) 1 = 0.3952, 2 = 0.3109, 3 = 0.403</span></span>
 <span><span class="co">#&gt; </span></span>
@@ -393,7 +394,8 @@ plus <code>tau1 - tau0</code>.</p>
 <span>                 estimand <span class="op">=</span> <span class="st">"atu"</span><span class="op">)</span></span>
 <span><span class="va">res_atu</span></span>
 <span><span class="co">#&gt; RD-DID estimate of the ATU in period 3</span></span>
-<span><span class="co">#&gt;   Comparison periods: 1, 2   (constant confounding trend; weights 0.5, 0.5)</span></span>
+<span><span class="co">#&gt;   Comparison periods: 1, 2   (constant confounding trend)</span></span>
+<span><span class="co">#&gt;   Comparison weights: 1: 0.500, 2: 0.500</span></span>
 <span><span class="co">#&gt;   Sampling scheme: panel, no unit changes side of the cutoff (detected)</span></span>
 <span><span class="co">#&gt;   Bandwidth: common h = 0.3025 (rule "joint": one bandwidth, chosen for the RD-DID estimate)</span></span>
 <span><span class="co">#&gt;   Pilot bandwidth b (period = value): 1 = 0.452, 2 = 0.4691, 3 = 0.4415</span></span>

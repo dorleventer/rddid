@@ -84,5 +84,5 @@ Other tests of the assumptions:
 ``` r
 if (requireNamespace("ggplot2", quietly = TRUE))
   plot_switchers(rddid_sim_pv, x = "R", time = "year", id = "id", periods = c(1, 3))
-#> plot_switchers: 13.8% of the 1000 units observed in both periods change side
+#> plot_switchers(): 13.8% of the 1000 units observed in both periods change side
 ```

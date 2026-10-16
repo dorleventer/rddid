@@ -67,7 +67,8 @@ are all periods other than `t_rd`, in sorted order.
 fit <- rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 fit
 #> RD-DID estimate of the ATT in period 3
-#>   Comparison periods: 1, 2   (constant confounding trend; weights 0.5, 0.5)
+#>   Comparison periods: 1, 2   (constant confounding trend)
+#>   Comparison weights: 1: 0.500, 2: 0.500
 #>   Sampling scheme: panel, no unit changes side of the cutoff (detected)
 #>   Bandwidth: common h = 0.2672 (rule "joint": one bandwidth, chosen for the RD-DID estimate)
 #>   Pilot bandwidth b (period = value): 1 = 0.4102, 2 = 0.3868, 3 = 0.3951
@@ -134,7 +135,8 @@ subtracts the average of the year-1 and year-2 jumps, (0.51 + 0.63) / 2
 
 summary(fit)
 #> RD-DID estimate of the ATT in period 3
-#>   Comparison periods: 1, 2   (constant confounding trend; weights 0.5, 0.5)
+#>   Comparison periods: 1, 2   (constant confounding trend)
+#>   Comparison weights: 1: 0.500, 2: 0.500
 #>   Sampling scheme: panel, no unit changes side of the cutoff (detected)
 #>   Bandwidth: common h = 0.2672 (rule "joint": one bandwidth, chosen for the RD-DID estimate)
 #>   Pilot bandwidth b (period = value): 1 = 0.4102, 2 = 0.3868, 3 = 0.3951
@@ -143,11 +145,11 @@ summary(fit)
 #>   Conventional                 1.0927     0.1264    8.64   <0.001   [0.8450, 1.3405]
 #>   Robust (bias-corrected)      1.1414     0.1494    7.64   <0.001   [0.8486, 1.4342]
 #> 
-#>   Per-period local-linear fits, in time order (estimate = sum of coef x jump):
-#>   period   role          coef      n        h        b       jump      s.e.  jump (bc) s.e. (rb)
-#>   1        comparison    -0.5   1000   0.2672   0.4102     0.5119    0.1688     0.4639    0.1948
-#>   2        comparison    -0.5   1000   0.2672   0.3868     0.6306    0.1686     0.6240    0.2012
-#>   3        RD               1   1000   0.2672   0.3951     1.6640    0.1641     1.6854    0.1931
+#>   Per-period local-linear fits (Conventional = sum of coef x jump; Robust = sum of coef x jump (bc)):
+#>   period   role           coef      n        h        b       jump      s.e.  jump (bc) s.e. (rb)
+#>   1        comparison   -0.500   1000   0.2672   0.4102     0.5119    0.1688     0.4639    0.1948
+#>   2        comparison   -0.500   1000   0.2672   0.3868     0.6306    0.1686     0.6240    0.2012
+#>   3        RD            1.000   1000   0.2672   0.3951     1.6640    0.1641     1.6854    0.1931
 #> 
 #>   Robust s.e. under each sampling scheme (the printed one is for "pc"; the others are for comparison):
 #>     cross-section 0.2385   panel, no unit changes side 0.1494   panel, some change side 0.1494
@@ -199,7 +201,8 @@ fit_lin <- rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3
                  trend = "linear")
 fit_lin
 #> RD-DID estimate of the ATT in period 3
-#>   Comparison periods: 1, 2   (linear confounding trend; weights -1, 2)
+#>   Comparison periods: 1, 2   (linear confounding trend)
+#>   Comparison weights: 1: -1.000, 2: 2.000
 #>   Sampling scheme: panel, no unit changes side of the cutoff (detected)
 #>   Bandwidth: common h = 0.2672 (rule "joint": one bandwidth, chosen for the RD-DID estimate)
 #>   Pilot bandwidth b (period = value): 1 = 0.4102, 2 = 0.3869, 3 = 0.3951
@@ -240,8 +243,10 @@ sim4 <- rbind(rddid_sim, transform(rddid_sim[rddid_sim$year == 3, ], year = 4))
 fit_avg <- rddid(sim4, y = "Y", x = "R", time = "year", id = "id", t_rd = c(3, 4),
                  comparisons = c(1, 2), bwselect = "cct")
 fit_avg
-#> RD-DID estimate of the ATT averaged over RD periods 3, 4 (weights 0.5, 0.5)
-#>   Comparison periods: 1, 2   (constant confounding trend; aggregated weights 0.5, 0.5)
+#> RD-DID estimate of the ATT averaged over RD periods 3, 4
+#>   RD-period weights: 3: 0.500, 4: 0.500
+#>   Comparison periods: 1, 2   (constant confounding trend)
+#>   Comparison weights (summed over the RD periods): 1: 0.500, 2: 0.500
 #>   Sampling scheme: panel, no unit changes side of the cutoff (detected)
 #>   Bandwidth: per-period CCT MSE-optimal (rule "cct"): h (period = value) 1 = 0.2637, 2 = 0.3256, 3 = 0.4141, 4 = 0.4141
 #> 
@@ -338,7 +343,8 @@ below check:
 fit_pv <- rddid(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 fit_pv
 #> RD-DID estimate of the ATT in period 3
-#>   Comparison periods: 1, 2   (constant confounding trend; weights 0.5, 0.5)
+#>   Comparison periods: 1, 2   (constant confounding trend)
+#>   Comparison weights: 1: 0.500, 2: 0.500
 #>   Sampling scheme: panel, some units change side of the cutoff (detected)
 #>   Bandwidth: common h = 0.2367 (rule "joint": one bandwidth, chosen for the RD-DID estimate)
 #>   Pilot bandwidth b (period = value): 1 = 0.3889, 2 = 0.3847, 3 = 0.3933
@@ -367,11 +373,13 @@ tc
 #>   H0: the share of each type jumps by zero at the cutoff, in every period
 #>   Sampling scheme: panel, some units change side of the cutoff (detected)
 #>   Periods: 1, 2, 3   Types: ++, +-, -+, --   Bandwidth: CCT MSE-optimal, chosen per cell
+#>   Type in a period: a unit's sides of the cutoff in the other periods, in time order
+#>     ("+" at or above, "-" below).
 #> 
 #>   Joint sup-t (t critical values) max |t| = 1.232 over 9 jumps,  p = 0.869  (largest: period:type 1:+-)
-#>     Period 1: sup-t (t critical values) max |t| = 1.232 over 3 jumps,  p = 0.500
+#>     Period 1: sup-t (t critical values) max |t| = 1.232 over 3 jumps,  p = 0.499
 #>     Period 2: sup-t (t critical values) max |t| = 0.582 over 3 jumps,  p = 0.902
-#>     Period 3: sup-t (t critical values) max |t| = 1.048 over 3 jumps,  p = 0.633
+#>     Period 3: sup-t (t critical values) max |t| = 1.048 over 3 jumps,  p = 0.631
 #>   All joint statistics: x$joint_tests
 ```
 
@@ -439,6 +447,7 @@ hg
 #>   Sampling scheme: panel, some units change side of the cutoff (detected)
 #>   Comparison periods: 1, 2   Bandwidth: h = 0.2104 in every cell (CCT on the pooled comparison periods)
 #> 
+#>   Type: a unit's side of the cutoff in RD period 3 ("+" at or above, "-" below).
 #>   Wald chi-squared(2) = 0.247,  p = 0.884
 #> 
 #>   Per-cell local-linear jumps (comparison periods):
@@ -470,12 +479,13 @@ comparison periods).
 
 tr <- rd_trendcell(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 tr
-#> Test of a constant within-type confounding discontinuity  [rd_trendcell()]
+#> Test of constant within-type confounding  [rd_trendcell()]
 #>   H0: within each type, the confounding jump is the same in every comparison period
 #>   Sampling scheme: panel, some units change side of the cutoff (detected)
 #>   Comparison periods: 1, 2   Trend: constant
 #>   Bandwidth: h = 0.2104 in every cell (CCT on the pooled comparison periods)
 #> 
+#>   Type: a unit's side of the cutoff in RD period 3 ("+" at or above, "-" below).
 #>   Wald chi-squared(2) = 1.445,  p = 0.485
 #> 
 #>   Per-cell local-linear jumps (comparison periods):
@@ -496,11 +506,11 @@ One table for all four:
 ``` r
 
 do.call(rbind, lapply(list(tc, cs, hg, tr), tidy))
-#>                               test statistic df    p.value
-#> 1                  type continuity 1.2317753  9 0.86933131
-#> 2            composition stability 3.0857080  6 0.01639984
-#> 3          homogeneous confounding 0.2474976  2 0.88360178
-#> 4 constant within-type confounding 1.4453616  2 0.48544912
+#>            test                       assumption statistic df    p.value
+#> 1   rd_typecont                  type continuity 1.2317753 NA 0.86888131
+#> 2 rd_compstable            composition stability 3.0857080 NA 0.01639984
+#> 3      rd_homog          homogeneous confounding 0.2474976  2 0.88360178
+#> 4  rd_trendcell constant within-type confounding 1.4453616  2 0.48544912
 #>                     method
 #> 1 sup-t, t critical values
 #> 2 sup-t, t critical values
@@ -544,7 +554,8 @@ For illustration, make everybody treated in years 1 and 2 of
 sim_atu <- transform(rddid_sim, W = ifelse(year < 3, 1, W), Y = Y + (year < 3))
 rddid(sim_atu, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, estimand = "atu")
 #> RD-DID estimate of the ATU in period 3
-#>   Comparison periods: 1, 2   (constant confounding trend; weights 0.5, 0.5)
+#>   Comparison periods: 1, 2   (constant confounding trend)
+#>   Comparison weights: 1: 0.500, 2: 0.500
 #>   Sampling scheme: panel, no unit changes side of the cutoff (detected)
 #>   Bandwidth: common h = 0.2672 (rule "joint": one bandwidth, chosen for the RD-DID estimate)
 #>   Pilot bandwidth b (period = value): 1 = 0.4102, 2 = 0.3868, 3 = 0.3951

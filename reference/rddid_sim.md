@@ -77,7 +77,8 @@ head(rddid_sim)
 #> 6  6    1  0.8406841 1 0  1.59100391
 rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 #> RD-DID estimate of the ATT in period 3
-#>   Comparison periods: 1, 2   (constant confounding trend; weights 0.5, 0.5)
+#>   Comparison periods: 1, 2   (constant confounding trend)
+#>   Comparison weights: 1: 0.500, 2: 0.500
 #>   Sampling scheme: panel, no unit changes side of the cutoff (detected)
 #>   Bandwidth: common h = 0.2672 (rule "joint": one bandwidth, chosen for the RD-DID estimate)
 #>   Pilot bandwidth b (period = value): 1 = 0.4102, 2 = 0.3868, 3 = 0.3951

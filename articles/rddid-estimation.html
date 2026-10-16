@@ -141,7 +141,8 @@ order.</p>
 <code class="sourceCode R"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rddid.html">rddid</a></span><span class="op">(</span><span class="va">rddid_sim</span>, y <span class="op">=</span> <span class="st">"Y"</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="va">fit</span></span>
 <span><span class="co">#&gt; RD-DID estimate of the ATT in period 3</span></span>
-<span><span class="co">#&gt;   Comparison periods: 1, 2   (constant confounding trend; weights 0.5, 0.5)</span></span>
+<span><span class="co">#&gt;   Comparison periods: 1, 2   (constant confounding trend)</span></span>
+<span><span class="co">#&gt;   Comparison weights: 1: 0.500, 2: 0.500</span></span>
 <span><span class="co">#&gt;   Sampling scheme: panel, no unit changes side of the cutoff (detected)</span></span>
 <span><span class="co">#&gt;   Bandwidth: common h = 0.2672 (rule "joint": one bandwidth, chosen for the RD-DID estimate)</span></span>
 <span><span class="co">#&gt;   Pilot bandwidth b (period = value): 1 = 0.4102, 2 = 0.3868, 3 = 0.3951</span></span>
@@ -209,7 +210,8 @@ jumps, (0.51 + 0.63) / 2 = 0.57, its estimate of the confounding jump of
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span>
 <span><span class="co">#&gt; RD-DID estimate of the ATT in period 3</span></span>
-<span><span class="co">#&gt;   Comparison periods: 1, 2   (constant confounding trend; weights 0.5, 0.5)</span></span>
+<span><span class="co">#&gt;   Comparison periods: 1, 2   (constant confounding trend)</span></span>
+<span><span class="co">#&gt;   Comparison weights: 1: 0.500, 2: 0.500</span></span>
 <span><span class="co">#&gt;   Sampling scheme: panel, no unit changes side of the cutoff (detected)</span></span>
 <span><span class="co">#&gt;   Bandwidth: common h = 0.2672 (rule "joint": one bandwidth, chosen for the RD-DID estimate)</span></span>
 <span><span class="co">#&gt;   Pilot bandwidth b (period = value): 1 = 0.4102, 2 = 0.3868, 3 = 0.3951</span></span>
@@ -218,11 +220,11 @@ jumps, (0.51 + 0.63) / 2 = 0.57, its estimate of the confounding jump of
 <span><span class="co">#&gt;   Conventional                 1.0927     0.1264    8.64   &lt;0.001   [0.8450, 1.3405]</span></span>
 <span><span class="co">#&gt;   Robust (bias-corrected)      1.1414     0.1494    7.64   &lt;0.001   [0.8486, 1.4342]</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt;   Per-period local-linear fits, in time order (estimate = sum of coef x jump):</span></span>
-<span><span class="co">#&gt;   period   role          coef      n        h        b       jump      s.e.  jump (bc) s.e. (rb)</span></span>
-<span><span class="co">#&gt;   1        comparison    -0.5   1000   0.2672   0.4102     0.5119    0.1688     0.4639    0.1948</span></span>
-<span><span class="co">#&gt;   2        comparison    -0.5   1000   0.2672   0.3868     0.6306    0.1686     0.6240    0.2012</span></span>
-<span><span class="co">#&gt;   3        RD               1   1000   0.2672   0.3951     1.6640    0.1641     1.6854    0.1931</span></span>
+<span><span class="co">#&gt;   Per-period local-linear fits (Conventional = sum of coef x jump; Robust = sum of coef x jump (bc)):</span></span>
+<span><span class="co">#&gt;   period   role           coef      n        h        b       jump      s.e.  jump (bc) s.e. (rb)</span></span>
+<span><span class="co">#&gt;   1        comparison   -0.500   1000   0.2672   0.4102     0.5119    0.1688     0.4639    0.1948</span></span>
+<span><span class="co">#&gt;   2        comparison   -0.500   1000   0.2672   0.3868     0.6306    0.1686     0.6240    0.2012</span></span>
+<span><span class="co">#&gt;   3        RD            1.000   1000   0.2672   0.3951     1.6640    0.1641     1.6854    0.1931</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Robust s.e. under each sampling scheme (the printed one is for "pc"; the others are for comparison):</span></span>
 <span><span class="co">#&gt;     cross-section 0.2385   panel, no unit changes side 0.1494   panel, some change side 0.1494</span></span></code></pre></div>
@@ -266,7 +268,8 @@ for a paper</a> below has an example.</p>
 <span>                 trend <span class="op">=</span> <span class="st">"linear"</span><span class="op">)</span></span>
 <span><span class="va">fit_lin</span></span>
 <span><span class="co">#&gt; RD-DID estimate of the ATT in period 3</span></span>
-<span><span class="co">#&gt;   Comparison periods: 1, 2   (linear confounding trend; weights -1, 2)</span></span>
+<span><span class="co">#&gt;   Comparison periods: 1, 2   (linear confounding trend)</span></span>
+<span><span class="co">#&gt;   Comparison weights: 1: -1.000, 2: 2.000</span></span>
 <span><span class="co">#&gt;   Sampling scheme: panel, no unit changes side of the cutoff (detected)</span></span>
 <span><span class="co">#&gt;   Bandwidth: common h = 0.2672 (rule "joint": one bandwidth, chosen for the RD-DID estimate)</span></span>
 <span><span class="co">#&gt;   Pilot bandwidth b (period = value): 1 = 0.4102, 2 = 0.3869, 3 = 0.3951</span></span>
@@ -305,8 +308,10 @@ period, so for illustration year 3 is copied as a second RD year, 4:</p>
 <span><span class="va">fit_avg</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rddid.html">rddid</a></span><span class="op">(</span><span class="va">sim4</span>, y <span class="op">=</span> <span class="st">"Y"</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">3</span>, <span class="fl">4</span><span class="op">)</span>,</span>
 <span>                 comparisons <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span>, bwselect <span class="op">=</span> <span class="st">"cct"</span><span class="op">)</span></span>
 <span><span class="va">fit_avg</span></span>
-<span><span class="co">#&gt; RD-DID estimate of the ATT averaged over RD periods 3, 4 (weights 0.5, 0.5)</span></span>
-<span><span class="co">#&gt;   Comparison periods: 1, 2   (constant confounding trend; aggregated weights 0.5, 0.5)</span></span>
+<span><span class="co">#&gt; RD-DID estimate of the ATT averaged over RD periods 3, 4</span></span>
+<span><span class="co">#&gt;   RD-period weights: 3: 0.500, 4: 0.500</span></span>
+<span><span class="co">#&gt;   Comparison periods: 1, 2   (constant confounding trend)</span></span>
+<span><span class="co">#&gt;   Comparison weights (summed over the RD periods): 1: 0.500, 2: 0.500</span></span>
 <span><span class="co">#&gt;   Sampling scheme: panel, no unit changes side of the cutoff (detected)</span></span>
 <span><span class="co">#&gt;   Bandwidth: per-period CCT MSE-optimal (rule "cct"): h (period = value) 1 = 0.2637, 2 = 0.3256, 3 = 0.4141, 4 = 0.4141</span></span>
 <span><span class="co">#&gt; </span></span>
@@ -346,42 +351,42 @@ confidence intervals:</p>
 
     <script src="https://cdn.jsdelivr.net/gh/vincentarelbundock/tinytable@main/inst/tinytable.js"></script><script>
       // Create table-specific functions using external factory
-      const tableFns_le78ipfaqhz4cz2rim5w = TinyTable.createTableFunctions("tinytable_le78ipfaqhz4cz2rim5w");
+      const tableFns_ionuetme0i8a07rr27c3 = TinyTable.createTableFunctions("tinytable_ionuetme0i8a07rr27c3");
       // tinytable span after
       window.addEventListener('load', function () {
           var cellsToStyle = [
             // tinytable style arrays after
-          { positions: [ { i: '6', j: 2 }, { i: '6', j: 3 } ], css_id: 'tinytable_css_gz48g9u5lmerzqmvmixp',}, 
-          { positions: [ { i: '4', j: 2 }, { i: '4', j: 3 } ], css_id: 'tinytable_css_rhlvqxdahw5oug91crgz',}, 
-          { positions: [ { i: '1', j: 2 }, { i: '2', j: 2 }, { i: '3', j: 2 }, { i: '5', j: 2 }, { i: '1', j: 3 }, { i: '2', j: 3 }, { i: '3', j: 3 }, { i: '5', j: 3 } ], css_id: 'tinytable_css_5041j5b1ujxa858ooqec',}, 
-          { positions: [ { i: '0', j: 2 }, { i: '0', j: 3 } ], css_id: 'tinytable_css_hg0ugp39hvb0pqnfmjcx',}, 
-          { positions: [ { i: '6', j: 1 } ], css_id: 'tinytable_css_0qdylgw2ficof5hd5xft',}, 
-          { positions: [ { i: '4', j: 1 } ], css_id: 'tinytable_css_k3eo73wwujcl73yj8rwn',}, 
-          { positions: [ { i: '1', j: 1 }, { i: '2', j: 1 }, { i: '3', j: 1 }, { i: '5', j: 1 } ], css_id: 'tinytable_css_3f2b61hqbo4lxejtf646',}, 
-          { positions: [ { i: '0', j: 1 } ], css_id: 'tinytable_css_28p97k37mfruezxbtvol',}, 
+          { positions: [ { i: '6', j: 2 }, { i: '6', j: 3 } ], css_id: 'tinytable_css_nn8f0utpq73b27gr1sin',}, 
+          { positions: [ { i: '4', j: 2 }, { i: '4', j: 3 } ], css_id: 'tinytable_css_3d5j4y16dzj3227c2x4o',}, 
+          { positions: [ { i: '1', j: 2 }, { i: '2', j: 2 }, { i: '3', j: 2 }, { i: '5', j: 2 }, { i: '1', j: 3 }, { i: '2', j: 3 }, { i: '3', j: 3 }, { i: '5', j: 3 } ], css_id: 'tinytable_css_l8sqzv3cflfe7g1mwcwq',}, 
+          { positions: [ { i: '0', j: 2 }, { i: '0', j: 3 } ], css_id: 'tinytable_css_qrq4748qp56ngc3ez4t9',}, 
+          { positions: [ { i: '6', j: 1 } ], css_id: 'tinytable_css_rd55fr3zste1kbg90p0p',}, 
+          { positions: [ { i: '4', j: 1 } ], css_id: 'tinytable_css_dsgk63qvemwjabzbsjat',}, 
+          { positions: [ { i: '1', j: 1 }, { i: '2', j: 1 }, { i: '3', j: 1 }, { i: '5', j: 1 } ], css_id: 'tinytable_css_hu9zklmj5lmh41p71vzq',}, 
+          { positions: [ { i: '0', j: 1 } ], css_id: 'tinytable_css_v7vldmmiumrydf3p6thu',}, 
           ];
 
           // Loop over the arrays to style the cells
           cellsToStyle.forEach(function (group) {
               group.positions.forEach(function (cell) {
-                  tableFns_le78ipfaqhz4cz2rim5w.styleCell(cell.i, cell.j, group.css_id);
+                  tableFns_ionuetme0i8a07rr27c3.styleCell(cell.i, cell.j, group.css_id);
               });
           });
       });
     </script><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/vincentarelbundock/tinytable@main/inst/tinytable.css">
 <style>
     /* tinytable css entries after */
-    #tinytable_le78ipfaqhz4cz2rim5w td.tinytable_css_gz48g9u5lmerzqmvmixp, #tinytable_le78ipfaqhz4cz2rim5w th.tinytable_css_gz48g9u5lmerzqmvmixp {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.08em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center }
-    #tinytable_le78ipfaqhz4cz2rim5w td.tinytable_css_rhlvqxdahw5oug91crgz, #tinytable_le78ipfaqhz4cz2rim5w th.tinytable_css_rhlvqxdahw5oug91crgz {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center }
-    #tinytable_le78ipfaqhz4cz2rim5w td.tinytable_css_5041j5b1ujxa858ooqec, #tinytable_le78ipfaqhz4cz2rim5w th.tinytable_css_5041j5b1ujxa858ooqec { text-align: center }
-    #tinytable_le78ipfaqhz4cz2rim5w td.tinytable_css_hg0ugp39hvb0pqnfmjcx, #tinytable_le78ipfaqhz4cz2rim5w th.tinytable_css_hg0ugp39hvb0pqnfmjcx {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 1; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.08em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center }
-    #tinytable_le78ipfaqhz4cz2rim5w td.tinytable_css_0qdylgw2ficof5hd5xft, #tinytable_le78ipfaqhz4cz2rim5w th.tinytable_css_0qdylgw2ficof5hd5xft {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.08em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: left }
-    #tinytable_le78ipfaqhz4cz2rim5w td.tinytable_css_k3eo73wwujcl73yj8rwn, #tinytable_le78ipfaqhz4cz2rim5w th.tinytable_css_k3eo73wwujcl73yj8rwn {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: left }
-    #tinytable_le78ipfaqhz4cz2rim5w td.tinytable_css_3f2b61hqbo4lxejtf646, #tinytable_le78ipfaqhz4cz2rim5w th.tinytable_css_3f2b61hqbo4lxejtf646 { text-align: left }
-    #tinytable_le78ipfaqhz4cz2rim5w td.tinytable_css_28p97k37mfruezxbtvol, #tinytable_le78ipfaqhz4cz2rim5w th.tinytable_css_28p97k37mfruezxbtvol {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 1; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.08em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: left }
+    #tinytable_ionuetme0i8a07rr27c3 td.tinytable_css_nn8f0utpq73b27gr1sin, #tinytable_ionuetme0i8a07rr27c3 th.tinytable_css_nn8f0utpq73b27gr1sin {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.08em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center }
+    #tinytable_ionuetme0i8a07rr27c3 td.tinytable_css_3d5j4y16dzj3227c2x4o, #tinytable_ionuetme0i8a07rr27c3 th.tinytable_css_3d5j4y16dzj3227c2x4o {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center }
+    #tinytable_ionuetme0i8a07rr27c3 td.tinytable_css_l8sqzv3cflfe7g1mwcwq, #tinytable_ionuetme0i8a07rr27c3 th.tinytable_css_l8sqzv3cflfe7g1mwcwq { text-align: center }
+    #tinytable_ionuetme0i8a07rr27c3 td.tinytable_css_qrq4748qp56ngc3ez4t9, #tinytable_ionuetme0i8a07rr27c3 th.tinytable_css_qrq4748qp56ngc3ez4t9 {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 1; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.08em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center }
+    #tinytable_ionuetme0i8a07rr27c3 td.tinytable_css_rd55fr3zste1kbg90p0p, #tinytable_ionuetme0i8a07rr27c3 th.tinytable_css_rd55fr3zste1kbg90p0p {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.08em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: left }
+    #tinytable_ionuetme0i8a07rr27c3 td.tinytable_css_dsgk63qvemwjabzbsjat, #tinytable_ionuetme0i8a07rr27c3 th.tinytable_css_dsgk63qvemwjabzbsjat {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: left }
+    #tinytable_ionuetme0i8a07rr27c3 td.tinytable_css_hu9zklmj5lmh41p71vzq, #tinytable_ionuetme0i8a07rr27c3 th.tinytable_css_hu9zklmj5lmh41p71vzq { text-align: left }
+    #tinytable_ionuetme0i8a07rr27c3 td.tinytable_css_v7vldmmiumrydf3p6thu, #tinytable_ionuetme0i8a07rr27c3 th.tinytable_css_v7vldmmiumrydf3p6thu {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 1; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.08em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: left }
     </style>
 <div class="container">
-      <table class="table tinytable" id="tinytable_le78ipfaqhz4cz2rim5w" style="width: auto; margin-left: auto; margin-right: auto;" data-quarto-disable-processing="true">
+      <table class="table tinytable" id="tinytable_ionuetme0i8a07rr27c3" style="width: auto; margin-left: auto; margin-right: auto;" data-quarto-disable-processing="true">
 <thead><tr>
 <th scope="col" data-row="0" data-col="1"> </th>
                 <th scope="col" data-row="0" data-col="2">Constant</th>
@@ -489,7 +494,8 @@ assumptions the four tests below check:</p>
 <code class="sourceCode R"><span><span class="va">fit_pv</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rddid.html">rddid</a></span><span class="op">(</span><span class="va">rddid_sim_pv</span>, y <span class="op">=</span> <span class="st">"Y"</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="va">fit_pv</span></span>
 <span><span class="co">#&gt; RD-DID estimate of the ATT in period 3</span></span>
-<span><span class="co">#&gt;   Comparison periods: 1, 2   (constant confounding trend; weights 0.5, 0.5)</span></span>
+<span><span class="co">#&gt;   Comparison periods: 1, 2   (constant confounding trend)</span></span>
+<span><span class="co">#&gt;   Comparison weights: 1: 0.500, 2: 0.500</span></span>
 <span><span class="co">#&gt;   Sampling scheme: panel, some units change side of the cutoff (detected)</span></span>
 <span><span class="co">#&gt;   Bandwidth: common h = 0.2367 (rule "joint": one bandwidth, chosen for the RD-DID estimate)</span></span>
 <span><span class="co">#&gt;   Pilot bandwidth b (period = value): 1 = 0.3889, 2 = 0.3847, 3 = 0.3933</span></span>
@@ -513,11 +519,13 @@ whatever the other tests say.</p>
 <span><span class="co">#&gt;   H0: the share of each type jumps by zero at the cutoff, in every period</span></span>
 <span><span class="co">#&gt;   Sampling scheme: panel, some units change side of the cutoff (detected)</span></span>
 <span><span class="co">#&gt;   Periods: 1, 2, 3   Types: ++, +-, -+, --   Bandwidth: CCT MSE-optimal, chosen per cell</span></span>
+<span><span class="co">#&gt;   Type in a period: a unit's sides of the cutoff in the other periods, in time order</span></span>
+<span><span class="co">#&gt;     ("+" at or above, "-" below).</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Joint sup-t (t critical values) max |t| = 1.232 over 9 jumps,  p = 0.869  (largest: period:type 1:+-)</span></span>
-<span><span class="co">#&gt;     Period 1: sup-t (t critical values) max |t| = 1.232 over 3 jumps,  p = 0.500</span></span>
+<span><span class="co">#&gt;     Period 1: sup-t (t critical values) max |t| = 1.232 over 3 jumps,  p = 0.499</span></span>
 <span><span class="co">#&gt;     Period 2: sup-t (t critical values) max |t| = 0.582 over 3 jumps,  p = 0.902</span></span>
-<span><span class="co">#&gt;     Period 3: sup-t (t critical values) max |t| = 1.048 over 3 jumps,  p = 0.633</span></span>
+<span><span class="co">#&gt;     Period 3: sup-t (t critical values) max |t| = 1.048 over 3 jumps,  p = 0.631</span></span>
 <span><span class="co">#&gt;   All joint statistics: x$joint_tests</span></span></code></pre></div>
 <p>Every test prints its null (H0) and the sampling scheme read off the
 data. <code>Types: ++, +-, -+, --</code> are the types of the first row
@@ -579,6 +587,7 @@ can be biased.</p>
 <span><span class="co">#&gt;   Sampling scheme: panel, some units change side of the cutoff (detected)</span></span>
 <span><span class="co">#&gt;   Comparison periods: 1, 2   Bandwidth: h = 0.2104 in every cell (CCT on the pooled comparison periods)</span></span>
 <span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;   Type: a unit's side of the cutoff in RD period 3 ("+" at or above, "-" below).</span></span>
 <span><span class="co">#&gt;   Wald chi-squared(2) = 0.247,  p = 0.884</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Per-cell local-linear jumps (comparison periods):</span></span>
@@ -606,12 +615,13 @@ version (three or more comparison periods).</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">tr</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rd_trendcell.html">rd_trendcell</a></span><span class="op">(</span><span class="va">rddid_sim_pv</span>, y <span class="op">=</span> <span class="st">"Y"</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="va">tr</span></span>
-<span><span class="co">#&gt; Test of a constant within-type confounding discontinuity  [rd_trendcell()]</span></span>
+<span><span class="co">#&gt; Test of constant within-type confounding  [rd_trendcell()]</span></span>
 <span><span class="co">#&gt;   H0: within each type, the confounding jump is the same in every comparison period</span></span>
 <span><span class="co">#&gt;   Sampling scheme: panel, some units change side of the cutoff (detected)</span></span>
 <span><span class="co">#&gt;   Comparison periods: 1, 2   Trend: constant</span></span>
 <span><span class="co">#&gt;   Bandwidth: h = 0.2104 in every cell (CCT on the pooled comparison periods)</span></span>
 <span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;   Type: a unit's side of the cutoff in RD period 3 ("+" at or above, "-" below).</span></span>
 <span><span class="co">#&gt;   Wald chi-squared(2) = 1.445,  p = 0.485</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Per-cell local-linear jumps (comparison periods):</span></span>
@@ -626,11 +636,11 @@ Wald statistic has one contrast per type: year 2 against the year marked
 <p>One table for all four:</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">rbind</span>, <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">tc</span>, <span class="va">cs</span>, <span class="va">hg</span>, <span class="va">tr</span><span class="op">)</span>, <span class="va">tidy</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt;                               test statistic df    p.value</span></span>
-<span><span class="co">#&gt; 1                  type continuity 1.2317753  9 0.86933131</span></span>
-<span><span class="co">#&gt; 2            composition stability 3.0857080  6 0.01639984</span></span>
-<span><span class="co">#&gt; 3          homogeneous confounding 0.2474976  2 0.88360178</span></span>
-<span><span class="co">#&gt; 4 constant within-type confounding 1.4453616  2 0.48544912</span></span>
+<span><span class="co">#&gt;            test                       assumption statistic df    p.value</span></span>
+<span><span class="co">#&gt; 1   rd_typecont                  type continuity 1.2317753 NA 0.86888131</span></span>
+<span><span class="co">#&gt; 2 rd_compstable            composition stability 3.0857080 NA 0.01639984</span></span>
+<span><span class="co">#&gt; 3      rd_homog          homogeneous confounding 0.2474976  2 0.88360178</span></span>
+<span><span class="co">#&gt; 4  rd_trendcell constant within-type confounding 1.4453616  2 0.48544912</span></span>
 <span><span class="co">#&gt;                     method</span></span>
 <span><span class="co">#&gt; 1 sup-t, t critical values</span></span>
 <span><span class="co">#&gt; 2 sup-t, t critical values</span></span>
@@ -669,7 +679,8 @@ illustration, make everybody treated in years 1 and 2 of
 <code class="sourceCode R"><span><span class="va">sim_atu</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/transform.html" class="external-link">transform</a></span><span class="op">(</span><span class="va">rddid_sim</span>, W <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="va">year</span> <span class="op">&lt;</span> <span class="fl">3</span>, <span class="fl">1</span>, <span class="va">W</span><span class="op">)</span>, Y <span class="op">=</span> <span class="va">Y</span> <span class="op">+</span> <span class="op">(</span><span class="va">year</span> <span class="op">&lt;</span> <span class="fl">3</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/rddid.html">rddid</a></span><span class="op">(</span><span class="va">sim_atu</span>, y <span class="op">=</span> <span class="st">"Y"</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span>, estimand <span class="op">=</span> <span class="st">"atu"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; RD-DID estimate of the ATU in period 3</span></span>
-<span><span class="co">#&gt;   Comparison periods: 1, 2   (constant confounding trend; weights 0.5, 0.5)</span></span>
+<span><span class="co">#&gt;   Comparison periods: 1, 2   (constant confounding trend)</span></span>
+<span><span class="co">#&gt;   Comparison weights: 1: 0.500, 2: 0.500</span></span>
 <span><span class="co">#&gt;   Sampling scheme: panel, no unit changes side of the cutoff (detected)</span></span>
 <span><span class="co">#&gt;   Bandwidth: common h = 0.2672 (rule "joint": one bandwidth, chosen for the RD-DID estimate)</span></span>
 <span><span class="co">#&gt;   Pilot bandwidth b (period = value): 1 = 0.4102, 2 = 0.3868, 3 = 0.3951</span></span>

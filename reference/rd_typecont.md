@@ -74,11 +74,10 @@ rd_typecont(
 
 - t_rd, comparisons:
 
-  optional: the RD period and the comparison periods, to restrict the
-  test to these periods. With `comparisons = NULL` (default) every
-  period in `data` enters, whatever `t_rd`; since the test treats all
-  periods alike, `t_rd` alone changes nothing and only lets you write
-  the same call as for
+  the periods the test uses: `t_rd` and the `comparisons`;
+  `comparisons = NULL` (default) uses every period in `data` (other than
+  `t_rd`, which is then used too). The test treats all periods alike, so
+  `t_rd` is optional: it lets you write the same call as for
   [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md).
 
 - estimand:
@@ -325,19 +324,21 @@ tc          # the null, the joint sup-t test, then each period's own test
 #>   H0: the share of each type jumps by zero at the cutoff, in every period
 #>   Sampling scheme: panel, some units change side of the cutoff (detected)
 #>   Periods: 1, 2, 3   Types: ++, +-, -+, --   Bandwidth: CCT MSE-optimal, chosen per cell
+#>   Type in a period: a unit's sides of the cutoff in the other periods, in time order
+#>     ("+" at or above, "-" below).
 #> 
 #>   Joint sup-t (t critical values) max |t| = 1.232 over 9 jumps,  p = 0.869  (largest: period:type 1:+-)
-#>     Period 1: sup-t (t critical values) max |t| = 1.232 over 3 jumps,  p = 0.500
+#>     Period 1: sup-t (t critical values) max |t| = 1.232 over 3 jumps,  p = 0.499
 #>     Period 2: sup-t (t critical values) max |t| = 0.582 over 3 jumps,  p = 0.902
-#>     Period 3: sup-t (t critical values) max |t| = 1.048 over 3 jumps,  p = 0.633
+#>     Period 3: sup-t (t critical values) max |t| = 1.048 over 3 jumps,  p = 0.631
 #>   All joint statistics: x$joint_tests
 tc$p_value
-#> [1] 0.8693313
+#> [1] 0.8688813
 tc$joint_tests   # every statistic side by side
 #>   method   reference statistic df   p_value
-#> 1   supt           t  1.231775  9 0.8693313
-#> 2   supt      normal  1.231775  9 0.8621414
-#> 3  swald           t  5.110313  9 0.7955420
+#> 1   supt           t  1.231775  9 0.8688813
+#> 2   supt      normal  1.231775  9 0.8609214
+#> 3  swald           t  5.110313  9 0.7953520
 #> 4  swald      normal  5.110313  9 0.7861821
 #> 5   wald chi-squared  4.781633  9 0.8529133
 # the chi-squared Wald, or sup-t with normal critical values:
@@ -346,6 +347,8 @@ rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3, joint = "
 #>   H0: the share of each type jumps by zero at the cutoff, in every period
 #>   Sampling scheme: panel, some units change side of the cutoff (detected)
 #>   Periods: 1, 2, 3   Types: ++, +-, -+, --   Bandwidth: CCT MSE-optimal, chosen per cell
+#>   Type in a period: a unit's sides of the cutoff in the other periods, in time order
+#>     ("+" at or above, "-" below).
 #> 
 #>   Joint Wald chi-squared(9) = 4.782,  p = 0.853
 #>     Period 1: chi-squared(3) = 1.531,  p = 0.675
@@ -357,9 +360,11 @@ rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3, studentiz
 #>   H0: the share of each type jumps by zero at the cutoff, in every period
 #>   Sampling scheme: panel, some units change side of the cutoff (detected)
 #>   Periods: 1, 2, 3   Types: ++, +-, -+, --   Bandwidth: CCT MSE-optimal, chosen per cell
+#>   Type in a period: a unit's sides of the cutoff in the other periods, in time order
+#>     ("+" at or above, "-" below).
 #> 
-#>   Joint sup-t (normal critical values) max |t| = 1.232 over 9 jumps,  p = 0.862  (largest: period:type 1:+-)
-#>     Period 1: sup-t (normal critical values) max |t| = 1.232 over 3 jumps,  p = 0.491
+#>   Joint sup-t (normal critical values) max |t| = 1.232 over 9 jumps,  p = 0.861  (largest: period:type 1:+-)
+#>     Period 1: sup-t (normal critical values) max |t| = 1.232 over 3 jumps,  p = 0.490
 #>     Period 2: sup-t (normal critical values) max |t| = 0.582 over 3 jumps,  p = 0.900
 #>     Period 3: sup-t (normal critical values) max |t| = 1.048 over 3 jumps,  p = 0.628
 #>   All joint statistics: x$joint_tests

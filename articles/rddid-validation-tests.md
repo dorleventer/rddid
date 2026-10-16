@@ -53,7 +53,7 @@ two tests on type shares pick a separate CCT bandwidth for every
 local-linear fit (`bwselect = "cct"`) and combine their jumps with a
 studentized sup-t statistic (`joint = "supt"`, `studentize = TRUE`); the
 two tests on the outcome use one bandwidth for every cell
-(`bwselect = "common"`). The last section says why.
+(`bwselect = "pooled"`). The last section says why.
 
 ## Type continuity: `rd_typecont()`
 
@@ -68,11 +68,13 @@ tc
 #>   H0: the share of each type jumps by zero at the cutoff, in every period
 #>   Sampling scheme: panel, some units change side of the cutoff (detected)
 #>   Periods: 1, 2, 3   Types: ++, +-, -+, --   Bandwidth: CCT MSE-optimal, chosen per cell
+#>   Type in a period: a unit's sides of the cutoff in the other periods, in time order
+#>     ("+" at or above, "-" below).
 #> 
 #>   Joint sup-t (t critical values) max |t| = 1.232 over 9 jumps,  p = 0.869  (largest: period:type 1:+-)
-#>     Period 1: sup-t (t critical values) max |t| = 1.232 over 3 jumps,  p = 0.500
+#>     Period 1: sup-t (t critical values) max |t| = 1.232 over 3 jumps,  p = 0.499
 #>     Period 2: sup-t (t critical values) max |t| = 0.582 over 3 jumps,  p = 0.902
-#>     Period 3: sup-t (t critical values) max |t| = 1.048 over 3 jumps,  p = 0.633
+#>     Period 3: sup-t (t critical values) max |t| = 1.048 over 3 jumps,  p = 0.631
 #>   All joint statistics: x$joint_tests
 ```
 
@@ -171,6 +173,7 @@ hg
 #>   Sampling scheme: panel, some units change side of the cutoff (detected)
 #>   Comparison periods: 1, 2   Bandwidth: h = 0.2104 in every cell (CCT on the pooled comparison periods)
 #> 
+#>   Type: a unit's side of the cutoff in RD period 3 ("+" at or above, "-" below).
 #>   Wald chi-squared(2) = 0.247,  p = 0.884
 #> 
 #>   Per-cell local-linear jumps (comparison periods):
@@ -209,12 +212,13 @@ comparison period.**
 
 tr <- rd_trendcell(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 tr
-#> Test of a constant within-type confounding discontinuity  [rd_trendcell()]
+#> Test of constant within-type confounding  [rd_trendcell()]
 #>   H0: within each type, the confounding jump is the same in every comparison period
 #>   Sampling scheme: panel, some units change side of the cutoff (detected)
 #>   Comparison periods: 1, 2   Trend: constant
 #>   Bandwidth: h = 0.2104 in every cell (CCT on the pooled comparison periods)
 #> 
+#>   Type: a unit's side of the cutoff in RD period 3 ("+" at or above, "-" below).
 #>   Wald chi-squared(2) = 1.445,  p = 0.485
 #> 
 #>   Per-cell local-linear jumps (comparison periods):
@@ -295,10 +299,10 @@ ch
 #>   Assumption                          Statistic        p   Statistic type             Bandwidth
 #>   type continuity                         1.232    0.869   sup-t, t critical values   CCT per cell
 #>   composition stability                   3.086    0.016   sup-t, t critical values   CCT per cell
-#>   homogeneous confounding                 0.247    0.884   Wald chi-squared(2)        common (pooled CCT), h = 0.21
-#>   constant within-type confounding        1.445    0.485   Wald chi-squared(2)        common (pooled CCT), h = 0.21
+#>   homogeneous confounding                 0.247    0.884   Wald chi-squared(2)        pooled CCT, h = 0.21
+#>   constant within-type confounding        1.445    0.485   Wald chi-squared(2)        pooled CCT, h = 0.21
 #> 
-#>   Reading at the 5% level (not rejecting does not establish an assumption):
+#>   Reading at level 0.95, rejecting when p < 0.05 (not rejecting does not establish an assumption):
 #>     type continuity                    not rejected
 #>     composition stability              rejected     } identification needs
 #>     homogeneous confounding            not rejected } only one of these two
@@ -327,7 +331,8 @@ valid:
 
 rddid(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 #> RD-DID estimate of the ATT in period 3
-#>   Comparison periods: 1, 2   (constant confounding trend; weights 0.5, 0.5)
+#>   Comparison periods: 1, 2   (constant confounding trend)
+#>   Comparison weights: 1: 0.500, 2: 0.500
 #>   Sampling scheme: panel, some units change side of the cutoff (detected)
 #>   Bandwidth: common h = 0.2367 (rule "joint": one bandwidth, chosen for the RD-DID estimate)
 #>   Pilot bandwidth b (period = value): 1 = 0.3889, 2 = 0.3847, 3 = 0.3933
@@ -341,7 +346,7 @@ rddid(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 
 The true effect is 1.
 
-## Why sup-t, and a common bandwidth for the outcome tests
+## Why sup-t, and a pooled bandwidth for the outcome tests
 
 In simulations with a clean null (every assumption true, 1,000 units,
 three periods, 5% level), the chi-squared Wald statistics with per-cell
@@ -364,7 +369,7 @@ the jumps, not from the jumps themselves, in two ways.
   error, so a variance that is too small, or noisy, inflates them as
   well, by less than the Wald; that is why the share tests stay slightly
   above 5% at three periods. For the share tests the per-fit bandwidth
-  is kept, because it adapts to a sorting window and every common
+  is kept, because it adapts to a sorting window and every pooled
   bandwidth tried halved the power against local sorting.
 
 The default sup-t is studentized: each standard error is an estimate,
@@ -389,7 +394,7 @@ one argument away, in each test and in
 # share tests: the chi-squared Wald, or sup-t with normal critical values
 rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3, joint = "wald")
 rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3, studentize = FALSE)
-# outcome tests: one bandwidth per cell instead of one common bandwidth
+# outcome tests: one bandwidth per cell instead of one pooled bandwidth
 rd_homog(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, bwselect = "cct")
 # all four at once, and one test differently from the others
 rd_checks(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
@@ -403,9 +408,9 @@ alternatives can be compared without running the test again:
 
 ch$typecont$joint_tests
 #>   method   reference statistic df   p_value
-#> 1   supt           t  1.231775  9 0.8693313
-#> 2   supt      normal  1.231775  9 0.8621414
-#> 3  swald           t  5.110313  9 0.7955420
+#> 1   supt           t  1.231775  9 0.8688813
+#> 2   supt      normal  1.231775  9 0.8609214
+#> 3  swald           t  5.110313  9 0.7953520
 #> 4  swald      normal  5.110313  9 0.7861821
 #> 5   wald chi-squared  4.781633  9 0.8529133
 ```
@@ -421,7 +426,7 @@ ch$typecont$joint_tests
   [`rd_homog()`](https://dorleventer.github.io/rddid/reference/rd_homog.md)
   and
   [`rd_trendcell()`](https://dorleventer.github.io/rddid/reference/rd_trendcell.md),
-  `"common"` (default) uses the CCT bandwidth of the outcome on the
+  `"pooled"` (default) uses the CCT bandwidth of the outcome on the
   pooled comparison periods in every cell, `"cct"` one per cell, `"rot"`
   a rule of thumb. `h` fixes the bandwidth.
 - `joint`
@@ -436,12 +441,16 @@ ch$typecont$joint_tests
 - `scheme`: detected from the data as in
   [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md);
   set it to override.
+- [`rd_homog()`](https://dorleventer.github.io/rddid/reference/rd_homog.md):
+  `type_by = "rd_side"` (default, the side in the RD period) or
+  `"pattern"` (the sides in the other periods used).
+  [`rd_trendcell()`](https://dorleventer.github.io/rddid/reference/rd_trendcell.md)
+  always types units by their side in the RD period.
 - [`rd_homog()`](https://dorleventer.github.io/rddid/reference/rd_homog.md)
   and
   [`rd_trendcell()`](https://dorleventer.github.io/rddid/reference/rd_trendcell.md):
-  `type_by = "rd_side"` (default, the side in the RD period) or
-  `"pattern"` (the sides in all other periods); `min_n` drops cells with
-  too few observations on either side of the cutoff, with a message.
+  `min_n` drops cells with too few observations on either side of the
+  cutoff, with a message.
 
 The article [How rddid() computes the
 estimate](https://dorleventer.github.io/rddid/articles/rddid-how-it-works.md)

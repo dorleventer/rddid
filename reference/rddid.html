@@ -98,8 +98,7 @@ jumps from the RD-period jump. How the weights are set is the
 <span>  kernel <span class="op">=</span> <span class="st">"triangular"</span>,</span>
 <span>  level <span class="op">=</span> <span class="fl">0.95</span>,</span>
 <span>  regularize <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  reg_const <span class="op">=</span> <span class="fl">3</span>,</span>
-<span>  weights <span class="op">=</span> <span class="cn">NULL</span></span>
+<span>  reg_const <span class="op">=</span> <span class="fl">3</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -256,11 +255,6 @@ bandwidth very large. Not used with a given <code>h</code> or <code>bwselect = "
 <dt id="arg-reg-const">reg_const<a class="anchor" aria-label="anchor" href="#arg-reg-const"></a></dt>
 <dd><p>the regularization constant: the multiple of the estimated
 variance of the bias constants added to the squared bias (default 3).</p></dd>
-
-
-<dt id="arg-weights">weights<a class="anchor" aria-label="anchor" href="#arg-weights"></a></dt>
-<dd><p>the old name of <code>trend</code>, still accepted with a message. It is
-not a vector of observation weights; <code>rddid()</code> has none.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -533,7 +527,8 @@ example data <a href="rddid_sim.html">rddid_sim</a> and <a href="rddid_sim_pv.ht
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu">rddid</span><span class="op">(</span><span class="va">rddid_sim</span>, y <span class="op">=</span> <span class="st">"Y"</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fit</span>            <span class="co"># the estimate, its standard error and confidence interval</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> RD-DID estimate of the ATT in period 3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Comparison periods: 1, 2   (constant confounding trend; weights 0.5, 0.5)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Comparison periods: 1, 2   (constant confounding trend)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Comparison weights: 1: 0.500, 2: 0.500</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Sampling scheme: panel, no unit changes side of the cutoff (detected)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Bandwidth: common h = 0.2672 (rule "joint": one bandwidth, chosen for the RD-DID estimate)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Pilot bandwidth b (period = value): 1 = 0.4102, 2 = 0.3868, 3 = 0.3951</span>
@@ -545,7 +540,8 @@ example data <a href="rddid_sim.html">rddid_sim</a> and <a href="rddid_sim_pv.ht
 <span class="r-out co"><span class="r-pr">#&gt;</span>   summary() shows the per-period fits and the s.e. under every sampling scheme.</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span>   <span class="co"># the jump in every period, and the s.e. under each scheme</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> RD-DID estimate of the ATT in period 3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Comparison periods: 1, 2   (constant confounding trend; weights 0.5, 0.5)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Comparison periods: 1, 2   (constant confounding trend)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Comparison weights: 1: 0.500, 2: 0.500</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Sampling scheme: panel, no unit changes side of the cutoff (detected)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Bandwidth: common h = 0.2672 (rule "joint": one bandwidth, chosen for the RD-DID estimate)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Pilot bandwidth b (period = value): 1 = 0.4102, 2 = 0.3868, 3 = 0.3951</span>
@@ -554,11 +550,11 @@ example data <a href="rddid_sim.html">rddid_sim</a> and <a href="rddid_sim_pv.ht
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Conventional                 1.0927     0.1264    8.64   &lt;0.001   [0.8450, 1.3405]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Robust (bias-corrected)      1.1414     0.1494    7.64   &lt;0.001   [0.8486, 1.4342]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Per-period local-linear fits, in time order (estimate = sum of coef x jump):</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   period   role          coef      n        h        b       jump      s.e.  jump (bc) s.e. (rb)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   1        comparison    -0.5   1000   0.2672   0.4102     0.5119    0.1688     0.4639    0.1948</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   2        comparison    -0.5   1000   0.2672   0.3868     0.6306    0.1686     0.6240    0.2012</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   3        RD               1   1000   0.2672   0.3951     1.6640    0.1641     1.6854    0.1931</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Per-period local-linear fits (Conventional = sum of coef x jump; Robust = sum of coef x jump (bc)):</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   period   role           coef      n        h        b       jump      s.e.  jump (bc) s.e. (rb)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   1        comparison   -0.500   1000   0.2672   0.4102     0.5119    0.1688     0.4639    0.1948</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   2        comparison   -0.500   1000   0.2672   0.3868     0.6306    0.1686     0.6240    0.2012</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   3        RD            1.000   1000   0.2672   0.3951     1.6640    0.1641     1.6854    0.1931</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Robust s.e. under each sampling scheme (the printed one is for "pc"; the others are for comparison):</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     cross-section 0.2385   panel, no unit changes side 0.1494   panel, some change side 0.1494</span>
@@ -572,7 +568,8 @@ example data <a href="rddid_sim.html">rddid_sim</a> and <a href="rddid_sim_pv.ht
 <span class="r-in"><span><span class="fu">rddid</span><span class="op">(</span><span class="va">rddid_sim</span>, y <span class="op">=</span> <span class="st">"Y"</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span>,</span></span>
 <span class="r-in"><span>      trend <span class="op">=</span> <span class="st">"linear"</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> RD-DID estimate of the ATT in period 3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Comparison periods: 1, 2   (linear confounding trend; weights -1, 2)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Comparison periods: 1, 2   (linear confounding trend)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Comparison weights: 1: -1.000, 2: 2.000</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Sampling scheme: panel, no unit changes side of the cutoff (detected)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Bandwidth: common h = 0.2672 (rule "joint": one bandwidth, chosen for the RD-DID estimate)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Pilot bandwidth b (period = value): 1 = 0.4102, 2 = 0.3869, 3 = 0.3951</span>
@@ -586,7 +583,8 @@ example data <a href="rddid_sim.html">rddid_sim</a> and <a href="rddid_sim_pv.ht
 <span class="r-in"><span><span class="fu">rddid</span><span class="op">(</span><span class="va">rddid_sim</span>, y <span class="op">=</span> <span class="st">"Y"</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span>,</span></span>
 <span class="r-in"><span>      weighting <span class="op">=</span> <span class="st">"min_variance"</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> RD-DID estimate of the ATT in period 3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Comparison periods: 1, 2   (constant confounding trend; minimum-variance weights 0.452, 0.548; bias-corrected: 0.461, 0.539)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Comparison periods: 1, 2   (constant confounding trend)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Comparison weights (minimum variance): 1: 0.452, 2: 0.548; Robust row: 1: 0.461, 2: 0.539</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Sampling scheme: panel, no unit changes side of the cutoff (detected)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Bandwidth: common h = 0.2704 (rule "joint": one bandwidth, chosen for the RD-DID estimate)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Pilot bandwidth b (period = value): 1 = 0.4151, 2 = 0.3915, 3 = 0.3998</span>
@@ -601,8 +599,10 @@ example data <a href="rddid_sim.html">rddid_sim</a> and <a href="rddid_sim_pv.ht
 <span class="r-in"><span><span class="va">sim4</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span><span class="va">rddid_sim</span>, <span class="fu"><a href="https://rdrr.io/r/base/transform.html" class="external-link">transform</a></span><span class="op">(</span><span class="va">rddid_sim</span><span class="op">[</span><span class="va">rddid_sim</span><span class="op">$</span><span class="va">year</span> <span class="op">==</span> <span class="fl">3</span>, <span class="op">]</span>, year <span class="op">=</span> <span class="fl">4</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">rddid</span><span class="op">(</span><span class="va">sim4</span>, y <span class="op">=</span> <span class="st">"Y"</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">3</span>, <span class="fl">4</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>      comparisons <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> RD-DID estimate of the ATT averaged over RD periods 3, 4 (weights 0.5, 0.5)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Comparison periods: 1, 2   (constant confounding trend; aggregated weights 0.5, 0.5)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> RD-DID estimate of the ATT averaged over RD periods 3, 4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   RD-period weights: 3: 0.500, 4: 0.500</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Comparison periods: 1, 2   (constant confounding trend)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Comparison weights (summed over the RD periods): 1: 0.500, 2: 0.500</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Sampling scheme: panel, no unit changes side of the cutoff (detected)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Bandwidth: common h = 0.2719 (rule "joint": one bandwidth, chosen for the RD-DID estimate)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Pilot bandwidth b (period = value): 1 = 0.4173, 2 = 0.3936, 3 = 0.402, 4 = 0.402</span>

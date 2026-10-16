@@ -30,18 +30,17 @@ rd_trendcell(
   x,
   time,
   id,
-  t_rd = NULL,
+  t_rd,
   comparisons = NULL,
   estimand = c("att", "atu"),
   trend = c("constant", "linear"),
   c = 0,
   h = NULL,
-  bwselect = c("common", "cct", "rot"),
+  bwselect = c("pooled", "cct", "rot"),
   kernel = "triangular",
   scheme = c("auto", "cs", "pc", "pv"),
   min_n = 10L,
   bc = TRUE,
-  type_by = c("rd_side", "pattern"),
   p = 1L,
   q = 2L
 )
@@ -90,15 +89,14 @@ rd_trendcell(
 
 - t_rd:
 
-  the RD period. Required with `type_by = "rd_side"` (the default),
-  where a unit's side of the cutoff in the RD period is its type. The
-  test does not use the RD period's outcomes.
+  the RD period (required): a unit's side of the cutoff in the RD period
+  is its type. The test does not use the RD period's outcomes.
 
 - comparisons:
 
   the comparison periods in which the test runs, taken in time order.
-  `NULL` (default) uses every period other than `t_rd` (every period if
-  `t_rd` is `NULL`).
+  `NULL` (default) uses every period other than `t_rd`. The constant
+  trend needs at least 2 comparison periods, the linear trend 3.
 
 - estimand:
 
@@ -128,7 +126,7 @@ rd_trendcell(
 
 - bwselect:
 
-  the bandwidth rule when `h` is not given: `"common"` (default; one
+  the bandwidth rule when `h` is not given: `"pooled"` (default; one
   bandwidth for every cell, the CCT bandwidth of the outcome on the
   running variable with all comparison periods pooled), `"cct"` (each
   cell's own CCT bandwidths from
@@ -163,13 +161,6 @@ rd_trendcell(
   [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md);
   `FALSE`: the conventional jumps and variances.
 
-- type_by:
-
-  how types are defined: `"rd_side"` (default; the unit's side of the
-  cutoff in the RD period, which needs `t_rd`) or `"pattern"` (its sides
-  in all periods other than the RD period). Either way the type is fixed
-  across the comparison periods.
-
 - p, q:
 
   orders of the local polynomials in every cell, for the point estimate
@@ -197,7 +188,7 @@ An object of class `"rd_trendcell"`, a list with:
 
 - `bandwidth`:
 
-  a list with `method` (`"common"`, `"cct"`, `"rot"` or `"fixed"` for a
+  a list with `method` (`"pooled"`, `"cct"`, `"rot"` or `"fixed"` for a
   numeric `h`) and `h` (the bandwidth used in every cell, `NA` when it
   varies by cell).
 
@@ -261,13 +252,10 @@ scheme off the comparison periods, by the rule of
 
 ### Options
 
-`type_by = "rd_side"` (default) types each unit by its side of the
-cutoff in the RD period, so `t_rd` is required; units not observed in
-the RD period are left out. `type_by = "pattern"` types units by their
-sides in all periods in `data` other than the RD period (other than the
-first comparison period if `t_rd` is `NULL`). A (type, period) cell with
-fewer than `min_n` observations on either side of the cutoff is dropped,
-and a message lists the dropped cells. `bc = TRUE` (default) tests the
+A unit's type is its side of the cutoff in the RD period; units not
+observed in the RD period are left out. A (type, period) cell with fewer
+than `min_n` observations on either side of the cutoff is dropped, and a
+message lists the dropped cells. `bc = TRUE` (default) tests the
 bias-corrected jumps with their robust variance, as in the `Robust` row
 of [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md);
 `bc = FALSE` uses the conventional jumps and variances. With
@@ -280,17 +268,17 @@ bandwidths in every cell.
 
 ### Bandwidth
 
-`bwselect = "common"` (default) uses one bandwidth, as main and pilot
+`bwselect = "pooled"` (default) uses one bandwidth, as main and pilot
 bandwidth, in every cell: the CCT MSE-optimal bandwidth of the outcome
 on the running variable, chosen once on all comparison periods pooled
 (every unit, every type). A bandwidth chosen on each cell's own data
 (`"cct"`) is noisier, and the variance formula treats it as fixed, so
 the cell variances come out about 10-15% too small and the test rejects
 a true null too often: about 8% at the 5% level with two comparison
-periods at n = 1,000, against 6% with the common bandwidth, in the
-package authors' simulations. The common bandwidth costs some power
+periods at n = 1,000, against 6% with the pooled bandwidth, in the
+package authors' simulations. The pooled bandwidth costs some power
 against a violation confined to one cell (about 8 points there), because
-a per-cell bandwidth adapts to the cell that moves. The common bandwidth
+a per-cell bandwidth adapts to the cell that moves. The pooled bandwidth
 is reported in `bandwidth` and in the printout.
 
 ### ATU designs
@@ -336,12 +324,13 @@ Other tests of the assumptions:
 # rddid_sim_pv: the running variable moves, so some units change side
 tr <- rd_trendcell(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 tr          # the Wald test, then each type's jump in each comparison period
-#> Test of a constant within-type confounding discontinuity  [rd_trendcell()]
+#> Test of constant within-type confounding  [rd_trendcell()]
 #>   H0: within each type, the confounding jump is the same in every comparison period
 #>   Sampling scheme: panel, some units change side of the cutoff (detected)
 #>   Comparison periods: 1, 2   Trend: constant
 #>   Bandwidth: h = 0.2104 in every cell (CCT on the pooled comparison periods)
 #> 
+#>   Type: a unit's side of the cutoff in RD period 3 ("+" at or above, "-" below).
 #>   Wald chi-squared(2) = 1.445,  p = 0.485
 #> 
 #>   Per-cell local-linear jumps (comparison periods):
@@ -350,14 +339,15 @@ tr          # the Wald test, then each type's jump in each comparison period
 #>     +          2                0.8699     0.5244     490
 #>     -          1                0.5347     0.2640     510  (reference)
 #>     -          2                1.0987     0.4183     510
-# one CCT bandwidth per cell instead of one common bandwidth
+# one CCT bandwidth per cell instead of one pooled bandwidth
 rd_trendcell(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, bwselect = "cct")
-#> Test of a constant within-type confounding discontinuity  [rd_trendcell()]
+#> Test of constant within-type confounding  [rd_trendcell()]
 #>   H0: within each type, the confounding jump is the same in every comparison period
 #>   Sampling scheme: panel, some units change side of the cutoff (detected)
 #>   Comparison periods: 1, 2   Trend: constant
 #>   Bandwidth: CCT MSE-optimal, chosen per cell
 #> 
+#>   Type: a unit's side of the cutoff in RD period 3 ("+" at or above, "-" below).
 #>   Wald chi-squared(2) = 0.078,  p = 0.962
 #> 
 #>   Per-cell local-linear jumps (comparison periods):
@@ -366,23 +356,4 @@ rd_trendcell(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
 #>     +          2                0.7356     0.3588     490
 #>     -          1                0.8985     0.2213     510  (reference)
 #>     -          2                1.0282     0.4007     510
-# trend = "linear" needs three comparison periods; with two it is not testable
-rd_trendcell(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
-             trend = "linear")
-#> rd_trendcell: linear trend is not testable -- no cell has 3 or more comparison periods (degrees of freedom = 0). Returning an object with df = 0, statistic = NA, p_value = NA.
-#> Test of a constant within-type confounding discontinuity  [rd_trendcell()]
-#>   H0: within each type, the confounding jump moves linearly across the comparison periods
-#>   Sampling scheme: panel, some units change side of the cutoff (detected)
-#>   Comparison periods: 1, 2   Trend: linear
-#>   Bandwidth: h = 0.2104 in every cell (CCT on the pooled comparison periods)
-#> 
-#>   Wald: not testable (df = 0)
-#>     (a linear within-type trend needs at least 3 comparison periods to be testable)
-#> 
-#>   Per-cell local-linear jumps (comparison periods):
-#>     Type       Period             jump       s.e.       n
-#>     +          1                0.7070     0.4047     490
-#>     +          2                0.8699     0.5244     490
-#>     -          1                0.5347     0.2640     510
-#>     -          2                1.0987     0.4183     510
 ```

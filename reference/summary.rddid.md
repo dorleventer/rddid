@@ -41,11 +41,14 @@ print(x, digits = 4, ...)
 [`summary()`](https://rdrr.io/r/base/summary.html) returns an object of
 class `"summary.rddid"`: a list with `fit` (the object) and
 `per_period`, a data frame with one row per period in time order and
-columns `period`, `role` (`"RD"` or `"comparison"`), `coef` (its
-coefficient in the estimate, 1 for the RD period and minus its weight
+columns `period`, `role` (`"RD"` or `"comparison"`), `coef` (the
+period's coefficient in the conventional estimate: the RD period's
+weight in `rd_weights`, 1 for a single RD period, and minus its weight
 for a comparison period), `n`, `h`, `b`, `jump` and `se` (the
-conventional local-linear jump and its standard error) and `jump_bc`,
-`se_rb` (bias-corrected jump, robust standard error).
+conventional local-linear jump and its standard error), `jump_bc`,
+`se_rb` (bias-corrected jump, robust standard error) and, under
+`weighting = "min_variance"`, `coef_bc` (the coefficients of the
+bias-corrected estimate, which has its own weights).
 
 ## Examples
 
@@ -53,7 +56,8 @@ conventional local-linear jump and its standard error) and `jump_bc`,
 fit <- rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 summary(fit)
 #> RD-DID estimate of the ATT in period 3
-#>   Comparison periods: 1, 2   (constant confounding trend; weights 0.5, 0.5)
+#>   Comparison periods: 1, 2   (constant confounding trend)
+#>   Comparison weights: 1: 0.500, 2: 0.500
 #>   Sampling scheme: panel, no unit changes side of the cutoff (detected)
 #>   Bandwidth: common h = 0.2672 (rule "joint": one bandwidth, chosen for the RD-DID estimate)
 #>   Pilot bandwidth b (period = value): 1 = 0.4102, 2 = 0.3868, 3 = 0.3951
@@ -62,11 +66,11 @@ summary(fit)
 #>   Conventional                 1.0927     0.1264    8.64   <0.001   [0.8450, 1.3405]
 #>   Robust (bias-corrected)      1.1414     0.1494    7.64   <0.001   [0.8486, 1.4342]
 #> 
-#>   Per-period local-linear fits, in time order (estimate = sum of coef x jump):
-#>   period   role          coef      n        h        b       jump      s.e.  jump (bc) s.e. (rb)
-#>   1        comparison    -0.5   1000   0.2672   0.4102     0.5119    0.1688     0.4639    0.1948
-#>   2        comparison    -0.5   1000   0.2672   0.3868     0.6306    0.1686     0.6240    0.2012
-#>   3        RD               1   1000   0.2672   0.3951     1.6640    0.1641     1.6854    0.1931
+#>   Per-period local-linear fits (Conventional = sum of coef x jump; Robust = sum of coef x jump (bc)):
+#>   period   role           coef      n        h        b       jump      s.e.  jump (bc) s.e. (rb)
+#>   1        comparison   -0.500   1000   0.2672   0.4102     0.5119    0.1688     0.4639    0.1948
+#>   2        comparison   -0.500   1000   0.2672   0.3868     0.6306    0.1686     0.6240    0.2012
+#>   3        RD            1.000   1000   0.2672   0.3951     1.6640    0.1641     1.6854    0.1931
 #> 
 #>   Robust s.e. under each sampling scheme (the printed one is for "pc"; the others are for comparison):
 #>     cross-section 0.2385   panel, no unit changes side 0.1494   panel, some change side 0.1494

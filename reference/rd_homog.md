@@ -28,12 +28,12 @@ rd_homog(
   x,
   time,
   id,
-  t_rd = NULL,
+  t_rd,
   comparisons = NULL,
   estimand = c("att", "atu"),
   c = 0,
   h = NULL,
-  bwselect = c("common", "cct", "rot"),
+  bwselect = c("pooled", "cct", "rot"),
   kernel = "triangular",
   scheme = c("auto", "cs", "pc", "pv"),
   min_n = 10L,
@@ -95,7 +95,7 @@ rd_homog(
 - comparisons:
 
   the comparison periods in which the test runs. `NULL` (default) uses
-  every period other than `t_rd` (every period if `t_rd` is `NULL`).
+  every period other than `t_rd`.
 
 - estimand:
 
@@ -114,7 +114,7 @@ rd_homog(
 
 - bwselect:
 
-  the bandwidth rule when `h` is not given: `"common"` (default; one
+  the bandwidth rule when `h` is not given: `"pooled"` (default; one
   bandwidth for every cell, the CCT bandwidth of the outcome on the
   running variable with all comparison periods pooled), `"cct"` (each
   cell's own CCT bandwidths from
@@ -152,8 +152,8 @@ rd_homog(
 - type_by:
 
   how types are defined: `"rd_side"` (default; the unit's side of the
-  cutoff in the RD period, which needs `t_rd`) or `"pattern"` (its sides
-  in all other periods in `data`).
+  cutoff in the RD period) or `"pattern"` (its sides in the other
+  periods used).
 
 - p, q:
 
@@ -180,7 +180,7 @@ An object of class `"rd_homog"`, a list with:
 
 - `bandwidth`:
 
-  a list with `method` (`"common"`, `"cct"`, `"rot"` or `"fixed"` for a
+  a list with `method` (`"pooled"`, `"cct"`, `"rot"` or `"fixed"` for a
   numeric `h`) and `h` (the bandwidth used in every cell, `NA` when it
   varies by cell).
 
@@ -246,12 +246,12 @@ periods, by the rule of
 `type_by = "rd_side"` (default) types each unit by its side of the
 cutoff in the RD period, so `t_rd` is required and each comparison
 period gives one difference; units not observed in the RD period are
-left out. `type_by = "pattern"` types units by their sides in all other
-periods in `data`. A (period, type) cell with fewer than `min_n`
-observations on either side of the cutoff is dropped, and a message
-lists the dropped cells; a period with fewer than two types is skipped.
-`bc = TRUE` (default) tests the bias-corrected jumps with their robust
-variance, as in the `Robust` row of
+left out. `type_by = "pattern"` types units by their sides in the other
+periods used (`t_rd` and `comparisons`). A (period, type) cell with
+fewer than `min_n` observations on either side of the cutoff is dropped,
+and a message lists the dropped cells; a period with fewer than two
+types is skipped. `bc = TRUE` (default) tests the bias-corrected jumps
+with their robust variance, as in the `Robust` row of
 [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md);
 `bc = FALSE` uses the conventional jumps and variances. With
 `bwselect = "cct"` each cell gets its own CCT bandwidths from
@@ -263,17 +263,17 @@ bandwidths in every cell.
 
 ### Bandwidth
 
-`bwselect = "common"` (default) uses one bandwidth, as main and pilot
+`bwselect = "pooled"` (default) uses one bandwidth, as main and pilot
 bandwidth, in every cell: the CCT MSE-optimal bandwidth of the outcome
 on the running variable, chosen once on all comparison periods pooled
 (every unit, every type). A bandwidth chosen on each cell's own data
 (`"cct"`) is noisier, and the variance formula treats it as fixed, so
 the cell variances come out about 10-15% too small and the test rejects
 a true null too often: about 8% at the 5% level with two comparison
-periods at n = 1,000, against 6% with the common bandwidth, in the
-package authors' simulations. The common bandwidth costs some power
+periods at n = 1,000, against 6% with the pooled bandwidth, in the
+package authors' simulations. The pooled bandwidth costs some power
 against a violation confined to one cell (about 8 points there), because
-a per-cell bandwidth adapts to the cell that moves. The common bandwidth
+a per-cell bandwidth adapts to the cell that moves. The pooled bandwidth
 is reported in `bandwidth` and in the printout.
 
 ### ATU designs
@@ -324,6 +324,7 @@ hc          # the Wald test, then each type's jump in each comparison period
 #>   Sampling scheme: panel, some units change side of the cutoff (detected)
 #>   Comparison periods: 1, 2   Bandwidth: h = 0.2104 in every cell (CCT on the pooled comparison periods)
 #> 
+#>   Type: a unit's side of the cutoff in RD period 3 ("+" at or above, "-" below).
 #>   Wald chi-squared(2) = 0.247,  p = 0.884
 #> 
 #>   Per-cell local-linear jumps (comparison periods):
@@ -338,13 +339,14 @@ hc$period_type_jumps
 #> 2      1    + 0.7069579 0.4046868 490     FALSE
 #> 3      2    - 1.0987330 0.4182535 510      TRUE
 #> 4      2    + 0.8698688 0.5243519 490     FALSE
-# one CCT bandwidth per cell instead of one common bandwidth
+# one CCT bandwidth per cell instead of one pooled bandwidth
 rd_homog(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, bwselect = "cct")
 #> Test of homogeneous confounding  [rd_homog()]
 #>   H0: in each comparison period the confounding jump is the same for every type
 #>   Sampling scheme: panel, some units change side of the cutoff (detected)
 #>   Comparison periods: 1, 2   Bandwidth: CCT MSE-optimal, chosen per cell
 #> 
+#>   Type: a unit's side of the cutoff in RD period 3 ("+" at or above, "-" below).
 #>   Wald chi-squared(2) = 0.465,  p = 0.793
 #> 
 #>   Per-cell local-linear jumps (comparison periods):

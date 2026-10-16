@@ -31,12 +31,12 @@ rd_checks(
   bc = TRUE,
   joint = c("supt", "swald", "wald"),
   studentize = TRUE,
-  outcome_bwselect = c("common", "cct", "rot"),
+  outcome_bwselect = c("pooled", "cct", "rot"),
   typecont = list(),
   compstable = list(),
   homog = list(),
   trendcell = list(),
-  level = 0.05
+  level = 0.95
 )
 ```
 
@@ -75,7 +75,7 @@ rd_checks(
   [`rd_homog()`](https://dorleventer.github.io/rddid/reference/rd_homog.md)
   and
   [`rd_trendcell()`](https://dorleventer.github.io/rddid/reference/rd_trendcell.md):
-  `"common"` (default; one bandwidth for every cell, the CCT bandwidth
+  `"pooled"` (default; one bandwidth for every cell, the CCT bandwidth
   of the outcome on the pooled comparison periods), `"cct"` (one CCT
   bandwidth per cell) or `"rot"` (a rule of thumb per cell). The share
   tests' own `bwselect` (per-fit CCT by default) can be changed in
@@ -89,7 +89,10 @@ rd_checks(
 
 - level:
 
-  the level of the reading in the printout (default 0.05).
+  the confidence level of the reading in the printout (default 0.95, as
+  in
+  [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md)):
+  a test rejects when its p-value is below `1 - level`.
 
 ## Value
 
@@ -110,10 +113,12 @@ test's list, for example `typecont = list(joint = "wald")` or
 the data (for example, no unit changes side of the cutoff) gives a row
 with its error message and `NA` results.
 
-The printout ends with the reading at the level `level`: which
-assumptions a test rejects. Not rejecting an assumption does not
-establish it; constant within-type confounding concerns the RD period
-and is checked in the comparison periods only (a pre-trends check).
+The printout ends with a reading at the confidence level `level`, as in
+[`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md): a
+test rejects its assumption when its p-value is below `1 - level`. Not
+rejecting an assumption does not establish it; constant within-type
+confounding concerns the RD period and is checked in the comparison
+periods only (a pre-trends check).
 
 ## See also
 
@@ -145,10 +150,10 @@ ch
 #>   Assumption                          Statistic        p   Statistic type             Bandwidth
 #>   type continuity                         1.232    0.869   sup-t, t critical values   CCT per cell
 #>   composition stability                   3.086    0.016   sup-t, t critical values   CCT per cell
-#>   homogeneous confounding                 0.247    0.884   Wald chi-squared(2)        common (pooled CCT), h = 0.21
-#>   constant within-type confounding        1.445    0.485   Wald chi-squared(2)        common (pooled CCT), h = 0.21
+#>   homogeneous confounding                 0.247    0.884   Wald chi-squared(2)        pooled CCT, h = 0.21
+#>   constant within-type confounding        1.445    0.485   Wald chi-squared(2)        pooled CCT, h = 0.21
 #> 
-#>   Reading at the 5% level (not rejecting does not establish an assumption):
+#>   Reading at level 0.95, rejecting when p < 0.05 (not rejecting does not establish an assumption):
 #>     type continuity                    not rejected
 #>     composition stability              rejected     } identification needs
 #>     homogeneous confounding            not rejected } only one of these two
@@ -165,7 +170,7 @@ rd_checks(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
 #>   homogeneous confounding                 0.465    0.793   Wald chi-squared(2)        CCT per cell
 #>   constant within-type confounding        0.078    0.962   Wald chi-squared(2)        CCT per cell
 #> 
-#>   Reading at the 5% level (not rejecting does not establish an assumption):
+#>   Reading at level 0.95, rejecting when p < 0.05 (not rejecting does not establish an assumption):
 #>     type continuity                    not rejected
 #>     composition stability              rejected     } identification needs
 #>     homogeneous confounding            not rejected } only one of these two

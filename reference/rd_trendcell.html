@@ -97,18 +97,17 @@ degenerate and the test is not informative.</p>
 <span>  <span class="va">x</span>,</span>
 <span>  <span class="va">time</span>,</span>
 <span>  <span class="va">id</span>,</span>
-<span>  t_rd <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  <span class="va">t_rd</span>,</span>
 <span>  comparisons <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  estimand <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"att"</span>, <span class="st">"atu"</span><span class="op">)</span>,</span>
 <span>  trend <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"constant"</span>, <span class="st">"linear"</span><span class="op">)</span>,</span>
 <span>  c <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  h <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  bwselect <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"common"</span>, <span class="st">"cct"</span>, <span class="st">"rot"</span><span class="op">)</span>,</span>
+<span>  bwselect <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"pooled"</span>, <span class="st">"cct"</span>, <span class="st">"rot"</span><span class="op">)</span>,</span>
 <span>  kernel <span class="op">=</span> <span class="st">"triangular"</span>,</span>
 <span>  scheme <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"auto"</span>, <span class="st">"cs"</span>, <span class="st">"pc"</span>, <span class="st">"pv"</span><span class="op">)</span>,</span>
 <span>  min_n <span class="op">=</span> <span class="fl">10L</span>,</span>
 <span>  bc <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  type_by <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"rd_side"</span>, <span class="st">"pattern"</span><span class="op">)</span>,</span>
 <span>  p <span class="op">=</span> <span class="fl">1L</span>,</span>
 <span>  q <span class="op">=</span> <span class="fl">2L</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -153,15 +152,14 @@ read across periods.</p></dd>
 
 
 <dt id="arg-t-rd">t_rd<a class="anchor" aria-label="anchor" href="#arg-t-rd"></a></dt>
-<dd><p>the RD period. Required with <code>type_by = "rd_side"</code> (the
-default), where a unit's side of the cutoff in the RD period is its type.
-The test does not use the RD period's outcomes.</p></dd>
+<dd><p>the RD period (required): a unit's side of the cutoff in the RD
+period is its type. The test does not use the RD period's outcomes.</p></dd>
 
 
 <dt id="arg-comparisons">comparisons<a class="anchor" aria-label="anchor" href="#arg-comparisons"></a></dt>
 <dd><p>the comparison periods in which the test runs, taken in
-time order. <code>NULL</code> (default) uses every period other than <code>t_rd</code> (every
-period if <code>t_rd</code> is <code>NULL</code>).</p></dd>
+time order. <code>NULL</code> (default) uses every period other than <code>t_rd</code>. The
+constant trend needs at least 2 comparison periods, the linear trend 3.</p></dd>
 
 
 <dt id="arg-estimand">estimand<a class="anchor" aria-label="anchor" href="#arg-estimand"></a></dt>
@@ -189,7 +187,7 @@ If given, <code>bwselect</code> is ignored.</p></dd>
 
 
 <dt id="arg-bwselect">bwselect<a class="anchor" aria-label="anchor" href="#arg-bwselect"></a></dt>
-<dd><p>the bandwidth rule when <code>h</code> is not given: <code>"common"</code>
+<dd><p>the bandwidth rule when <code>h</code> is not given: <code>"pooled"</code>
 (default; one bandwidth for every cell, the CCT bandwidth of the outcome on
 the running variable with all comparison periods pooled), <code>"cct"</code> (each
 cell's own CCT bandwidths from <code><a href="rd_bw_cct.html">rd_bw_cct()</a></code>) or <code>"rot"</code> (the rule of thumb
@@ -221,13 +219,6 @@ robust variance, as in the <code>Robust</code> row of <code><a href="rddid.html"
 conventional jumps and variances.</p></dd>
 
 
-<dt id="arg-type-by">type_by<a class="anchor" aria-label="anchor" href="#arg-type-by"></a></dt>
-<dd><p>how types are defined: <code>"rd_side"</code> (default; the unit's side
-of the cutoff in the RD period, which needs <code>t_rd</code>) or <code>"pattern"</code> (its
-sides in all periods other than the RD period). Either way the type is
-fixed across the comparison periods.</p></dd>
-
-
 <dt id="arg-p-q">p, q<a class="anchor" aria-label="anchor" href="#arg-p-q"></a></dt>
 <dd><p>orders of the local polynomials in every cell, for the point
 estimate and the bias correction (defaults 1 and 2; <code>q</code> must exceed <code>p</code>).
@@ -249,7 +240,7 @@ no type has jumps in three comparison periods.</p></dd>
 <dd><p><code>"att"</code> or <code>"atu"</code>, as passed.</p></dd>
 
 <dt><code>bandwidth</code></dt>
-<dd><p>a list with <code>method</code> (<code>"common"</code>, <code>"cct"</code>, <code>"rot"</code> or
+<dd><p>a list with <code>method</code> (<code>"pooled"</code>, <code>"cct"</code>, <code>"rot"</code> or
 <code>"fixed"</code> for a numeric <code>h</code>) and <code>h</code> (the bandwidth used in every cell,
 <code>NA</code> when it varies by cell).</p></dd>
 
@@ -319,11 +310,8 @@ periods, by the rule of <code><a href="rddid.html">rddid()</a></code>.</p>
 <h3 id="options">Options<a class="anchor" aria-label="anchor" href="#options"></a></h3>
 
 
-<p><code>type_by = "rd_side"</code> (default) types each unit by its side of the cutoff in
-the RD period, so <code>t_rd</code> is required; units not observed in the RD period
-are left out. <code>type_by = "pattern"</code> types units by their sides in all
-periods in <code>data</code> other than the RD period (other than the first comparison
-period if <code>t_rd</code> is <code>NULL</code>). A (type, period) cell with fewer than <code>min_n</code>
+<p>A unit's type is its side of the cutoff in the RD period; units not
+observed in the RD period are left out. A (type, period) cell with fewer than <code>min_n</code>
 observations on either side of the cutoff is dropped, and a message lists
 the dropped cells. <code>bc = TRUE</code> (default) tests the bias-corrected jumps with
 their robust variance, as in the <code>Robust</code> row of <code><a href="rddid.html">rddid()</a></code>; <code>bc = FALSE</code>
@@ -338,17 +326,17 @@ cell. A numeric <code>h</code> is used as both bandwidths in every cell.</p>
 <h3 id="bandwidth">Bandwidth<a class="anchor" aria-label="anchor" href="#bandwidth"></a></h3>
 
 
-<p><code>bwselect = "common"</code> (default) uses one bandwidth, as main and pilot
+<p><code>bwselect = "pooled"</code> (default) uses one bandwidth, as main and pilot
 bandwidth, in every cell: the CCT MSE-optimal bandwidth of the outcome on
 the running variable, chosen once on all comparison periods pooled (every
 unit, every type). A bandwidth chosen on each cell's own data (<code>"cct"</code>) is
 noisier, and the variance formula treats it as fixed, so the cell variances
 come out about 10-15% too small and the test rejects a true null too often:
 about 8% at the 5% level with two comparison periods at n = 1,000, against
-6% with the common bandwidth, in the package authors' simulations. The
-common bandwidth costs some power against a violation confined to one cell
+6% with the pooled bandwidth, in the package authors' simulations. The
+pooled bandwidth costs some power against a violation confined to one cell
 (about 8 points there), because a per-cell bandwidth adapts to the cell that
-moves. The common bandwidth is reported in <code>bandwidth</code> and in the printout.</p>
+moves. The pooled bandwidth is reported in <code>bandwidth</code> and in the printout.</p>
 </div>
 
 <div class="section">
@@ -391,12 +379,13 @@ confidence intervals for regression-discontinuity designs. <em>Econometrica</em>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># rddid_sim_pv: the running variable moves, so some units change side</span></span></span>
 <span class="r-in"><span><span class="va">tr</span> <span class="op">&lt;-</span> <span class="fu">rd_trendcell</span><span class="op">(</span><span class="va">rddid_sim_pv</span>, y <span class="op">=</span> <span class="st">"Y"</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">tr</span>          <span class="co"># the Wald test, then each type's jump in each comparison period</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Test of a constant within-type confounding discontinuity  [rd_trendcell()]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Test of constant within-type confounding  [rd_trendcell()]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   H0: within each type, the confounding jump is the same in every comparison period</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Sampling scheme: panel, some units change side of the cutoff (detected)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Comparison periods: 1, 2   Trend: constant</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Bandwidth: h = 0.2104 in every cell (CCT on the pooled comparison periods)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Type: a unit's side of the cutoff in RD period 3 ("+" at or above, "-" below).</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Wald chi-squared(2) = 1.445,  p = 0.485</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Per-cell local-linear jumps (comparison periods):</span>
@@ -405,14 +394,15 @@ confidence intervals for regression-discontinuity designs. <em>Econometrica</em>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     +          2                0.8699     0.5244     490</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     -          1                0.5347     0.2640     510  (reference)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     -          2                1.0987     0.4183     510</span>
-<span class="r-in"><span><span class="co"># one CCT bandwidth per cell instead of one common bandwidth</span></span></span>
+<span class="r-in"><span><span class="co"># one CCT bandwidth per cell instead of one pooled bandwidth</span></span></span>
 <span class="r-in"><span><span class="fu">rd_trendcell</span><span class="op">(</span><span class="va">rddid_sim_pv</span>, y <span class="op">=</span> <span class="st">"Y"</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span>, bwselect <span class="op">=</span> <span class="st">"cct"</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Test of a constant within-type confounding discontinuity  [rd_trendcell()]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Test of constant within-type confounding  [rd_trendcell()]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   H0: within each type, the confounding jump is the same in every comparison period</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Sampling scheme: panel, some units change side of the cutoff (detected)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Comparison periods: 1, 2   Trend: constant</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Bandwidth: CCT MSE-optimal, chosen per cell</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Type: a unit's side of the cutoff in RD period 3 ("+" at or above, "-" below).</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Wald chi-squared(2) = 0.078,  p = 0.962</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Per-cell local-linear jumps (comparison periods):</span>
@@ -421,25 +411,6 @@ confidence intervals for regression-discontinuity designs. <em>Econometrica</em>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     +          2                0.7356     0.3588     490</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     -          1                0.8985     0.2213     510  (reference)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     -          2                1.0282     0.4007     510</span>
-<span class="r-in"><span><span class="co"># trend = "linear" needs three comparison periods; with two it is not testable</span></span></span>
-<span class="r-in"><span><span class="fu">rd_trendcell</span><span class="op">(</span><span class="va">rddid_sim_pv</span>, y <span class="op">=</span> <span class="st">"Y"</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span>,</span></span>
-<span class="r-in"><span>             trend <span class="op">=</span> <span class="st">"linear"</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> rd_trendcell: linear trend is not testable -- no cell has 3 or more comparison periods (degrees of freedom = 0). Returning an object with df = 0, statistic = NA, p_value = NA.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Test of a constant within-type confounding discontinuity  [rd_trendcell()]</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   H0: within each type, the confounding jump moves linearly across the comparison periods</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Sampling scheme: panel, some units change side of the cutoff (detected)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Comparison periods: 1, 2   Trend: linear</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Bandwidth: h = 0.2104 in every cell (CCT on the pooled comparison periods)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Wald: not testable (df = 0)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     (a linear within-type trend needs at least 3 comparison periods to be testable)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Per-cell local-linear jumps (comparison periods):</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     Type       Period             jump       s.e.       n</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     +          1                0.7070     0.4047     490</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     +          2                0.8699     0.5244     490</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     -          1                0.5347     0.2640     510</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     -          2                1.0987     0.4183     510</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

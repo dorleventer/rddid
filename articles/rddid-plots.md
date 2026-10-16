@@ -44,7 +44,7 @@ title is one `+ labs()` away (last section).
 ``` r
 
 plot_switchers(rddid_sim_pv, x = "R", time = "year", id = "id", periods = c(1, 3))
-#> plot_switchers: 13.8% of the 1000 units observed in both periods change side
+#> plot_switchers(): 13.8% of the 1000 units observed in both periods change side
 ```
 
 ![](rddid-plots_files/figure-html/switchers-1.png)

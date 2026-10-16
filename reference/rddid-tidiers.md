@@ -61,20 +61,23 @@ tidy(x, ...)
 [`tidy()`](https://generics.r-lib.org/reference/tidy.html) returns a
 data frame with one row per estimate (`term`, `estimate`, `std.error`,
 `statistic`, `p.value`, `conf.low`, `conf.high`) for a fit, and one row
-per test (`test`, `statistic`, `df`, `p.value`) for a validation test:
-the test's reported statistic (the largest \|t\| under `joint = "supt"`
-for
+per test for a validation test: `test` (the function, as in
+[`rd_checks()`](https://dorleventer.github.io/rddid/reference/rd_checks.md)),
+`assumption`, `statistic` (the largest \|t\| under `joint = "supt"` for
 [`rd_typecont()`](https://dorleventer.github.io/rddid/reference/rd_typecont.md)
 and
 [`rd_compstable()`](https://dorleventer.github.io/rddid/reference/rd_compstable.md),
 whose row is the joint test over pairs; the chi-squared statistic for
 [`rd_homog()`](https://dorleventer.github.io/rddid/reference/rd_homog.md)
 and
-[`rd_trendcell()`](https://dorleventer.github.io/rddid/reference/rd_trendcell.md)).
+[`rd_trendcell()`](https://dorleventer.github.io/rddid/reference/rd_trendcell.md)),
+`df` (the chi-squared degrees of freedom of a Wald statistic; `NA` for
+sup-t and sWald), `p.value` and `method`.
 [`glance()`](https://generics.r-lib.org/reference/glance.html) returns a
-one-row data frame describing the fit (`nobs`, `t_rd`, `comparisons`,
-`trend`, `weights`, `bwselect`, `h` (the common bandwidth under
-`"joint"`/fixed `h`, `NA` otherwise), `scheme`, `level`, `weighting`).
+one-row data frame describing the fit (`nobs`, `t_rd`, `rd_weights`,
+`comparisons`, `trend`, `weights`, `bwselect`, `h` (the common bandwidth
+under `"joint"`/fixed `h`, `NA` otherwise), `scheme`, `level`,
+`weighting`).
 
 ## Examples
 
@@ -85,11 +88,11 @@ tidy(fit)
 #> 1 Conventional 1.092709 0.1264043  8.644556 5.401507e-18 0.8449613  1.340457
 #> 2       Robust 1.141380 0.1493939  7.640071 2.171020e-14 0.8485735  1.434187
 glance(fit)
-#>   nobs t_rd comparisons    trend  weights bwselect         h scheme level
-#> 1 3000    3        1, 2 constant 0.5, 0.5    joint 0.2672096     pc  0.95
-#>   weighting
-#> 1       ols
+#>   nobs t_rd comparisons rd_weights    trend  weights bwselect         h scheme
+#> 1 3000    3        1, 2          1 constant 0.5, 0.5    joint 0.2672096     pc
+#>   level weighting
+#> 1  0.95       ols
 tidy(rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3))
-#>              test statistic df   p.value                   method
-#> 1 type continuity  1.231775  9 0.8693313 sup-t, t critical values
+#>          test      assumption statistic df   p.value                   method
+#> 1 rd_typecont type continuity  1.231775 NA 0.8688813 sup-t, t critical values
 ```

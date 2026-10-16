@@ -85,11 +85,13 @@ schemes.</p>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p><code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> returns an object of class <code>"summary.rddid"</code>: a list with <code>fit</code> (the
-object) and <code>per_period</code>, a data frame with one row per period in time order and columns <code>period</code>,
-<code>role</code> (<code>"RD"</code> or <code>"comparison"</code>), <code>coef</code> (its coefficient in the estimate, 1 for the RD
-period and minus its weight for a comparison period), <code>n</code>, <code>h</code>, <code>b</code>, <code>jump</code> and <code>se</code> (the
-conventional local-linear jump and its standard error) and <code>jump_bc</code>, <code>se_rb</code>
-(bias-corrected jump, robust standard error).</p>
+object) and <code>per_period</code>, a data frame with one row per period in time order and columns
+<code>period</code>, <code>role</code> (<code>"RD"</code> or <code>"comparison"</code>), <code>coef</code> (the period's coefficient in the
+conventional estimate: the RD period's weight in <code>rd_weights</code>, 1 for a single RD period,
+and minus its weight for a comparison period), <code>n</code>, <code>h</code>, <code>b</code>, <code>jump</code> and <code>se</code> (the
+conventional local-linear jump and its standard error), <code>jump_bc</code>, <code>se_rb</code>
+(bias-corrected jump, robust standard error) and, under <code>weighting = "min_variance"</code>,
+<code>coef_bc</code> (the coefficients of the bias-corrected estimate, which has its own weights).</p>
     </div>
 
     <div class="section level2">
@@ -97,7 +99,8 @@ conventional local-linear jump and its standard error) and <code>jump_bc</code>,
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="rddid.html">rddid</a></span><span class="op">(</span><span class="va">rddid_sim</span>, y <span class="op">=</span> <span class="st">"Y"</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> RD-DID estimate of the ATT in period 3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Comparison periods: 1, 2   (constant confounding trend; weights 0.5, 0.5)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Comparison periods: 1, 2   (constant confounding trend)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Comparison weights: 1: 0.500, 2: 0.500</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Sampling scheme: panel, no unit changes side of the cutoff (detected)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Bandwidth: common h = 0.2672 (rule "joint": one bandwidth, chosen for the RD-DID estimate)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Pilot bandwidth b (period = value): 1 = 0.4102, 2 = 0.3868, 3 = 0.3951</span>
@@ -106,11 +109,11 @@ conventional local-linear jump and its standard error) and <code>jump_bc</code>,
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Conventional                 1.0927     0.1264    8.64   &lt;0.001   [0.8450, 1.3405]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Robust (bias-corrected)      1.1414     0.1494    7.64   &lt;0.001   [0.8486, 1.4342]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Per-period local-linear fits, in time order (estimate = sum of coef x jump):</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   period   role          coef      n        h        b       jump      s.e.  jump (bc) s.e. (rb)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   1        comparison    -0.5   1000   0.2672   0.4102     0.5119    0.1688     0.4639    0.1948</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   2        comparison    -0.5   1000   0.2672   0.3868     0.6306    0.1686     0.6240    0.2012</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   3        RD               1   1000   0.2672   0.3951     1.6640    0.1641     1.6854    0.1931</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Per-period local-linear fits (Conventional = sum of coef x jump; Robust = sum of coef x jump (bc)):</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   period   role           coef      n        h        b       jump      s.e.  jump (bc) s.e. (rb)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   1        comparison   -0.500   1000   0.2672   0.4102     0.5119    0.1688     0.4639    0.1948</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   2        comparison   -0.500   1000   0.2672   0.3868     0.6306    0.1686     0.6240    0.2012</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   3        RD            1.000   1000   0.2672   0.3951     1.6640    0.1641     1.6854    0.1931</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Robust s.e. under each sampling scheme (the printed one is for "pc"; the others are for comparison):</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     cross-section 0.2385   panel, no unit changes side 0.1494   panel, some change side 0.1494</span>
