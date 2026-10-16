@@ -26,8 +26,7 @@ rddid(
   kernel = "triangular",
   level = 0.95,
   regularize = TRUE,
-  reg_const = 3,
-  weights = NULL
+  reg_const = 3
 )
 }
 \arguments{
@@ -137,9 +136,6 @@ bandwidth very large. Not used with a given \code{h} or \code{bwselect = "cct"}.
 
 \item{reg_const}{the regularization constant: the multiple of the estimated
 variance of the bias constants added to the squared bias (default 3).}
-
-\item{weights}{the old name of \code{trend}, still accepted with a message. It is
-not a vector of observation weights; \code{rddid()} has none.}
 }
 \value{
 An object of class \code{"rddid"}, a list with:

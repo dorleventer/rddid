@@ -2,7 +2,7 @@
 # (a unit's type = its sides of the cutoff in the other periods), .cell_bandwidth() (CCT or rule of
 # thumb per cell), .joint_wald() and .wald_eigen() (two Wald statistics; see the notes on each),
 # .gauss_joint() / .joint_tests() (sup-t and sWald, which do not invert the covariance) and
-# .common_bandwidth() (one pooled CCT bandwidth for the outcome tests).
+# .pooled_bandwidth() (one pooled CCT bandwidth for the outcome tests).
 # The code-to-paper map for the tests is dev/tests_map.md (developer material, not shipped).
 
 # ---------------------------------------------------------------------------
@@ -39,8 +39,8 @@
   # Pivot to wide: one row per unit, R and side per period.  Side is "+" if
   # R >= c (treated at the cutoff), "-" if R < c, NA if the unit is unobserved.
   if (anyDuplicated(data[, c(id, time)]))
-    stop("some (", id, ", ", time, ") pairs appear more than once: each unit may appear once per ",
-         "period.", call. = FALSE)
+    .abort("some (", id, ", ", time, ") pairs appear more than once: each unit may appear once per ",
+           "period.")
   wide <- data.frame(id = unique(data[[id]]))
   for (k in seq_along(periods)) {
     sub <- data[data[[time]] == periods[k], , drop = FALSE]
@@ -368,7 +368,7 @@
 #' @noRd
 .check_studentize <- function(studentize, fn) {
   if (!is.logical(studentize) || length(studentize) != 1L || is.na(studentize))
-    stop(fn, ": `studentize` must be TRUE or FALSE.", call. = FALSE)
+    .abort("`studentize` must be TRUE or FALSE.")
   invisible(TRUE)
 }
 
@@ -398,7 +398,7 @@
 #' units, all types), used as main and pilot bandwidth in every cell.
 #' @keywords internal
 #' @noRd
-.common_bandwidth <- function(data, y, x, time, comparisons, cutoff, kernel, p) {
+.pooled_bandwidth <- function(data, y, x, time, comparisons, cutoff, kernel, p) {
   # Why (T1652): a bandwidth chosen on each thin cell's own data makes every cell variance
   # 10-15% too small (the variance formula treats h as fixed), so the tests reject 7-8% at
   # n = 1,000; one h chosen on the pooled comparison periods (n(T - 1) rows instead of ~n/2) is
@@ -430,12 +430,12 @@
   sides <- wide[, side_cols, drop = FALSE]
   observed <- rowSums(!is.na(sides))
   if (!any(observed >= 2L))
-    stop(fn, ": no unit is observed in two of the periods used (the ids never repeat, as in a ",
-         "repeated cross-section); the tests of the assumptions need a panel.", call. = FALSE)
+    .abort("no unit is observed in two of the periods used (the ids never repeat, as in a ",
+           "repeated cross-section); the tests of the assumptions need a panel.")
   switches <- apply(sides, 1L, function(s) { s <- s[!is.na(s)]; length(unique(s)) > 1L })
   if (!any(switches))
-    stop(fn, ": no unit changes side of the cutoff between the periods, so every unit has the ",
-         "same type in every period and the test is not defined. The tests are for a running ",
-         "variable that varies over time (see ?", fn, ").", call. = FALSE)
+    .abort("no unit changes side of the cutoff between the periods, so every unit has the ",
+           "same type in every period and the test is not defined. The tests are for a running ",
+           "variable that varies over time (see ?", fn, ").")
   invisible(TRUE)
 }

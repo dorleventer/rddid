@@ -19,7 +19,7 @@ test_that("rd_bw_cct fallback fires and returns 0.5*IQR when rdbwselect fails", 
     h0_expected <- stats::sd(x_onesided)
   expect_message(
     bw <- rd_bw_cct(y_onesided, x_onesided),
-    regexp = "rd_bw_cct: CCT unavailable"
+    regexp = "rd_bw_cct(): CCT unavailable", fixed = TRUE
   )
   expect_equal(unname(bw["h"]), h0_expected, tolerance = 1e-10)
   expect_equal(unname(bw["b"]), h0_expected, tolerance = 1e-10)

@@ -52,7 +52,7 @@ rd_bw_cct <- function(y, x, c = 0, p = 1L, q = p + 1L, kernel = "triangular") {
   fallback <- function(reason) {
     h0 <- 0.5 * stats::IQR(x)
     if (!is.finite(h0) || h0 <= 0) h0 <- stats::sd(x)
-    message("rd_bw_cct: CCT unavailable (", reason,
+    message("rd_bw_cct(): CCT unavailable (", reason,
             "); falling back to 0.5*IQR h=", round(h0, 4))
     c(h = h0, b = h0)
   }

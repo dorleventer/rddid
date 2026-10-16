@@ -44,11 +44,11 @@ the order a numeric \code{trend} follows.}
 \item{id}{name of the unit-identifier column (a string). Required: types are
 read across periods.}
 
-\item{t_rd, comparisons}{optional: the RD period and the comparison periods,
-to restrict the test to these periods. With \code{comparisons = NULL} (default)
-every period in \code{data} enters, whatever \code{t_rd}; since the test treats all
-periods alike, \code{t_rd} alone changes nothing and only lets you write the
-same call as for \code{\link[=rddid]{rddid()}}.}
+\item{t_rd, comparisons}{the periods the test uses: \code{t_rd} and the
+\code{comparisons}; \code{comparisons = NULL} (default) uses every period in \code{data}
+(other than \code{t_rd}, which is then used too). The test treats all periods
+alike, so \code{t_rd} is optional: it lets you write the same call as for
+\code{\link[=rddid]{rddid()}}.}
 
 \item{estimand}{\code{"att"} (default) or \code{"atu"}, as in \code{\link[=rddid]{rddid()}}. Label only:
 the test is the same either way.}

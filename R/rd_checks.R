@@ -21,8 +21,9 @@
 #' A test that cannot run on the data (for example, no unit changes side of
 #' the cutoff) gives a row with its error message and `NA` results.
 #'
-#' The printout ends with the reading at the level `level`: which assumptions
-#' a test rejects. Not rejecting an assumption does not establish it; constant
+#' The printout ends with a reading at the confidence level `level`, as in
+#' [rddid()]: a test rejects its assumption when its p-value is below
+#' `1 - level`. Not rejecting an assumption does not establish it; constant
 #' within-type confounding concerns the RD period and is checked in the
 #' comparison periods only (a pre-trends check).
 #'
@@ -35,7 +36,7 @@
 #' @param studentize for `joint = "supt"` or `"swald"`: `TRUE` (default; t
 #'   critical values) or `FALSE` (normal critical values).
 #' @param outcome_bwselect the bandwidth rule of [rd_homog()] and
-#'   [rd_trendcell()]: `"common"` (default; one bandwidth for every cell, the
+#'   [rd_trendcell()]: `"pooled"` (default; one bandwidth for every cell, the
 #'   CCT bandwidth of the outcome on the pooled comparison periods), `"cct"`
 #'   (one CCT bandwidth per cell) or `"rot"` (a rule of thumb per cell). The
 #'   share tests' own `bwselect` (per-fit CCT by default) can be changed in
@@ -43,7 +44,8 @@
 #'   (`0.5 * IQR(x)` in every regression).
 #' @param typecont,compstable,homog,trendcell lists of further arguments for
 #'   one test, which override the shared ones.
-#' @param level the level of the reading in the printout (default 0.05).
+#' @param level the confidence level of the reading in the printout (default
+#'   0.95, as in [rddid()]): a test rejects when its p-value is below `1 - level`.
 #' @return An object of class `"rd_checks"`: a list with `table` (one row per
 #'   test: `test`, `assumption`, `statistic`, `p_value`, `method`, `bandwidth`,
 #'   `error`), the four test results `typecont`, `compstable`, `homog`,
@@ -67,15 +69,17 @@ rd_checks <- function(data, y, x, time, id, t_rd,
                       bc = TRUE,
                       joint = c("supt", "swald", "wald"),
                       studentize = TRUE,
-                      outcome_bwselect = c("common", "cct", "rot"),
+                      outcome_bwselect = c("pooled", "cct", "rot"),
                       typecont = list(), compstable = list(), homog = list(), trendcell = list(),
-                      level = 0.05) {
+                      level = 0.95) {
   cl               <- match.call()
-  estimand         <- match.arg(estimand)
-  scheme           <- match.arg(scheme)
-  joint            <- match.arg(joint)
-  outcome_bwselect <- match.arg(outcome_bwselect)
-  if (missing(t_rd)) stop("rd_checks: `t_rd` (the RD period) is required.", call. = FALSE)
+  estimand         <- .match_arg(estimand)
+  scheme           <- .match_arg(scheme)
+  joint            <- .match_arg(joint)
+  outcome_bwselect <- .match_arg(outcome_bwselect)
+  if (missing(t_rd)) .abort("`t_rd` (the RD period) is required.")
+  if (!is.numeric(level) || length(level) != 1L || level <= 0 || level >= 1)
+    .abort("`level` must be a single number strictly between 0 and 1 (e.g. 0.95).")
 
   shared <- list(data = data, x = x, time = time, id = id, t_rd = t_rd,
                  comparisons = comparisons, estimand = estimand, c = c, kernel = kernel,
@@ -130,7 +134,7 @@ rd_checks <- function(data, y, x, time, id, t_rd,
 .checks_bw <- function(r) {
   if (!is.null(r$bandwidth)) {
     return(switch(r$bandwidth$method,
-                  common = sprintf("common (pooled CCT), h = %.3g", r$bandwidth$h),
+                  pooled = sprintf("pooled CCT, h = %.3g", r$bandwidth$h),
                   fixed  = sprintf("fixed, h = %.3g", r$bandwidth$h),
                   cct    = "CCT per cell",
                   rot    = "rule of thumb per cell"))
@@ -156,10 +160,10 @@ print.rd_checks <- function(x, ...) {
                 fmt_p(tab$p_value[i]), tab$method[i], tab$bandwidth[i]))
   }
   rej <- function(k) { p <- tab$p_value[tab$test == paste0("rd_", k)]
-    if (!length(p) || is.na(p)) NA else p < x$level }
+    if (!length(p) || is.na(p)) NA else p < 1 - x$level }
   word <- function(r) if (is.na(r)) "not tested" else if (r) "rejected" else "not rejected"
-  cat(sprintf("\n  Reading at the %g%% level (not rejecting does not establish an assumption):\n",
-              100 * x$level))
+  cat(sprintf(paste0("\n  Reading at level %g, rejecting when p < %g (not rejecting does not ",
+                     "establish an assumption):\n"), x$level, 1 - x$level))
   cat(sprintf("    %-34s %s\n", "type continuity", word(rej("typecont"))))
   cat(sprintf("    %-34s %-13s} identification needs\n", "composition stability", word(rej("compstable"))))
   cat(sprintf("    %-34s %-13s} only one of these two\n", "homogeneous confounding", word(rej("homog"))))

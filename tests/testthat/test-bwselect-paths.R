@@ -119,7 +119,7 @@ test_that("rd_trendcell bwselect='rot' h=NULL (per-cell 0.2*range) runs end-to-e
   out <- rd_trendcell(dat, y = "y", x = "x", time = "time", id = "id",
                       comparisons = c(1L, 2L), t_rd = 3L,
                       c = 0, h = NULL, bwselect = "rot",
-                      type_by = "rd_side", trend = "constant", bc = FALSE)
+                      trend = "constant", bc = FALSE)
 
   expect_s3_class(out, "rd_trendcell")
   expect_true(is.finite(out$statistic))

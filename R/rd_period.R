@@ -77,10 +77,9 @@ rd_period <- function(y, x, h, b = h, id = NULL, c = 0, p = 1L, q = 2L,
   # one main and one pilot bandwidth per call: a vector would be recycled across the
   # observations by the kernel weights below, silently giving each unit its own bandwidth
   if (!is.numeric(h) || length(h) != 1L || !is.finite(h) || h <= 0)
-    stop("`h` must be a single positive number.", call. = FALSE)
+    .abort("`h` must be a single positive number.")
   if (!is.numeric(b) || length(b) != 1L || !is.finite(b) || b <= 0)
-    stop("`b` must be a single positive number (one pilot bandwidth for the period).",
-         call. = FALSE)
+    .abort("`b` must be a single positive number (one pilot bandwidth for the period).")
   stopifnot(length(y) == length(x), q > p, p >= 1L)
   cutoff <- c                              # `c` stays the argument name, as in rdrobust
   y <- as.numeric(y)
@@ -148,9 +147,9 @@ rd_period <- function(y, x, h, b = h, id = NULL, c = 0, p = 1L, q = 2L,
   # infinite
   if (sum(active) <= q + 1L || length(unique(xs[w_h > 0])) <= p + 1L ||
       length(unique(xs[w_b > 0])) <= q + 1L)
-    stop("too few distinct running-variable values within the bandwidth on one side of the ",
-         "cutoff (need more than p + 1 in the main window and more than q + 1 in the pilot ",
-         "window); use a wider bandwidth or check the data near the cutoff.")
+    .abort("too few distinct running-variable values within the bandwidth on one side of the ",
+           "cutoff (need more than p + 1 in the main window and more than q + 1 in the pilot ",
+           "window); use a wider bandwidth or check the data near the cutoff.")
   xs  <- xs[active]
   ys  <- ys[active]
   ids <- ids[active]

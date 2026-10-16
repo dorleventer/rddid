@@ -1,5 +1,5 @@
 # Size corrections of the validation tests (T1678, from the T1652 size study): sup-t / sWald joint
-# statistics, the full-covariance joint test of rd_compstable(), and the common bandwidth of
+# statistics, the full-covariance joint test of rd_compstable(), and the pooled bandwidth of
 # rd_homog() / rd_trendcell().
 
 test_that(".gauss_joint: one jump is the exact two-sided normal / t test", {
@@ -133,7 +133,7 @@ test_that("rd_homog / rd_trendcell: bwselect = 'common' is the pooled comparison
   pooled <- d[d$year %in% c(1, 2), ]
   h_ref <- unname(rd_bw_cct(pooled$Y, pooled$R, c = 0, p = 1L, kernel = "triangular")[["h"]])
   hg <- rd_homog(d, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
-  expect_identical(hg$bandwidth, list(method = "common", h = h_ref))
+  expect_identical(hg$bandwidth, list(method = "pooled", h = h_ref))
   # the same as passing that h
   hf <- rd_homog(d, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, h = h_ref)
   expect_identical(hf$statistic, hg$statistic)
@@ -154,15 +154,15 @@ test_that("rd_checks() equals the four separate calls and passes options through
   expect_identical(ch$table$p_value[3], hg$p_value)
   expect_identical(ch$typecont$p_value, tc$p_value)
   ch2 <- rd_checks(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
-                   joint = "wald", outcome_bwselect = "cct", homog = list(bwselect = "common"))
+                   joint = "wald", outcome_bwselect = "cct", homog = list(bwselect = "pooled"))
   expect_identical(ch2$typecont$joint_method, "wald")
-  expect_identical(ch2$homog$bandwidth$method, "common")      # the per-test list wins
+  expect_identical(ch2$homog$bandwidth$method, "pooled")      # the per-test list wins
   expect_identical(ch2$trendcell$bandwidth$method, "cct")
   expect_named(tidy(ch), c("test", "assumption", "statistic", "p.value", "method", "bandwidth",
                            "error"))
   ch3 <- rd_checks(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
   expect_true(all(!is.na(ch3$table$error)))                    # no switchers: every test says why
-  expect_output(print(ch), "Reading at the 5% level")
+  expect_output(print(ch), "Reading at level 0.95, rejecting when p < 0.05", fixed = TRUE)
   # a per-test `data` replaces the shared one (not merged; the code review's bug)
   d2 <- rddid_sim_pv[rddid_sim_pv$id <= 600, ]
   ch4 <- rd_checks(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,

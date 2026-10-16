@@ -102,9 +102,9 @@ test_that("pinned weights: as many comparison periods as restrictions gives the 
   expect_identical(one_mv$estimates, one_ols$estimates)
 })
 
-test_that("clear errors: numeric trend, removed iter rule, singular covariance", {
+test_that("clear errors: numeric trend, unknown bandwidth rule, singular covariance", {
   expect_error(run(trend = c(0.3, 0.7), weighting = "min_variance"), "fixes them")
-  expect_error(run(bwselect = "iter"), "should be one of")
+  expect_error(run(bwselect = "iter"), "`bwselect` must be one of \"joint\", \"cct\"", fixed = TRUE)
   expect_error(run(trend = "min_variance"), "is a value of `weighting`")
   dup <- rbind(rddid_sim_pv, transform(rddid_sim_pv[rddid_sim_pv$year == 1, ], year = 0))
   expect_error(suppressMessages(rddid(dup, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
@@ -122,7 +122,7 @@ test_that("the default is unchanged", {
 
 test_that("print and glance report the weighting", {
   mv <- run(weighting = "min_variance")
-  expect_output(print(mv), "minimum-variance weights")
+  expect_output(print(mv), "Comparison weights (minimum variance)", fixed = TRUE)
   expect_identical(glance(mv)$weighting, "min_variance")
   expect_identical(glance(run())$weighting, "ols")
 })

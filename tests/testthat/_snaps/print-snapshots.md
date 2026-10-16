@@ -4,7 +4,8 @@
       print(fit)
     Output
       RD-DID estimate of the ATT in period 3
-        Comparison periods: 1, 2   (constant confounding trend; weights 0.5, 0.5)
+        Comparison periods: 1, 2   (constant confounding trend)
+        Comparison weights: 1: 0.500, 2: 0.500
         Sampling scheme: panel, no unit changes side of the cutoff (detected)
         Bandwidth: common h = 0.2672 (rule "joint": one bandwidth, chosen for the RD-DID estimate)
         Pilot bandwidth b (period = value): 1 = 0.4102, 2 = 0.3868, 3 = 0.3951
@@ -21,7 +22,8 @@
       print(summary(fit))
     Output
       RD-DID estimate of the ATT in period 3
-        Comparison periods: 1, 2   (constant confounding trend; weights 0.5, 0.5)
+        Comparison periods: 1, 2   (constant confounding trend)
+        Comparison weights: 1: 0.500, 2: 0.500
         Sampling scheme: panel, no unit changes side of the cutoff (detected)
         Bandwidth: common h = 0.2672 (rule "joint": one bandwidth, chosen for the RD-DID estimate)
         Pilot bandwidth b (period = value): 1 = 0.4102, 2 = 0.3868, 3 = 0.3951
@@ -30,11 +32,11 @@
         Conventional                 1.0927     0.1264    8.64   <0.001   [0.8450, 1.3405]
         Robust (bias-corrected)      1.1414     0.1494    7.64   <0.001   [0.8486, 1.4342]
       
-        Per-period local-linear fits, in time order (estimate = sum of coef x jump):
-        period   role          coef      n        h        b       jump      s.e.  jump (bc) s.e. (rb)
-        1        comparison    -0.5   1000   0.2672   0.4102     0.5119    0.1688     0.4639    0.1948
-        2        comparison    -0.5   1000   0.2672   0.3868     0.6306    0.1686     0.6240    0.2012
-        3        RD               1   1000   0.2672   0.3951     1.6640    0.1641     1.6854    0.1931
+        Per-period local-linear fits (Conventional = sum of coef x jump; Robust = sum of coef x jump (bc)):
+        period   role           coef      n        h        b       jump      s.e.  jump (bc) s.e. (rb)
+        1        comparison   -0.500   1000   0.2672   0.4102     0.5119    0.1688     0.4639    0.1948
+        2        comparison   -0.500   1000   0.2672   0.3868     0.6306    0.1686     0.6240    0.2012
+        3        RD            1.000   1000   0.2672   0.3951     1.6640    0.1641     1.6854    0.1931
       
         Robust s.e. under each sampling scheme (the printed one is for "pc"; the others are for comparison):
           cross-section 0.2385   panel, no unit changes side 0.1494   panel, some change side 0.1494
@@ -65,6 +67,8 @@
         H0: the share of each type jumps by zero at the cutoff, in every period
         Sampling scheme: panel, some units change side of the cutoff (detected)
         Periods: 1, 2, 3   Types: ++, +-, -+, --   Bandwidth: CCT MSE-optimal, chosen per cell
+        Type in a period: a unit's sides of the cutoff in the other periods, in time order
+          ("+" at or above, "-" below).
       
         Joint sup-t (t critical values) max |t| = 1.232 over 9 jumps,  p = #.###  (largest: period:type 1:+-)
           Period 1: sup-t (t critical values) max |t| = 1.232 over 3 jumps,  p = #.###
@@ -100,6 +104,7 @@
         Sampling scheme: panel, some units change side of the cutoff (detected)
         Comparison periods: 1, 2   Bandwidth: h = 0.2104 in every cell (CCT on the pooled comparison periods)
       
+        Type: a unit's side of the cutoff in RD period 3 ("+" at or above, "-" below).
         Wald chi-squared(2) = 0.247,  p = 0.884
       
         Per-cell local-linear jumps (comparison periods):
@@ -115,12 +120,13 @@
       print(rd_trendcell(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id",
         t_rd = 3))
     Output
-      Test of a constant within-type confounding discontinuity  [rd_trendcell()]
+      Test of constant within-type confounding  [rd_trendcell()]
         H0: within each type, the confounding jump is the same in every comparison period
         Sampling scheme: panel, some units change side of the cutoff (detected)
         Comparison periods: 1, 2   Trend: constant
         Bandwidth: h = 0.2104 in every cell (CCT on the pooled comparison periods)
       
+        Type: a unit's side of the cutoff in RD period 3 ("+" at or above, "-" below).
         Wald chi-squared(2) = 1.445,  p = 0.485
       
         Per-cell local-linear jumps (comparison periods):
@@ -135,8 +141,8 @@
     Code
       rddid(rddid_sim, y = "Yy", x = "R", time = "year", id = "id", t_rd = 3)
     Condition
-      Error:
-      ! column 'Yy' not found in `data`.
+      Error in `rddid()`:
+      ! not a column of `data`: `y` = "Yy". The columns are id, year, R, V, W, Y.
 
 ---
 
@@ -145,15 +151,15 @@
         comparisons = c(1, 7))
     Condition
       Error in `rddid()`:
-      ! comparison period(s) not in `year`: 7
+      ! comparison period(s) 7 not in `year` (its periods: 1, 2, 3).
 
 ---
 
     Code
       rd_typecont(rddid_sim, x = "R", time = "year", id = "id")
     Condition
-      Error:
-      ! rd_typecont: no unit changes side of the cutoff between the periods, so every unit has the same type in every period and the test is not defined. The tests are for a running variable that varies over time (see ?rd_typecont).
+      Error in `rd_typecont()`:
+      ! no unit changes side of the cutoff between the periods, so every unit has the same type in every period and the test is not defined. The tests are for a running variable that varies over time (see ?rd_typecont).
 
 ---
 
@@ -175,10 +181,10 @@
         Assumption                          Statistic        p   Statistic type             Bandwidth
         type continuity                         1.232    #.###   sup-t, t critical values   CCT per cell
         composition stability                   3.086    #.###   sup-t, t critical values   CCT per cell
-        homogeneous confounding                 0.247    0.884   Wald chi-squared(2)        common (pooled CCT), h = 0.21
-        constant within-type confounding        1.445    0.485   Wald chi-squared(2)        common (pooled CCT), h = 0.21
+        homogeneous confounding                 0.247    0.884   Wald chi-squared(2)        pooled CCT, h = 0.21
+        constant within-type confounding        1.445    0.485   Wald chi-squared(2)        pooled CCT, h = 0.21
       
-        Reading at the 5% level (not rejecting does not establish an assumption):
+        Reading at level 0.95, rejecting when p < 0.05 (not rejecting does not establish an assumption):
           type continuity                    not rejected
           composition stability              rejected     } identification needs
           homogeneous confounding            not rejected } only one of these two

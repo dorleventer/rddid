@@ -48,7 +48,7 @@
     valid_types <- sort(unique(row_type[!is.na(row_type)]), method = "radix",
                         decreasing = TRUE)
     if (length(valid_types) < 2L) {
-      message("rd_homog: period ", tp, " has fewer than 2 types; skipping.")
+      message("rd_homog(): period ", tp, " has fewer than 2 types; skipping.")
       next
     }
 
@@ -249,8 +249,8 @@
 #' `type_by = "rd_side"` (default) types each unit by its side of the cutoff in
 #' the RD period, so `t_rd` is required and each comparison period gives one
 #' difference; units not observed in the RD period are left out.
-#' `type_by = "pattern"` types units by their sides in all other periods in
-#' `data`. A (period, type) cell with fewer than `min_n` observations on either
+#' `type_by = "pattern"` types units by their sides in the other periods used
+#' (`t_rd` and `comparisons`). A (period, type) cell with fewer than `min_n` observations on either
 #' side of the cutoff is dropped, and a message lists the dropped cells; a
 #' period with fewer than two types is skipped. `bc = TRUE` (default) tests the
 #' bias-corrected jumps with their robust variance, as in the `Robust` row of
@@ -263,17 +263,17 @@
 #'
 #' ## Bandwidth
 #'
-#' `bwselect = "common"` (default) uses one bandwidth, as main and pilot
+#' `bwselect = "pooled"` (default) uses one bandwidth, as main and pilot
 #' bandwidth, in every cell: the CCT MSE-optimal bandwidth of the outcome on
 #' the running variable, chosen once on all comparison periods pooled (every
 #' unit, every type). A bandwidth chosen on each cell's own data (`"cct"`) is
 #' noisier, and the variance formula treats it as fixed, so the cell variances
 #' come out about 10-15% too small and the test rejects a true null too often:
 #' about 8% at the 5% level with two comparison periods at n = 1,000, against
-#' 6% with the common bandwidth, in the package authors' simulations. The
-#' common bandwidth costs some power against a violation confined to one cell
+#' 6% with the pooled bandwidth, in the package authors' simulations. The
+#' pooled bandwidth costs some power against a violation confined to one cell
 #' (about 8 points there), because a per-cell bandwidth adapts to the cell that
-#' moves. The common bandwidth is reported in `bandwidth` and in the printout.
+#' moves. The pooled bandwidth is reported in `bandwidth` and in the printout.
 #'
 #' ## ATU designs
 #'
@@ -293,13 +293,12 @@
 #'   default), where a unit's side of the cutoff in the RD period is its type.
 #'   The test does not use the RD period's outcomes.
 #' @param comparisons the comparison periods in which the test runs. `NULL`
-#'   (default) uses every period other than `t_rd` (every period if `t_rd` is
-#'   `NULL`).
+#'   (default) uses every period other than `t_rd`.
 #' @param estimand `"att"` (default) or `"atu"`, as in [rddid()]. Label only:
 #'   the test is the same either way.
 #' @param h a bandwidth to use, as both main and pilot bandwidth, in every cell.
 #'   If given, `bwselect` is ignored.
-#' @param bwselect the bandwidth rule when `h` is not given: `"common"`
+#' @param bwselect the bandwidth rule when `h` is not given: `"pooled"`
 #'   (default; one bandwidth for every cell, the CCT bandwidth of the outcome on
 #'   the running variable with all comparison periods pooled), `"cct"` (each
 #'   cell's own CCT bandwidths from [rd_bw_cct()]) or `"rot"` (the rule of thumb
@@ -316,8 +315,8 @@
 #'   robust variance, as in the `Robust` row of [rddid()]; `FALSE`: the
 #'   conventional jumps and variances.
 #' @param type_by how types are defined: `"rd_side"` (default; the unit's side
-#'   of the cutoff in the RD period, which needs `t_rd`) or `"pattern"` (its
-#'   sides in all other periods in `data`).
+#'   of the cutoff in the RD period) or `"pattern"` (its sides in the other
+#'   periods used).
 #' @param p,q orders of the local polynomials in every cell, for the point
 #'   estimate and the bias correction (defaults 1 and 2; `q` must exceed `p`).
 #'   The per-cell CCT bandwidths are chosen for the order-`p` fit.
@@ -330,7 +329,7 @@
 #'       its chi-squared p-value.}
 #'     \item{`scheme`}{the sampling scheme used.}
 #'     \item{`estimand`}{`"att"` or `"atu"`, as passed.}
-#'     \item{`bandwidth`}{a list with `method` (`"common"`, `"cct"`, `"rot"` or
+#'     \item{`bandwidth`}{a list with `method` (`"pooled"`, `"cct"`, `"rot"` or
 #'       `"fixed"` for a numeric `h`) and `h` (the bandwidth used in every cell,
 #'       `NA` when it varies by cell).}
 #'     \item{`call`}{the matched call.}
@@ -367,14 +366,14 @@
 #' hc <- rd_homog(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 #' hc          # the Wald test, then each type's jump in each comparison period
 #' hc$period_type_jumps
-#' # one CCT bandwidth per cell instead of one common bandwidth
+#' # one CCT bandwidth per cell instead of one pooled bandwidth
 #' rd_homog(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, bwselect = "cct")
 #' @export
 rd_homog <- function(data, y, x, time, id,
-                     t_rd = NULL, comparisons = NULL,
+                     t_rd, comparisons = NULL,
                      estimand = c("att", "atu"),
                      c = 0, h = NULL,
-                     bwselect = c("common", "cct", "rot"),
+                     bwselect = c("pooled", "cct", "rot"),
                      kernel = "triangular",
                      scheme = c("auto", "cs", "pc", "pv"),
                      min_n = 10L,
@@ -382,19 +381,22 @@ rd_homog <- function(data, y, x, time, id,
                      type_by = c("rd_side", "pattern"),
                      p = 1L, q = 2L) {
   cl       <- match.call()
-  scheme   <- match.arg(scheme)
-  type_by  <- match.arg(type_by)
-  bwselect <- match.arg(bwselect)
+  scheme   <- .match_arg(scheme)
+  type_by  <- .match_arg(type_by)
+  bwselect <- .match_arg(bwselect)
   h_given  <- !is.null(h)
-  estimand <- match.arg(estimand)
-  kernel   <- match.arg(tolower(kernel), c("triangular", "epanechnikov", "uniform"))
+  estimand <- .match_arg(estimand)
+  kernel   <- .match_arg(tolower(kernel), c("triangular", "epanechnikov", "uniform"), "kernel")
   cutoff   <- c   # the cutoff; `c` stays the argument name for rdrobust users
 
   # ----- inputs and periods: the shared prepare step (input_checks.R) -----
   # a unit's type depends on its running variable only, so rows are dropped here for a missing
   # x, time or id; rows with a missing outcome are dropped from the fits once the types exist
-  prep <- .prepare_input(data, "rd_homog", x = x, time = time, id = id, y = y, t_rd = t_rd,
-                         comparisons = comparisons, t_rd_required = FALSE, restrict = TRUE,
+  if (missing(id)) .abort("`id` (the unit identifier) is required: the tests follow each unit ",
+                          "across periods.")
+  if (missing(t_rd)) t_rd <- NULL
+  prep <- .prepare_input(data, "rd_homog()", x = x, time = time, id = id, y = y, t_rd = t_rd,
+                         comparisons = comparisons,
                          complete_cols = c(x, time, id))
   data <- prep$data; t_rd <- prep$t_rd; comparisons <- prep$comparisons
 
@@ -404,24 +406,26 @@ rd_homog <- function(data, y, x, time, id,
   .stop_if_no_switchers(types$wide, as.character(c(t_rd, comparisons)), "rd_homog")
   type_list <- types$period_types
   if (type_by == "rd_side") {
-    if (is.null(t_rd))
-      stop("type_by = \"rd_side\" requires `t_rd` (the RD period whose side defines the type).")
     side_col <- paste0("side_", t_rd)
     if (!side_col %in% names(types$wide))
-      stop("RD period '", t_rd, "' has no side column; cannot define rd_side types.")
+      .abort("RD period '", t_rd, "' has no side column; cannot define rd_side types.")
     type_list <- .homog_rd_side_types(type_list, types$wide, side_col)
   }
 
   na_y <- is.na(data[[y]])
   if (any(na_y)) {
-    message("rd_homog: ", sum(na_y), " row(s) with a missing `", y, "` dropped from the fits.")
+    message("rd_homog(): ", sum(na_y), " row(s) with a missing `", y, "` dropped from the fits.")
     data <- data[!na_y, , drop = FALSE]
+    empty <- setdiff(comparisons, data[[time]])
+    if (length(empty))
+      .abort("no row with an observed `", y, "` in comparison period(s) ",
+             paste(empty, collapse = ", "), ".")
   }
 
-  # "common" (default): one bandwidth for every cell, the CCT h of the outcome on the pooled
-  # comparison periods (.common_bandwidth()); "cct": each cell's own; "rot": rule of thumb
-  if (!h_given && bwselect == "common")
-    h <- .common_bandwidth(data, y, x, time, comparisons, cutoff, kernel, p)
+  # "pooled" (default): one bandwidth for every cell, the CCT h of the outcome on the pooled
+  # comparison periods (.pooled_bandwidth()); "cct": each cell's own; "rot": rule of thumb
+  if (!h_given && bwselect == "pooled")
+    h <- .pooled_bandwidth(data, y, x, time, comparisons, cutoff, kernel, p)
   bandwidth <- list(method = if (h_given) "fixed" else bwselect,
                     h      = if (is.null(h)) NA_real_ else unname(h))
 
@@ -432,12 +436,12 @@ rd_homog <- function(data, y, x, time, id,
 
   contrast_entries <- .homog_contrast_entries(cells$contrast_keys)
   if (length(cells$skipped))
-    message("rd_homog: skipped ", length(cells$skipped), " cell(s) with fewer than min_n = ",
+    message("rd_homog(): skipped ", length(cells$skipped), " cell(s) with fewer than min_n = ",
             min_n, " observations on a side or a failed fit: ",
             paste(cells$skipped, collapse = "; "))
   if (length(contrast_entries) == 0L)
-    stop("rd_homog: no usable type contrasts found (see the skipped cells above); a smaller ",
-         "min_n or a wider h may help.")
+    .abort("no usable type contrasts found (see the skipped cells above); a smaller ",
+           "min_n or a wider h may help.")
   ref_map <- .homog_ref_map(cells$contrast_keys)
   # meta$D is already the bias-corrected jump when bc = TRUE
   Delta <- vapply(contrast_entries, function(key) {
@@ -450,9 +454,9 @@ rd_homog <- function(data, y, x, time, id,
   # (eigenvalues above its relative tolerance); df = 0 means none is left.
   wald <- .wald_eigen(Delta, Sigma, scale = max(abs(data[[y]]), na.rm = TRUE))
   if (isTRUE(wald$degenerate))
-    stop("rd_homog: the covariance of the contrasts is zero to working precision (the outcome ",
-         "has no residual variation within the cells); the test is undefined.")
-  if (wald$df == 0L) stop("rd_homog: estimated covariance matrix is numerically zero.")
+    .abort("the covariance of the contrasts is zero to working precision (the outcome ",
+           "has no residual variation within the cells); the test is undefined.")
+  if (wald$df == 0L) .abort("estimated covariance matrix is numerically zero.")
   wald_stat <- wald$stat
   wald_df   <- wald$df
   p_value   <- wald$p
@@ -471,6 +475,7 @@ rd_homog <- function(data, y, x, time, id,
       scheme            = use_scheme,
       scheme_requested  = scheme,
       t_rd              = t_rd,
+      type_by           = type_by,
       bc                = bc,
       estimand          = estimand,
       comparisons       = names(cells$contrast_keys),
@@ -489,6 +494,11 @@ print.rd_homog <- function(x, ...) {
   cat(sprintf("  Comparison periods: %s%s\n\n", paste(.period_order(as.character(x$comparisons)), collapse = ", "),
               if (is.null(x$bandwidth)) "" else
                 sprintf("   Bandwidth: %s", .bw_label_test(x$bandwidth$h, x$bandwidth$method))))
+  cat(if (identical(x$type_by, "pattern"))
+        paste0("  Type: a unit's sides of the cutoff in the other periods used, in time order\n",
+               '    ("+" at or above, "-" below).\n')
+      else sprintf('  Type: a unit\'s side of the cutoff in RD period %s ("+" at or above, "-" below).\n',
+                   x$t_rd))
   .print_wald(x$statistic, x$df, x$p_value, label = "Wald")
   .print_jump_table(x$period_type_jumps, c("period", "type"), c("Period", "Type"))
   invisible(x)

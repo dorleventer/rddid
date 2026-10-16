@@ -10,28 +10,17 @@
   m <- length(comps)
   if (is.numeric(weights)) {
     if (length(weights) != m)
-      stop("numeric `trend` weights must have one entry per comparison period.")
-    if (!is.null(names(weights)) && all(nzchar(names(weights)))) {
-      if (!setequal(names(weights), as.character(comps)))
-        stop("the names of the numeric `trend` weights must be the comparison periods: ",
-             paste(comps, collapse = ", "))
-      weights <- weights[as.character(comps)]     # match by name, not by position
-    }
+      .abort("numeric `trend` weights need one entry per comparison period (", m, "); got ",
+             length(weights), ".")
+    weights <- .match_names(weights, comps, "the numeric `trend` weights", "comparison periods")
     w <- unname(weights)
     if (abs(sum(w) - 1) > 1e-8)
-      warning("comparison weights do not sum to 1 (constant-trend admissibility).")
+      .warn("comparison weights do not sum to 1 (constant-trend admissibility).")
   } else {
-    if (is.character(weights) && length(weights) == 1L && weights %in% c("ols", "min_variance"))
-      stop("\"", weights, "\" is a value of `weighting`, not of `trend` (\"constant\" or ",
-           "\"linear\"); use weighting = \"", weights, "\".", call. = FALSE)
-    weights <- match.arg(weights, c("constant", "linear"))
     if (weights == "constant") {
       w <- rep(1 / m, m)                 # equal weights: constant confounding trend
     } else {
-      if (m < 2) stop("linear weights need at least 2 comparison periods.")
-      if (!is.numeric(comps) || !is.numeric(t_rd))
-        stop("trend = \"linear\" needs numeric period values (the line is fitted on the period ",
-             "values); the `time` column is not numeric.")
+      if (m < 2) .abort("trend = \"linear\" needs at least 2 comparison periods.")
       # extrapolate the line through the D_t to t_rd, with time centred at t_rd: shifting the
       # time axis changes neither the fitted line nor its value at t_rd, but the normal
       # equations in raw calendar years (~2000) lose ~1e-9 to cancellation
@@ -51,17 +40,15 @@
 .rddid_rd_weights <- function(rd_weights, t_rd) {
   J <- length(t_rd)
   if (is.null(rd_weights)) return(stats::setNames(rep(1 / J, J), as.character(t_rd)))
+  if (J == 1L)
+    .abort("`rd_weights` weights several RD periods; with the single RD period `t_rd` = ", t_rd,
+           " leave it out.")
   if (!is.numeric(rd_weights) || length(rd_weights) != J || any(!is.finite(rd_weights)))
-    stop("`rd_weights` must be a finite numeric vector with one entry per RD period in `t_rd`.",
-         call. = FALSE)
+    .abort("`rd_weights` must be finite numbers, one per RD period in `t_rd` (", J, "); got ",
+           length(rd_weights), " value(s).")
   if (all(rd_weights == 0))
-    stop("`rd_weights` are all zero, so the estimand is identically zero.", call. = FALSE)
-  if (!is.null(names(rd_weights)) && all(nzchar(names(rd_weights)))) {
-    if (!setequal(names(rd_weights), as.character(t_rd)))
-      stop("the names of `rd_weights` must be the RD periods: ", paste(t_rd, collapse = ", "),
-           call. = FALSE)
-    rd_weights <- rd_weights[as.character(t_rd)]   # match by name, not by position
-  }
+    .abort("`rd_weights` are all zero, so the estimand is identically zero.")
+  rd_weights <- .match_names(rd_weights, t_rd, "`rd_weights`", "RD periods")
   stats::setNames(unname(rd_weights), as.character(t_rd))
 }
 
@@ -78,14 +65,11 @@
   J <- length(t_rd)
   if (is.matrix(trend)) {
     if (!is.numeric(trend) || nrow(trend) != J || ncol(trend) != length(comps))
-      stop("a matrix `trend` must be numeric with one row per RD period (", J, ") and one ",
-           "column per comparison period (", length(comps), ").", call. = FALSE)
-    if (!is.null(rownames(trend)) && all(nzchar(rownames(trend)))) {
-      if (!setequal(rownames(trend), as.character(t_rd)))
-        stop("the row names of a matrix `trend` must be the RD periods: ",
-             paste(t_rd, collapse = ", "), call. = FALSE)
-      trend <- trend[as.character(t_rd), , drop = FALSE]
-    }
+      .abort("a matrix `trend` must be numeric with one row per RD period (", J, ") and one ",
+             "column per comparison period (", length(comps), ").")
+    if (!is.null(rownames(trend)))
+      trend <- trend[.match_names(stats::setNames(seq_len(J), rownames(trend)), t_rd,
+                                  "the rows of a matrix `trend`", "RD periods"), , drop = FALSE]
     rows <- lapply(seq_len(J), function(j)
       .rddid_weights(stats::setNames(trend[j, ], colnames(trend)), comps, t_rd[j]))
   } else if (is.numeric(trend)) {
@@ -130,9 +114,9 @@
   if (m == k)                                        # a single admissible weight vector
     return(list(w = w_pilot, Xi = Xi, xi = xi, pinned = TRUE))
   if (inherits(tryCatch(chol(Xi), error = function(e) e), "error"))
-    stop("the estimated covariance matrix of the comparison-period jumps is not positive ",
-         "definite, so the minimum-variance weights are not defined (are two comparison periods ",
-         "identical?); drop one of them or use `weighting = \"ols\"`.", call. = FALSE)
+    .abort("the estimated covariance matrix of the comparison-period jumps is not positive ",
+           "definite, so the minimum-variance weights are not defined (are two comparison periods ",
+           "identical?); drop one of them or use `weighting = \"ols\"`.")
   L <- if (k == 1L) matrix(1, 1L, m) else rbind(1, as.numeric(comps) - as.numeric(t_rd))
   l <- if (k == 1L) 1 else c(1, 0)
   list(w = stats::setNames(.mv_solve(Xi, xi, L, l), keys), Xi = Xi, xi = xi, pinned = FALSE)
@@ -146,4 +130,18 @@
   Xi_Lt <- solve(Xi, t(L))
   zeta <- solve(L %*% Xi_Lt, l - L %*% Xi_xi)
   as.numeric(Xi_xi + Xi_Lt %*% zeta)
+}
+
+#' Order `v` by `keys` when it is named (every entry named, the names being exactly `keys`);
+#' an unnamed `v` stays in the order given. Names on some entries only are an error.
+#' @keywords internal
+#' @noRd
+.match_names <- function(v, keys, what, key_label) {
+  nm <- names(v)
+  if (is.null(nm) || all(!nzchar(nm))) return(v)
+  if (any(!nzchar(nm)))
+    .abort(what, " are named on some entries only: name every entry by its period, or none.")
+  if (!setequal(nm, as.character(keys)) || anyDuplicated(nm))
+    .abort("the names of ", what, " must be the ", key_label, ": ", paste(keys, collapse = ", "), ".")
+  v[as.character(keys)]
 }
