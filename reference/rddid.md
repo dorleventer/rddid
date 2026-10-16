@@ -95,7 +95,7 @@ rddid(
   interest is uniform at the cutoff (nobody treated, or, with
   `estimand = "atu"`, everybody treated). `NULL` (default) uses every
   period other than `t_rd`; pass the periods explicitly when the data
-  contain periods that are neither (a second RD period, say).
+  contain periods that belong in neither.
 
 - trend:
 
@@ -117,7 +117,8 @@ rddid(
   the weights \\\phi_t\\ of the RD periods in the average, one per entry
   of `t_rd` (in that order, or named by period). `NULL` (default) gives
   equal weights. Any finite weights are allowed; weights that sum to one
-  make the estimand a weighted average.
+  make the estimand a weighted average. Only for several RD periods (a
+  single RD period has weight 1).
 
 - weighting:
 
@@ -126,8 +127,8 @@ rddid(
   weights for `"constant"`, the least-squares line for `"linear"`);
   `"min_variance"` uses the minimum-variance weights, the
   comparison-period weights the confounding-trend assumption allows that
-  make the variance of the estimate smallest (see Details). Not
-  available with a numeric `trend`.
+  make the variance of the estimate smallest (see Details). For a single
+  RD period and a character `trend`.
 
 - estimand:
 
@@ -233,7 +234,9 @@ An object of class `"rddid"`, a list with:
 - `weights`:
 
   named numeric vector of the comparison-period weights; with several RD
-  periods, the aggregated weights \\w^\phi\_{t_0}\\.
+  periods, the aggregated weights \\w^\phi_s\\; under
+  `weighting = "min_variance"`, those of the conventional estimate (the
+  bias-corrected estimate's are in `weights_detail$weights_bc`).
 
 - `rd_weights`:
 
@@ -331,14 +334,14 @@ With a vector `t_rd`, `rddid()` estimates the weighted average of the RD
 periods' effects, \\\mathrm{ATT}^\phi = \sum_t \phi_t \mathrm{ATT}(t)\\,
 with weights \\\phi_t\\ from `rd_weights` (equal by default; any finite
 weights are allowed, as they define the estimand). Each period's jump is
-estimated once: the RD periods enter with \\\phi_t\\ and the comparison
-periods with the aggregated weights \\w^\phi\_{t_0} = \sum_t \phi_t
-w\_{t_0}(t)\\, where \\w\_{t_0}(t)\\ are the weights the trend
-assumption gives for RD period \\t\\ (the paper's Corollary 2 and
-Section 5.6). The standard errors include the covariances between RD
-periods, and `"joint"` chooses one bandwidth for the average, not for
-any single RD period. `weighting = "min_variance"` is available for a
-single RD period only.
+estimated once: each RD period \\t\\ enters with \\\phi_t\\, and each
+comparison period \\s\\ with the aggregated weight \\w^\phi_s = \sum_t
+\phi_t w_s(t)\\, where \\w_s(t)\\ is the weight that RD period \\t\\
+alone gives comparison period \\s\\ under the trend assumption. The
+standard errors include the covariances between RD periods, and
+`"joint"` chooses one bandwidth for the average, not for any single RD
+period. `weighting = "min_variance"` is available for a single RD period
+only.
 
 ### The confounding-trend assumption
 
@@ -444,13 +447,12 @@ between periods), into the AMSE, which is then minimized in closed form.
 Each period's pilot bandwidth keeps that period's CCT ratio \\b/h\\.
 Each period's bias and variance constants are estimated at that period's
 own CCT pilot bandwidths, not at the RD period's, so an aggregate of
-several RD periods gets the same bandwidth whichever of them carries the
-`t_rd` label. With `regularize = TRUE` the rule adds `reg_const` times
-the estimated variance of the bias constants to the squared bias, as
-rdrobust does, so a near-zero estimated bias cannot make the bandwidth
-very large. Standard errors use the HC1 convention of rdrobust. The
-derivations are in the paper's appendix on estimation and bandwidth
-choice.
+several RD periods gets the same bandwidth whatever the order of `t_rd`.
+With `regularize = TRUE` the rule adds `reg_const` times the estimated
+variance of the bias constants to the squared bias, as rdrobust does, so
+a near-zero estimated bias cannot make the bandwidth very large.
+Standard errors use the HC1 convention of rdrobust. The derivations are
+in the paper's appendix on estimation and bandwidth choice.
 
 ## References
 
@@ -563,8 +565,7 @@ rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
 # several RD periods: the average of their effects (year 3 copied as a
 # second RD year, 4, for illustration)
 sim4 <- rbind(rddid_sim, transform(rddid_sim[rddid_sim$year == 3, ], year = 4))
-rddid(sim4, y = "Y", x = "R", time = "year", id = "id", t_rd = c(3, 4),
-      comparisons = c(1, 2))
+rddid(sim4, y = "Y", x = "R", time = "year", id = "id", t_rd = c(3, 4))
 #> RD-DID estimate of the ATT averaged over RD periods 3, 4
 #>   RD-period weights: 3: 0.500, 4: 0.500
 #>   Comparison periods: 1, 2   (constant confounding trend)

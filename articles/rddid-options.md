@@ -40,10 +40,10 @@ fit_joint$bandwidth$b_by_period
 One main bandwidth for every period, chosen to minimize the asymptotic
 mean squared error of the RD-DID estimate, not of each period’s jump.
 The bias and variance of each period’s jump are estimated at that
-period’s own CCT pilot bandwidths, so the rule does not depend on which
-period is labeled `t_rd`. The pilot bandwidth of each period keeps that
-period’s CCT ratio of pilot to main bandwidth. For year 3, from its own
-CCT pair:
+period’s own CCT pilot bandwidth, so these inputs to the rule are the
+same whichever period is the RD period. The pilot bandwidth of each
+period keeps that period’s CCT ratio of pilot to main bandwidth. For
+year 3, from its own CCT pair:
 
 ``` r
 
@@ -244,34 +244,42 @@ estimate the same effect; they differ in precision. By default
 equal weights under `"constant"` and the least-squares line under
 `"linear"`. `weighting = "min_variance"` uses the minimum-variance
 weights instead: the allowed weights that make the variance of the
-conventional estimate smallest, computed from the estimated variances of
-the yearly jumps and, in a panel, their covariances (the same quantities
-behind the conventional standard error).
+estimate smallest, computed from the estimated variances of the yearly
+jumps and, in a panel, their covariances. The conventional estimate gets
+the weights that minimize its variance; the bias-corrected (robust)
+estimate gets its own, from the variances and covariances of the
+bias-corrected jumps.
 
 ``` r
 
 fit_ols <- rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 fit_mv  <- rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
                  weighting = "min_variance")
-fit_mv$weights
+fit_mv$weights                      # the conventional estimate's weights
 #>         1         2 
 #> 0.4523365 0.5476635
-c(ols = fit_ols$estimates["Conventional", "se"],
-  min_variance = fit_mv$estimates["Conventional", "se"])
-#>          ols min_variance 
-#>    0.1264043    0.1255210
+fit_mv$weights_detail$weights_bc    # the bias-corrected estimate's weights
+#>         1         2 
+#> 0.4614776 0.5385224
+se <- cbind(ols = fit_ols$estimates$se, min_variance = fit_mv$estimates$se)
+rownames(se) <- rownames(fit_ols$estimates)
+se                                  # standard errors under the two weightings
+#>                    ols min_variance
+#> Conventional 0.1264043    0.1255210
+#> Robust       0.1493939    0.1484217
 ```
 
-The weights on years 1 and 2 are 0.452 and 0.548, and the standard error
-barely moves. In `rddid_sim` the two comparison years are equally noisy
-(their jumps have the same variance), so the weights stay near one half.
-The tilt toward year 2 comes from the panel: the same units appear every
-year, and the estimated year-2 jump covaries more with the year-3 jump
-than the year-1 jump does, so weighting it more cancels more of the
-year-3 noise. The gain is larger when the comparison periods differ in
-precision, for example in sample size near the cutoff; in a repeated
-cross-section with a constant trend the minimum-variance weights are
-inverse-variance weights.
+The conventional weights on years 1 and 2 are 0.452 and 0.548, the
+bias-corrected ones 0.461 and 0.539; the standard errors barely move. In
+`rddid_sim` the two comparison years are equally noisy (their jumps have
+the same variance), so the weights stay near one half. The tilt toward
+year 2 comes from the panel: the same units appear every year, and the
+estimated year-2 jump covaries more with the year-3 jump than the year-1
+jump does, so weighting it more cancels more of the year-3 noise. The
+gain is larger when the comparison periods differ in precision, for
+example in sample size near the cutoff; in a repeated cross-section with
+a constant trend the minimum-variance weights are inverse-variance
+weights.
 
 Under the default bandwidth rule the weights and the common bandwidth
 are chosen in three steps: the common bandwidth with the `"ols"`

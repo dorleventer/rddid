@@ -101,8 +101,8 @@ default)<a class="anchor" aria-label="anchor" href="#the-common-bandwidth-bwsele
 <p>One main bandwidth for every period, chosen to minimize the
 asymptotic mean squared error of the RD-DID estimate, not of each
 period’s jump. The bias and variance of each period’s jump are estimated
-at that period’s own CCT pilot bandwidths, so the rule does not depend
-on which period is labeled <code>t_rd</code>. The pilot bandwidth of
+at that period’s own CCT pilot bandwidth, so these inputs to the rule
+are the same whichever period is the RD period. The pilot bandwidth of
 each period keeps that period’s CCT ratio of pilot to main bandwidth.
 For year 3, from its own CCT pair:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
@@ -359,30 +359,38 @@ differ in precision. By default (<code>weighting = "ols"</code>)
 and the least-squares line under <code>"linear"</code>.
 <code>weighting = "min_variance"</code> uses the minimum-variance
 weights instead: the allowed weights that make the variance of the
-conventional estimate smallest, computed from the estimated variances of
-the yearly jumps and, in a panel, their covariances (the same quantities
-behind the conventional standard error).</p>
+estimate smallest, computed from the estimated variances of the yearly
+jumps and, in a panel, their covariances. The conventional estimate gets
+the weights that minimize its variance; the bias-corrected (robust)
+estimate gets its own, from the variances and covariances of the
+bias-corrected jumps.</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fit_ols</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rddid.html">rddid</a></span><span class="op">(</span><span class="va">rddid_sim</span>, y <span class="op">=</span> <span class="st">"Y"</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="va">fit_mv</span>  <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rddid.html">rddid</a></span><span class="op">(</span><span class="va">rddid_sim</span>, y <span class="op">=</span> <span class="st">"Y"</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span>,</span>
 <span>                 weighting <span class="op">=</span> <span class="st">"min_variance"</span><span class="op">)</span></span>
-<span><span class="va">fit_mv</span><span class="op">$</span><span class="va">weights</span></span>
+<span><span class="va">fit_mv</span><span class="op">$</span><span class="va">weights</span>                      <span class="co"># the conventional estimate's weights</span></span>
 <span><span class="co">#&gt;         1         2 </span></span>
 <span><span class="co">#&gt; 0.4523365 0.5476635</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>ols <span class="op">=</span> <span class="va">fit_ols</span><span class="op">$</span><span class="va">estimates</span><span class="op">[</span><span class="st">"Conventional"</span>, <span class="st">"se"</span><span class="op">]</span>,</span>
-<span>  min_variance <span class="op">=</span> <span class="va">fit_mv</span><span class="op">$</span><span class="va">estimates</span><span class="op">[</span><span class="st">"Conventional"</span>, <span class="st">"se"</span><span class="op">]</span><span class="op">)</span></span>
-<span><span class="co">#&gt;          ols min_variance </span></span>
-<span><span class="co">#&gt;    0.1264043    0.1255210</span></span></code></pre></div>
-<p>The weights on years 1 and 2 are 0.452 and 0.548, and the standard
-error barely moves. In <code>rddid_sim</code> the two comparison years
-are equally noisy (their jumps have the same variance), so the weights
-stay near one half. The tilt toward year 2 comes from the panel: the
-same units appear every year, and the estimated year-2 jump covaries
-more with the year-3 jump than the year-1 jump does, so weighting it
-more cancels more of the year-3 noise. The gain is larger when the
-comparison periods differ in precision, for example in sample size near
-the cutoff; in a repeated cross-section with a constant trend the
-minimum-variance weights are inverse-variance weights.</p>
+<span><span class="va">fit_mv</span><span class="op">$</span><span class="va">weights_detail</span><span class="op">$</span><span class="va">weights_bc</span>    <span class="co"># the bias-corrected estimate's weights</span></span>
+<span><span class="co">#&gt;         1         2 </span></span>
+<span><span class="co">#&gt; 0.4614776 0.5385224</span></span>
+<span><span class="va">se</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span>ols <span class="op">=</span> <span class="va">fit_ols</span><span class="op">$</span><span class="va">estimates</span><span class="op">$</span><span class="va">se</span>, min_variance <span class="op">=</span> <span class="va">fit_mv</span><span class="op">$</span><span class="va">estimates</span><span class="op">$</span><span class="va">se</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">se</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">fit_ols</span><span class="op">$</span><span class="va">estimates</span><span class="op">)</span></span>
+<span><span class="va">se</span>                                  <span class="co"># standard errors under the two weightings</span></span>
+<span><span class="co">#&gt;                    ols min_variance</span></span>
+<span><span class="co">#&gt; Conventional 0.1264043    0.1255210</span></span>
+<span><span class="co">#&gt; Robust       0.1493939    0.1484217</span></span></code></pre></div>
+<p>The conventional weights on years 1 and 2 are 0.452 and 0.548, the
+bias-corrected ones 0.461 and 0.539; the standard errors barely move. In
+<code>rddid_sim</code> the two comparison years are equally noisy (their
+jumps have the same variance), so the weights stay near one half. The
+tilt toward year 2 comes from the panel: the same units appear every
+year, and the estimated year-2 jump covaries more with the year-3 jump
+than the year-1 jump does, so weighting it more cancels more of the
+year-3 noise. The gain is larger when the comparison periods differ in
+precision, for example in sample size near the cutoff; in a repeated
+cross-section with a constant trend the minimum-variance weights are
+inverse-variance weights.</p>
 <p>Under the default bandwidth rule the weights and the common bandwidth
 are chosen in three steps: the common bandwidth with the
 <code>"ols"</code> weights, the minimum-variance weights at that

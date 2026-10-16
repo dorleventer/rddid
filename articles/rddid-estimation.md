@@ -230,18 +230,18 @@ period.
 When the treatment of interest is in place in several periods, `t_rd`
 can list them all.
 [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md) then
-estimates the weighted average of their effects, with weights
-`rd_weights` (equal by default; any weights the question calls for).
-Each period’s jump is estimated once, and each comparison period enters
-with the `rd_weights`-weighted sum of the weights the RD periods would
-give it. `rddid_sim` has one RD period, so for illustration year 3 is
-copied as a second RD year, 4:
+estimates a weighted average of their effects, with weights
+`rd_weights`: equal by default, or any finite weights, which define the
+average being estimated. Each period’s jump is estimated once, and each
+comparison period’s weight is the `rd_weights`-weighted sum of the
+weights each RD period alone would give it. `rddid_sim` has one RD
+period, so for illustration year 3 is copied as a second RD year, 4:
 
 ``` r
 
 sim4 <- rbind(rddid_sim, transform(rddid_sim[rddid_sim$year == 3, ], year = 4))
 fit_avg <- rddid(sim4, y = "Y", x = "R", time = "year", id = "id", t_rd = c(3, 4),
-                 comparisons = c(1, 2), bwselect = "cct")
+                 bwselect = "cct")
 fit_avg
 #> RD-DID estimate of the ATT averaged over RD periods 3, 4
 #>   RD-period weights: 3: 0.500, 4: 0.500
@@ -259,26 +259,34 @@ fit_cct3 <- rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 
                   bwselect = "cct")
 ```
 
-At the per-period CCT bandwidths the two copies get the same bandwidth,
-so the two RD-period jumps are identical and their average is the year-3
-estimate (1.040 against 1.040). The standard error does not shrink
-either (0.117 against 0.117): in a panel it includes the covariance
-between the RD-period jumps, which here are perfectly correlated; the
-cross-section formula, which leaves it out, would give 0.148. Under the
-default common bandwidth the two estimates differ slightly, because the
-rule’s regularization term adds the periods’ bias-estimate variances
-without their covariances. With RD periods that differ, the average is
-typically more precise than a single period, up to the noise of the
-comparison periods, which every RD period shares.
+`bwselect = "cct"` gives each period its own MSE-optimal bandwidth (from
+rdrobust’s `rdbwselect`; Calonico, Cattaneo and Titiunik, 2014), so the
+two copies get the same bandwidth, the two RD-period jumps are
+identical, and their average is the year-3 estimate (1.040 against
+1.040). The standard error is the year-3 one too (0.117 against 0.117):
+in a panel it includes the covariance between the RD-period jumps, which
+here are perfectly correlated. The cross-section formula leaves that
+covariance out, and so would report the average as more precise than
+year 3 alone (0.148 against 0.176), crediting the copy with information
+it does not have. Under the default bandwidth rule the two estimates
+differ slightly: the rule penalizes noisy estimates of the bias (the
+`regularize` option of
+[`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md)),
+and that penalty adds up the periods’ variances without their
+covariances. When the RD periods hold different units or draws,
+averaging them lowers the part of the variance that comes from the
+RD-period jumps; under a constant trend the part that comes from the
+comparison jumps, which every RD period shares, stays.
 
 ## A table for a paper
 
 [`tidy()`](https://generics.r-lib.org/reference/tidy.html) gives the
 estimates and
 [`glance()`](https://generics.r-lib.org/reference/glance.html) the
-design (RD period, comparison periods, trend, bandwidth rule, `h`,
-scheme), which is what table makers read. With the modelsummary package
-installed, the two fits side by side, with confidence intervals:
+design (RD periods and their weights, comparison periods, trend,
+bandwidth rule, `h`, scheme), which is what table makers read. With the
+modelsummary package installed, the two fits side by side, with
+confidence intervals:
 
 ``` r
 
@@ -377,9 +385,9 @@ tc
 #>     ("+" at or above, "-" below).
 #> 
 #>   Joint sup-t (t critical values) max |t| = 1.232 over 9 jumps,  p = 0.869  (largest: period:type 1:+-)
-#>     Period 1: sup-t (t critical values) max |t| = 1.232 over 3 jumps,  p = 0.499
+#>     Period 1: sup-t (t critical values) max |t| = 1.232 over 3 jumps,  p = 0.500
 #>     Period 2: sup-t (t critical values) max |t| = 0.582 over 3 jumps,  p = 0.902
-#>     Period 3: sup-t (t critical values) max |t| = 1.048 over 3 jumps,  p = 0.631
+#>     Period 3: sup-t (t critical values) max |t| = 1.048 over 3 jumps,  p = 0.633
 #>   All joint statistics: x$joint_tests
 ```
 
@@ -507,7 +515,7 @@ One table for all four:
 
 do.call(rbind, lapply(list(tc, cs, hg, tr), tidy))
 #>            test                       assumption statistic df    p.value
-#> 1   rd_typecont                  type continuity 1.2317753 NA 0.86888131
+#> 1   rd_typecont                  type continuity 1.2317753 NA 0.86933131
 #> 2 rd_compstable            composition stability 3.0857080 NA 0.01639984
 #> 3      rd_homog          homogeneous confounding 0.2474976  2 0.88360178
 #> 4  rd_trendcell constant within-type confounding 1.4453616  2 0.48544912

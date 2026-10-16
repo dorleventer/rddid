@@ -89,7 +89,7 @@ rd_compstable(
   interest is uniform at the cutoff (nobody treated, or, with
   `estimand = "atu"`, everybody treated). `NULL` (default) uses every
   period other than `t_rd`; pass the periods explicitly when the data
-  contain periods that are neither (a second RD period, say).
+  contain periods that belong in neither.
 
 - estimand:
 
