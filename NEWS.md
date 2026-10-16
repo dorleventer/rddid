@@ -19,6 +19,14 @@
   of `data`), and names a period in which every row has a missing value.
 * Results on data without missing values are unchanged (golden master: every result identical).
 
+## 2026-10-15: exact linear-trend weights with calendar years
+
+* `trend = "linear"`: the comparison weights are now computed with time centred at the RD period.
+  The weights are the same in exact arithmetic, but with calendar years (e.g. 1999, 2000) the old
+  computation lost about 1e-9 to rounding. Linear-trend results move only at that level (largest
+  relative change 7.6e-10 across the reference calls); constant-trend and numeric weights are
+  unchanged.
+
 ## 2026-10-15: minimum-variance weights for the bias-corrected estimate
 
 * With `weighting = "min_variance"`, the bias-corrected (robust) row of `estimates` now uses its
