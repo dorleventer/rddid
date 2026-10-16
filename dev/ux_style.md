@@ -55,5 +55,5 @@ Also: Calonico, S., M. D. Cattaneo and R. Titiunik (2014). Robust nonparametric 
 - British/American: American spelling ("minimize" is fine either way; be consistent within a file).
 
 ## Site structure (pkgdown)
-Navbar: Get started · Articles (How rddid() computes the estimate · Bandwidth rules and sampling schemes · Checking the identification assumptions) · Reference · Changelog · GitHub.
-Reference groups: **Estimate** (`rddid`, `summary.rddid`, `rddid-methods`, `rddid-tidiers`) · **Check the assumptions** (`rd_typecont`, `rd_compstable`, `rd_homog`, `rd_trendcell`) · **Building blocks** (`rd_period`, `rd_bw_cct`) · **Data** (`rddid_sim`, `rddid_sim_pv`).
+Navbar: Get started · Articles (Checking the identification assumptions · Plots of the estimate and the checks · Bandwidth rules and sampling schemes · How rddid() computes the estimate (for referees)) · Reference · GitHub. No changelog page: the package's `NEWS.md` lives in `inst/`, so it is installed (`news(package = "rddid")`) but pkgdown builds no page from it.
+Reference groups: **Package overview** (`rddid-package`) · **Estimate** (`rddid`, `summary.rddid`, `plot.rddid`, `rddid-methods`, `rddid-tidiers`, `reexports`) · **Check the assumptions** (`rd_checks`, the four tests, their `plot` methods, `plot_switchers`) · **Building blocks** (`rd_period`, `rd_bw_cct`) · **Data** (`rddid_sim`, `rddid_sim_pv`).

@@ -170,39 +170,48 @@ directly, one per comparison period.
 ## Several RD periods
 
 When the treatment of interest is in place in several periods, `t_rd` can list
-them all. `rddid()` then estimates the weighted average of their effects, with
-weights `rd_weights` (equal by default; any weights the question calls for).
-Each period's jump is estimated once, and each comparison period enters with the
-`rd_weights`-weighted sum of the weights the RD periods would give it. `rddid_sim` has one RD
-period, so for illustration year 3 is copied as a second RD year, 4:
+them all. `rddid()` then estimates a weighted average of their effects, with
+weights `rd_weights`: equal by default, or any finite weights, which define the
+average being estimated. Each period's jump is estimated once, and each
+comparison period's weight is the `rd_weights`-weighted sum of the weights each
+RD period alone would give it. `rddid_sim` has one RD period, so for
+illustration year 3 is copied as a second RD year, 4:
 
 ```{r}
 sim4 <- rbind(rddid_sim, transform(rddid_sim[rddid_sim$year == 3, ], year = 4))
 fit_avg <- rddid(sim4, y = "Y", x = "R", time = "year", id = "id", t_rd = c(3, 4),
-                 comparisons = c(1, 2), bwselect = "cct")
+                 bwselect = "cct")
 fit_avg
 fit_cct3 <- rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
                   bwselect = "cct")
 ```
 
-At the per-period CCT bandwidths the two copies get the same bandwidth, so the
-two RD-period jumps are identical and their average is the year-3 estimate
+`bwselect = "cct"` gives each period its own MSE-optimal bandwidth (from
+rdrobust's `rdbwselect`; Calonico, Cattaneo and Titiunik, 2014), so the two
+copies get the same bandwidth, the two RD-period jumps are identical, and their
+average is the year-3 estimate
 (`r fmt(fit_avg$estimates["Conventional", "est"], 3)` against
-`r fmt(fit_cct3$estimates["Conventional", "est"], 3)`). The standard error does
-not shrink either (`r fmt(fit_avg$estimates["Conventional", "se"], 3)` against
+`r fmt(fit_cct3$estimates["Conventional", "est"], 3)`). The standard error is
+the year-3 one too (`r fmt(fit_avg$estimates["Conventional", "se"], 3)` against
 `r fmt(fit_cct3$estimates["Conventional", "se"], 3)`): in a panel it includes the
-covariance between the RD-period jumps, which here are perfectly correlated; the
-cross-section formula, which leaves it out, would give
-`r fmt(fit_avg$estimates["Conventional", "se_cs"], 3)`. Under the default common
-bandwidth the two estimates differ slightly, because the rule's regularization
-term adds the periods' bias-estimate variances without their covariances. With RD
-periods that differ, the average is typically more precise than a single period, up to the
-noise of the comparison periods, which every RD period shares.
+covariance between the RD-period jumps, which here are perfectly correlated. The
+cross-section formula leaves that covariance out, and so would report the
+average as more precise than year 3 alone
+(`r fmt(fit_avg$estimates["Conventional", "se_cs"], 3)` against
+`r fmt(fit_cct3$estimates["Conventional", "se_cs"], 3)`), crediting the copy
+with information it does not have. Under the default bandwidth rule the two
+estimates differ slightly: the rule penalizes noisy estimates of the bias (the
+`regularize` option of `rddid()`), and that penalty adds up the periods'
+variances without their covariances. When the RD periods hold different units
+or draws, averaging them lowers the part of the variance that comes from the
+RD-period jumps; under a constant trend the part that comes from the
+comparison jumps, which every RD period shares, stays.
 
 ## A table for a paper
 
-`tidy()` gives the estimates and `glance()` the design (RD period, comparison
-periods, trend, bandwidth rule, `h`, scheme), which is what table makers read.
+`tidy()` gives the estimates and `glance()` the design (RD periods and their
+weights, comparison periods, trend, bandwidth rule, `h`, scheme), which is what
+table makers read.
 With the modelsummary package installed, the two fits side by side, with
 confidence intervals:
 

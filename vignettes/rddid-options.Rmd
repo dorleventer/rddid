@@ -42,7 +42,8 @@ fit_joint$bandwidth$b_by_period
 One main bandwidth for every period, chosen to minimize the asymptotic mean
 squared error of the RD-DID estimate, not of each period's jump. The bias and
 variance of each period's jump are estimated at that period's own CCT pilot
-bandwidths, so the rule does not depend on which period is labeled `t_rd`.
+bandwidth, so these inputs to the rule are the same whichever period is the RD
+period.
 The pilot bandwidth of each period keeps that period's CCT ratio of pilot to
 main bandwidth. For year 3, from its own CCT pair:
 
@@ -220,21 +221,28 @@ comparison periods to the RD period do. All of them estimate the same effect;
 they differ in precision. By default (`weighting = "ols"`) `rddid()` uses equal
 weights under `"constant"` and the least-squares line under `"linear"`.
 `weighting = "min_variance"` uses the minimum-variance weights instead: the
-allowed weights that make the variance of the conventional estimate smallest,
-computed from the estimated variances of the yearly jumps and, in a panel, their
-covariances (the same quantities behind the conventional standard error).
+allowed weights that make the variance of the estimate smallest, computed from
+the estimated variances of the yearly jumps and, in a panel, their covariances.
+The conventional estimate gets the weights that minimize its variance; the
+bias-corrected (robust) estimate gets its own, from the variances and
+covariances of the bias-corrected jumps.
 
 ```{r}
 fit_ols <- rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 fit_mv  <- rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
                  weighting = "min_variance")
-fit_mv$weights
-c(ols = fit_ols$estimates["Conventional", "se"],
-  min_variance = fit_mv$estimates["Conventional", "se"])
+fit_mv$weights                      # the conventional estimate's weights
+fit_mv$weights_detail$weights_bc    # the bias-corrected estimate's weights
+se <- cbind(ols = fit_ols$estimates$se, min_variance = fit_mv$estimates$se)
+rownames(se) <- rownames(fit_ols$estimates)
+se                                  # standard errors under the two weightings
 ```
 
-The weights on years 1 and 2 are `r fmt(fit_mv$weights[[1]])` and
-`r fmt(fit_mv$weights[[2]])`, and the standard error barely moves. In
+The conventional weights on years 1 and 2 are `r fmt(fit_mv$weights[[1]])` and
+`r fmt(fit_mv$weights[[2]])`, the bias-corrected ones
+`r fmt(fit_mv$weights_detail$weights_bc[[1]])` and
+`r fmt(fit_mv$weights_detail$weights_bc[[2]])`; the standard errors barely
+move. In
 `rddid_sim` the two comparison years are equally noisy (their jumps have the
 same variance), so the weights stay near one half. The tilt toward year 2 comes
 from the panel: the same units appear every year, and the estimated year-2 jump
