@@ -42,6 +42,11 @@
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.4.0.9000" id="rddid-0409000-development">rddid 0.4.0.9000 (development)<a class="anchor" aria-label="anchor" href="#rddid-0409000-development"></a></h2>
 <div class="section level3">
+<h3 id="id_2026-exact-linear-trend-weights-with-calendar-years-0-4-0-9000">2026-10-15: exact linear-trend weights with calendar years<a class="anchor" aria-label="anchor" href="#id_2026-exact-linear-trend-weights-with-calendar-years-0-4-0-9000"></a></h3>
+<ul><li>
+<code>trend = "linear"</code>: the comparison weights are now computed with time centred at the RD period. The weights are the same in exact arithmetic, but with calendar years (e.g. 1999, 2000) the old computation lost about 1e-9 to rounding. Linear-trend results move only at that level (largest relative change 7.6e-10 across the reference calls); constant-trend and numeric weights are unchanged.</li>
+</ul></div>
+<div class="section level3">
 <h3 id="id_2026-minimum-variance-weights-for-the-bias-corrected-estimate-0-4-0-9000">2026-10-15: minimum-variance weights for the bias-corrected estimate<a class="anchor" aria-label="anchor" href="#id_2026-minimum-variance-weights-for-the-bias-corrected-estimate-0-4-0-9000"></a></h3>
 <ul><li>With <code>weighting = "min_variance"</code>, the bias-corrected (robust) row of <code>estimates</code> now uses its own minimum-variance weights, computed from the variances and covariances of the bias-corrected jumps (the paper, Section 5.5). Before, it reused the weights that minimize the conventional variance. The conventional row, the bandwidths and <code>weighting = "ols"</code> are unchanged.</li>
 <li>New fields <code>coef_bc</code> and <code>weights_detail$weights_bc</code> (with <code>Xi_bc</code>, <code>xi_bc</code>); <code><a href="https://rdrr.io/r/base/print.html" class="external-link">print()</a></code> shows the bias-corrected weights when they differ.</li>
