@@ -1,3 +1,6 @@
+<!-- The development log of rddid up to its first public version (kept for the authors; the
+package's user-facing NEWS is inst/NEWS.md). -->
+
 # rddid 0.4.0.9000 (development)
 
 ## 2026-10-16: the tests use only the periods they are given

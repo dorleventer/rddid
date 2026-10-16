@@ -24,10 +24,11 @@ rd_typecont(
 }
 \arguments{
 \item{data}{a data frame in long format, one row per unit and period, from a
-panel (it need not be balanced). A unit's type is read from the periods in
-which it is observed; a unit missing from a period that its type needs is
-left out of the cells that use that type. Rows with a missing running
-variable, period or id are dropped, with a message.}
+panel (it need not be balanced). Only the rows of the periods used (see
+\code{t_rd}, \code{comparisons}) are read, and a unit's type comes from those
+periods; a unit missing from a period that its type needs is left out of
+the cells that use that type. Rows with a missing running variable, period
+or id are dropped, with a message.}
 
 \item{x}{name of the running-variable column (a string).}
 

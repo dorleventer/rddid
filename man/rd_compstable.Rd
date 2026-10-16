@@ -51,7 +51,7 @@ interest switches on at the cutoff.}
 treatment of interest is uniform at the cutoff (nobody treated, or, with
 \code{estimand = "atu"}, everybody treated). \code{NULL} (default) uses every period
 other than \code{t_rd}; pass the periods explicitly when the data contain
-periods that are neither (a second RD period, say).}
+periods that belong in neither.}
 
 \item{estimand}{\code{"att"} (default) or \code{"atu"}, as in \code{\link[=rddid]{rddid()}}. Under \code{"atu"}
 the test is on the shares among the units below the cutoff; see "ATU

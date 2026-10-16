@@ -225,10 +225,11 @@
 #' under `estimand = "att"` and `"atu"`; `estimand` only labels the output.
 #'
 #' @param data a data frame in long format, one row per unit and period, from a
-#'   panel (it need not be balanced). A unit's type is read from the periods in
-#'   which it is observed; a unit missing from a period that its type needs is
-#'   left out of the cells that use that type. Rows with a missing running
-#'   variable, period or id are dropped, with a message.
+#'   panel (it need not be balanced). Only the rows of the periods used (see
+#'   `t_rd`, `comparisons`) are read, and a unit's type comes from those
+#'   periods; a unit missing from a period that its type needs is left out of
+#'   the cells that use that type. Rows with a missing running variable, period
+#'   or id are dropped, with a message.
 #' @param id name of the unit-identifier column (a string). Required: types are
 #'   read across periods.
 #' @param t_rd,comparisons the periods the test uses: `t_rd` and the

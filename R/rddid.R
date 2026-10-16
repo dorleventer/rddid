@@ -32,11 +32,11 @@
 #' periods' effects, \eqn{\mathrm{ATT}^\phi = \sum_t \phi_t \mathrm{ATT}(t)}{ATT^phi = sum_t phi_t ATT(t)},
 #' with weights \eqn{\phi_t}{phi_t} from `rd_weights` (equal by default; any
 #' finite weights are allowed, as they define the estimand). Each period's jump
-#' is estimated once: the RD periods enter with \eqn{\phi_t}{phi_t} and the
-#' comparison periods with the aggregated weights
-#' \eqn{w^\phi_{t_0} = \sum_t \phi_t w_{t_0}(t)}{w^phi_t0 = sum_t phi_t w_t0(t)}, where
-#' \eqn{w_{t_0}(t)}{w_t0(t)} are the weights the trend assumption gives for RD
-#' period \eqn{t} (the paper's Corollary 2 and Section 5.6). The standard errors
+#' is estimated once: each RD period \eqn{t} enters with \eqn{\phi_t}{phi_t},
+#' and each comparison period \eqn{s} with the aggregated weight
+#' \eqn{w^\phi_s = \sum_t \phi_t w_s(t)}{w^phi_s = sum_t phi_t w_s(t)}, where
+#' \eqn{w_s(t)}{w_s(t)} is the weight that RD period \eqn{t} alone gives
+#' comparison period \eqn{s} under the trend assumption. The standard errors
 #' include the covariances between RD periods, and `"joint"` chooses one
 #' bandwidth for the average, not for any single RD period. `weighting =
 #' "min_variance"` is available for a single RD period only.
@@ -136,7 +136,7 @@
 #' period's CCT ratio \eqn{b/h}{b/h}. Each period's bias and variance
 #' constants are estimated at that period's own CCT pilot bandwidths, not at the
 #' RD period's, so an aggregate of several RD periods gets the same bandwidth
-#' whichever of them carries the `t_rd` label.
+#' whatever the order of `t_rd`.
 #' With `regularize = TRUE` the rule adds `reg_const` times the estimated variance of the bias constants to
 #' the squared bias, as \pkg{rdrobust} does, so a near-zero estimated bias
 #' cannot make the bandwidth very large. Standard errors use the HC1 convention
@@ -169,7 +169,7 @@
 #'   treatment of interest is uniform at the cutoff (nobody treated, or, with
 #'   `estimand = "atu"`, everybody treated). `NULL` (default) uses every period
 #'   other than `t_rd`; pass the periods explicitly when the data contain
-#'   periods that are neither (a second RD period, say).
+#'   periods that belong in neither.
 #' @param trend the confounding-trend assumption, which restricts the
 #'   comparison-period weights (`weighting` picks them within it): `"constant"`
 #'   (default; the confounding jump is the same in every period; equal weights
@@ -184,13 +184,15 @@
 #' @param rd_weights the weights \eqn{\phi_t}{phi_t} of the RD periods in the
 #'   average, one per entry of `t_rd` (in that order, or named by period).
 #'   `NULL` (default) gives equal weights. Any finite weights are allowed;
-#'   weights that sum to one make the estimand a weighted average.
+#'   weights that sum to one make the estimand a weighted average. Only for
+#'   several RD periods (a single RD period has weight 1).
 #' @param weighting how the comparison-period weights are chosen within the
 #'   `trend` assumption: `"ols"` (default) uses the weights `trend` implies
 #'   (equal weights for `"constant"`, the least-squares line for `"linear"`);
 #'   `"min_variance"` uses the minimum-variance weights, the comparison-period
 #'   weights the confounding-trend assumption allows that make the variance of
-#'   the estimate smallest (see Details). Not available with a numeric `trend`.
+#'   the estimate smallest (see Details). For a single RD period and a
+#'   character `trend`.
 #' @param estimand `"att"` (default) when the comparison periods are uniformly
 #'   untreated: the ATT, the effect of the treatment on the units just above the
 #'   cutoff that are treated in the RD period. `"atu"` when the comparison
@@ -247,7 +249,9 @@
 #'       from `coef` only under `weighting = "min_variance"`.}
 #'     \item{`weights`}{named numeric vector of the comparison-period weights;
 #'       with several RD periods, the aggregated weights
-#'       \eqn{w^\phi_{t_0}}{w^phi_t0}.}
+#'       \eqn{w^\phi_s}{w^phi_s}; under `weighting = "min_variance"`, those of
+#'       the conventional estimate (the bias-corrected estimate's are in
+#'       `weights_detail$weights_bc`).}
 #'     \item{`rd_weights`}{named numeric vector of the RD-period weights
 #'       \eqn{\phi_t}{phi_t} (1 for a single RD period).}
 #'     \item{`weights_by_target`}{numeric matrix of the comparison-period
@@ -316,8 +320,7 @@
 #' # several RD periods: the average of their effects (year 3 copied as a
 #' # second RD year, 4, for illustration)
 #' sim4 <- rbind(rddid_sim, transform(rddid_sim[rddid_sim$year == 3, ], year = 4))
-#' rddid(sim4, y = "Y", x = "R", time = "year", id = "id", t_rd = c(3, 4),
-#'       comparisons = c(1, 2))
+#' rddid(sim4, y = "Y", x = "R", time = "year", id = "id", t_rd = c(3, 4))
 #' # comparison periods uniformly treated: add estimand = "atu" (same numbers)
 #' @export
 rddid <- function(data, y, x, time, id = NULL, t_rd,
