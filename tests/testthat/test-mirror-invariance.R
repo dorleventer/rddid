@@ -176,15 +176,13 @@ test_that("rd_homog() mirror invariance: S1, scheme=pv, t_rd=2, comparisons=1", 
   check_jump_swap(orig$period_type_jumps, mir$period_type_jumps, "type", info0)
 })
 
-test_that("rd_trendcell() mirror invariance: S0_3, scheme=pc, type_by=rd_side", {
-  info0 <- "S0_3 t_rd=3 comparisons=1,2 scheme=pc type_by=rd_side"
+test_that("rd_trendcell() mirror invariance: S0_3, scheme=pc", {
+  info0 <- "S0_3 t_rd=3 comparisons=1,2 scheme=pc"
 
   orig <- rd_trendcell(S0_3, y = "Y", x = "R", time = "t", id = "id",
-                        t_rd = 3, comparisons = c(1, 2),
-                        type_by = "rd_side", scheme = "pc")
+                        t_rd = 3, comparisons = c(1, 2), scheme = "pc")
   mir  <- rd_trendcell(mirror_x(S0_3), y = "Y", x = "R", time = "t", id = "id",
-                        t_rd = 3, comparisons = c(1, 2),
-                        type_by = "rd_side", scheme = "pc")
+                        t_rd = 3, comparisons = c(1, 2), scheme = "pc")
 
   expect_equal(orig$statistic, mir$statistic, tolerance = 1e-10, info = paste(info0, "statistic"))
   expect_equal(orig$df, mir$df, tolerance = 1e-10, info = paste(info0, "df"))

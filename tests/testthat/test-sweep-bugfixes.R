@@ -175,19 +175,15 @@ test_that("untestable results are NA, not chi-squared(0) = 0 with p = 1", {
 
 test_that("comparisons may not include t_rd, and must exist, in every test", {
   expect_error(rd_compstable(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3,
-                             comparisons = c(1, 3)), "must not be one of")
+                             comparisons = c(1, 3)), "period 3 is in both")
   expect_error(rd_homog(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
-                        comparisons = c(1, 3)), "must not be one of")
+                        comparisons = c(1, 3)), "period 3 is in both")
   expect_error(rd_trendcell(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
-                            comparisons = c(1, 9)), "comparison period(s) not in `year`: 9", fixed = TRUE)
+                            comparisons = c(1, 9)), "comparison period(s) 9 not in `year`", fixed = TRUE)
   expect_error(rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 7),
                "not a period")
 })
 
-test_that("rd_trendcell refuses type_by = 'pattern' with a clear message", {
-  expect_error(rd_trendcell(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
-                            type_by = "pattern"), "not defined here")
-})
 
 test_that("the reference flag is set only in periods that contributed a contrast", {
   hg <- rd_homog(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)

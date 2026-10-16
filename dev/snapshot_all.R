@@ -57,7 +57,7 @@ for (sc in c("cs", "pc", "pv")) {
          rddid(d, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, bwselect = bw))
     keep(sprintf("rddid|%s|%s|linear", sc, bw),
          rddid(d, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, bwselect = bw,
-               weights = "linear"))
+               trend = "linear"))
   }
   keep(sprintf("rddid|%s|joint|p2", sc),
        rddid(d, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, bwselect = "joint",
@@ -75,7 +75,7 @@ for (sc in c("cs", "pc", "pv")) {
              estimand = "atu"))
   keep(sprintf("rddid|%s|joint|numeric-w", sc),
        rddid(d, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, bwselect = "joint",
-             comparisons = c(2, 1), weights = c(0.3, 0.7)))
+             comparisons = c(2, 1), trend = c(0.3, 0.7)))
   for (fs in c("cs", "pc", "pv"))
     keep(sprintf("rddid|%s|joint|scheme-%s", sc, fs),
          rddid(d, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, bwselect = "joint",
@@ -92,7 +92,7 @@ keep("rddid|pc|no-id",
      rddid(dat$pc, y = "Y", x = "R", time = "year", t_rd = 3, bwselect = "cct"))
 keep("rddid|pv4|joint|linear-3comp",
      rddid(dat$pv4, y = "Y", x = "R", time = "year", id = "id", t_rd = 4, bwselect = "joint",
-           weights = "linear"))
+           trend = "linear"))
 # minimum-variance weights (each row its own weights), PV data, constant trend, two comparisons
 for (bw in c("joint", "cct"))
   keep(sprintf("rddid|pv|%s|min_variance", bw),
@@ -151,9 +151,6 @@ for (sc in c("pc", "pv")) {
        rd_compstable(d, x = "R", time = "year", id = "id", t_rd = 3, scheme = "cs"))
   keep(sprintf("rd_homog|%s|pattern", sc),
        rd_homog(d, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, type_by = "pattern"))
-  keep(sprintf("rd_trendcell|%s|pattern", sc),
-       rd_trendcell(d, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
-                    type_by = "pattern"))
   keep(sprintf("rd_homog|%s|fixed-h", sc),
        rd_homog(d, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, h = 0.3))
   keep(sprintf("rd_compstable|%s|fixed-h", sc),

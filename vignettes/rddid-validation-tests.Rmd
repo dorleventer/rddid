@@ -57,7 +57,7 @@ default each test uses the bias-corrected jumps with their robust variances
 tests on type shares pick a separate CCT bandwidth for every local-linear fit
 (`bwselect = "cct"`) and combine their jumps with a studentized sup-t statistic
 (`joint = "supt"`, `studentize = TRUE`); the two tests on the outcome use one bandwidth for every
-cell (`bwselect = "common"`). The last section says why.
+cell (`bwselect = "pooled"`). The last section says why.
 
 ## Type continuity: `rd_typecont()`
 
@@ -236,7 +236,7 @@ rddid(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 
 The true effect is 1.
 
-## Why sup-t, and a common bandwidth for the outcome tests
+## Why sup-t, and a pooled bandwidth for the outcome tests
 
 In simulations with a clean null (every assumption true, 1,000 units, three
 periods, 5% level), the chi-squared Wald statistics with per-cell bandwidths
@@ -257,7 +257,7 @@ the jumps themselves, in two ways.
   standard error, so a variance that is too small, or noisy, inflates them as
   well, by less than the Wald; that is why the share tests stay slightly above
   5% at three periods. For the share tests the per-fit bandwidth is kept,
-  because it adapts to a sorting window and every common bandwidth tried
+  because it adapts to a sorting window and every pooled bandwidth tried
   halved the power against local sorting.
 
 The default sup-t is studentized: each standard error is an estimate, with
@@ -280,7 +280,7 @@ argument away, in each test and in `rd_checks()`.
 # share tests: the chi-squared Wald, or sup-t with normal critical values
 rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3, joint = "wald")
 rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3, studentize = FALSE)
-# outcome tests: one bandwidth per cell instead of one common bandwidth
+# outcome tests: one bandwidth per cell instead of one pooled bandwidth
 rd_homog(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, bwselect = "cct")
 # all four at once, and one test differently from the others
 rd_checks(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
@@ -298,7 +298,7 @@ ch$typecont$joint_tests
 
 - `bwselect`: for `rd_typecont()` and `rd_compstable()`, `"cct"` (default)
   chooses a CCT bandwidth for every local-linear fit and `"rot"` uses a rule of
-  thumb; for `rd_homog()` and `rd_trendcell()`, `"common"` (default) uses the
+  thumb; for `rd_homog()` and `rd_trendcell()`, `"pooled"` (default) uses the
   CCT bandwidth of the outcome on the pooled comparison periods in every cell,
   `"cct"` one per cell, `"rot"` a rule of thumb. `h` fixes the bandwidth.
 - `joint` (`rd_typecont()`, `rd_compstable()`): `"supt"` (default), `"swald"`
@@ -308,9 +308,11 @@ ch$typecont$joint_tests
 - `bc`: `TRUE` (default) tests the bias-corrected jumps with their robust
   variances; `FALSE` uses the conventional ones.
 - `scheme`: detected from the data as in `rddid()`; set it to override.
-- `rd_homog()` and `rd_trendcell()`: `type_by = "rd_side"` (default, the side in
-  the RD period) or `"pattern"` (the sides in all other periods); `min_n` drops
-  cells with too few observations on either side of the cutoff, with a message.
+- `rd_homog()`: `type_by = "rd_side"` (default, the side in the RD period) or
+  `"pattern"` (the sides in the other periods used). `rd_trendcell()` always
+  types units by their side in the RD period.
+- `rd_homog()` and `rd_trendcell()`: `min_n` drops cells with too few
+  observations on either side of the cutoff, with a message.
 
 The article [How rddid() computes the estimate](rddid-how-it-works.html)
 rebuilds the type-continuity and composition-stability tests by hand and runs

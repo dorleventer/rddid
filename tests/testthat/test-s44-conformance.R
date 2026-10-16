@@ -82,8 +82,7 @@ s44_pkg_homog <- function(d, comparisons, ...) {
 s44_pkg_trendcell <- function(d, comparisons, ...) {
   rd_trendcell(d, y = "y", x = "x", time = "time", id = "id",
                comparisons = comparisons, t_rd = "trd", c = 0, h = s44_h,
-               kernel = "triangular", min_n = 10L, type_by = "rd_side",
-               trend = "constant", ...)
+               kernel = "triangular", min_n = 10L, trend = "constant", ...)
 }
 
 

@@ -19,11 +19,13 @@
 #' @param x a `"summary.rddid"` object.
 #' @param ... unused.
 #' @return `summary()` returns an object of class `"summary.rddid"`: a list with `fit` (the
-#'   object) and `per_period`, a data frame with one row per period in time order and columns `period`,
-#'   `role` (`"RD"` or `"comparison"`), `coef` (its coefficient in the estimate, 1 for the RD
-#'   period and minus its weight for a comparison period), `n`, `h`, `b`, `jump` and `se` (the
-#'   conventional local-linear jump and its standard error) and `jump_bc`, `se_rb`
-#'   (bias-corrected jump, robust standard error).
+#'   object) and `per_period`, a data frame with one row per period in time order and columns
+#'   `period`, `role` (`"RD"` or `"comparison"`), `coef` (the period's coefficient in the
+#'   conventional estimate: the RD period's weight in `rd_weights`, 1 for a single RD period,
+#'   and minus its weight for a comparison period), `n`, `h`, `b`, `jump` and `se` (the
+#'   conventional local-linear jump and its standard error), `jump_bc`, `se_rb`
+#'   (bias-corrected jump, robust standard error) and, under `weighting = "min_variance"`,
+#'   `coef_bc` (the coefficients of the bias-corrected estimate, which has its own weights).
 #' @examples
 #' fit <- rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 #' summary(fit)
@@ -39,16 +41,20 @@ summary.rddid <- function(object, ...) {
 print.summary.rddid <- function(x, digits = 4, ...) {
   fit <- x$fit
   print(fit, digits = digits, hint = FALSE)
-  cat("\n  Per-period local-linear fits, in time order (estimate = sum of coef x jump):\n")
   tab <- x$per_period
-  fmt <- function(v, d = digits) formatC(v, digits = d, format = "f")
-  cat(sprintf("  %-8s %-11s %6s %6s %8s %8s %10s %9s %10s %9s\n", "period", "role", "coef",
-              "n", "h", "b", "jump", "s.e.", "jump (bc)", "s.e. (rb)"))
+  own_bc <- !is.null(tab$coef_bc)              # the bias-corrected estimate has its own weights
+  cat("\n  Per-period local-linear fits (Conventional = sum of coef x jump; Robust = sum of",
+      if (own_bc) "coef (bc) x jump (bc)):\n" else "coef x jump (bc)):\n")
+  fmt  <- function(v, d = digits) formatC(v, digits = d, format = "f")
+  fmtc <- function(v) formatC(v, digits = 3, format = "f")
+  cat(sprintf("  %-8s %-11s %7s %6s %8s %8s %10s %9s%s %10s %9s\n", "period", "role", "coef",
+              "n", "h", "b", "jump", "s.e.", if (own_bc) sprintf(" %9s", "coef (bc)") else "",
+              "jump (bc)", "s.e. (rb)"))
   for (i in seq_len(nrow(tab)))
-    cat(sprintf("  %-8s %-11s %6s %6d %8s %8s %10s %9s %10s %9s\n", tab$period[i], tab$role[i],
-                formatC(tab$coef[i], digits = 3, format = "g"), tab$n[i], fmt(tab$h[i]),
-                fmt(tab$b[i]), fmt(tab$jump[i]), fmt(tab$se[i]), fmt(tab$jump_bc[i]),
-                fmt(tab$se_rb[i])))
+    cat(sprintf("  %-8s %-11s %7s %6d %8s %8s %10s %9s%s %10s %9s\n", tab$period[i], tab$role[i],
+                fmtc(tab$coef[i]), tab$n[i], fmt(tab$h[i]), fmt(tab$b[i]), fmt(tab$jump[i]),
+                fmt(tab$se[i]), if (own_bc) sprintf(" %9s", fmtc(tab$coef_bc[i])) else "",
+                fmt(tab$jump_bc[i]), fmt(tab$se_rb[i])))
   e <- fit$estimates
   cat("\n  Robust s.e. under each sampling scheme (the printed one is for \"", fit$scheme,
       "\"; the others are for comparison):\n", sep = "")
@@ -61,9 +67,9 @@ print.summary.rddid <- function(x, digits = 4, ...) {
 #' @keywords internal
 #' @noRd
 .rddid_period_table <- function(x) {
-  per <- .period_order(names(x$fits))      # rows in time order ...
+  per <- .fit_period_order(x)              # rows in time order ...
   f   <- x$fits[per]                       # ... and every column taken in that same order
-  data.frame(
+  out <- data.frame(
     period  = per,
     role    = ifelse(per %in% as.character(x$t_rd), "RD", "comparison"),
     coef    = unname(x$coef[per]),
@@ -75,6 +81,9 @@ print.summary.rddid <- function(x, digits = 4, ...) {
     jump_bc = vapply(f, function(z) z$D_bc, numeric(1)),
     se_rb   = vapply(f, function(z) sqrt(z$V_D_bc), numeric(1)),
     row.names = NULL, stringsAsFactors = FALSE)
+  if (!is.null(x$coef_bc) && !isTRUE(all.equal(x$coef_bc, x$coef)))
+    out$coef_bc <- unname(x$coef_bc[per])
+  out
 }
 
 #' Coefficients, confidence intervals and sample size of an RD-DID fit
@@ -149,12 +158,14 @@ nobs.rddid <- function(object, ...) as.integer(sum(object$n_by_period))
 #' @param ... unused.
 #' @return `tidy()` returns a data frame with one row per estimate (`term`, `estimate`,
 #'   `std.error`, `statistic`, `p.value`, `conf.low`, `conf.high`) for a fit, and one row per
-#'   test (`test`, `statistic`, `df`, `p.value`) for a validation test: the test's reported
-#'   statistic (the largest |t| under `joint = "supt"` for [rd_typecont()] and
+#'   test for a validation test: `test` (the function, as in [rd_checks()]), `assumption`,
+#'   `statistic` (the largest |t| under `joint = "supt"` for [rd_typecont()] and
 #'   [rd_compstable()], whose row is the joint test over pairs; the chi-squared statistic for
-#'   [rd_homog()] and [rd_trendcell()]).
+#'   [rd_homog()] and [rd_trendcell()]), `df` (the chi-squared degrees of freedom of a Wald
+#'   statistic; `NA` for sup-t and sWald), `p.value` and `method`.
 #'   `glance()` returns a
-#'   one-row data frame describing the fit (`nobs`, `t_rd`, `comparisons`, `trend`, `weights`,
+#'   one-row data frame describing the fit (`nobs`, `t_rd`, `rd_weights`, `comparisons`,
+#'   `trend`, `weights`,
 #'   `bwselect`, `h` (the common bandwidth under `"joint"`/fixed `h`, `NA` otherwise),
 #'   `scheme`, `level`, `weighting`).
 #' @examples
@@ -198,6 +209,7 @@ glance.rddid <- function(x, ...) {
   data.frame(nobs = nobs.rddid(x),
              t_rd = if (length(x$t_rd) == 1L) x$t_rd else paste(x$t_rd, collapse = ", "),
              comparisons = paste(x$comparisons, collapse = ", "),
+             rd_weights = paste(signif(x$rd_weights, 3), collapse = ", "),
              trend = x$weights_type, weights = paste(signif(x$weights, 3), collapse = ", "),
              bwselect = x$bandwidth$method,
              h = if (!is.null(x$bandwidth[["h"]])) unname(x$bandwidth[["h"]]) else NA_real_,
@@ -209,22 +221,27 @@ glance.rddid <- function(x, ...) {
 #' One-row tidy() data frame for a validation test
 #' @keywords internal
 #' @noRd
-.tidy_test <- function(x, name) {
-  data.frame(test = name, statistic = x$statistic, df = x$df, p.value = x$p_value,
+.tidy_test <- function(x, fn, assumption) {
+  # df is a chi-squared degrees of freedom: defined for the Wald statistics only, not for sup-t
+  # or sWald (whose critical values are simulated)
+  wald <- identical(x$joint_method %||% "wald", "wald")
+  data.frame(test = fn, assumption = assumption, statistic = x$statistic,
+             df = if (wald) x$df else NA_integer_, p.value = x$p_value,
              method = .checks_method(x), row.names = NULL, stringsAsFactors = FALSE)
 }
 #' @rdname rddid-tidiers
 #' @export
-tidy.rd_typecont <- function(x, ...) .tidy_test(x, "type continuity")
+tidy.rd_typecont <- function(x, ...) .tidy_test(x, "rd_typecont", "type continuity")
 #' @rdname rddid-tidiers
 #' @export
-tidy.rd_compstable <- function(x, ...) .tidy_test(x, "composition stability")
+tidy.rd_compstable <- function(x, ...) .tidy_test(x, "rd_compstable", "composition stability")
 #' @rdname rddid-tidiers
 #' @export
-tidy.rd_homog <- function(x, ...) .tidy_test(x, "homogeneous confounding")
+tidy.rd_homog <- function(x, ...) .tidy_test(x, "rd_homog", "homogeneous confounding")
 #' @rdname rddid-tidiers
 #' @export
-tidy.rd_trendcell <- function(x, ...) .tidy_test(x, "constant within-type confounding")
+tidy.rd_trendcell <- function(x, ...)
+  .tidy_test(x, "rd_trendcell", paste(x$trend, "within-type confounding"))
 
 # ---- shared print helpers for the validation tests ------------------------------------------
 #' Header shared by the four tests' print methods: title, H0, scheme, estimand
@@ -281,7 +298,7 @@ tidy.rd_trendcell <- function(x, ...) .tidy_test(x, "constant within-type confou
 #' @keywords internal
 #' @noRd
 .bw_label_test <- function(h, bwselect) {
-  if (identical(bwselect, "common") && !is.null(h) && !is.na(h))
+  if (identical(bwselect, "pooled") && !is.null(h) && !is.na(h))
     sprintf("h = %.4g in every cell (CCT on the pooled comparison periods)", h)
   else if (!is.null(h) && !is.na(h)) sprintf("h = %.4g in every cell", h)
   else if (bwselect == "cct") "CCT MSE-optimal, chosen per cell"

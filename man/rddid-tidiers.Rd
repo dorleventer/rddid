@@ -39,12 +39,14 @@ makers pass them.}
 \value{
 \code{tidy()} returns a data frame with one row per estimate (\code{term}, \code{estimate},
 \code{std.error}, \code{statistic}, \code{p.value}, \code{conf.low}, \code{conf.high}) for a fit, and one row per
-test (\code{test}, \code{statistic}, \code{df}, \code{p.value}) for a validation test: the test's reported
-statistic (the largest |t| under \code{joint = "supt"} for \code{\link[=rd_typecont]{rd_typecont()}} and
+test for a validation test: \code{test} (the function, as in \code{\link[=rd_checks]{rd_checks()}}), \code{assumption},
+\code{statistic} (the largest |t| under \code{joint = "supt"} for \code{\link[=rd_typecont]{rd_typecont()}} and
 \code{\link[=rd_compstable]{rd_compstable()}}, whose row is the joint test over pairs; the chi-squared statistic for
-\code{\link[=rd_homog]{rd_homog()}} and \code{\link[=rd_trendcell]{rd_trendcell()}}).
+\code{\link[=rd_homog]{rd_homog()}} and \code{\link[=rd_trendcell]{rd_trendcell()}}), \code{df} (the chi-squared degrees of freedom of a Wald
+statistic; \code{NA} for sup-t and sWald), \code{p.value} and \code{method}.
 \code{glance()} returns a
-one-row data frame describing the fit (\code{nobs}, \code{t_rd}, \code{comparisons}, \code{trend}, \code{weights},
+one-row data frame describing the fit (\code{nobs}, \code{t_rd}, \code{rd_weights}, \code{comparisons},
+\code{trend}, \code{weights},
 \code{bwselect}, \code{h} (the common bandwidth under \code{"joint"}/fixed \code{h}, \code{NA} otherwise),
 \code{scheme}, \code{level}, \code{weighting}).
 }

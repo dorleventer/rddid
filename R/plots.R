@@ -16,8 +16,7 @@ utils::globalVariables(c("x", "y", "side", "jump", "lo", "hi", "x_a", "x_b", "st
 
 .need_ggplot2 <- function() {
   if (!requireNamespace("ggplot2", quietly = TRUE))
-    stop("the plot methods need the ggplot2 package: install.packages(\"ggplot2\")",
-         call. = FALSE)
+    .abort("the plot methods need the ggplot2 package: install.packages(\"ggplot2\")")
 }
 
 # ---- palette and theme (the paper's) --------------------------------------------------------
@@ -52,6 +51,13 @@ utils::globalVariables(c("x", "y", "side", "jump", "lo", "hi", "x_a", "x_b", "st
 .period_order <- function(labels) {
   num <- suppressWarnings(as.numeric(labels))
   if (!anyNA(num)) labels[order(num)] else labels
+}
+
+#' The periods of an rddid() fit in time order (level order for a factor period column)
+#' @keywords internal
+#' @noRd
+.fit_period_order <- function(x) {
+  if (!is.null(x$period_order)) x$period_order else .period_order(names(x$fits))
 }
 
 #' Binned means of y by x on each side of the cutoff: `bins` equal-width bins from lo to the
@@ -154,7 +160,7 @@ utils::globalVariables(c("x", "y", "side", "jump", "lo", "hi", "x_a", "x_b", "st
 plot.rddid <- function(x, bins = 20L, ...) {
   .need_ggplot2()
   cutoff  <- x$c
-  periods <- .period_order(names(x$fits))      # panels in time order
+  periods <- .fit_period_order(x)              # panels in time order
   role_of <- function(k) if (k %in% as.character(x$t_rd)) "RD period" else "Comparison period"
   pts <- do.call(rbind, lapply(periods, function(k) {
     b <- .bin_sides(x$data[[k]]$x, x$data[[k]]$y, cutoff, bins = bins)
@@ -214,8 +220,8 @@ plot.rd_typecont <- function(x, t_rd = NULL, comparison = NULL, bins = 20L, ...)
     if (!is.null(x$meta$t_rd)) as.character(x$meta$t_rd) else periods[length(periods)]
   t0 <- if (!is.null(comparison)) as.character(comparison) else setdiff(periods, rd)[1L]
   if (!rd %in% periods || !t0 %in% periods || rd == t0)
-    stop("`t_rd` and `comparison` must be two different periods among: ",
-         paste(periods, collapse = ", "))
+    .abort("`t_rd` and `comparison` must be two different periods among: ",
+           paste(periods, collapse = ", "))
   cutoff <- x$meta$c
   w <- x$sides
   panel <- function(this, other, role) {
@@ -231,7 +237,7 @@ plot.rd_typecont <- function(x, t_rd = NULL, comparison = NULL, bins = 20L, ...)
   }
   left  <- panel(t0, rd, "Comparison period")
   right <- panel(rd, t0, "RD period")
-  if (is.null(left) || is.null(right)) stop("the local-linear fit failed in one period.")
+  if (is.null(left) || is.null(right)) .abort("the local-linear fit failed in one period.")
   pts   <- rbind(left$pts, right$pts)
   lines <- rbind(left$lines, right$lines)
   lv <- c(left$pts$panel[1], right$pts$panel[1])
@@ -281,11 +287,11 @@ plot.rd_typecont <- function(x, t_rd = NULL, comparison = NULL, bins = 20L, ...)
 #' @export
 plot.rd_compstable <- function(x, pair = 1L, bins = 20L, ...) {
   .need_ggplot2()
-  if (!length(x$pairs)) stop("no pair was tested (every pair was skipped).")
+  if (!length(x$pairs)) .abort("no pair was tested (every pair was skipped).")
   ok_pair <- (is.character(pair) && pair %in% names(x$pairs)) ||
     (is.numeric(pair) && length(pair) == 1L && pair >= 1 && pair <= length(x$pairs))
-  if (!ok_pair) stop("`pair` must be an index 1..", length(x$pairs), " or one of: ",
-                     paste(names(x$pairs), collapse = ", "))
+  if (!ok_pair) .abort("`pair` must be an index 1..", length(x$pairs), " or one of: ",
+                       paste(names(x$pairs), collapse = ", "))
   pr <- x$pairs[[pair]]
   pair_name <- if (is.character(pair)) pair else names(x$pairs)[pair]
   t_rd <- sub("::.*$", "", pair_name); t0 <- sub("^.*::", "", pair_name)
@@ -296,7 +302,7 @@ plot.rd_compstable <- function(x, pair = 1L, bins = 20L, ...) {
   xx <- c(s$x_t0, s$x_trd)
   yy <- c(partner(s$type_t0), partner(s$type_trd))
   fit <- .indicator_fit(yy, xx, 0, x$meta$kernel, x$meta$h, x$meta$bwselect)
-  if (is.null(fit)) stop("the local-linear fit on the reflected sample failed.")
+  if (is.null(fit)) .abort("the local-linear fit on the reflected sample failed.")
   h <- unname(fit$h)
   # under "att" the comparison period is the mirrored one (left of 0); under "atu" the whole
   # sample was mirrored first, so the RD period (right of 0) is the mirrored one
@@ -373,7 +379,7 @@ plot.rd_compstable <- function(x, pair = 1L, bins = 20L, ...) {
 plot.rd_homog <- function(x, ...) {
   .need_ggplot2()
   tab <- x$period_type_jumps
-  if (is.null(tab) || !nrow(tab)) stop("no fitted cells to plot.")
+  if (is.null(tab) || !nrow(tab)) .abort("no fitted cells to plot.")
   tab$type <- .type_names(tab$type, x$t_rd)
   .jump_pointrange(tab, colour_var = "type")
 }
@@ -396,7 +402,7 @@ plot.rd_homog <- function(x, ...) {
 plot.rd_trendcell <- function(x, ...) {
   .need_ggplot2()
   tab <- x$cell_period_jumps
-  if (is.null(tab) || !nrow(tab)) stop("no fitted cells to plot.")
+  if (is.null(tab) || !nrow(tab)) .abort("no fitted cells to plot.")
   tab$type <- .type_names(tab$cell, x$t_rd)
   ref <- do.call(rbind, lapply(split(tab, tab$type), function(d) {
     tv <- suppressWarnings(as.numeric(d$period))
@@ -437,19 +443,19 @@ plot_switchers <- function(data, x, time, id, periods = NULL, c = 0, ...) {
   all_periods <- sort(unique(data[[time]]))
   if (is.null(periods)) periods <- all_periods[1:2]
   if (length(periods) != 2L || !all(periods %in% all_periods))
-    stop("`periods` must be two values of `", time, "`.")
+    .abort("`periods` must be two values of `", time, "`.")
   a <- data[data[[time]] == periods[1], c(id, x)]
   b <- data[data[[time]] == periods[2], c(id, x)]
   names(a) <- c("id", "x_a"); names(b) <- c("id", "x_b")
   m <- merge(a, b, by = "id")
   m <- m[is.finite(m$x_a) & is.finite(m$x_b), ]
-  if (!nrow(m)) stop("no unit is observed in both periods (the ids never repeat).")
+  if (!nrow(m)) .abort("no unit is observed in both periods (the ids never repeat).")
   above_a <- m$x_a >= cutoff; above_b <- m$x_b >= cutoff
   lab <- c(stay = "Same side", up = "Below, then above", down = "Above, then below")
   m$status <- factor(lab[ifelse(above_a == above_b, "stay", ifelse(above_a, "down", "up"))],
                      levels = lab)
   m <- m[order(m$status != lab[["stay"]]), ]        # switchers drawn on top of the stayers
-  message(sprintf("plot_switchers: %.1f%% of the %d units observed in both periods change side",
+  message(sprintf("plot_switchers(): %.1f%% of the %d units observed in both periods change side",
                   100 * mean(m$status != lab[["stay"]]), nrow(m)))
   cols <- stats::setNames(c("grey75", .col_above, .col_below), lab)   # colour = side in period 2
   ggplot2::ggplot(m, ggplot2::aes(x = x_a, y = x_b, colour = status)) +

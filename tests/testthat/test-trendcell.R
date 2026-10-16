@@ -122,18 +122,15 @@ test_that("rd_trendcell with 2 comparison periods returns df = #cells", {
 # ---------------------------------------------------------------------------
 # 5. Linear trend with only 2 comparison periods: returns df = 0 with message
 # ---------------------------------------------------------------------------
-test_that("rd_trendcell with trend='linear' and 2 comparison periods returns df=0", {
+test_that("rd_trendcell needs 3 comparison periods for a linear trend, 2 for a constant one", {
   dat <- make_trendcell_panel(n = 600, T_comp = 2,
                                jump_fn = function(k, t) if (k == "+") 0.4 else 0.4)
-  expect_message(
-    res <- rd_trendcell(dat, y = "y", x = "x", time = "time", id = "id",
-                        comparisons = 1:2, t_rd = 3L, h = 0.4,
-                        trend = "linear"),
-    regexp = "df = 0"
-  )
-  expect_equal(res$df, 0L)
-  expect_true(is.na(res$statistic))
-  expect_true(is.na(res$p_value))
+  expect_error(rd_trendcell(dat, y = "y", x = "x", time = "time", id = "id",
+                            comparisons = 1:2, t_rd = 3L, h = 0.4, trend = "linear"),
+               "needs at least 3 of them; got 2")
+  expect_error(rd_trendcell(dat, y = "y", x = "x", time = "time", id = "id",
+                            comparisons = 1, t_rd = 3L, h = 0.4),
+               "needs at least 2 of them; got 1")
 })
 
 # ---------------------------------------------------------------------------

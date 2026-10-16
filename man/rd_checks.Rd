@@ -19,12 +19,12 @@ rd_checks(
   bc = TRUE,
   joint = c("supt", "swald", "wald"),
   studentize = TRUE,
-  outcome_bwselect = c("common", "cct", "rot"),
+  outcome_bwselect = c("pooled", "cct", "rot"),
   typecont = list(),
   compstable = list(),
   homog = list(),
   trendcell = list(),
-  level = 0.05
+  level = 0.95
 )
 }
 \arguments{
@@ -42,7 +42,7 @@ defaults as in each test.}
 critical values) or \code{FALSE} (normal critical values).}
 
 \item{outcome_bwselect}{the bandwidth rule of \code{\link[=rd_homog]{rd_homog()}} and
-\code{\link[=rd_trendcell]{rd_trendcell()}}: \code{"common"} (default; one bandwidth for every cell, the
+\code{\link[=rd_trendcell]{rd_trendcell()}}: \code{"pooled"} (default; one bandwidth for every cell, the
 CCT bandwidth of the outcome on the pooled comparison periods), \code{"cct"}
 (one CCT bandwidth per cell) or \code{"rot"} (a rule of thumb per cell). The
 share tests' own \code{bwselect} (per-fit CCT by default) can be changed in
@@ -52,7 +52,8 @@ share tests' own \code{bwselect} (per-fit CCT by default) can be changed in
 \item{typecont, compstable, homog, trendcell}{lists of further arguments for
 one test, which override the shared ones.}
 
-\item{level}{the level of the reading in the printout (default 0.05).}
+\item{level}{the confidence level of the reading in the printout (default
+0.95, as in \code{\link[=rddid]{rddid()}}): a test rejects when its p-value is below \code{1 - level}.}
 }
 \value{
 An object of class \code{"rd_checks"}: a list with \code{table} (one row per
@@ -79,8 +80,9 @@ different value for one test only, goes in that test's list, for example
 A test that cannot run on the data (for example, no unit changes side of
 the cutoff) gives a row with its error message and \code{NA} results.
 
-The printout ends with the reading at the level \code{level}: which assumptions
-a test rejects. Not rejecting an assumption does not establish it; constant
+The printout ends with a reading at the confidence level \code{level}, as in
+\code{\link[=rddid]{rddid()}}: a test rejects its assumption when its p-value is below
+\code{1 - level}. Not rejecting an assumption does not establish it; constant
 within-type confounding concerns the RD period and is checked in the
 comparison periods only (a pre-trends check).
 }

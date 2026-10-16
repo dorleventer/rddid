@@ -231,11 +231,11 @@
 #'   variable, period or id are dropped, with a message.
 #' @param id name of the unit-identifier column (a string). Required: types are
 #'   read across periods.
-#' @param t_rd,comparisons optional: the RD period and the comparison periods,
-#'   to restrict the test to these periods. With `comparisons = NULL` (default)
-#'   every period in `data` enters, whatever `t_rd`; since the test treats all
-#'   periods alike, `t_rd` alone changes nothing and only lets you write the
-#'   same call as for [rddid()].
+#' @param t_rd,comparisons the periods the test uses: `t_rd` and the
+#'   `comparisons`; `comparisons = NULL` (default) uses every period in `data`
+#'   (other than `t_rd`, which is then used too). The test treats all periods
+#'   alike, so `t_rd` is optional: it lets you write the same call as for
+#'   [rddid()].
 #' @param estimand `"att"` (default) or `"atu"`, as in [rddid()]. Label only:
 #'   the test is the same either way.
 #' @param h a bandwidth to use, as both main and pilot bandwidth, in every
@@ -328,23 +328,24 @@ rd_typecont <- function(data, x, time, id,
                         joint = c("supt", "swald", "wald"),
                         studentize = TRUE) {
   cl       <- match.call()
-  scheme   <- match.arg(scheme)
-  joint    <- match.arg(joint)
+  scheme   <- .match_arg(scheme)
+  joint    <- .match_arg(joint)
   .check_studentize(studentize, "rd_typecont")
-  bwselect <- match.arg(bwselect)
-  estimand <- match.arg(estimand)
-  kernel   <- match.arg(tolower(kernel), c("triangular", "epanechnikov", "uniform"))
+  bwselect <- .match_arg(bwselect)
+  estimand <- .match_arg(estimand)
+  kernel   <- .match_arg(tolower(kernel), c("triangular", "epanechnikov", "uniform"), "kernel")
   cutoff   <- c   # the cutoff; `c` stays the argument name for rdrobust users
 
   # ----- inputs and periods: the shared prepare step (input_checks.R) -----
-  # `t_rd`/`comparisons` only select which periods enter: the test treats every period alike
-  data <- .prepare_input(data, "rd_typecont", x = x, time = time, id = id, t_rd = t_rd,
-                         comparisons = comparisons, t_rd_required = FALSE,
-                         default_comparisons = FALSE, restrict = !is.null(comparisons))$data
+  # the test treats every period alike: `t_rd` and `comparisons` only select which periods enter
+  if (missing(id)) .abort("`id` (the unit identifier) is required: the tests follow each unit ",
+                          "across periods.")
+  data <- .prepare_input(data, "rd_typecont()", x = x, time = time, id = id, t_rd = t_rd,
+                         comparisons = comparisons, t_rd_required = FALSE)$data
   periods       <- sort(unique(data[[time]]))
   period_labels <- as.character(periods)
   n_periods     <- length(periods)
-  if (n_periods < 2L) stop("need at least 2 periods to define a type.")
+  if (n_periods < 2L) .abort("need at least 2 periods to define a type.")
 
   # bwselect = "cct" leaves h NULL: each cell then gets its own CCT bandwidths
   if (is.null(h) && bwselect == "rot") h <- .rot_bandwidth_iqr(data[[x]])
@@ -426,10 +427,12 @@ print.rd_typecont <- function(x, ...) {
   .print_test_header("type continuity", "rd_typecont",
                      "the share of each type jumps by zero at the cutoff, in every period",
                      x$scheme, identical(x$scheme_requested, "auto"), x$estimand)
-  cat(sprintf("  Periods: %s   Types: %s   Bandwidth: %s\n\n",
+  cat(sprintf("  Periods: %s   Types: %s   Bandwidth: %s\n",
               paste(x$meta$periods, collapse = ", "),
               paste(x$meta$type_values, collapse = ", "),
               .bw_label_test(x$meta$h, x$meta$bwselect)))
+  cat("  Type in a period: a unit's sides of the cutoff in the other periods, in time order\n",
+      '    ("+" at or above, "-" below).\n\n', sep = "")
   method <- x$joint_method %||% "wald"
   tt <- x$t_stats %||% x$z
   largest <- if (method == "supt" && length(tt) && any(is.finite(tt)))

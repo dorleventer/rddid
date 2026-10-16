@@ -9,8 +9,8 @@
 #' @noRd
 .compstable_wide <- function(data, x, time, id, all_periods, period_labels, cutoff, estimand) {
   if (anyDuplicated(data[, c(id, time)]))
-    stop("some (", id, ", ", time, ") pairs appear more than once: each unit may appear once per ",
-         "period.", call. = FALSE)
+    .abort("some (", id, ", ", time, ") pairs appear more than once: each unit may appear once per ",
+           "period.")
   wide <- data.frame(id = unique(data[[id]]), stringsAsFactors = FALSE)
   for (lab in period_labels) {
     rows_t <- data[data[[time]] == all_periods[match(lab, period_labels)], , drop = FALSE]
@@ -492,27 +492,29 @@ rd_compstable <- function(data, x, time, id, t_rd,
                           joint = c("supt", "swald", "wald"),
                           studentize = TRUE) {
   cl       <- match.call()
-  scheme   <- match.arg(scheme)
-  joint    <- match.arg(joint)
+  scheme   <- .match_arg(scheme)
+  joint    <- .match_arg(joint)
   .check_studentize(studentize, "rd_compstable")
-  bwselect <- match.arg(bwselect)
-  estimand <- match.arg(estimand)
-  kernel   <- match.arg(tolower(kernel), c("triangular", "epanechnikov", "uniform"))
+  bwselect <- .match_arg(bwselect)
+  estimand <- .match_arg(estimand)
+  kernel   <- .match_arg(tolower(kernel), c("triangular", "epanechnikov", "uniform"), "kernel")
   cutoff   <- c   # the cutoff; `c` stays the argument name for rdrobust users
 
   # ----- inputs and periods: the shared prepare step (input_checks.R) -----
+  if (missing(id)) .abort("`id` (the unit identifier) is required: the tests follow each unit ",
+                          "across periods.")
   if (missing(t_rd)) t_rd <- NULL
-  prep <- .prepare_input(data, "rd_compstable", x = x, time = time, id = id, t_rd = t_rd,
-                         comparisons = comparisons, restrict = TRUE)
+  prep <- .prepare_input(data, "rd_compstable()", x = x, time = time, id = id, t_rd = t_rd,
+                         comparisons = comparisons)
   data <- prep$data; t_rd <- prep$t_rd; comparisons <- prep$comparisons
   c_orig <- cutoff
   if (estimand == "atu") {
     if (any(data[[x]] == cutoff, na.rm = TRUE))
-      stop("estimand = \"atu\": ", sum(data[[x]] == cutoff, na.rm = TRUE),
-           " observation(s) have x == c. Units at the cutoff are treated in the original ",
-           "design but cannot be placed on the treated side of the mirrored design; ",
-           "set the cutoff between support points (e.g. c = 4999.5 for integer populations) ",
-           "so that no unit sits on it.")
+      .abort("estimand = \"atu\": ", sum(data[[x]] == cutoff, na.rm = TRUE),
+             " observation(s) have x == c. Units at the cutoff are treated in the original ",
+             "design but cannot be placed on the treated side of the mirrored design; ",
+             "set the cutoff between support points (e.g. c = 4999.5 for integer populations) ",
+             "so that no unit sits on it.")
     # mirror x around the cutoff: the units below it are now the ones above the cutoff 0
     data[[x]] <- cutoff - data[[x]]
     cutoff    <- 0
@@ -532,8 +534,8 @@ rd_compstable <- function(data, x, time, id, t_rd,
     pair_key <- paste0(as.character(t_rd), "::", as.character(t0))
     refl     <- .compstable_reflect(wide, t_rd, t0, period_labels, cutoff)
     if (refl$n_trd < 3L || refl$n_t0 < 3L) {
-      warning("rd_compstable: pair ", pair_key,
-              " has too few above-cutoff observations; skipping.")
+      .warn("pair ", pair_key,
+            " has too few above-cutoff observations; skipping.")
       next
     }
     pairs_out[[pair_key]] <- .compstable_pair_test(refl, scheme, kernel, h, bwselect, bc, joint,

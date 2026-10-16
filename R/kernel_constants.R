@@ -78,7 +78,7 @@
 ## numeric 1/2; a pasted Unicode minus (U+2212) maps to "-".
 .kc_side_idx <- function(side) {
   if (is.numeric(side)) {
-    if (!all(side %in% c(1, 2))) stop("numeric side must be 1 (\"+\") or 2 (\"-\")")
+    if (!all(side %in% c(1, 2))) .abort("numeric side must be 1 (\"+\") or 2 (\"-\")")
     return(as.integer(side))
   }
   s   <- as.character(side)
@@ -89,7 +89,7 @@
     out[bad] <- ifelse(vapply(s[bad], function(z) identical(charToRaw(z), mn),
                               logical(1)), 2L, NA_integer_)
   }
-  if (anyNA(out)) stop("side must be \"+\" or \"-\", got: ", paste(s, collapse = ", "))
+  if (anyNA(out)) .abort("side must be \"+\" or \"-\", got: ", paste(s, collapse = ", "))
   out
 }
 
@@ -134,7 +134,7 @@
   o <- order(nodes)
   out <- list(x = nodes[o], w = wts[o])
   if (abs(sum(out$w) - 2) > 1e-10)
-    stop("Gauss-Legendre weights do not sum to 2 (n = ", n, ")")
+    .abort("Gauss-Legendre weights do not sum to 2 (n = ", n, ")")
   .kc_gl_cache[[key]] <- out
   out
 }

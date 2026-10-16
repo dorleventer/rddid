@@ -48,9 +48,9 @@ dgp_b <- function(n = 4000, d = 0, alpha = c(1, 1), kappa = 0, sort_p = 0, sort_
   }))
 }
 
-fit <- function(dat, weights = "constant", bwselect = "cct", scheme = "auto", ...) {
+fit <- function(dat, trend = "constant", bwselect = "cct", scheme = "auto", ...) {
   r <- rddid(dat, y = "Y", x = "R", time = "t", id = "id", t_rd = max(dat$t),
-             weights = weights, bwselect = bwselect, scheme = scheme, ...)
+             trend = trend, bwselect = bwselect, scheme = scheme, ...)
   e <- r$estimates
   c(est = e["Conventional", "est"], se = e["Conventional", "se"],
     est_bc = e["Robust", "est"], se_bc = e["Robust", "se"], scheme = r$scheme)
@@ -59,15 +59,15 @@ fit <- function(dat, weights = "constant", bwselect = "cct", scheme = "auto", ..
 cat("=========== DGP-A ===========\n")
 tic(); a1 <- dgp_a(); f <- fit(a1); toc("rddid cct pc")
 cat("A const, constant w:", round(as.numeric(f[1:4]), 3), f[5], " (truth 1)\n")
-f <- fit(a1, weights = "linear"); cat("A const, linear w  :", round(as.numeric(f[1:4]), 3), "\n")
+f <- fit(a1, trend = "linear"); cat("A const, linear w  :", round(as.numeric(f[1:4]), 3), "\n")
 a2 <- dgp_a(alpha = 0.5 + 0.5 * (1:3))
 f <- fit(a2); cat("A lin, constant w  :", round(as.numeric(f[1:4]), 3), " (bias truth 0.75)\n")
-f <- fit(a2, weights = "linear"); cat("A lin, linear w    :", round(as.numeric(f[1:4]), 3), " (truth 1)\n")
+f <- fit(a2, trend = "linear"); cat("A lin, linear w    :", round(as.numeric(f[1:4]), 3), " (truth 1)\n")
 # per-period table
 for (t in 1:3) { d <- a1[a1$t == t, ]; bw <- rd_bw_cct(d$Y, d$R); p <- rd_period(d$Y, d$R, h = bw["h"], b = bw["b"], id = d$id)
   cat(sprintf("  t=%d D=%.3f (%.3f) Dbc=%.3f (%.3f) h=%.3f n=%d\n", t, p$D, sqrt(p$V_D), p$D_bc, sqrt(p$V_D_bc), p$h, p$n)) }
 # 20 seeds
-res <- t(sapply(1:20, function(s) c(as.numeric(fit(dgp_a(seed = s))[1:2]), as.numeric(fit(dgp_a(alpha = 0.5 + 0.5*(1:3), seed = s), weights = "linear")[1:2]))))
+res <- t(sapply(1:20, function(s) c(as.numeric(fit(dgp_a(seed = s))[1:2]), as.numeric(fit(dgp_a(alpha = 0.5 + 0.5*(1:3), seed = s), trend = "linear")[1:2]))))
 cat("A 20 seeds: const mean est", round(mean(res[,1]),3), "sd", round(sd(res[,1]),3), "mean se", round(mean(res[,2]),3),
     "| linear mean est", round(mean(res[,3]),3), "sd", round(sd(res[,3]),3), "mean se", round(mean(res[,4]),3), "\n")
 
@@ -104,7 +104,7 @@ tests <- function(dat, t_rd = 2) {
   tc <- rd_typecont(dat, x = "R", time = "t", id = "id", bwselect = "cct", S = 199L, bc = FALSE)
   cs <- rd_compstable(dat, x = "R", time = "t", id = "id", t_rd = t_rd, comparisons = comps, bwselect = "cct", S = 199L, bc = FALSE)
   hg <- rd_homog(dat, y = "Y", x = "R", time = "t", id = "id", comparisons = comps, t_rd = t_rd, bwselect = "cct", type_by = "rd_side", bc = FALSE)
-  tr <- if (length(comps) >= 2) rd_trendcell(dat, y = "Y", x = "R", time = "t", id = "id", comparisons = comps, t_rd = t_rd, bwselect = "cct", type_by = "rd_side", bc = FALSE)$p_value else NA
+  tr <- if (length(comps) >= 2) rd_trendcell(dat, y = "Y", x = "R", time = "t", id = "id", comparisons = comps, t_rd = t_rd, bwselect = "cct", bc = FALSE)$p_value else NA
   f <- fit(dat)
   c(typecont = tc$ll_wald$p, compstable = cs$pairs[[1]]$ll_wald$p, homog = hg$p_value, trendcell = tr, bias = as.numeric(f["est"]) - 1, se = as.numeric(f["se"]))
 }
@@ -115,4 +115,4 @@ for (nm in names(scen)) { tic(); r1 <- do.call(tests, list(dat = do.call(dgp_b, 
   rr <- t(sapply(2:21, function(s) do.call(tests, list(dat = do.call(dgp_b, c(scen[[nm]], seed = s)), t_rd = if (!is.null(scen[[nm]]$periods)) 3 else 2))))
   cat(sprintf("   20 seeds: rej@5%%  typecont %.2f compstable %.2f homog %.2f trendcell %.2f | bias mean %.3f sd %.3f mean se %.3f\n",
               mean(rr[,1] < .05), mean(rr[,2] < .05), mean(rr[,3] < .05), mean(rr[,4] < .05, na.rm = TRUE), mean(rr[,5]), sd(rr[,5]), mean(rr[,6]))) }
-if (TRUE) { d4 <- dgp_b(periods = 3, gamma = 0.3); f <- fit(d4, weights = "linear"); cat("S4 linear weights est:", round(as.numeric(f[1:2]), 3), "(truth 1)\n") }
+if (TRUE) { d4 <- dgp_b(periods = 3, gamma = 0.3); f <- fit(d4, trend = "linear"); cat("S4 linear weights est:", round(as.numeric(f[1:2]), 3), "(truth 1)\n") }

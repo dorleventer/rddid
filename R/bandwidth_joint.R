@@ -63,8 +63,8 @@
     pilot_bws <- .bw_cct(plist, c = cutoff, p = p, q = q, kernel = kernel)
   missing_k <- setdiff(keys, names(pilot_bws))
   if (length(missing_k) > 0L)
-    stop("`pilot_bws` is missing entries for period(s): ",
-         paste(missing_k, collapse = ", "), ".")
+    .abort("`pilot_bws` is missing entries for period(s): ",
+           paste(missing_k, collapse = ", "), ".")
 
   # one pilot fit per period at its own CCT pair; rd_period() returns the plug-in constants
   # B-hat_t (bias, via the conventional / bias-corrected gap) and V-hat_t (variance)
@@ -104,8 +104,8 @@
       }
     }
     if (all(kappa_plus == 0) && all(kappa_minus == 0))
-      warning("scheme = \"pc\" but no unit is active in two periods' windows: ",
-              "the cross-period term is identically zero (same as scheme = \"cs\").")
+      .warn("scheme = \"pc\" but no unit is active in two periods' windows: ",
+            "the cross-period term is identically zero (same as scheme = \"cs\").")
   }
   list(keys = keys, coef = period_coef, bias_const = bias_const, var_const = var_const,
        n_obs = n_obs, var_bias_const = var_bias_const, h_pilot = h_pilot, ratio = ratio,
@@ -183,19 +183,19 @@
   denom <- B_agg^2 + reg
 
   if (!is.finite(denom) || denom <= 0)
-    stop("aggregate bias constant B is ~0 and regularization is off: the ",
-         "AMSE-optimal bandwidth diverges. Use bwselect = \"cct\" or pass h.")
+    .abort("aggregate bias constant B is ~0 and regularization is off: the ",
+           "AMSE-optimal bandwidth diverges. Use bwselect = \"cct\" or pass h.")
   if (!is.finite(Veff) || Veff <= 0)
-    stop("aggregate variance scale is not positive; check the sampling scheme and ",
-         "the per-period fits.")
+    .abort("aggregate variance scale is not positive; check the sampling scheme and ",
+           "the per-period fits.")
   # the closed-form minimiser of the AMSE in h: for p = 1 the leading constant is 1 and the
   # exponent 1/5
   h_star <- (fp1^2 / (2 * (p + 1)) * Veff / denom)^(1 / (2 * p + 3))
   radius <- max(vapply(plist, function(d) max(abs(d$x - cutoff), na.rm = TRUE), numeric(1)))
   if (is.finite(radius) && h_star > radius)
-    warning("joint AMSE-optimal bandwidth h* = ", signif(h_star, 4),
-            " exceeds the running-variable radius ", signif(radius, 4),
-            " (the period biases nearly cancel); consider bwselect = \"cct\" or a fixed h.")
+    .warn("joint AMSE-optimal bandwidth h* = ", signif(h_star, 4),
+          " exceeds the running-variable radius ", signif(radius, 4),
+          " (the period biases nearly cancel); consider bwselect = \"cct\" or a fixed h.")
   b <- stats::setNames(h_star * const$ratio, const$keys)
   list(h = h_star, b = b, B = B_agg, Veff = Veff, reg = reg,
        pilot_bws = const$pilot_bws, constants = const)

@@ -228,8 +228,6 @@
 #'   bandwidth very large. Not used with a given `h` or `bwselect = "cct"`.
 #' @param reg_const the regularization constant: the multiple of the estimated
 #'   variance of the bias constants added to the squared bias (default 3).
-#' @param weights the old name of `trend`, still accepted with a message. It is
-#'   not a vector of observation weights; `rddid()` has none.
 #'
 #' @return An object of class `"rddid"`, a list with:
 #'   \describe{
@@ -329,20 +327,21 @@ rddid <- function(data, y, x, time, id = NULL, t_rd,
                   bwselect = c("joint", "cct"), h = NULL, b = NULL,
                   scheme = c("auto", "cs", "pc", "pv"),
                   c = 0, p = 1L, q = 2L, kernel = "triangular", level = 0.95,
-                  regularize = TRUE, reg_const = 3,
-                  weights = NULL) {
+                  regularize = TRUE, reg_const = 3) {
   cl       <- match.call()
-  bwselect <- match.arg(bwselect)
-  scheme   <- match.arg(scheme)
-  estimand <- match.arg(estimand)
-  weighting <- match.arg(weighting)
-  kernel   <- match.arg(tolower(kernel), c("triangular", "epanechnikov", "uniform"))
+  bwselect <- .match_arg(bwselect)
+  scheme   <- .match_arg(scheme)
+  estimand <- .match_arg(estimand)
+  weighting <- .match_arg(weighting)
+  kernel   <- .match_arg(tolower(kernel), c("triangular", "epanechnikov", "uniform"), "kernel")
   cutoff   <- c                            # `c` stays the argument name, as in rdrobust
-  if (!is.null(weights)) {                 # `weights` is the old name of `trend`
-    if (!missing(trend))
-      stop("supply either `trend` or its old name `weights`, not both.")
-    message("rddid(): `weights` is now called `trend`; the old name still works.")
-    trend <- weights
+  if (is.character(trend)) {
+    if (length(trend) == 1L && trend %in% c("ols", "min_variance"))
+      .abort("\"", trend, "\" is a value of `weighting`, not of `trend` (\"constant\" or ",
+             "\"linear\"); use weighting = \"", trend, "\".")
+    trend <- .match_arg(trend, c("constant", "linear"))
+  } else if (!is.numeric(trend)) {
+    .abort("`trend` must be \"constant\", \"linear\" or numeric weights.")
   }
 
   # ---- periods and data -------------------------------------------------------------------
@@ -351,19 +350,24 @@ rddid <- function(data, y, x, time, id = NULL, t_rd,
   if (is.null(id)) data$.rddid_row_id <- seq_len(nrow(data))
   if (missing(t_rd)) t_rd <- NULL
   prep <- .prepare_input(data, "rddid()", x = x, time = time, id = id, y = y, t_rd = t_rd,
-                         comparisons = comparisons, t_rd_scalar = FALSE, restrict = TRUE)
+                         comparisons = comparisons, t_rd_scalar = FALSE)
   data <- prep$data; t_rd <- prep$t_rd; comparisons <- prep$comparisons
   time_col <- data[[time]]
+  if (identical(trend, "linear") && !is.numeric(time_col))
+    .abort("trend = \"linear\" fits a line in the period values, so the period column `", time,
+           "` must be numeric (it is ", class(time_col)[1L], ").")
   if (!is.numeric(level) || length(level) != 1L || level <= 0 || level >= 1)
-    stop("`level` must be a single number strictly between 0 and 1 (e.g. 0.95).")
+    .abort("`level` must be a single number strictly between 0 and 1 (e.g. 0.95).")
   if (!is.null(b) && is.null(h))
-    stop("`b` is the pilot bandwidth that goes with a fixed `h`; supply `h` too, or neither.")
+    .abort("`b` is the pilot bandwidth that goes with a fixed `h`; supply `h` too, or neither.")
   if (!is.null(h) && (!is.numeric(h) || length(h) != 1L || !is.finite(h) || h <= 0))
-    stop("`h` must be a single positive number.")
+    .abort("`h` must be a single positive number.")
   if (is.null(id) && scheme == "auto")
     message("rddid(): no `id` given, so every row is treated as a different unit ",
             "(repeated cross-section standard errors).")
   periods <- c(t_rd, comparisons)          # the RD period first, then the comparisons
+  period_order <- as.character(if (is.factor(time_col)) intersect(levels(time_col), periods)
+                               else sort(periods))   # time order, for printouts and plots
   plist   <- .rddid_period_frames(data, y, x, id, time_col, periods)
 
   # ---- the estimator's coefficients: phi_t on each RD period (1 for a single one), minus the
@@ -374,19 +378,19 @@ rddid <- function(data, y, x, time, id = NULL, t_rd,
   period_coef  <- c(rd_w, -comp_weights)
   if (weighting == "min_variance") {
     if (is.numeric(trend))
-      stop("`weighting = \"min_variance\"` chooses the comparison weights and a numeric `trend` ",
-           "fixes them; use one or the other.", call. = FALSE)
+      .abort("`weighting = \"min_variance\"` chooses the comparison weights and a numeric `trend` ",
+             "fixes them; use one or the other.")
     if (length(t_rd) > 1L)
-      stop("`weighting = \"min_variance\"` is available for a single RD period; with several ",
-           "RD periods use the default `weighting = \"ols\"`.", call. = FALSE)
+      .abort("`weighting = \"min_variance\"` is available for a single RD period; with several ",
+             "RD periods use the default `weighting = \"ols\"`.")
   }
 
   # ---- sampling scheme (sets the standard error and, for the joint rules, the bandwidth) --
   detected   <- .detect_scheme(plist, c = cutoff)
   use_scheme <- if (scheme == "auto") detected else scheme
   if (scheme %in% c("pc", "pv") && detected == "cs")
-    warning("scheme = \"", scheme, "\" requested but no unit id repeats across periods; ",
-            "all cross-period covariances are zero, so the reported SE equals the CS one.")
+    .warn("scheme = \"", scheme, "\" requested but no unit id repeats across periods; ",
+          "all cross-period covariances are zero, so the reported SE equals the CS one.")
   else if (scheme != "auto" && scheme != detected)
     message("rddid(): scheme = \"", scheme, "\" as requested; the data look like \"", detected,
             "\" (", .scheme_label(detected), ").")
@@ -408,7 +412,7 @@ rddid <- function(data, y, x, time, id = NULL, t_rd,
   if (weighting == "min_variance") {
     # the unscaled weights of the single RD period (setNames: [1, ] drops the names of a 1 x 1 matrix)
     w_pilot <- stats::setNames(as.numeric(weights_by_target[1, ]), colnames(weights_by_target))
-    trend_type <- match.arg(trend, c("constant", "linear"))
+    trend_type <- trend
     mv    <- .mv_weights(fits, comparisons, t_rd, trend_type, use_scheme, w_pilot)
     # the bias-corrected estimate minimizes its own (robust) variance, from the same fits
     mv_bc <- .mv_weights(fits, comparisons, t_rd, trend_type, use_scheme, w_pilot, bc = TRUE)
@@ -435,9 +439,9 @@ rddid <- function(data, y, x, time, id = NULL, t_rd,
     estimates = .rddid_estimate_table(agg_conv, agg_bc, use_scheme, level),
     coef = period_coef, weights = comp_weights,
     rd_weights = rd_w, weights_by_target = weights_by_target, coef_bc = period_coef_bc,
-    weights_type = if (is.numeric(trend)) "custom" else match.arg(trend, c("constant", "linear")),
+    weights_type = if (is.numeric(trend)) "custom" else trend,
     estimand = estimand,
-    t_rd = t_rd, comparisons = comparisons,
+    t_rd = t_rd, comparisons = comparisons, period_order = period_order,
     scheme = use_scheme, scheme_detected = detected, scheme_requested = scheme,
     bandwidth = bw$info, fits = fits, level = level,
     p = p, q = q, kernel = kernel, c = cutoff,
@@ -525,22 +529,29 @@ rddid <- function(data, y, x, time, id = NULL, t_rd,
 #' @export
 print.rddid <- function(x, digits = 4, hint = TRUE, ...) {
   est <- if (is.null(x$estimand)) "att" else x$estimand
-  fmt_w <- function(w) paste(trimws(formatC(w, digits = 3, format = "g")), collapse = ", ")
+  # weights as "period: weight", three decimals
+  fmt_w <- function(w) {
+    v <- formatC(unname(w), digits = 3, format = "f")
+    paste(if (is.null(names(w))) v else paste0(names(w), ": ", v), collapse = ", ")
+  }
   several <- length(x$t_rd) > 1L
   if (several)
-    cat(sprintf("RD-DID estimate of the %s %s RD periods %s (weights %s)\n", toupper(est),
+    cat(sprintf("RD-DID estimate of the %s %s RD periods %s\n", toupper(est),
                 if (abs(sum(x$rd_weights) - 1) < 1e-8) "averaged over" else "weighted sum over",
-                paste(x$t_rd, collapse = ", "), fmt_w(x$rd_weights)))
+                paste(x$t_rd, collapse = ", ")),
+        sprintf("  RD-period weights: %s\n", fmt_w(x$rd_weights)), sep = "")
   else
     cat(sprintf("RD-DID estimate of the %s in period %s\n", toupper(est), x$t_rd))
-  cat(sprintf("  Comparison periods: %s   (%s; %s %s)\n",
-              paste(x$comparisons, collapse = ", "), .trend_label(x$weights_type),
-              if (identical(x$weighting, "min_variance")) "minimum-variance weights"
-              else if (several) "aggregated weights" else "weights",
-              paste0(fmt_w(x$weights),
-                     if (!is.null(x$weights_detail$weights_bc) &&
-                         !isTRUE(all.equal(x$weights_detail$weights_bc, x$weights)))
-                       paste0("; bias-corrected: ", fmt_w(x$weights_detail$weights_bc)) else "")))
+  cat(sprintf("  Comparison periods: %s   (%s)\n", paste(x$comparisons, collapse = ", "),
+              .trend_label(x$weights_type)))
+  w_bc <- x$weights_detail$weights_bc
+  own_bc <- !is.null(w_bc) && !isTRUE(all.equal(unname(w_bc), unname(x$weights)))
+  cat(sprintf("  Comparison weights%s: %s%s\n",
+              if (identical(x$weighting, "min_variance")) " (minimum variance)"
+              else if (several) " (summed over the RD periods)" else "",
+              fmt_w(x$weights),
+              if (own_bc) paste0("; Robust row: ", fmt_w(stats::setNames(w_bc, names(x$weights))))
+              else ""))
   cat(sprintf("  Sampling scheme: %s%s\n", .scheme_label(x$scheme),
               if (identical(x$scheme_requested, "auto")) " (detected)" else ""))
   cat(sprintf("  Bandwidth: %s\n\n", .bandwidth_label(x$bandwidth)))

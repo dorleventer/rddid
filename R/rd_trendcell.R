@@ -7,25 +7,9 @@
 
 #' Each unit's type, named by unit id, fixed across the comparison periods.
 #' @noRd
-.trendcell_cell_map <- function(types, type_by, t_rd, comparisons) {
-  if (type_by == "rd_side") {
-    if (is.null(t_rd))
-      stop("type_by = \"rd_side\" requires `t_rd` (the RD period whose side defines the cell).")
-    side_col <- paste0("side_", t_rd)
-    if (!side_col %in% names(types$wide))
-      stop("RD period '", t_rd, "' has no side column in the data; cannot define rd_side cells.")
-    cell_map <- stats::setNames(types$wide[[side_col]], as.character(types$wide$id))
-  } else {
-    # the types as seen from ONE period, so that they do not change across the comparison
-    # periods: from t_rd (the sides in all other periods), else from the first comparison period
-    ref_tp <- if (!is.null(t_rd) && as.character(t_rd) %in% names(types$period_types))
-      as.character(t_rd)
-    else
-      as.character(comparisons[1L])
-    ref_types <- types$period_types[[ref_tp]]
-    cell_map  <- stats::setNames(ref_types$type, as.character(ref_types$id))
-  }
-  cell_map
+.trendcell_cell_map <- function(types, t_rd) {
+  side_col <- paste0("side_", t_rd)       # a unit's type: its side of the cutoff in the RD period
+  stats::setNames(types$wide[[side_col]], as.character(types$wide$id))
 }
 
 
@@ -134,7 +118,7 @@
     tv <- suppressWarnings(as.numeric(vapply(cell_keys, function(key) all_meta[[key]]$period,
                                              character(1))))
     if (anyNA(tv))
-      stop("rd_trendcell: trend = \"linear\" needs numeric period values.")
+      .abort("trend = \"linear\" needs numeric period values.")
     C_k <- matrix(0, nrow = n_contrasts_k, ncol = m_k)
     for (i in seq_len(n_contrasts_k)) {
       t0 <- tv[i]; t1 <- tv[i + 1L]; t2 <- tv[i + 2L]
@@ -243,7 +227,7 @@
 #' @noRd
 .trendcell_untestable <- function(jump_df, use_scheme, scheme, bc, estimand, trend, comparisons, cl,
                                   t_rd = NULL) {
-  message("rd_trendcell: linear trend is not testable -- no cell has ",
+  message("rd_trendcell(): linear trend is not testable -- no cell has ",
           "3 or more comparison periods (degrees of freedom = 0). ",
           "Returning an object with df = 0, statistic = NA, p_value = NA.")
   structure(
@@ -312,11 +296,8 @@
 #'
 #' ## Options
 #'
-#' `type_by = "rd_side"` (default) types each unit by its side of the cutoff in
-#' the RD period, so `t_rd` is required; units not observed in the RD period
-#' are left out. `type_by = "pattern"` types units by their sides in all
-#' periods in `data` other than the RD period (other than the first comparison
-#' period if `t_rd` is `NULL`). A (type, period) cell with fewer than `min_n`
+#' A unit's type is its side of the cutoff in the RD period; units not
+#' observed in the RD period are left out. A (type, period) cell with fewer than `min_n`
 #' observations on either side of the cutoff is dropped, and a message lists
 #' the dropped cells. `bc = TRUE` (default) tests the bias-corrected jumps with
 #' their robust variance, as in the `Robust` row of [rddid()]; `bc = FALSE`
@@ -328,17 +309,17 @@
 #'
 #' ## Bandwidth
 #'
-#' `bwselect = "common"` (default) uses one bandwidth, as main and pilot
+#' `bwselect = "pooled"` (default) uses one bandwidth, as main and pilot
 #' bandwidth, in every cell: the CCT MSE-optimal bandwidth of the outcome on
 #' the running variable, chosen once on all comparison periods pooled (every
 #' unit, every type). A bandwidth chosen on each cell's own data (`"cct"`) is
 #' noisier, and the variance formula treats it as fixed, so the cell variances
 #' come out about 10-15% too small and the test rejects a true null too often:
 #' about 8% at the 5% level with two comparison periods at n = 1,000, against
-#' 6% with the common bandwidth, in the package authors' simulations. The
-#' common bandwidth costs some power against a violation confined to one cell
+#' 6% with the pooled bandwidth, in the package authors' simulations. The
+#' pooled bandwidth costs some power against a violation confined to one cell
 #' (about 8 points there), because a per-cell bandwidth adapts to the cell that
-#' moves. The common bandwidth is reported in `bandwidth` and in the printout.
+#' moves. The pooled bandwidth is reported in `bandwidth` and in the printout.
 #'
 #' ## ATU designs
 #'
@@ -354,12 +335,11 @@
 #'   outcome still gives its unit's side of the cutoff and is left out of the fits.
 #' @param id name of the unit-identifier column (a string). Required: types are
 #'   read across periods.
-#' @param t_rd the RD period. Required with `type_by = "rd_side"` (the
-#'   default), where a unit's side of the cutoff in the RD period is its type.
-#'   The test does not use the RD period's outcomes.
+#' @param t_rd the RD period (required): a unit's side of the cutoff in the RD
+#'   period is its type. The test does not use the RD period's outcomes.
 #' @param comparisons the comparison periods in which the test runs, taken in
-#'   time order. `NULL` (default) uses every period other than `t_rd` (every
-#'   period if `t_rd` is `NULL`).
+#'   time order. `NULL` (default) uses every period other than `t_rd`. The
+#'   constant trend needs at least 2 comparison periods, the linear trend 3.
 #' @param estimand `"att"` (default) or `"atu"`, as in [rddid()]. Label only:
 #'   the test is the same either way.
 #' @param trend the trend assumption tested within each type: `"constant"`
@@ -371,7 +351,7 @@
 #'   unequally spaced comparison periods are handled.
 #' @param h a bandwidth to use, as both main and pilot bandwidth, in every cell.
 #'   If given, `bwselect` is ignored.
-#' @param bwselect the bandwidth rule when `h` is not given: `"common"`
+#' @param bwselect the bandwidth rule when `h` is not given: `"pooled"`
 #'   (default; one bandwidth for every cell, the CCT bandwidth of the outcome on
 #'   the running variable with all comparison periods pooled), `"cct"` (each
 #'   cell's own CCT bandwidths from [rd_bw_cct()]) or `"rot"` (the rule of thumb
@@ -387,10 +367,6 @@
 #' @param bc logical. `TRUE` (default): test the bias-corrected jumps with their
 #'   robust variance, as in the `Robust` row of [rddid()]; `FALSE`: the
 #'   conventional jumps and variances.
-#' @param type_by how types are defined: `"rd_side"` (default; the unit's side
-#'   of the cutoff in the RD period, which needs `t_rd`) or `"pattern"` (its
-#'   sides in all periods other than the RD period). Either way the type is
-#'   fixed across the comparison periods.
 #' @param p,q orders of the local polynomials in every cell, for the point
 #'   estimate and the bias correction (defaults 1 and 2; `q` must exceed `p`).
 #'   The per-cell CCT bandwidths are chosen for the order-`p` fit.
@@ -404,7 +380,7 @@
 #'       no type has jumps in three comparison periods.}
 #'     \item{`scheme`}{the sampling scheme used.}
 #'     \item{`estimand`}{`"att"` or `"atu"`, as passed.}
-#'     \item{`bandwidth`}{a list with `method` (`"common"`, `"cct"`, `"rot"` or
+#'     \item{`bandwidth`}{a list with `method` (`"pooled"`, `"cct"`, `"rot"` or
 #'       `"fixed"` for a numeric `h`) and `h` (the bandwidth used in every cell,
 #'       `NA` when it varies by cell).}
 #'     \item{`call`}{the matched call.}
@@ -440,62 +416,64 @@
 #' # rddid_sim_pv: the running variable moves, so some units change side
 #' tr <- rd_trendcell(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 #' tr          # the Wald test, then each type's jump in each comparison period
-#' # one CCT bandwidth per cell instead of one common bandwidth
+#' # one CCT bandwidth per cell instead of one pooled bandwidth
 #' rd_trendcell(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, bwselect = "cct")
-#' # trend = "linear" needs three comparison periods; with two it is not testable
-#' rd_trendcell(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
-#'              trend = "linear")
 #' @export
 rd_trendcell <- function(data, y, x, time, id,
-                         t_rd = NULL, comparisons = NULL,
+                         t_rd, comparisons = NULL,
                          estimand = c("att", "atu"),
                          trend   = c("constant", "linear"),
                          c = 0, h = NULL,
-                         bwselect = c("common", "cct", "rot"),
+                         bwselect = c("pooled", "cct", "rot"),
                          kernel = "triangular",
                          scheme = c("auto", "cs", "pc", "pv"),
                          min_n = 10L,
                          bc = TRUE,
-                         type_by = c("rd_side", "pattern"),
                          p = 1L, q = 2L) {
   cl       <- match.call()
-  scheme   <- match.arg(scheme)
-  type_by  <- match.arg(type_by)
-  trend    <- match.arg(trend)
-  bwselect <- match.arg(bwselect)
+  scheme   <- .match_arg(scheme)
+  trend    <- .match_arg(trend)
+  bwselect <- .match_arg(bwselect)
   h_given  <- !is.null(h)
-  estimand <- match.arg(estimand)
-  kernel   <- match.arg(tolower(kernel), c("triangular", "epanechnikov", "uniform"))
+  estimand <- .match_arg(estimand)
+  kernel   <- .match_arg(tolower(kernel), c("triangular", "epanechnikov", "uniform"), "kernel")
   cutoff   <- c   # the cutoff; `c` stays the argument name for rdrobust users
 
   # ----- inputs and periods: the shared prepare step (input_checks.R) -----
   # a unit's type depends on its running variable only, so rows are dropped here for a missing
   # x, time or id; rows with a missing outcome are dropped from the fits once the types exist
-  prep <- .prepare_input(data, "rd_trendcell", x = x, time = time, id = id, y = y, t_rd = t_rd,
-                         comparisons = comparisons, t_rd_required = FALSE, restrict = TRUE,
+  if (missing(id)) .abort("`id` (the unit identifier) is required: the tests follow each unit ",
+                          "across periods.")
+  if (missing(t_rd)) t_rd <- NULL
+  prep <- .prepare_input(data, "rd_trendcell()", x = x, time = time, id = id, y = y, t_rd = t_rd,
+                         comparisons = comparisons,
                          complete_cols = c(x, time, id))
   data <- prep$data; t_rd <- prep$t_rd; comparisons <- prep$comparisons
   comparisons <- sort(comparisons)   # the contrasts below are in time order
+  n_needed <- if (trend == "constant") 2L else 3L
+  if (length(comparisons) < n_needed)
+    .abort("trend = \"", trend, "\" compares each type's jump across the comparison periods, ",
+           "so it needs at least ", n_needed, " of them; got ", length(comparisons), ".")
 
   types    <- .build_types(data, x = x, time = time, id = id, c = cutoff)
 
   .stop_if_no_switchers(types$wide, as.character(c(t_rd, comparisons)), "rd_trendcell")
-  if (type_by == "pattern")
-    stop("rd_trendcell: type_by = \"pattern\" is not defined here: a cell that is fixed across ",
-         "the comparison periods cannot use a comparison period's own side of the cutoff, so ",
-         "every cell would lie on one side only. Use the default type_by = \"rd_side\".")
-  cell_map <- .trendcell_cell_map(types, type_by, t_rd, comparisons)
+  cell_map <- .trendcell_cell_map(types, t_rd)
 
   na_y <- is.na(data[[y]])
   if (any(na_y)) {
-    message("rd_trendcell: ", sum(na_y), " row(s) with a missing `", y, "` dropped from the fits.")
+    message("rd_trendcell(): ", sum(na_y), " row(s) with a missing `", y, "` dropped from the fits.")
     data <- data[!na_y, , drop = FALSE]
+    empty <- setdiff(comparisons, data[[time]])
+    if (length(empty))
+      .abort("no row with an observed `", y, "` in comparison period(s) ",
+             paste(empty, collapse = ", "), ".")
   }
 
-  # "common" (default): one bandwidth for every cell, the CCT h of the outcome on the pooled
-  # comparison periods (.common_bandwidth()); "cct": each cell's own; "rot": rule of thumb
-  if (!h_given && bwselect == "common")
-    h <- .common_bandwidth(data, y, x, time, comparisons, cutoff, kernel, p)
+  # "pooled" (default): one bandwidth for every cell, the CCT h of the outcome on the pooled
+  # comparison periods (.pooled_bandwidth()); "cct": each cell's own; "rot": rule of thumb
+  if (!h_given && bwselect == "pooled")
+    h <- .pooled_bandwidth(data, y, x, time, comparisons, cutoff, kernel, p)
   bandwidth <- list(method = if (h_given) "fixed" else bwselect,
                     h      = if (is.null(h)) NA_real_ else unname(h))
 
@@ -510,7 +488,7 @@ rd_trendcell <- function(data, y, x, time, id,
   jump_df   <- .trendcell_jump_table(stacked$jump_rows)
 
   if (length(cells$skipped))
-    message("rd_trendcell: skipped ", length(cells$skipped), " cell(s) with fewer than min_n = ",
+    message("rd_trendcell(): skipped ", length(cells$skipped), " cell(s) with fewer than min_n = ",
             min_n, " observations on a side or a failed fit: ",
             paste(cells$skipped, collapse = "; "))
 
@@ -520,18 +498,18 @@ rd_trendcell <- function(data, y, x, time, id,
         .trendcell_untestable(jump_df, use_scheme, scheme, bc, estimand, trend, comparisons, cl,
                               t_rd = t_rd),
         list(bandwidth = bandwidth)))
-    stop("rd_trendcell: no usable within-cell cross-period contrasts found; ",
-         "check data, bandwidth, min_n, or number of comparison periods.")
+    .abort("no usable within-cell cross-period contrasts found; ",
+           "check data, bandwidth, min_n, or number of comparison periods.")
   }
 
   # Sigma_all is built from estimated covariances and can be numerically indefinite, so the Wald
   # statistic uses only its positive eigen-directions (.wald_eigen(), assumption_tests_helpers.R)
   wald <- .wald_eigen(Delta_all, Sigma_all, scale = max(abs(data[[y]]), na.rm = TRUE))
   if (isTRUE(wald$degenerate))
-    stop("rd_trendcell: the covariance of the contrasts is zero to working precision (the ",
-         "outcome has no residual variation within the cells); the test is undefined.")
+    .abort("the covariance of the contrasts is zero to working precision (the ",
+           "outcome has no residual variation within the cells); the test is undefined.")
   if (wald$df == 0L)
-    stop("rd_trendcell: estimated covariance matrix is numerically zero.")
+    .abort("estimated covariance matrix is numerically zero.")
 
   structure(
     list(statistic         = wald$stat,
@@ -559,11 +537,12 @@ print.rd_trendcell <- function(x, ...) {
     "within each type, the confounding jump moves linearly across the comparison periods"
   else
     "within each type, the confounding jump is the same in every comparison period"
-  .print_test_header("a constant within-type confounding discontinuity", "rd_trendcell",
+  .print_test_header(paste(x$trend, "within-type confounding"), "rd_trendcell",
                      null_text, x$scheme, identical(x$scheme_requested, "auto"), x$estimand)
   cat(sprintf("  Comparison periods: %s   Trend: %s%s\n\n", paste(.period_order(as.character(x$comparisons)), collapse = ", "),
               x$trend, if (is.null(x$bandwidth)) "" else
                 sprintf("\n  Bandwidth: %s", .bw_label_test(x$bandwidth$h, x$bandwidth$method))))
+  cat(sprintf("  Type: a unit's side of the cutoff in RD period %s (\"+\" at or above, \"-\" below).\n", x$t_rd))
   .print_wald(x$statistic, x$df, x$p_value, label = "Wald")
   if (is.na(x$statistic))
     cat("    (a linear within-type trend needs at least 3 comparison periods to be testable)\n")

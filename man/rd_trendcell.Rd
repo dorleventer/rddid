@@ -10,18 +10,17 @@ rd_trendcell(
   x,
   time,
   id,
-  t_rd = NULL,
+  t_rd,
   comparisons = NULL,
   estimand = c("att", "atu"),
   trend = c("constant", "linear"),
   c = 0,
   h = NULL,
-  bwselect = c("common", "cct", "rot"),
+  bwselect = c("pooled", "cct", "rot"),
   kernel = "triangular",
   scheme = c("auto", "cs", "pc", "pv"),
   min_n = 10L,
   bc = TRUE,
-  type_by = c("rd_side", "pattern"),
   p = 1L,
   q = 2L
 )
@@ -51,13 +50,12 @@ the order a numeric \code{trend} follows.}
 \item{id}{name of the unit-identifier column (a string). Required: types are
 read across periods.}
 
-\item{t_rd}{the RD period. Required with \code{type_by = "rd_side"} (the
-default), where a unit's side of the cutoff in the RD period is its type.
-The test does not use the RD period's outcomes.}
+\item{t_rd}{the RD period (required): a unit's side of the cutoff in the RD
+period is its type. The test does not use the RD period's outcomes.}
 
 \item{comparisons}{the comparison periods in which the test runs, taken in
-time order. \code{NULL} (default) uses every period other than \code{t_rd} (every
-period if \code{t_rd} is \code{NULL}).}
+time order. \code{NULL} (default) uses every period other than \code{t_rd}. The
+constant trend needs at least 2 comparison periods, the linear trend 3.}
 
 \item{estimand}{\code{"att"} (default) or \code{"atu"}, as in \code{\link[=rddid]{rddid()}}. Label only:
 the test is the same either way.}
@@ -75,7 +73,7 @@ unequally spaced comparison periods are handled.}
 \item{h}{a bandwidth to use, as both main and pilot bandwidth, in every cell.
 If given, \code{bwselect} is ignored.}
 
-\item{bwselect}{the bandwidth rule when \code{h} is not given: \code{"common"}
+\item{bwselect}{the bandwidth rule when \code{h} is not given: \code{"pooled"}
 (default; one bandwidth for every cell, the CCT bandwidth of the outcome on
 the running variable with all comparison periods pooled), \code{"cct"} (each
 cell's own CCT bandwidths from \code{\link[=rd_bw_cct]{rd_bw_cct()}}) or \code{"rot"} (the rule of thumb
@@ -98,11 +96,6 @@ are dropped, with a message listing them.}
 robust variance, as in the \code{Robust} row of \code{\link[=rddid]{rddid()}}; \code{FALSE}: the
 conventional jumps and variances.}
 
-\item{type_by}{how types are defined: \code{"rd_side"} (default; the unit's side
-of the cutoff in the RD period, which needs \code{t_rd}) or \code{"pattern"} (its
-sides in all periods other than the RD period). Either way the type is
-fixed across the comparison periods.}
-
 \item{p, q}{orders of the local polynomials in every cell, for the point
 estimate and the bias correction (defaults 1 and 2; \code{q} must exceed \code{p}).
 The per-cell CCT bandwidths are chosen for the order-\code{p} fit.}
@@ -116,7 +109,7 @@ its chi-squared p-value; \code{NA}, \code{0}, \code{NA} when \code{trend = "line
 no type has jumps in three comparison periods.}
 \item{\code{scheme}}{the sampling scheme used.}
 \item{\code{estimand}}{\code{"att"} or \code{"atu"}, as passed.}
-\item{\code{bandwidth}}{a list with \code{method} (\code{"common"}, \code{"cct"}, \code{"rot"} or
+\item{\code{bandwidth}}{a list with \code{method} (\code{"pooled"}, \code{"cct"}, \code{"rot"} or
 \code{"fixed"} for a numeric \code{h}) and \code{h} (the bandwidth used in every cell,
 \code{NA} when it varies by cell).}
 \item{\code{call}}{the matched call.}
@@ -183,11 +176,8 @@ periods, by the rule of \code{\link[=rddid]{rddid()}}.
 
 \subsection{Options}{
 
-\code{type_by = "rd_side"} (default) types each unit by its side of the cutoff in
-the RD period, so \code{t_rd} is required; units not observed in the RD period
-are left out. \code{type_by = "pattern"} types units by their sides in all
-periods in \code{data} other than the RD period (other than the first comparison
-period if \code{t_rd} is \code{NULL}). A (type, period) cell with fewer than \code{min_n}
+A unit's type is its side of the cutoff in the RD period; units not
+observed in the RD period are left out. A (type, period) cell with fewer than \code{min_n}
 observations on either side of the cutoff is dropped, and a message lists
 the dropped cells. \code{bc = TRUE} (default) tests the bias-corrected jumps with
 their robust variance, as in the \code{Robust} row of \code{\link[=rddid]{rddid()}}; \code{bc = FALSE}
@@ -200,17 +190,17 @@ cell. A numeric \code{h} is used as both bandwidths in every cell.
 
 \subsection{Bandwidth}{
 
-\code{bwselect = "common"} (default) uses one bandwidth, as main and pilot
+\code{bwselect = "pooled"} (default) uses one bandwidth, as main and pilot
 bandwidth, in every cell: the CCT MSE-optimal bandwidth of the outcome on
 the running variable, chosen once on all comparison periods pooled (every
 unit, every type). A bandwidth chosen on each cell's own data (\code{"cct"}) is
 noisier, and the variance formula treats it as fixed, so the cell variances
 come out about 10-15\% too small and the test rejects a true null too often:
 about 8\% at the 5\% level with two comparison periods at n = 1,000, against
-6\% with the common bandwidth, in the package authors' simulations. The
-common bandwidth costs some power against a violation confined to one cell
+6\% with the pooled bandwidth, in the package authors' simulations. The
+pooled bandwidth costs some power against a violation confined to one cell
 (about 8 points there), because a per-cell bandwidth adapts to the cell that
-moves. The common bandwidth is reported in \code{bandwidth} and in the printout.
+moves. The pooled bandwidth is reported in \code{bandwidth} and in the printout.
 }
 
 \subsection{ATU designs}{
@@ -224,11 +214,8 @@ same, so \code{estimand} only labels the output.
 # rddid_sim_pv: the running variable moves, so some units change side
 tr <- rd_trendcell(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 tr          # the Wald test, then each type's jump in each comparison period
-# one CCT bandwidth per cell instead of one common bandwidth
+# one CCT bandwidth per cell instead of one pooled bandwidth
 rd_trendcell(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, bwselect = "cct")
-# trend = "linear" needs three comparison periods; with two it is not testable
-rd_trendcell(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
-             trend = "linear")
 }
 \references{
 Leventer, D. and D. Nevo (2024). \emph{Correcting Invalid Regression Discontinuity

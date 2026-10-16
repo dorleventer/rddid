@@ -20,12 +20,13 @@ test_that("every entry point gives the same message for the same input error, un
   for (fn in names(calls)) {
     f <- calls[[fn]]
     e <- caught(f(d, t_rd = 7))
-    expect_identical(conditionMessage(e), "`t_rd` = 7 is not a period in `year`.")
+    expect_identical(conditionMessage(e), "`t_rd` = 7 is not a period in `year` (its periods: 1, 2, 3).")
     expect_identical(as.character(conditionCall(e)[[1L]]), fn)
-    expect_error(f(d, t_rd = 3, comparisons = c(1, 9)), "^comparison period\\(s\\) not in `year`: 9$")
+    expect_error(f(d, t_rd = 3, comparisons = c(1, 9)),
+                 "comparison period(s) 9 not in `year` (its periods: 1, 2, 3).", fixed = TRUE)
     expect_error(f(d, t_rd = 3, comparisons = c(1, 1)), "contains a period more than once")
     expect_error(f(dup, t_rd = 3, comparisons = 1:2), "^2 row\\(s\\) repeat a \\(id, year\\) pair")
-    expect_error(f(chr, t_rd = 3), "running variable column 'R' must be numeric")
+    expect_error(f(chr, t_rd = 3), 'the running variable column `x` = "R" must be numeric', fixed = TRUE)
     expect_error(f(as.list(d), t_rd = 3), "`data` must be a data frame")
   }
 })
@@ -45,7 +46,7 @@ test_that("a period with no complete row is named", {
 
 test_that("rddid(): rows with a missing value are dropped, with a message", {
   na_y <- d; na_y$Y[c(5, 1500)] <- NA
-  expect_message(f_na <- calls$rddid(na_y, t_rd = 3), "2 row(s) with a missing value", fixed = TRUE)
+  expect_message(f_na <- calls$rddid(na_y, t_rd = 3), "2 row(s) with a missing `Y` dropped", fixed = TRUE)
   f_drop <- calls$rddid(d[-c(5, 1500), ], t_rd = 3)
   expect_equal(f_na$estimates, f_drop$estimates, tolerance = 0)
 })

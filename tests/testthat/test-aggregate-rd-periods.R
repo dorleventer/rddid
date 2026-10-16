@@ -113,14 +113,11 @@ test_that("linear trend: aggregated comparison weights are those of Corollary 1 
   expect_equal(f2$estimates, f$estimates, tolerance = 1e-10)
 })
 
-test_that("a single RD period is unchanged: rd_weights = 1 gives identical results", {
+test_that("a single RD period has weight 1 and takes no rd_weights", {
   d <- .agg_data("pc")
   a <- .fit(d, t_rd = 3, comparisons = .comps)
-  b <- .fit(d, t_rd = 3, comparisons = .comps, rd_weights = 1)
-  expect_identical(a$estimates, b$estimates)
-  expect_identical(a$coef, b$coef)
-  expect_identical(a$bandwidth, b$bandwidth)
   expect_equal(a$rd_weights, c(`3` = 1))
+  expect_error(.fit(d, t_rd = 3, comparisons = .comps, rd_weights = 2), "leave it out")
 })
 
 test_that("estimand = \"atu\" returns the same numbers for the aggregate", {
@@ -193,9 +190,9 @@ test_that("any finite rd_weights are allowed, without a warning; named weights a
 test_that("input errors", {
   d <- .agg_data("pc")
   expect_error(.fit(d, t_rd = c(3, 3), comparisons = .comps), "more than once")
-  expect_error(.fit(d, t_rd = c(2, 3), comparisons = .comps), "must not be one of the `comparisons`")
+  expect_error(.fit(d, t_rd = c(2, 3), comparisons = .comps), "period 2 is in both `t_rd` and `comparisons`", fixed = TRUE)
   expect_error(.fit(d, t_rd = c(3, 9), comparisons = .comps), "`t_rd` = 9 is not a period in `year`", fixed = TRUE)
-  expect_error(.fit(d, t_rd = .rd, comparisons = .comps, rd_weights = c(1, 2)), "one entry per RD period")
+  expect_error(.fit(d, t_rd = .rd, comparisons = .comps, rd_weights = c(1, 2)), "one per RD period in `t_rd` (3); got 2", fixed = TRUE)
   expect_error(.fit(d, t_rd = .rd, comparisons = .comps, rd_weights = c(1, NA, 2)), "finite")
   expect_error(.fit(d, t_rd = .rd, comparisons = .comps, rd_weights = c(`3` = 1, `4` = 1, `9` = 1)),
                "names of `rd_weights`")
@@ -216,23 +213,11 @@ test_that("methods: summary roles, glance, print and plot with several RD period
   expect_identical(g$t_rd, "3, 4, 5")
   out <- capture.output(print(f))
   expect_match(out[1], "averaged over RD periods 3, 4, 5", fixed = TRUE)
-  expect_match(out[2], "aggregated weights", fixed = TRUE)
+  expect_match(out[2], "RD-period weights: 3: 0.333, 4: 0.333, 5: 0.333", fixed = TRUE)
+  expect_match(out[4], "Comparison weights (summed over the RD periods)", fixed = TRUE)
   expect_identical(glance(.fit(d, t_rd = 3, comparisons = .comps, h = 0.4))$t_rd, 3)
   skip_if_not_installed("ggplot2")
   expect_s3_class(plot(f), "ggplot")
-})
-
-test_that("min_variance with one RD period scales exactly with rd_weights (pinned and not pinned)", {
-  r <- function(...) suppressMessages(rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id",
-                                            t_rd = 3, h = 0.3, weighting = "min_variance", ...))
-  for (comps in list(2, c(1, 2))) {                  # one comparison: pinned; two: not pinned
-    a1 <- r(comparisons = comps); a2 <- r(comparisons = comps, rd_weights = 2)
-    expect_equal(a2$weights_detail$pinned, length(comps) == 1L)
-    expect_equal(a2$coef, 2 * a1$coef, tolerance = 1e-12)
-    expect_equal(a2$estimates[, "est"], 2 * a1$estimates[, "est"], tolerance = 1e-12)
-    expect_equal(a2$weights_by_target, a1$weights_by_target, tolerance = 1e-12)
-    expect_equal(a2$weights_detail$pilot, a1$weights_detail$pilot, tolerance = 1e-12)
-  }
 })
 
 test_that("joint rule, PC, equal pilots: Veff / h0 = c' Sigma c with RD-RD covariances built by hand", {
