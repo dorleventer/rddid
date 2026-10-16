@@ -369,9 +369,9 @@ tc
 #>   Periods: 1, 2, 3   Types: ++, +-, -+, --   Bandwidth: CCT MSE-optimal, chosen per cell
 #> 
 #>   Joint sup-t (t critical values) max |t| = 1.232 over 9 jumps,  p = 0.869  (largest: period:type 1:+-)
-#>     Period 1: sup-t (t critical values) max |t| = 1.232 over 3 jumps,  p = 0.499
+#>     Period 1: sup-t (t critical values) max |t| = 1.232 over 3 jumps,  p = 0.500
 #>     Period 2: sup-t (t critical values) max |t| = 0.582 over 3 jumps,  p = 0.902
-#>     Period 3: sup-t (t critical values) max |t| = 1.048 over 3 jumps,  p = 0.631
+#>     Period 3: sup-t (t critical values) max |t| = 1.048 over 3 jumps,  p = 0.633
 #>   All joint statistics: x$joint_tests
 ```
 
@@ -497,7 +497,7 @@ One table for all four:
 
 do.call(rbind, lapply(list(tc, cs, hg, tr), tidy))
 #>                               test statistic df    p.value
-#> 1                  type continuity 1.2317753  9 0.86888131
+#> 1                  type continuity 1.2317753  9 0.86933131
 #> 2            composition stability 3.0857080  6 0.01639984
 #> 3          homogeneous confounding 0.2474976  2 0.88360178
 #> 4 constant within-type confounding 1.4453616  2 0.48544912

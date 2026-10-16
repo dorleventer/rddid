@@ -91,5 +91,5 @@ glance(fit)
 #> 1       ols
 tidy(rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3))
 #>              test statistic df   p.value                   method
-#> 1 type continuity  1.231775  9 0.8688813 sup-t, t critical values
+#> 1 type continuity  1.231775  9 0.8693313 sup-t, t critical values
 ```

@@ -327,17 +327,17 @@ tc          # the null, the joint sup-t test, then each period's own test
 #>   Periods: 1, 2, 3   Types: ++, +-, -+, --   Bandwidth: CCT MSE-optimal, chosen per cell
 #> 
 #>   Joint sup-t (t critical values) max |t| = 1.232 over 9 jumps,  p = 0.869  (largest: period:type 1:+-)
-#>     Period 1: sup-t (t critical values) max |t| = 1.232 over 3 jumps,  p = 0.499
+#>     Period 1: sup-t (t critical values) max |t| = 1.232 over 3 jumps,  p = 0.500
 #>     Period 2: sup-t (t critical values) max |t| = 0.582 over 3 jumps,  p = 0.902
-#>     Period 3: sup-t (t critical values) max |t| = 1.048 over 3 jumps,  p = 0.631
+#>     Period 3: sup-t (t critical values) max |t| = 1.048 over 3 jumps,  p = 0.633
 #>   All joint statistics: x$joint_tests
 tc$p_value
-#> [1] 0.8688813
+#> [1] 0.8693313
 tc$joint_tests   # every statistic side by side
 #>   method   reference statistic df   p_value
-#> 1   supt           t  1.231775  9 0.8688813
-#> 2   supt      normal  1.231775  9 0.8609214
-#> 3  swald           t  5.110313  9 0.7953520
+#> 1   supt           t  1.231775  9 0.8693313
+#> 2   supt      normal  1.231775  9 0.8621414
+#> 3  swald           t  5.110313  9 0.7955420
 #> 4  swald      normal  5.110313  9 0.7861821
 #> 5   wald chi-squared  4.781633  9 0.8529133
 # the chi-squared Wald, or sup-t with normal critical values:
@@ -358,8 +358,8 @@ rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3, studentiz
 #>   Sampling scheme: panel, some units change side of the cutoff (detected)
 #>   Periods: 1, 2, 3   Types: ++, +-, -+, --   Bandwidth: CCT MSE-optimal, chosen per cell
 #> 
-#>   Joint sup-t (normal critical values) max |t| = 1.232 over 9 jumps,  p = 0.861  (largest: period:type 1:+-)
-#>     Period 1: sup-t (normal critical values) max |t| = 1.232 over 3 jumps,  p = 0.490
+#>   Joint sup-t (normal critical values) max |t| = 1.232 over 9 jumps,  p = 0.862  (largest: period:type 1:+-)
+#>     Period 1: sup-t (normal critical values) max |t| = 1.232 over 3 jumps,  p = 0.491
 #>     Period 2: sup-t (normal critical values) max |t| = 0.582 over 3 jumps,  p = 0.900
 #>     Period 3: sup-t (normal critical values) max |t| = 1.048 over 3 jumps,  p = 0.628
 #>   All joint statistics: x$joint_tests

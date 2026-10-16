@@ -2,6 +2,28 @@
 
 ## rddid 0.4.0.9000 (development)
 
+### 2026-10-16: the tests use only the periods they are given
+
+- [`rd_compstable()`](https://dorleventer.github.io/rddid/reference/rd_compstable.md),
+  [`rd_homog()`](https://dorleventer.github.io/rddid/reference/rd_homog.md)
+  and
+  [`rd_trendcell()`](https://dorleventer.github.io/rddid/reference/rd_trendcell.md)
+  now use only the rows of `t_rd` and `comparisons`, as
+  [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md)
+  does. Before, they built each unit’s type from every period in `data`:
+  a unit missing from a period outside the test was dropped, and under
+  [`rd_compstable()`](https://dorleventer.github.io/rddid/reference/rd_compstable.md)
+  the unused periods split the units into finer types. With
+  `comparisons = NULL` (every period) nothing changes.
+  [`rd_typecont()`](https://dorleventer.github.io/rddid/reference/rd_typecont.md)
+  already did this.
+- Golden master: one cell changes,
+  `rd_compstable(t_rd = 3, comparisons = 2)` on three periods: 2 types
+  and 1 degree of freedom (before: 4 and 3, period 1 splitting the
+  types). The Grembi application calls (A7 to A10) are identical.
+- With a single contrast, the sup-t / sWald p-value no longer carries
+  the contrast’s name.
+
 ### 2026-10-15: one input step for `rddid()` and the four tests
 
 - [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md),
