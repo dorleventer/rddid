@@ -50,7 +50,9 @@ rddid(
 
   a data frame in long format, one row per unit and period: a repeated
   cross-section (different units in each period) or a panel (the same
-  units in several periods; it need not be balanced).
+  units in several periods; it need not be balanced). Only the rows of
+  `t_rd` and `comparisons` are used; among them, rows with a missing
+  outcome, running variable, period or id are dropped, with a message.
 
 - y:
 

@@ -2,6 +2,43 @@
 
 ## rddid 0.4.0.9000 (development)
 
+### 2026-10-15: one input step for `rddid()` and the four tests
+
+- [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md),
+  [`rd_typecont()`](https://dorleventer.github.io/rddid/reference/rd_typecont.md),
+  [`rd_compstable()`](https://dorleventer.github.io/rddid/reference/rd_compstable.md),
+  [`rd_homog()`](https://dorleventer.github.io/rddid/reference/rd_homog.md)
+  and
+  [`rd_trendcell()`](https://dorleventer.github.io/rddid/reference/rd_trendcell.md)
+  now check and prepare their input in one shared internal step, so the
+  same mistake gives the same message everywhere: `data` must be a data
+  frame, the running variable numeric (the outcome numeric or logical),
+  the period column numeric, character or factor; `t_rd` and
+  `comparisons` must be periods in the data, not overlap, and not
+  repeat; each unit may appear once per period; a factor `t_rd` or
+  `comparisons` is read as character. The four tests say that they take
+  one RD period, and `kernel` is not case sensitive in any of them.
+  Errors name the function in their header (`Error in rd_homog(...)`),
+  not in the message (before: an `rd_homog:` prefix in some).
+- Missing values are handled the same way everywhere: rows with a
+  missing value in a used column are dropped, with a message. Before,
+  [`rd_typecont()`](https://dorleventer.github.io/rddid/reference/rd_typecont.md)
+  and
+  [`rd_compstable()`](https://dorleventer.github.io/rddid/reference/rd_compstable.md)
+  dropped them without a message, and
+  [`rd_homog()`](https://dorleventer.github.io/rddid/reference/rd_homog.md)
+  and
+  [`rd_trendcell()`](https://dorleventer.github.io/rddid/reference/rd_trendcell.md)
+  kept them (a missing outcome counted toward `min_n` and a cell’s `n`).
+  In these two tests a row with a missing outcome still gives its unit’s
+  side of the cutoff and is left out of the fits only.
+- [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md)
+  checks for repeated (id, period) rows among the rows it uses (before:
+  in all periods of `data`), and names a period in which every row has a
+  missing value.
+- Results on data without missing values are unchanged (golden master:
+  every result identical).
+
 ### 2026-10-15: exact linear-trend weights with calendar years
 
 - `trend = "linear"`: the comparison weights are now computed with time

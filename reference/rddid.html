@@ -110,7 +110,9 @@ jumps from the RD-period jump. How the weights are set is the
 <dl><dt id="arg-data">data<a class="anchor" aria-label="anchor" href="#arg-data"></a></dt>
 <dd><p>a data frame in long format, one row per unit and period: a
 repeated cross-section (different units in each period) or a panel (the
-same units in several periods; it need not be balanced).</p></dd>
+same units in several periods; it need not be balanced). Only the rows of
+<code>t_rd</code> and <code>comparisons</code> are used; among them, rows with a missing outcome,
+running variable, period or id are dropped, with a message.</p></dd>
 
 
 <dt id="arg-y">y<a class="anchor" aria-label="anchor" href="#arg-y"></a></dt>
