@@ -27,8 +27,8 @@ rd_homog(
 }
 \arguments{
 \item{data}{a data frame in long format, one row per unit and period, from a
-panel (it need not be balanced). A unit's type is read from the periods in
-which it is observed; a unit missing from a period that its type needs is
+panel (it need not be balanced). Only the rows of \code{t_rd} and \code{comparisons}
+are used: a unit's type is read from those periods; a unit missing from a period that its type needs is
 left out of the cells that use that type. Rows with a missing running
 variable, period or id are dropped, with a message; a row with a missing
 outcome still gives its unit's side of the cutoff and is left out of the fits.}

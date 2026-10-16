@@ -308,8 +308,8 @@
   s_obs <- sum(tt^2)
   cell  <- idx[which.max(abs(tt))]
   if (K == 1L) {
-    p_n <- 2 * stats::pnorm(-abs(tt))
-    p_t <- if (is.finite(nu)) 2 * stats::pt(-abs(tt), df = nu) else p_n
+    p_n <- unname(2 * stats::pnorm(-abs(tt)))   # unname: tt carries the contrast's name
+    p_t <- if (is.finite(nu)) unname(2 * stats::pt(-abs(tt), df = nu)) else p_n
     out <- list(supt_t = list(stat = m_obs, df = 1L, p = p_t, cell = cell),
                 supt_normal = list(stat = m_obs, df = 1L, p = p_n, cell = cell),
                 swald_t = list(stat = s_obs, df = 1L, p = p_t),
