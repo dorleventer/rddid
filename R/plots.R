@@ -418,6 +418,9 @@ plot.rd_trendcell <- function(x, ...) {
 #' of switchers.
 #'
 #' @inheritParams rddid
+#' @param data a data frame in long format, one row per unit and period: a
+#'   repeated cross-section (different units in each period) or a panel (the
+#'   same units in several periods; it need not be balanced).
 #' @param periods the two periods to compare (values of `time`); default the first two in
 #'   `data`.
 #' @param ... unused.

@@ -194,7 +194,7 @@ test_that("input errors", {
   d <- .agg_data("pc")
   expect_error(.fit(d, t_rd = c(3, 3), comparisons = .comps), "more than once")
   expect_error(.fit(d, t_rd = c(2, 3), comparisons = .comps), "must not be one of the `comparisons`")
-  expect_error(.fit(d, t_rd = c(3, 9), comparisons = .comps), "t_rd = 9 not present")
+  expect_error(.fit(d, t_rd = c(3, 9), comparisons = .comps), "`t_rd` = 9 is not a period in `year`", fixed = TRUE)
   expect_error(.fit(d, t_rd = .rd, comparisons = .comps, rd_weights = c(1, 2)), "one entry per RD period")
   expect_error(.fit(d, t_rd = .rd, comparisons = .comps, rd_weights = c(1, NA, 2)), "finite")
   expect_error(.fit(d, t_rd = .rd, comparisons = .comps, rd_weights = c(`3` = 1, `4` = 1, `9` = 1)),

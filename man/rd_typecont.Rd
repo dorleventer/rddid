@@ -26,7 +26,8 @@ rd_typecont(
 \item{data}{a data frame in long format, one row per unit and period, from a
 panel (it need not be balanced). A unit's type is read from the periods in
 which it is observed; a unit missing from a period that its type needs is
-left out of the cells that use that type.}
+left out of the cells that use that type. Rows with a missing running
+variable, period or id are dropped, with a message.}
 
 \item{x}{name of the running-variable column (a string).}
 

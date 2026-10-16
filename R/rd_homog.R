@@ -284,7 +284,9 @@
 #' @param data a data frame in long format, one row per unit and period, from a
 #'   panel (it need not be balanced). A unit's type is read from the periods in
 #'   which it is observed; a unit missing from a period that its type needs is
-#'   left out of the cells that use that type.
+#'   left out of the cells that use that type. Rows with a missing running
+#'   variable, period or id are dropped, with a message; a row with a missing
+#'   outcome still gives its unit's side of the cutoff and is left out of the fits.
 #' @param id name of the unit-identifier column (a string). Required: types are
 #'   read across periods.
 #' @param t_rd the RD period. Required with `type_by = "rd_side"` (the
@@ -385,25 +387,16 @@ rd_homog <- function(data, y, x, time, id,
   bwselect <- match.arg(bwselect)
   h_given  <- !is.null(h)
   estimand <- match.arg(estimand)
-  kernel   <- match.arg(kernel, c("triangular", "epanechnikov", "uniform"))
+  kernel   <- match.arg(tolower(kernel), c("triangular", "epanechnikov", "uniform"))
   cutoff   <- c   # the cutoff; `c` stays the argument name for rdrobust users
 
-  .check_columns(data, c(y, x, time, id))
-
-  times_all <- sort(unique(data[[time]]))
-  if (is.null(comparisons)) {
-    comparisons <- if (!is.null(t_rd)) setdiff(times_all, t_rd) else times_all
-  }
-  if (!is.null(t_rd) && !t_rd %in% times_all)
-    stop("rd_homog: `t_rd` (", t_rd, ") is not a period in `data`.")
-  if (!is.null(t_rd) && t_rd %in% comparisons)
-    stop("rd_homog: `t_rd` must not be one of the `comparisons`.")
-  if (!all(comparisons %in% times_all))
-    stop("rd_homog: comparison period(s) not in `data`: ",
-         paste(setdiff(comparisons, times_all), collapse = ", "))
-  if (anyDuplicated(comparisons)) stop("rd_homog: `comparisons` contains a period more than once.")
-  if (length(comparisons) < 1L)
-    stop("need at least one comparison period.")
+  # ----- inputs and periods: the shared prepare step (input_checks.R) -----
+  # a unit's type depends on its running variable only, so rows are dropped here for a missing
+  # x, time or id; rows with a missing outcome are dropped from the fits once the types exist
+  prep <- .prepare_input(data, "rd_homog", x = x, time = time, id = id, y = y, t_rd = t_rd,
+                         comparisons = comparisons, t_rd_required = FALSE,
+                         complete_cols = c(x, time, id))
+  data <- prep$data; t_rd <- prep$t_rd; comparisons <- prep$comparisons
 
   # types are "+"/"-" sign-pattern strings (a unit at the cutoff counts as above); a unit
   # unobserved in a period its type needs is dropped from that period
@@ -417,6 +410,12 @@ rd_homog <- function(data, y, x, time, id,
     if (!side_col %in% names(types$wide))
       stop("RD period '", t_rd, "' has no side column; cannot define rd_side types.")
     type_list <- .homog_rd_side_types(type_list, types$wide, side_col)
+  }
+
+  na_y <- is.na(data[[y]])
+  if (any(na_y)) {
+    message("rd_homog: ", sum(na_y), " row(s) with a missing `", y, "` dropped from the fits.")
+    data <- data[!na_y, , drop = FALSE]
   }
 
   # "common" (default): one bandwidth for every cell, the CCT h of the outcome on the pooled
