@@ -10,6 +10,19 @@ Not part of the package build (`.Rbuildignore`).
 
 Contents: `appB_map.md` and `tests_map.md` (code ↔ paper maps), `check_appB_labels.R`, `snapshot_rddid.R`, `site_plan.md` and `site_dgp_check.R` (pkgdown site rebuild, 2026-09), `atu_estimand_plan.md` (the `estimand` argument, 2026-09-10).
 
+## Versions
+
+Every pull request that changes the code (`R/`, `data/`, `src/`, `NAMESPACE`) raises the version
+in `DESCRIPTION`. Between releases only the fourth component moves (0.4.0.9001 -> 0.4.0.9002):
+run `usethis::use_version("dev")` or edit by hand. Change the first heading of `inst/NEWS.md`
+to match (`# rddid 0.4.0.9002`). Documentation, tests, vignettes and CI need no bump.
+
+The reason: outputs record the package version (the application scripts write it into their
+`.tex` headers), so each version number should name one state of the code. The CI job
+`version-bump` (`.github/workflows/version-bump.yaml`) enforces both rules and is a required
+check on `master`. A release sets a three-part version (e.g. 0.5.0); the next change after it
+moves to 0.5.0.9000.
+
 ## Pre-commit hook
 
 After cloning, enable the doc-sync pre-commit hook (regenerates `man/*.Rd` from roxygen and blocks commits where the generated docs are stale — the mismatch that otherwise fails `R CMD check`):
