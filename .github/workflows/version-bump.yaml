@@ -1,0 +1,50 @@
+# A pull request that changes the package's code must raise the version in DESCRIPTION
+# (between releases: the fourth component, 0.4.0.9001 -> 0.4.0.9002; usethis::use_version("dev")).
+# Outputs made with the package record its version, so each code change gets its own number.
+# Code = R/, data/, src/, NAMESPACE. Documentation, tests, vignettes and CI changes need no bump.
+# The first heading of inst/NEWS.md carries the same version ("# rddid <version>"); R's news()
+# does not parse a "(development version)" heading.
+name: version-bump
+
+on:
+  pull_request:
+    branches: [main, master]
+
+permissions: read-all
+
+jobs:
+  version-bump:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: NEWS heading matches DESCRIPTION
+        shell: bash
+        run: |
+          ver=$(sed -n 's/^Version: *//p' DESCRIPTION)
+          head1=$(grep -m 1 '^# ' inst/NEWS.md)
+          if [ "$head1" != "# rddid $ver" ]; then
+            echo "::error::inst/NEWS.md starts with '$head1'; expected '# rddid $ver'."
+            exit 1
+          fi
+
+      - name: Code changes raise the version
+        shell: bash
+        run: |
+          base="origin/${{ github.base_ref }}"
+          changed=$(git diff --name-only "$base"...HEAD -- R/ data/ src/ NAMESPACE)
+          if [ -z "$changed" ]; then
+            echo "No code changes; no version bump needed."
+            exit 0
+          fi
+          old=$(git show "$base":DESCRIPTION | sed -n 's/^Version: *//p')
+          new=$(sed -n 's/^Version: *//p' DESCRIPTION)
+          echo "Code files changed:"
+          echo "$changed"
+          echo "Version: $old -> $new"
+          if [ "$old" = "$new" ] || [ "$(printf '%s\n%s\n' "$old" "$new" | sort -V | tail -n 1)" != "$new" ]; then
+            echo "::error::The code changed but the version did not go up ($old -> $new). Run usethis::use_version(\"dev\")."
+            exit 1
+          fi
