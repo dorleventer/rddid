@@ -13,7 +13,7 @@ schemes."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">rddid</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9001</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9002</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -102,30 +102,30 @@ conventional local-linear jump and its standard error), <code>jump_bc</code>, <c
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Comparison periods: 1, 2   (constant confounding trend)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Comparison weights: 1: 0.500, 2: 0.500</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Sampling scheme: panel, no unit changes side of the cutoff (detected)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Bandwidth: common h = 0.2672 (rule "joint": one bandwidth, chosen for the RD-DID estimate)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Pilot bandwidth b (period = value): 1 = 0.4102, 2 = 0.3868, 3 = 0.3951</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Bandwidth: common h = 0.2734 (rule "joint": one bandwidth, chosen for the RD-DID estimate)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Pilot bandwidth b (period = value): 1 = 0.4197, 2 = 0.3958, 3 = 0.4043</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                              Estimate  Std. err.       z  p-value   95% CI</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Conventional                 1.0927     0.1264    8.64   &lt;0.001   [0.8450, 1.3405]</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Robust (bias-corrected)      1.1414     0.1494    7.64   &lt;0.001   [0.8486, 1.4342]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Conventional                 1.0903     0.1251    8.72   &lt;0.001   [0.8451, 1.3355]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Robust (bias-corrected)      1.1387     0.1478    7.70   &lt;0.001   [0.8489, 1.4284]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Per-period local-linear fits (Conventional = sum of coef x jump; Robust = sum of coef x jump (bc)):</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   period   role           coef      n        h        b       jump      s.e.  jump (bc) s.e. (rb)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   1        comparison   -0.500   1000   0.2672   0.4102     0.5119    0.1688     0.4639    0.1948</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   2        comparison   -0.500   1000   0.2672   0.3868     0.6306    0.1686     0.6240    0.2012</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   3        RD            1.000   1000   0.2672   0.3951     1.6640    0.1641     1.6854    0.1931</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   1        comparison   -0.500   1000   0.2734   0.4197     0.5152    0.1672     0.4653    0.1932</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   2        comparison   -0.500   1000   0.2734   0.3958     0.6308    0.1667     0.6269    0.1991</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   3        RD            1.000   1000   0.2734   0.4043     1.6633    0.1624     1.6848    0.1912</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Robust s.e. under each sampling scheme (the printed one is for "pc"; the others are for comparison):</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     cross-section 0.2385   panel, no unit changes side 0.1494   panel, some change side 0.1494</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     cross-section 0.2362   panel, no unit changes side 0.1478   panel, some change side 0.1478</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span><span class="op">$</span><span class="va">per_period</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   period       role coef    n         h         b      jump        se   jump_bc</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1      1 comparison -0.5 1000 0.2672096 0.4101520 0.5119443 0.1688159 0.4639253</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2      2 comparison -0.5 1000 0.2672096 0.3868401 0.6306109 0.1685612 0.6240145</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3      3         RD  1.0 1000 0.2672096 0.3950840 1.6639868 0.1641410 1.6853502</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1      1 comparison -0.5 1000 0.2734096 0.4196687 0.5152062 0.1672386 0.4652979</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2      2 comparison -0.5 1000 0.2734096 0.3958158 0.6307688 0.1666649 0.6268708</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3      3         RD  1.0 1000 0.2734096 0.4042511 1.6633103 0.1624416 1.6847733</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>       se_rb</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 0.1948448</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2 0.2011668</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3 0.1931055</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 0.1932246</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 0.1990750</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 0.1911622</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

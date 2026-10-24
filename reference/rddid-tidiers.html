@@ -11,7 +11,7 @@ generics package; the methods are registered when that package (or broom) is loa
 
     <a class="navbar-brand me-2" href="../index.html">rddid</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9001</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9002</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -115,11 +115,11 @@ one-row data frame describing the fit (<code>nobs</code>, <code>t_rd</code>, <co
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="rddid.html">rddid</a></span><span class="op">(</span><span class="va">rddid_sim</span>, y <span class="op">=</span> <span class="st">"Y"</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>           term estimate std.error statistic      p.value  conf.low conf.high</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 Conventional 1.092709 0.1264043  8.644556 5.401507e-18 0.8449613  1.340457</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2       Robust 1.141380 0.1493939  7.640071 2.171020e-14 0.8485735  1.434187</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 Conventional 1.090323 0.1250905  8.716269 2.875204e-18 0.8451498  1.335496</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2       Robust 1.138689 0.1478291  7.702739 1.331800e-14 0.8489493  1.428429</span>
 <span class="r-in"><span><span class="fu"><a href="https://generics.r-lib.org/reference/glance.html" class="external-link">glance</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   nobs t_rd comparisons rd_weights    trend  weights bwselect         h scheme</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 3000    3        1, 2          1 constant 0.5, 0.5    joint 0.2672096     pc</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 3000    3        1, 2          1 constant 0.5, 0.5    joint 0.2734096     pc</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   level weighting</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1  0.95       ols</span>
 <span class="r-in"><span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="fu"><a href="rd_typecont.html">rd_typecont</a></span><span class="op">(</span><span class="va">rddid_sim_pv</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span><span class="op">)</span><span class="op">)</span></span></span>

@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">rddid</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9001</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9002</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -144,12 +144,12 @@ order.</p>
 <span><span class="co">#&gt;   Comparison periods: 1, 2   (constant confounding trend)</span></span>
 <span><span class="co">#&gt;   Comparison weights: 1: 0.500, 2: 0.500</span></span>
 <span><span class="co">#&gt;   Sampling scheme: panel, no unit changes side of the cutoff (detected)</span></span>
-<span><span class="co">#&gt;   Bandwidth: common h = 0.2672 (rule "joint": one bandwidth, chosen for the RD-DID estimate)</span></span>
-<span><span class="co">#&gt;   Pilot bandwidth b (period = value): 1 = 0.4102, 2 = 0.3868, 3 = 0.3951</span></span>
+<span><span class="co">#&gt;   Bandwidth: common h = 0.2734 (rule "joint": one bandwidth, chosen for the RD-DID estimate)</span></span>
+<span><span class="co">#&gt;   Pilot bandwidth b (period = value): 1 = 0.4197, 2 = 0.3958, 3 = 0.4043</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;                              Estimate  Std. err.       z  p-value   95% CI</span></span>
-<span><span class="co">#&gt;   Conventional                 1.0927     0.1264    8.64   &lt;0.001   [0.8450, 1.3405]</span></span>
-<span><span class="co">#&gt;   Robust (bias-corrected)      1.1414     0.1494    7.64   &lt;0.001   [0.8486, 1.4342]</span></span>
+<span><span class="co">#&gt;   Conventional                 1.0903     0.1251    8.72   &lt;0.001   [0.8451, 1.3355]</span></span>
+<span><span class="co">#&gt;   Robust (bias-corrected)      1.1387     0.1478    7.70   &lt;0.001   [0.8489, 1.4284]</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   summary() shows the per-period fits and the s.e. under every sampling scheme.</span></span></code></pre></div>
 <p>Line by line:</p>
@@ -196,12 +196,12 @@ in year 3 alone would estimate the effect plus the confounding jump, 1 +
 0.5 = 1.5. The year-3 fit is stored in the object:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fit</span><span class="op">$</span><span class="va">fits</span><span class="op">[[</span><span class="st">"3"</span><span class="op">]</span><span class="op">]</span></span>
-<span><span class="co">#&gt; Single-period RD (p=1, h=0.2672, b=0.3951, kernel=triangular, n=1000)</span></span>
-<span><span class="co">#&gt;   D (conventional)   = +1.664  (se 0.1641)</span></span>
-<span><span class="co">#&gt;   D (bias-corrected) = +1.6854  (se 0.1931)</span></span></code></pre></div>
+<span><span class="co">#&gt; Single-period RD (p=1, h=0.2734, b=0.4043, kernel=triangular, n=1000)</span></span>
+<span><span class="co">#&gt;   D (conventional)   = +1.6633  (se 0.1624)</span></span>
+<span><span class="co">#&gt;   D (bias-corrected) = +1.6848  (se 0.1912)</span></span></code></pre></div>
 <p>Its jump, 1.66, is that naive RD estimate, whose target is 1.5, not
 1. <code><a href="../reference/rddid.html">rddid()</a></code> subtracts the average of the year-1 and year-2
-jumps, (0.51 + 0.63) / 2 = 0.57, its estimate of the confounding jump of
+jumps, (0.52 + 0.63) / 2 = 0.57, its estimate of the confounding jump of
 0.5.</p>
 </div>
 <div class="section level2">
@@ -213,47 +213,47 @@ jumps, (0.51 + 0.63) / 2 = 0.57, its estimate of the confounding jump of
 <span><span class="co">#&gt;   Comparison periods: 1, 2   (constant confounding trend)</span></span>
 <span><span class="co">#&gt;   Comparison weights: 1: 0.500, 2: 0.500</span></span>
 <span><span class="co">#&gt;   Sampling scheme: panel, no unit changes side of the cutoff (detected)</span></span>
-<span><span class="co">#&gt;   Bandwidth: common h = 0.2672 (rule "joint": one bandwidth, chosen for the RD-DID estimate)</span></span>
-<span><span class="co">#&gt;   Pilot bandwidth b (period = value): 1 = 0.4102, 2 = 0.3868, 3 = 0.3951</span></span>
+<span><span class="co">#&gt;   Bandwidth: common h = 0.2734 (rule "joint": one bandwidth, chosen for the RD-DID estimate)</span></span>
+<span><span class="co">#&gt;   Pilot bandwidth b (period = value): 1 = 0.4197, 2 = 0.3958, 3 = 0.4043</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;                              Estimate  Std. err.       z  p-value   95% CI</span></span>
-<span><span class="co">#&gt;   Conventional                 1.0927     0.1264    8.64   &lt;0.001   [0.8450, 1.3405]</span></span>
-<span><span class="co">#&gt;   Robust (bias-corrected)      1.1414     0.1494    7.64   &lt;0.001   [0.8486, 1.4342]</span></span>
+<span><span class="co">#&gt;   Conventional                 1.0903     0.1251    8.72   &lt;0.001   [0.8451, 1.3355]</span></span>
+<span><span class="co">#&gt;   Robust (bias-corrected)      1.1387     0.1478    7.70   &lt;0.001   [0.8489, 1.4284]</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Per-period local-linear fits (Conventional = sum of coef x jump; Robust = sum of coef x jump (bc)):</span></span>
 <span><span class="co">#&gt;   period   role           coef      n        h        b       jump      s.e.  jump (bc) s.e. (rb)</span></span>
-<span><span class="co">#&gt;   1        comparison   -0.500   1000   0.2672   0.4102     0.5119    0.1688     0.4639    0.1948</span></span>
-<span><span class="co">#&gt;   2        comparison   -0.500   1000   0.2672   0.3868     0.6306    0.1686     0.6240    0.2012</span></span>
-<span><span class="co">#&gt;   3        RD            1.000   1000   0.2672   0.3951     1.6640    0.1641     1.6854    0.1931</span></span>
+<span><span class="co">#&gt;   1        comparison   -0.500   1000   0.2734   0.4197     0.5152    0.1672     0.4653    0.1932</span></span>
+<span><span class="co">#&gt;   2        comparison   -0.500   1000   0.2734   0.3958     0.6308    0.1667     0.6269    0.1991</span></span>
+<span><span class="co">#&gt;   3        RD            1.000   1000   0.2734   0.4043     1.6633    0.1624     1.6848    0.1912</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Robust s.e. under each sampling scheme (the printed one is for "pc"; the others are for comparison):</span></span>
-<span><span class="co">#&gt;     cross-section 0.2385   panel, no unit changes side 0.1494   panel, some change side 0.1494</span></span></code></pre></div>
+<span><span class="co">#&gt;     cross-section 0.2362   panel, no unit changes side 0.1478   panel, some change side 0.1478</span></span></code></pre></div>
 <p><code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> adds the per-period fits. Each row gives the
 period’s role, its coefficient in the estimate (+1 for the RD period,
 minus its weight for a comparison period), its number of observations,
 its bandwidths, and its jump with standard error, conventional
 (<code>jump</code>, <code>s.e.</code>) and bias-corrected
 (<code>jump (bc)</code>, <code>s.e. (rb)</code>). The estimate is the
-sum of coefficient times jump: 1.664 - 0.5 × 0.512 - 0.5 × 0.631 =
-1.093.</p>
+sum of coefficient times jump: 1.663 - 0.5 × 0.515 - 0.5 × 0.631 =
+1.090.</p>
 <p>The last lines give the robust standard error under each of the three
 sampling schemes. The printout uses the one for the scheme detected in
 the data; the other two show what the formulas for the other schemes
-give on the same data. Here the cross-section standard error, 0.239,
+give on the same data. Here the cross-section standard error, 0.236,
 ignores that the same units appear in every year; the panel one, which
-accounts for it, is 0.149.</p>
+accounts for it, is 0.148.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Conventional       Robust </span></span>
-<span><span class="co">#&gt;     1.092709     1.141380</span></span>
+<span><span class="co">#&gt;     1.090323     1.138689</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span>
 <span><span class="co">#&gt;                  2.5 %   97.5 %</span></span>
-<span><span class="co">#&gt; Conventional 0.8449613 1.340457</span></span>
-<span><span class="co">#&gt; Robust       0.8485735 1.434187</span></span>
+<span><span class="co">#&gt; Conventional 0.8451498 1.335496</span></span>
+<span><span class="co">#&gt; Robust       0.8489493 1.428429</span></span>
 <span><span class="fu"><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span>
 <span><span class="co">#&gt;           term estimate std.error statistic      p.value  conf.low conf.high</span></span>
-<span><span class="co">#&gt; 1 Conventional 1.092709 0.1264043  8.644556 5.401507e-18 0.8449613  1.340457</span></span>
-<span><span class="co">#&gt; 2       Robust 1.141380 0.1493939  7.640071 2.171020e-14 0.8485735  1.434187</span></span></code></pre></div>
+<span><span class="co">#&gt; 1 Conventional 1.090323 0.1250905  8.716269 2.875204e-18 0.8451498  1.335496</span></span>
+<span><span class="co">#&gt; 2       Robust 1.138689 0.1478291  7.702739 1.331800e-14 0.8489493  1.428429</span></span></code></pre></div>
 <p><code><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef()</a></code> returns the two point estimates and
 <code><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint()</a></code> their confidence intervals. <code><a href="https://generics.r-lib.org/reference/tidy.html" class="external-link">tidy()</a></code>
 returns one row per estimate, so table makers such as modelsummary work
@@ -271,12 +271,12 @@ for a paper</a> below has an example.</p>
 <span><span class="co">#&gt;   Comparison periods: 1, 2   (linear confounding trend)</span></span>
 <span><span class="co">#&gt;   Comparison weights: 1: -1.000, 2: 2.000</span></span>
 <span><span class="co">#&gt;   Sampling scheme: panel, no unit changes side of the cutoff (detected)</span></span>
-<span><span class="co">#&gt;   Bandwidth: common h = 0.2672 (rule "joint": one bandwidth, chosen for the RD-DID estimate)</span></span>
-<span><span class="co">#&gt;   Pilot bandwidth b (period = value): 1 = 0.4102, 2 = 0.3869, 3 = 0.3951</span></span>
+<span><span class="co">#&gt;   Bandwidth: common h = 0.308 (rule "joint": one bandwidth, chosen for the RD-DID estimate)</span></span>
+<span><span class="co">#&gt;   Pilot bandwidth b (period = value): 1 = 0.4728, 2 = 0.4459, 3 = 0.4554</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;                              Estimate  Std. err.       z  p-value   95% CI</span></span>
-<span><span class="co">#&gt;   Conventional                 0.9147     0.2582    3.54   &lt;0.001   [0.4087, 1.4207]</span></span>
-<span><span class="co">#&gt;   Robust (bias-corrected)      0.9012     0.3068    2.94    0.003   [0.3000, 1.5025]</span></span>
+<span><span class="co">#&gt;   Conventional                 0.9196     0.2416    3.81   &lt;0.001   [0.4462, 1.3931]</span></span>
+<span><span class="co">#&gt;   Robust (bias-corrected)      0.8810     0.2874    3.06    0.002   [0.3176, 1.4443]</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   summary() shows the per-period fits and the s.e. under every sampling scheme.</span></span></code></pre></div>
 <p>With <code>trend = "linear"</code> the confounding jump may move
@@ -285,7 +285,7 @@ extrapolated to year 3, which gives weights -1 and 2: the confounding
 jump in year 3 is estimated by
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><msub><mi>D</mi><mn>2</mn></msub><mo>−</mo><msub><mi>D</mi><mn>1</mn></msub></mrow><annotation encoding="application/x-tex">2 D_2 - D_1</annotation></semantics></math>.
 This needs at least two comparison periods. The standard error grows
-(0.258 against 0.126) because extrapolating a line amplifies noise. In
+(0.242 against 0.125) because extrapolating a line amplifies noise. In
 <code>rddid_sim</code> the confounding jump is constant, so both
 estimates are valid; the linear one gives up precision to allow for a
 linear trend. A numeric vector instead of <code>"constant"</code> or
@@ -357,42 +357,42 @@ side, with confidence intervals:</p>
 
     <script src="https://cdn.jsdelivr.net/gh/vincentarelbundock/tinytable@main/inst/tinytable.js"></script><script>
       // Create table-specific functions using external factory
-      const tableFns_u05e85lb6noor3n6rz45 = TinyTable.createTableFunctions("tinytable_u05e85lb6noor3n6rz45");
+      const tableFns_1fyxwajq92drw83n0fl2 = TinyTable.createTableFunctions("tinytable_1fyxwajq92drw83n0fl2");
       // tinytable span after
       window.addEventListener('load', function () {
           var cellsToStyle = [
             // tinytable style arrays after
-          { positions: [ { i: '6', j: 2 }, { i: '6', j: 3 } ], css_id: 'tinytable_css_gfwtix49915k5kodn0ui',}, 
-          { positions: [ { i: '4', j: 2 }, { i: '4', j: 3 } ], css_id: 'tinytable_css_f3mbkoxy1d25d0i9gjmp',}, 
-          { positions: [ { i: '1', j: 2 }, { i: '2', j: 2 }, { i: '3', j: 2 }, { i: '5', j: 2 }, { i: '1', j: 3 }, { i: '2', j: 3 }, { i: '3', j: 3 }, { i: '5', j: 3 } ], css_id: 'tinytable_css_g2mkt6oiq6y5udf83agh',}, 
-          { positions: [ { i: '0', j: 2 }, { i: '0', j: 3 } ], css_id: 'tinytable_css_andlb89qew7pbn2ivoc0',}, 
-          { positions: [ { i: '6', j: 1 } ], css_id: 'tinytable_css_4qwyj4863hp71boy1o1i',}, 
-          { positions: [ { i: '4', j: 1 } ], css_id: 'tinytable_css_uu5jj8xbioe3rfcuknnd',}, 
-          { positions: [ { i: '1', j: 1 }, { i: '2', j: 1 }, { i: '3', j: 1 }, { i: '5', j: 1 } ], css_id: 'tinytable_css_rj8niknpcdbxup16sfm7',}, 
-          { positions: [ { i: '0', j: 1 } ], css_id: 'tinytable_css_882k7fb6a00bk7yxc3l1',}, 
+          { positions: [ { i: '6', j: 2 }, { i: '6', j: 3 } ], css_id: 'tinytable_css_9v72wbu8rrf8ww3slv4l',}, 
+          { positions: [ { i: '4', j: 2 }, { i: '4', j: 3 } ], css_id: 'tinytable_css_19vs9yabupe7j80vdvu4',}, 
+          { positions: [ { i: '1', j: 2 }, { i: '2', j: 2 }, { i: '3', j: 2 }, { i: '5', j: 2 }, { i: '1', j: 3 }, { i: '2', j: 3 }, { i: '3', j: 3 }, { i: '5', j: 3 } ], css_id: 'tinytable_css_gg455vpxvv4ta378fjjr',}, 
+          { positions: [ { i: '0', j: 2 }, { i: '0', j: 3 } ], css_id: 'tinytable_css_07fjcbq3oy6f0vke3srs',}, 
+          { positions: [ { i: '6', j: 1 } ], css_id: 'tinytable_css_hntahmx9zj22mltpax34',}, 
+          { positions: [ { i: '4', j: 1 } ], css_id: 'tinytable_css_wymcs62td8ftttfmh004',}, 
+          { positions: [ { i: '1', j: 1 }, { i: '2', j: 1 }, { i: '3', j: 1 }, { i: '5', j: 1 } ], css_id: 'tinytable_css_l4l30nx5ssa17vxjh41q',}, 
+          { positions: [ { i: '0', j: 1 } ], css_id: 'tinytable_css_jnbok23jqvtfx0f86w0c',}, 
           ];
 
           // Loop over the arrays to style the cells
           cellsToStyle.forEach(function (group) {
               group.positions.forEach(function (cell) {
-                  tableFns_u05e85lb6noor3n6rz45.styleCell(cell.i, cell.j, group.css_id);
+                  tableFns_1fyxwajq92drw83n0fl2.styleCell(cell.i, cell.j, group.css_id);
               });
           });
       });
     </script><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/vincentarelbundock/tinytable@main/inst/tinytable.css">
 <style>
     /* tinytable css entries after */
-    #tinytable_u05e85lb6noor3n6rz45 td.tinytable_css_gfwtix49915k5kodn0ui, #tinytable_u05e85lb6noor3n6rz45 th.tinytable_css_gfwtix49915k5kodn0ui {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.08em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center }
-    #tinytable_u05e85lb6noor3n6rz45 td.tinytable_css_f3mbkoxy1d25d0i9gjmp, #tinytable_u05e85lb6noor3n6rz45 th.tinytable_css_f3mbkoxy1d25d0i9gjmp {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center }
-    #tinytable_u05e85lb6noor3n6rz45 td.tinytable_css_g2mkt6oiq6y5udf83agh, #tinytable_u05e85lb6noor3n6rz45 th.tinytable_css_g2mkt6oiq6y5udf83agh { text-align: center }
-    #tinytable_u05e85lb6noor3n6rz45 td.tinytable_css_andlb89qew7pbn2ivoc0, #tinytable_u05e85lb6noor3n6rz45 th.tinytable_css_andlb89qew7pbn2ivoc0 {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 1; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.08em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center }
-    #tinytable_u05e85lb6noor3n6rz45 td.tinytable_css_4qwyj4863hp71boy1o1i, #tinytable_u05e85lb6noor3n6rz45 th.tinytable_css_4qwyj4863hp71boy1o1i {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.08em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: left }
-    #tinytable_u05e85lb6noor3n6rz45 td.tinytable_css_uu5jj8xbioe3rfcuknnd, #tinytable_u05e85lb6noor3n6rz45 th.tinytable_css_uu5jj8xbioe3rfcuknnd {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: left }
-    #tinytable_u05e85lb6noor3n6rz45 td.tinytable_css_rj8niknpcdbxup16sfm7, #tinytable_u05e85lb6noor3n6rz45 th.tinytable_css_rj8niknpcdbxup16sfm7 { text-align: left }
-    #tinytable_u05e85lb6noor3n6rz45 td.tinytable_css_882k7fb6a00bk7yxc3l1, #tinytable_u05e85lb6noor3n6rz45 th.tinytable_css_882k7fb6a00bk7yxc3l1 {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 1; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.08em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: left }
+    #tinytable_1fyxwajq92drw83n0fl2 td.tinytable_css_9v72wbu8rrf8ww3slv4l, #tinytable_1fyxwajq92drw83n0fl2 th.tinytable_css_9v72wbu8rrf8ww3slv4l {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.08em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center }
+    #tinytable_1fyxwajq92drw83n0fl2 td.tinytable_css_19vs9yabupe7j80vdvu4, #tinytable_1fyxwajq92drw83n0fl2 th.tinytable_css_19vs9yabupe7j80vdvu4 {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center }
+    #tinytable_1fyxwajq92drw83n0fl2 td.tinytable_css_gg455vpxvv4ta378fjjr, #tinytable_1fyxwajq92drw83n0fl2 th.tinytable_css_gg455vpxvv4ta378fjjr { text-align: center }
+    #tinytable_1fyxwajq92drw83n0fl2 td.tinytable_css_07fjcbq3oy6f0vke3srs, #tinytable_1fyxwajq92drw83n0fl2 th.tinytable_css_07fjcbq3oy6f0vke3srs {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 1; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.08em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center }
+    #tinytable_1fyxwajq92drw83n0fl2 td.tinytable_css_hntahmx9zj22mltpax34, #tinytable_1fyxwajq92drw83n0fl2 th.tinytable_css_hntahmx9zj22mltpax34 {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.08em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: left }
+    #tinytable_1fyxwajq92drw83n0fl2 td.tinytable_css_wymcs62td8ftttfmh004, #tinytable_1fyxwajq92drw83n0fl2 th.tinytable_css_wymcs62td8ftttfmh004 {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: left }
+    #tinytable_1fyxwajq92drw83n0fl2 td.tinytable_css_l4l30nx5ssa17vxjh41q, #tinytable_1fyxwajq92drw83n0fl2 th.tinytable_css_l4l30nx5ssa17vxjh41q { text-align: left }
+    #tinytable_1fyxwajq92drw83n0fl2 td.tinytable_css_jnbok23jqvtfx0f86w0c, #tinytable_1fyxwajq92drw83n0fl2 th.tinytable_css_jnbok23jqvtfx0f86w0c {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 1; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.08em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: left }
     </style>
 <div class="container">
-      <table class="table tinytable" id="tinytable_u05e85lb6noor3n6rz45" style="width: auto; margin-left: auto; margin-right: auto;" data-quarto-disable-processing="true">
+      <table class="table tinytable" id="tinytable_1fyxwajq92drw83n0fl2" style="width: auto; margin-left: auto; margin-right: auto;" data-quarto-disable-processing="true">
 <thead><tr>
 <th scope="col" data-row="0" data-col="1"> </th>
                 <th scope="col" data-row="0" data-col="2">Constant</th>
@@ -401,28 +401,28 @@ side, with confidence intervals:</p>
 <tbody>
 <tr>
 <td data-row="1" data-col="1">Conventional</td>
-                  <td data-row="1" data-col="2">1.093</td>
-                  <td data-row="1" data-col="3">0.915</td>
+                  <td data-row="1" data-col="2">1.090</td>
+                  <td data-row="1" data-col="3">0.920</td>
                 </tr>
 <tr>
 <td data-row="2" data-col="1"></td>
-                  <td data-row="2" data-col="2">[0.845, 1.340]</td>
-                  <td data-row="2" data-col="3">[0.409, 1.421]</td>
+                  <td data-row="2" data-col="2">[0.845, 1.335]</td>
+                  <td data-row="2" data-col="3">[0.446, 1.393]</td>
                 </tr>
 <tr>
 <td data-row="3" data-col="1">Robust</td>
-                  <td data-row="3" data-col="2">1.141</td>
-                  <td data-row="3" data-col="3">0.901</td>
+                  <td data-row="3" data-col="2">1.139</td>
+                  <td data-row="3" data-col="3">0.881</td>
                 </tr>
 <tr>
 <td data-row="4" data-col="1"></td>
-                  <td data-row="4" data-col="2">[0.849, 1.434]</td>
-                  <td data-row="4" data-col="3">[0.300, 1.502]</td>
+                  <td data-row="4" data-col="2">[0.849, 1.428]</td>
+                  <td data-row="4" data-col="3">[0.318, 1.444]</td>
                 </tr>
 <tr>
 <td data-row="5" data-col="1">h</td>
-                  <td data-row="5" data-col="2">0.267</td>
-                  <td data-row="5" data-col="3">0.267</td>
+                  <td data-row="5" data-col="2">0.273</td>
+                  <td data-row="5" data-col="3">0.308</td>
                 </tr>
 <tr>
 <td data-row="6" data-col="1">Num.Obs.</td>
@@ -503,12 +503,12 @@ assumptions the four tests below check:</p>
 <span><span class="co">#&gt;   Comparison periods: 1, 2   (constant confounding trend)</span></span>
 <span><span class="co">#&gt;   Comparison weights: 1: 0.500, 2: 0.500</span></span>
 <span><span class="co">#&gt;   Sampling scheme: panel, some units change side of the cutoff (detected)</span></span>
-<span><span class="co">#&gt;   Bandwidth: common h = 0.2367 (rule "joint": one bandwidth, chosen for the RD-DID estimate)</span></span>
-<span><span class="co">#&gt;   Pilot bandwidth b (period = value): 1 = 0.3889, 2 = 0.3847, 3 = 0.3933</span></span>
+<span><span class="co">#&gt;   Bandwidth: common h = 0.2399 (rule "joint": one bandwidth, chosen for the RD-DID estimate)</span></span>
+<span><span class="co">#&gt;   Pilot bandwidth b (period = value): 1 = 0.394, 2 = 0.3898, 3 = 0.3985</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;                              Estimate  Std. err.       z  p-value   95% CI</span></span>
-<span><span class="co">#&gt;   Conventional                 0.9654     0.1933    4.99   &lt;0.001   [0.5866, 1.3442]</span></span>
-<span><span class="co">#&gt;   Robust (bias-corrected)      0.9823     0.2292    4.29   &lt;0.001   [0.5332, 1.4315]</span></span>
+<span><span class="co">#&gt;   Conventional                 0.9675     0.1918    5.04   &lt;0.001   [0.5916, 1.3434]</span></span>
+<span><span class="co">#&gt;   Robust (bias-corrected)      0.9883     0.2275    4.34   &lt;0.001   [0.5424, 1.4342]</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   summary() shows the per-period fits and the s.e. under every sampling scheme.</span></span></code></pre></div>
 <p>The sampling scheme is now a panel in which some units change side of
@@ -688,12 +688,12 @@ illustration, make everybody treated in years 1 and 2 of
 <span><span class="co">#&gt;   Comparison periods: 1, 2   (constant confounding trend)</span></span>
 <span><span class="co">#&gt;   Comparison weights: 1: 0.500, 2: 0.500</span></span>
 <span><span class="co">#&gt;   Sampling scheme: panel, no unit changes side of the cutoff (detected)</span></span>
-<span><span class="co">#&gt;   Bandwidth: common h = 0.2672 (rule "joint": one bandwidth, chosen for the RD-DID estimate)</span></span>
-<span><span class="co">#&gt;   Pilot bandwidth b (period = value): 1 = 0.4102, 2 = 0.3868, 3 = 0.3951</span></span>
+<span><span class="co">#&gt;   Bandwidth: common h = 0.2734 (rule "joint": one bandwidth, chosen for the RD-DID estimate)</span></span>
+<span><span class="co">#&gt;   Pilot bandwidth b (period = value): 1 = 0.4197, 2 = 0.3958, 3 = 0.4043</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;                              Estimate  Std. err.       z  p-value   95% CI</span></span>
-<span><span class="co">#&gt;   Conventional                 1.0927     0.1264    8.64   &lt;0.001   [0.8450, 1.3405]</span></span>
-<span><span class="co">#&gt;   Robust (bias-corrected)      1.1414     0.1494    7.64   &lt;0.001   [0.8486, 1.4342]</span></span>
+<span><span class="co">#&gt;   Conventional                 1.0903     0.1251    8.72   &lt;0.001   [0.8451, 1.3355]</span></span>
+<span><span class="co">#&gt;   Robust (bias-corrected)      1.1387     0.1478    7.70   &lt;0.001   [0.8489, 1.4284]</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   summary() shows the per-period fits and the s.e. under every sampling scheme.</span></span></code></pre></div>
 <p>The numbers are those of <code>fit</code>, now labeled the ATU; the

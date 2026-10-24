@@ -59,14 +59,14 @@ rows used across all periods.
 fit <- rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 coef(fit)
 #> Conventional       Robust 
-#>     1.092709     1.141380 
+#>     1.090323     1.138689 
 confint(fit)
 #>                  2.5 %   97.5 %
-#> Conventional 0.8449613 1.340457
-#> Robust       0.8485735 1.434187
+#> Conventional 0.8451498 1.335496
+#> Robust       0.8489493 1.428429
 confint(fit, "Robust", level = 0.9)
 #>              5 %     95 %
-#> Robust 0.8956491 1.387111
+#> Robust 0.8955317 1.381846
 nobs(fit)
 #> [1] 3000
 ```

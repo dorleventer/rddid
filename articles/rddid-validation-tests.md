@@ -334,12 +334,12 @@ rddid(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 #>   Comparison periods: 1, 2   (constant confounding trend)
 #>   Comparison weights: 1: 0.500, 2: 0.500
 #>   Sampling scheme: panel, some units change side of the cutoff (detected)
-#>   Bandwidth: common h = 0.2367 (rule "joint": one bandwidth, chosen for the RD-DID estimate)
-#>   Pilot bandwidth b (period = value): 1 = 0.3889, 2 = 0.3847, 3 = 0.3933
+#>   Bandwidth: common h = 0.2399 (rule "joint": one bandwidth, chosen for the RD-DID estimate)
+#>   Pilot bandwidth b (period = value): 1 = 0.394, 2 = 0.3898, 3 = 0.3985
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI
-#>   Conventional                 0.9654     0.1933    4.99   <0.001   [0.5866, 1.3442]
-#>   Robust (bias-corrected)      0.9823     0.2292    4.29   <0.001   [0.5332, 1.4315]
+#>   Conventional                 0.9675     0.1918    5.04   <0.001   [0.5916, 1.3434]
+#>   Robust (bias-corrected)      0.9883     0.2275    4.34   <0.001   [0.5424, 1.4342]
 #> 
 #>   summary() shows the per-period fits and the s.e. under every sampling scheme.
 ```
