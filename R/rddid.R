@@ -128,18 +128,22 @@
 #' ## Technical details
 #'
 #' The `"joint"` rule is AMSE-optimal: it minimizes the asymptotic mean squared
-#' error (AMSE) of the RD-DID estimate over a common `h`. Each period is first
-#' fitted at its own CCT bandwidths to estimate that period's bias constant and
-#' variance constant; these are combined, with the coefficients of the sum above
-#' (and, under `"pc"`, the covariances between periods), into the AMSE, which
-#' is then minimized in closed form. Each period's pilot bandwidth keeps that
-#' period's CCT ratio \eqn{b/h}{b/h}. Each period's bias and variance
-#' constants are estimated at that period's own CCT pilot bandwidths, not at the
-#' RD period's, so an aggregate of several RD periods gets the same bandwidth
+#' error (AMSE) of the RD-DID estimate over a common `h`, in the way
+#' \pkg{rdrobust} chooses a bandwidth for one period. Each period's bias
+#' constant is estimated from a fit at that period's own CCT bandwidths. Each
+#' period's variance constant, and under `"pc"` the covariances between periods,
+#' are estimated at one rule-of-thumb bandwidth shared by every period (the
+#' preliminary bandwidth of \pkg{rdrobust}, computed from the running variables
+#' of all periods pooled; `bandwidth$h_rot` in the result). These are combined,
+#' with the coefficients of the sum above, into the AMSE, which is then
+#' minimized in closed form. Each period's pilot bandwidth keeps that period's
+#' CCT ratio \eqn{b/h}{b/h}. Nothing in the rule depends on which period is the
+#' RD period, so an aggregate of several RD periods gets the same bandwidth
 #' whatever the order of `t_rd`.
-#' With `regularize = TRUE` the rule adds `reg_const` times the estimated variance of the bias constants to
-#' the squared bias, as \pkg{rdrobust} does, so a near-zero estimated bias
-#' cannot make the bandwidth very large. Standard errors use the HC1 convention
+#' With `regularize = TRUE` the rule adds `reg_const` times the estimated
+#' variance of the aggregate bias constant, including its covariances between
+#' periods, to the squared bias, as \pkg{rdrobust} does, so a near-zero
+#' estimated bias cannot make the bandwidth very large. Standard errors use the HC1 convention
 #' of \pkg{rdrobust}. The derivations are in the paper's appendix on estimation
 #' and bandwidth choice.
 #'
@@ -503,7 +507,7 @@ rddid <- function(data, y, x, time, id = NULL, t_rd,
     bws  <- stats::setNames(lapply(labels, function(k)
       c(h = jb$h, b = unname(jb$b[[k]]))), labels)
     info <- list(method = "joint", h = jb$h, b = jb$b, B = jb$B,
-                 Veff = jb$Veff, reg = jb$reg, pilot_bws = jb$pilot_bws)
+                 Veff = jb$Veff, reg = jb$reg, h_rot = jb$h_rot, pilot_bws = jb$pilot_bws)
   }
   # the bandwidths actually used in each period, whatever the rule
   info$h_by_period <- vapply(bws, function(v) unname(v[["h"]]), numeric(1))

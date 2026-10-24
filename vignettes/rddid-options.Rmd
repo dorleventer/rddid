@@ -40,10 +40,11 @@ fit_joint$bandwidth$b_by_period
 ```
 
 One main bandwidth for every period, chosen to minimize the asymptotic mean
-squared error of the RD-DID estimate, not of each period's jump. The bias and
-variance of each period's jump are estimated at that period's own CCT pilot
-bandwidth, so these inputs to the rule are the same whichever period is the RD
-period.
+squared error of the RD-DID estimate, not of each period's jump. The bias of
+each period's jump is estimated at that period's own CCT pilot bandwidth, and
+its variance, with the covariances between periods in a panel, at one
+rule-of-thumb bandwidth shared by every period (`fit_joint$bandwidth$h_rot`), so
+these inputs to the rule are the same whichever period is the RD period.
 The pilot bandwidth of each period keeps that period's CCT ratio of pilot to
 main bandwidth. For year 3, from its own CCT pair:
 
