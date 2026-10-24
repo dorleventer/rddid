@@ -1,4 +1,4 @@
-# rddid 0.4.0.9001
+# rddid 0.4.0.9002
 
 First public version.
 
@@ -12,7 +12,11 @@ First public version.
 * Standard errors for a repeated cross-section and for a panel, with a running variable fixed or
   moving over time. Each fit reports the local-linear estimate with its conventional standard
   error and the bias-corrected estimate with its robust standard error. The bandwidth is one
-  common bandwidth chosen for the RD-DID estimate, or each period's own CCT bandwidth.
+  common bandwidth chosen for the RD-DID estimate, or each period's own CCT bandwidth. The
+  common bandwidth is chosen as rdrobust chooses one for a single period: the variance and,
+  in a panel, the covariances between periods at one rule-of-thumb bandwidth shared by every
+  period, the bias from each period's pilot fit, and a regularization that includes the
+  covariances of the bias estimates between periods.
 * Tests of the identification assumptions when the running variable moves over time:
   `rd_typecont()`, `rd_compstable()`, `rd_homog()` and `rd_trendcell()`, or all four at once
   with `rd_checks()`.

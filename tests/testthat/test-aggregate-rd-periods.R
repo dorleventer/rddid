@@ -220,7 +220,7 @@ test_that("methods: summary roles, glance, print and plot with several RD period
   expect_s3_class(plot(f), "ggplot")
 })
 
-test_that("joint rule, PC, equal pilots: Veff / h0 = c' Sigma c with RD-RD covariances built by hand", {
+test_that("joint rule, PC: Veff / h_rot = c' Sigma(h_rot) c with RD-RD covariances built by hand", {
   d <- .agg_data("pc")
   phi <- c(0.2, 0.3, 0.5)
   coef <- c(stats::setNames(phi, .rd), stats::setNames(-rep(sum(phi) / 2, 2), .comps))
@@ -229,7 +229,8 @@ test_that("joint rule, PC, equal pilots: Veff / h0 = c' Sigma c with RD-RD covar
     data.frame(y = s$Y, x = s$R, id = s$id) }), per)
   pb <- stats::setNames(rep(list(c(h = h0, b = b0)), length(per)), per)
   jb <- .bw_joint(plist, coef, scheme = "pc", pilot_bws = pb)
-  fits <- lapply(per, function(k) rd_period(plist[[k]]$y, plist[[k]]$x, h = h0, b = b0, id = plist[[k]]$id))
+  h0 <- jb$h_rot                                 # the variance side is at the shared ROT bandwidth
+  fits <- lapply(per, function(k) rd_period(plist[[k]]$y, plist[[k]]$x, h = h0, b = h0, id = plist[[k]]$id))
   same <- function(ft, fs) sum(vapply(c("+", "-"), function(sd) {
     a <- ft$sides[[sd]]; b <- fs$sides[[sd]]; m <- match(a$id, b$id); ok <- !is.na(m)
     sum(a$g[ok] * b$g[m[ok]]) }, numeric(1)))

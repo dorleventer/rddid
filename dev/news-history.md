@@ -3,6 +3,30 @@ package's user-facing NEWS is inst/NEWS.md). -->
 
 # rddid 0.4.0.9000 (development)
 
+## 2026-10-24: the common bandwidth estimates its constants as CCT does (0.4.0.9002)
+
+* `bwselect = "joint"`: the variance constants, and under `"pc"` the same-side cross-period
+  covariances, are now estimated at one rule-of-thumb bandwidth `h_rot` shared by every period
+  (rdrobust's preliminary bandwidth, `2.576 min(sd, IQR/1.349) N^{-1/5}` for the triangular
+  kernel, on the pooled running variables; `bandwidth$h_rot` in the result). Before, each period
+  was fitted at its own CCT pair and the PC covariance was rescaled to a bandwidth ratio of one by
+  the kernel constant. The bias constants still come from each period's CCT pilot.
+* The regularization is now `reg_const` times the variance of the aggregate bias estimate
+  `sum_t coef_t B-hat_t`, with the cross-period covariances of the `B-hat_t` (same side under
+  `"pc"`, same minus opposite side under `"pv"`). Before, it summed the per-period variances,
+  which overstates it 1.7 to 7.7 times when the periods' errors are correlated.
+* Why: paper App. B.4 "Bandwidth estimation" (Overleaf 3762b95..ba9a6c4); simulation evidence in
+  rd-did `docs/bw_routes_note.md` (T1755): the variance side was already accurate, the
+  regularization was the defect; the new rule is closer to the AMSE-optimal common bandwidth under
+  PC and PV with little movement, unchanged under CS.
+* Golden master (new baseline `dev/snapshots/baseline_bwrot.rds`, against a fresh snapshot of
+  8300e37): exactly the 31 `rddid(bwselect = "joint")` cells change (bandwidths and everything
+  computed at them); every `cct`, fixed-`h` and test cell is identical. The print snapshot moves
+  with the joint bandwidth (h 0.2672 -> 0.2734 on `rddid_sim`).
+* Internal: `.bw_constants()` returns `var_bias` and `var_cross` (K x K) and `h_rot`, no longer
+  `var_bias_const`, `kappa_plus`, `kappa_minus`; `.bw_rot()` is new. The kernel constants in
+  `kernel_constants.R` are no longer used by the selector (only by the conformance tests).
+
 ## 2026-10-16: the tests use only the periods they are given
 
 * `rd_compstable()`, `rd_homog()` and `rd_trendcell()` now use only the rows of `t_rd` and
