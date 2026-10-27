@@ -77,6 +77,80 @@ test_that("B.4 joint rule — regularization moves b and h but not d; reg_const 
   expect_true(on$b < off$b)
   r6 <- .bw_pilots(pl, .jp_coef, scheme = "pc", reg_const = 6)
   expect_equal(r6$stage_b$R, 2 * on$stage_b$R, tolerance = 1e-12)
+  # h: regularized through its own term, and through b
+  j_on  <- .bw_joint(pl, .jp_coef, "3", scheme = "pc")
+  j_off <- .bw_joint(pl, .jp_coef, "3", scheme = "pc", regularize = FALSE)
+  expect_equal(j_off$reg, 0)
+  expect_true(j_on$reg > 0)
+  expect_identical(j_on$d, j_off$d)
+  expect_equal(j_off$b, off$b, tolerance = 1e-12)
+  expect_false(isTRUE(all.equal(j_on$h, j_off$h, tolerance = 1e-6)))
+})
+
+# one stage on one side of one period from scratch: weighted lm() for the coefficients, the HC1
+# sandwich written out, rdrobust's formulas for V, B and R (rdrobust_bw)
+.jp_ref_side <- function(y, x, o, nu, oB, hV, hB) {
+  tri <- function(u) pmax(0, 1 - abs(u))
+  fit <- function(oo, hh, coefk) {
+    w <- tri(x / hh); k <- w > 0
+    X <- outer(x[k], 0:oo, `^`); m <- lm(y[k] ~ X - 1, weights = w[k])
+    G <- crossprod(X * sqrt(w[k])); Gi <- solve(G)
+    e <- residuals(m) * sqrt(sum(k) / (sum(k) - (oo + 1)))
+    S <- Gi %*% crossprod(X * (w[k] * e)) %*% Gi
+    list(beta = coef(m)[[coefk + 1]], var = S[coefk + 1, coefk + 1],
+         bc = hh^nu * coef(lm((x[k] / hh)^(oo + 1) ~ X - 1, weights = w[k]))[[nu + 1]])
+  }
+  fv <- fit(o, hV, nu); fb <- fit(oB, hB, o + 1)
+  list(var_v = fv$var, bterm = fv$bc * fb$beta, var_b = fv$bc^2 * fb$var)
+}
+.jp_ref_stage <- function(plist, coef, o, nu, oB, hV, hB, reg) {   # CS: no cross-period terms
+  V <- B <- R <- 0
+  for (k in names(coef)) for (sd in c("+", "-")) {
+    d <- plist[[k]]; s <- if (sd == "+") d$x >= 0 else d$x < 0
+    hb <- if (identical(hB, "range")) max(abs(d$x[s])) else hB
+    r <- .jp_ref_side(d$y[s], d$x[s], o, nu, oB, hV, hb)
+    V <- V + coef[[k]]^2 * r$var_v
+    B <- B + coef[[k]] * (if (sd == "+") 1 else -1) * r$bterm
+    R <- R + coef[[k]]^2 * r$var_b
+  }
+  V <- (2 * nu + 1) * hV^(2 * nu + 1) * V
+  B <- sqrt(2 * (o + 1 - nu)) * B
+  R <- reg * 2 * (o + 1 - nu) * R
+  (V / (B^2 + R))^(1 / (2 * o + 3))
+}
+
+test_that("B.4 joint rule — d from scratch (one period), and d, b for a repeated cross-section from scratch", {
+  d <- .jp_panel(); pl <- .jp_plist(d)
+  for (k in names(pl)) pl[[k]]$id <- paste(k, pl[[k]]$id)          # no unit in two periods
+  one <- pl["3"]
+  pil1 <- .bw_pilots(one, c(`3` = 1), scheme = "cs")
+  hr1  <- .bw_rot(one)
+  cap <- function(v, l) min(v, max(vapply(l, function(z) max(abs(z$x)), 0)))   # bwrestrict
+  expect_equal(pil1$d, cap(.jp_ref_stage(one, c(`3` = 1), 3L, 3L, 4L, hr1, "range", 0), one),
+               tolerance = 1e-8)
+  pil <- .bw_pilots(pl, .jp_coef, scheme = "cs")
+  hr  <- .bw_rot(pl)
+  d_raw <- .jp_ref_stage(pl, .jp_coef, 3L, 3L, 4L, hr, "range", 0)
+  expect_equal(pil$stage_d$bw, d_raw, tolerance = 1e-8)              # before the cap
+  d_ref <- cap(d_raw, pl)
+  expect_equal(pil$d, d_ref, tolerance = 1e-8)
+  expect_equal(pil$b, cap(.jp_ref_stage(pl, .jp_coef, 2L, 2L, 3L, hr, d_ref, 3), pl), tolerance = 1e-8)
+})
+
+test_that("B.4 joint rule, mass points — a discrete running variable: no abort, and one period equals rdbwselect (masspoints = \"adjust\")", {
+  for (step in c(0.05, 0.075)) {
+    set.seed(31)
+    n <- 3000; R <- sample(seq(-1, 1, by = step), n, replace = TRUE)
+    rows <- lapply(1:3, function(t) data.frame(id = seq_len(n), year = t, R = R,
+      Y = 0.3 * t + 0.5 * R + (0.4 + 0.5 * t) * R^2 + 0.4 * (R >= 0) + (t == 3) * (R >= 0) + rnorm(n, 0, 0.4)))
+    dd <- do.call(rbind, rows)
+    expect_no_error(rddid(dd, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, comparisons = c(1, 2)))
+    d3 <- dd[dd$year == 3, ]
+    jb <- .bw_joint(list(`3` = data.frame(y = d3$Y, x = d3$R, id = d3$id)), c(`3` = 1), "3", scheme = "cs")
+    rb <- suppressWarnings(rdrobust::rdbwselect(d3$Y, d3$R, vce = "hc1", bwselect = "mserd"))$bws
+    expect_equal(jb$h, rb[1, 1], tolerance = 1e-8, info = step)
+    expect_equal(jb$b, rb[1, 3], tolerance = 1e-8, info = step)
+  }
 })
 
 test_that("B.4 joint rule through rddid() — one h and one b in every period, the bias correction at that b", {

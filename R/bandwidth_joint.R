@@ -27,25 +27,56 @@
 # removed after tag v0.4.0.9000-iter; it was dropped from the paper, T1633.)
 
 
+#' Mass points of the running variable, as rdrobust's `masspoints = "adjust"`
+#'
+#' Per period and side: the number of rows `N` and of distinct values `M`. `mass` is TRUE when
+#' some period has a side with `1 - M / N >= 0.2` (rdrobust then sets `bwcheck = 10`); `bw_min` is
+#' the largest, over periods and sides, of the 10th smallest distinct distance to the cutoff
+#' (fewer if the side has fewer distinct values), plus 1e-8; `m_bar` is the average number of
+#' distinct values per period (rdrobust's `M`, which equals `N` without ties); `radius` the
+#' largest distance to the cutoff (rdrobust's `bw_max`).
+#' @keywords internal
+#' @noRd
+.bw_mass <- function(plist, c = 0) {
+  cutoff <- c
+  per <- lapply(plist, function(d) {
+    x <- d$x[is.finite(d$x)]
+    lapply(list(x[x < cutoff], x[x >= cutoff]), function(xs) {
+      u <- sort(unique(abs(xs - cutoff)))
+      list(N = length(xs), M = length(u), bw_min = u[min(10L, length(u))] + 1e-8)
+    })
+  })
+  sides <- unlist(per, recursive = FALSE)
+  list(mass   = any(vapply(sides, function(z) 1 - z$M / z$N >= 0.2, logical(1))),
+       bw_min = max(vapply(sides, function(z) z$bw_min, numeric(1))),
+       m_bar  = mean(vapply(per, function(z) z[[1]]$M + z[[2]]$M, numeric(1))),
+       radius = max(vapply(plist, function(d) max(abs(d$x - cutoff), na.rm = TRUE), numeric(1))))
+}
+
 #' Rule-of-thumb preliminary bandwidth shared by every period (App. B.4, "Bandwidth estimation")
 #'
 #' rdrobust's rule of thumb for the preliminary bandwidth of `rdbwselect()`,
-#' `C_K * min(sd, IQR / 1.349) * N^{-1/5}` (`C_K` = 2.576 triangular, 1.843 uniform, 2.34
-#' Epanechnikov; the IQR from type-2 quantiles, as rdrobust), computed once from the running
-#' variables of all periods pooled, with `N` the average number of rows per period. Every
+#' `C_K * min(sd, IQR / 1.349) * M^{-1/5}` (`C_K` = 2.576 triangular, 1.843 uniform, 2.34
+#' Epanechnikov; the IQR from type-2 quantiles), computed once from the running variables of all
+#' periods pooled, with `M` the average number of distinct running-variable values per period
+#' (the number of rows when there are no ties; rdrobust's `masspoints = "adjust"`). As rdrobust,
+#' it is capped at the largest distance to the cutoff and, when the running variable has mass
+#' points ([.bw_mass()]), raised to at least the 10th distinct distance on each side. Every
 #' period's variance constant is estimated at it, so the cross-period covariances are estimated
 #' at a bandwidth ratio of one.
 #' @keywords internal
 #' @noRd
-.bw_rot <- function(plist, kernel = "triangular") {
+.bw_rot <- function(plist, kernel = "triangular", c = 0) {
   x <- unlist(lapply(plist, function(d) d$x), use.names = FALSE)
   x <- x[is.finite(x)]
   iqr <- unname(stats::quantile(x, 0.75, type = 2) - stats::quantile(x, 0.25, type = 2))
   s <- min(stats::sd(x), iqr / 1.349)
   if (!is.finite(s) || s <= 0) s <- stats::sd(x)
   ck <- switch(kernel, triangular = 2.576, uniform = 1.843, epanechnikov = 2.34)
-  nbar <- mean(vapply(plist, nrow, numeric(1)))
-  ck * s * nbar^(-1 / 5)
+  mp <- .bw_mass(plist, c = c)
+  h  <- min(ck * s * mp$m_bar^(-1 / 5), mp$radius)
+  if (mp$mass) h <- max(h, mp$bw_min)
+  h
 }
 
 #' One side of one period for a stage of the selector
@@ -61,7 +92,8 @@
   k <- w > 0
   if (length(unique(x[k])) <= o + 1L)
     .abort("too few distinct running-variable values on one side of the cutoff for the ",
-           "order-", o, " fit of the bandwidth selector; use bwselect = \"cct\" or pass h.")
+           "order-", o, " fit at bandwidth ", signif(hh, 4), " in the bandwidth selector; ",
+           "use bwselect = \"cct\" or pass h.")
   y <- y[k]; x <- x[k]; id <- id[k]; w <- w[k]
   X  <- outer(x - cutoff, 0:o, `^`)
   Gi <- .qrXXinv(sqrt(w) * X)
@@ -154,7 +186,9 @@
 #'   b = h^opt(p+1, q,   V-bar-hat(p+1, q, h_rot),   B-bar-hat(p+1, q, q+1, h_rot, d)),
 #'       regularized when `regularize`.
 #' Each is capped at the largest distance of the running variable to the cutoff over all
-#' periods, as rdrobust's `bwrestrict = TRUE`. With one period and `coef = 1` these are
+#' periods, as rdrobust's `bwrestrict = TRUE`, and, when the running variable has mass points,
+#' `d` is raised to at least the 10th distinct distance on each side ([.bw_mass()]), as
+#' rdrobust's `bwcheck`. With one period and `coef = 1` these are
 #' rdbwselect's `d` (internal) and `b`; under a balanced PC panel, its `d` and `b` on the composite
 #' outcome `sum_t coef_t Y_t` (at the same `h_rot`).
 #' @return list with `d`, `b` and the two stages (`stage_d`, `stage_b`: `V`, `B`, `R`, `bw`).
@@ -163,11 +197,13 @@
 .bw_pilots <- function(plist, coef, scheme = "cs", h_rot = NULL, c = 0, p = 1L, q = 2L,
                        kernel = "triangular", regularize = TRUE, reg_const = 3) {
   cutoff <- c
-  if (is.null(h_rot)) h_rot <- .bw_rot(plist[names(coef)], kernel = kernel)
-  radius <- max(vapply(plist[names(coef)], function(d) max(abs(d$x - cutoff)), numeric(1)))
+  if (is.null(h_rot)) h_rot <- .bw_rot(plist[names(coef)], kernel = kernel, c = cutoff)
+  mp <- .bw_mass(plist[names(coef)], c = cutoff)
+  radius <- mp$radius
   st_d <- .bw_stage(plist, coef, scheme, o = q + 1L, nu = q + 1L, oB = q + 2L,
                     h_V = h_rot, h_B = "range", reg_const = 0, c = cutoff, kernel = kernel)
   d <- min(st_d$bw, radius)
+  if (mp$mass) d <- max(d, mp$bw_min)
   st_b <- .bw_stage(plist, coef, scheme, o = q, nu = p + 1L, oB = q + 1L,
                     h_V = h_rot, h_B = d, reg_const = if (regularize) reg_const else 0,
                     c = cutoff, kernel = kernel)
@@ -212,7 +248,7 @@
   fp1  <- factorial(p + 1)
   if (!is.numeric(b) || length(b) != 1L || !is.finite(b) || b <= 0)
     .abort("`b` must be one positive pilot bandwidth, common to all periods.")
-  if (is.null(h_rot)) h_rot <- .bw_rot(plist[keys], kernel = kernel)
+  if (is.null(h_rot)) h_rot <- .bw_rot(plist[keys], kernel = kernel, c = cutoff)
 
   fit_at <- function(k, h, b)
     rd_period(plist[[k]]$y, plist[[k]]$x, h = h, b = b, id = plist[[k]]$id,
@@ -317,7 +353,7 @@
   cutoff <- c
   d <- NA_real_
   if (is.null(constants)) {
-    h_rot <- .bw_rot(plist[names(coef)], kernel = kernel)
+    h_rot <- .bw_rot(plist[names(coef)], kernel = kernel, c = cutoff)
     if (is.null(b)) {
       pil <- .bw_pilots(plist, coef, scheme = scheme, h_rot = h_rot, c = cutoff, p = p, q = q,
                         kernel = kernel, regularize = regularize, reg_const = reg_const)
@@ -352,11 +388,15 @@
   # the closed-form minimiser of the AMSE in h: for p = 1 the leading constant is 1 and the
   # exponent 1/5
   h_star <- (fp1^2 / (2 * (p + 1)) * Veff / denom)^(1 / (2 * p + 3))
+  # capped at the largest distance to the cutoff, as rdrobust's bwrestrict
   radius <- max(vapply(plist, function(d) max(abs(d$x - cutoff), na.rm = TRUE), numeric(1)))
-  if (is.finite(radius) && h_star > radius)
+  if (is.finite(radius) && h_star > radius) {
     .warn("joint AMSE-optimal bandwidth h* = ", signif(h_star, 4),
           " exceeds the running-variable radius ", signif(radius, 4),
-          " (the period biases nearly cancel); consider bwselect = \"cct\" or a fixed h.")
+          " (the period biases nearly cancel) and is set to the radius; consider ",
+          "bwselect = \"cct\" or a fixed h.")
+    h_star <- radius
+  }
   list(h = h_star, b = const$b, d = d, B = B_agg, Veff = Veff, reg = reg, h_rot = const$h_rot,
        constants = const)
 }

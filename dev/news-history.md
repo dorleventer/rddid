@@ -19,15 +19,25 @@ package's user-facing NEWS is inst/NEWS.md). -->
   `.bw_pilots()`; `.bw_constants()` / `.bw_joint()` take one `b` instead of `pilot_bws`;
   `bandwidth` in the result has `d` and one `b` (no `pilot_bws`). `.bw_rot()` takes the IQR from
   type-2 quantiles, as rdrobust (was `IQR()`, type 7; matters only when IQR / 1.349 < sd).
+* rdrobust's handling of the data, ported so that one period is exactly `rdbwselect`:
+  `masspoints = "adjust"` (new `.bw_mass()`: `h_rot` uses the average number of distinct
+  running-variable values per period instead of rows; with mass points, a side with
+  `1 - M/N >= 0.2`, `h_rot` and `d` are raised to at least the 10th distinct distance to the cutoff,
+  rdrobust's `bwcheck = 10`) and `bwrestrict` (`h_rot`, `d`, `b` and now also `h` capped at the
+  largest distance to the cutoff; `h` still warns when capped). Without this the order-(q+1) fit
+  of the `d` stage at `h_rot` aborted on discrete running variables that master handled (review
+  finding).
 * Why: paper App. B.4 "Bandwidth estimation" (Overleaf `c0b890c`, 2026-10-27) and the T1787
   simulations (rd-did `code/simulations/bw_routes`, `docs/bw_routes_note.md` section 8): joint
   pilots give the most accurate common bandwidth of the routes compared.
 * Checks: one period, `h` and `b` equal `rdbwselect(mserd, hc1)` to 1e-8 (p = 1, 2; both branches
   of the rule of thumb); balanced PC panel, `b` and `h` equal `rdbwselect` on the composite
   outcome at the same `h_rot`; `.bw_stage()`'s third stage equals `.bw_joint()`'s `h` (two
-  implementations of eq:common_h_opt).
+  implementations of eq:common_h_opt); `d` (one period and CS) and `b` (CS) equal a from-scratch
+  `lm()` + HC1 reference; a discrete running variable runs, and one period equals `rdbwselect`
+  with its mass-point adjustment.
 * Golden master (new baseline `dev/snapshots/baseline_jointpilots.rds`, against
-  `baseline_bmomrot.rds`): exactly the 31 joint cells change (h by a factor 0.87-1.52); the other
+  `baseline_bmomrot.rds`): exactly the 31 joint cells change (h by a factor 0.86-1.52); the other
   98 are identical. On `rddid_sim` the print snapshot's common h moves 0.2694 -> 0.3986, with
   b = 0.5936 in every period.
 
