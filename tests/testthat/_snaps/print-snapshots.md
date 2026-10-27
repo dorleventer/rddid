@@ -55,7 +55,7 @@
       print(confint(fit))
     Output
                        2.5 %   97.5 %
-      Conventional 0.7994834 1.215591
+      Conventional 0.7994833 1.215591
       Robust       0.7784777 1.270830
 
 # print of the four tests

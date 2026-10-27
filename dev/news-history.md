@@ -36,9 +36,15 @@ package's user-facing NEWS is inst/NEWS.md). -->
   implementations of eq:common_h_opt); `d` (one period and CS) and `b` (CS) equal a from-scratch
   `lm()` + HC1 reference; a discrete running variable runs, and one period equals `rdbwselect`
   with its mass-point adjustment.
-* Golden master (new baseline `dev/snapshots/baseline_jointpilots.rds`, against
-  `baseline_bmomrot.rds`): exactly the 31 joint cells change (h by a factor 0.86-1.52); the other
-  98 are identical. On `rddid_sim` the print snapshot's common h moves 0.2694 -> 0.3986, with
+* rdrobust 4.1 (CRAN 2026-10-07; CI installs it): the selector follows 4.1.1, whose d stage takes
+  each side's range times 1 + sqrt(eps) (the farthest unit keeps a positive weight) and whose
+  `bwcheck` floor is the 10th distinct distance times 1 + sqrt(eps). Against rdrobust 2.2 the
+  one-period equality then holds to ~1e-3 on heavy-tailed data (tests use 1e-8 for rdrobust >= 4.1,
+  1e-3 below).
+* Golden master, all recorded under rdrobust 4.1.1: `baseline_bmomrot_rd41.rds` (master
+  d25dd5e) against the new `baseline_jointpilots.rds`: exactly the 31 joint cells change (h by a
+  factor 0.86-1.52); the other 98 are identical. Upgrading rdrobust 2.2 -> 4.1.1 alone moves 80
+  cells of master by at most 6e-7 (relative; h and estimates), through `rdbwselect`. On `rddid_sim` the print snapshot's common h moves 0.2694 -> 0.3986, with
   b = 0.5936 in every period.
 
 ## 2026-10-27: the bias design moment at the shared rule-of-thumb bandwidth (0.4.0.9003)

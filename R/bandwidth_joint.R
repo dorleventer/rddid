@@ -32,7 +32,7 @@
 #' Per period and side: the number of rows `N` and of distinct values `M`. `mass` is TRUE when
 #' some period has a side with `1 - M / N >= 0.2` (rdrobust then sets `bwcheck = 10`); `bw_min` is
 #' the largest, over periods and sides, of the 10th smallest distinct distance to the cutoff
-#' (fewer if the side has fewer distinct values), plus 1e-8; `m_bar` is the average number of
+#' (fewer if the side has fewer distinct values), times 1 + sqrt(eps) (rdrobust 4.1); `m_bar` is the average number of
 #' distinct values per period (rdrobust's `M`, which equals `N` without ties); `radius` the
 #' largest distance to the cutoff (rdrobust's `bw_max`).
 #' @keywords internal
@@ -43,7 +43,7 @@
     x <- d$x[is.finite(d$x)]
     lapply(list(x[x < cutoff], x[x >= cutoff]), function(xs) {
       u <- sort(unique(abs(xs - cutoff)))
-      list(N = length(xs), M = length(u), bw_min = u[min(10L, length(u))] + 1e-8)
+      list(N = length(xs), M = length(u), bw_min = u[min(10L, length(u))] * (1 + sqrt(.Machine$double.eps)))
     })
   })
   sides <- unlist(per, recursive = FALSE)
@@ -143,7 +143,8 @@
 #'   bw = (V / (B^2 + R))^{1 / (2 o + 3)},
 #' the paper's `h^opt(nu, o, V-bar-hat, B-bar-hat)` with `B^2` replaced by `B^2 + R`. `h_B = "range"`
 #' takes, in each period and on each side, the largest distance of the running variable to the
-#' cutoff. The cross-period covariances follow the scheme as in [.bw_constants()]: in `V` the
+#' cutoff, times 1 + sqrt(eps) so that the farthest unit keeps a positive kernel weight (rdrobust
+#' 4.1; rdrobust 2.2 used the distance itself, a difference of order 1e-8 to 1e-4 in d). The cross-period covariances follow the scheme as in [.bw_constants()]: in `V` the
 #' same-side ones under `"pc"` only; in `R` none under `"cs"`, same side under `"pc"`, same minus
 #' opposite side under `"pv"`.
 #' @keywords internal
@@ -157,7 +158,7 @@
     d <- plist[[k]]; GV[[k]] <- list(); GB[[k]] <- list()
     for (sd in c("+", "-")) {
       s  <- if (sd == "+") d$x >= cutoff else d$x < cutoff
-      hb <- if (identical(h_B, "range")) max(abs(d$x[s] - cutoff)) else h_B
+      hb <- if (identical(h_B, "range")) max(abs(d$x[s] - cutoff)) * (1 + sqrt(.Machine$double.eps)) else h_B
       fv <- .bw_side_poly(d$y[s], d$x[s], d$id[s], cutoff, o, nu, h_V, kernel)
       fb <- .bw_side_poly(d$y[s], d$x[s], d$id[s], cutoff, oB, o + 1L, hb, kernel)
       sg <- if (sd == "+") 1 else -1

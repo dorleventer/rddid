@@ -20,6 +20,9 @@
 .jp_plist <- function(d) stats::setNames(lapply(c(3, 1, 2), function(tv) {
   r <- d$year == tv; data.frame(y = d$Y[r], x = d$R[r], id = d$id[r]) }), c("3", "1", "2"))
 .jp_coef <- c(`3` = 1, `1` = -0.5, `2` = -0.5)
+# the selector follows rdrobust >= 4.1 exactly; rdrobust 2.2 took the d stage's range without the
+# 1 + sqrt(eps) factor, which moves h and b by up to ~1e-3 on heavy-tailed data
+.jp_tol <- if (utils::packageVersion("rdrobust") >= "4.1.0") 1e-8 else 1e-3
 
 test_that("B.4 joint rule, one period — h and b equal rdbwselect (mserd, hc1), p = 1, 2, both branches of the rule of thumb", {
   for (xd in c("unif", "t")) for (p in 1:2) {
@@ -28,8 +31,8 @@ test_that("B.4 joint rule, one period — h and b equal rdbwselect (mserd, hc1),
     pl <- list(`3` = data.frame(y = d3$Y, x = d3$R, id = d3$id))
     jb <- .bw_joint(pl, c(`3` = 1), "3", scheme = "cs", p = p, q = q)
     rb <- rdrobust::rdbwselect(d3$Y, d3$R, p = p, q = q, vce = "hc1", bwselect = "mserd")$bws
-    expect_equal(jb$h, rb[1, 1], tolerance = 1e-8, info = paste(xd, p))
-    expect_equal(jb$b, rb[1, 3], tolerance = 1e-8, info = paste(xd, p))
+    expect_equal(jb$h, rb[1, 1], tolerance = .jp_tol, info = paste(xd, p))
+    expect_equal(jb$b, rb[1, 3], tolerance = .jp_tol, info = paste(xd, p))
   }
 })
 
@@ -46,8 +49,8 @@ test_that("B.4 joint rule, balanced PC panel — d, b and h are rdbwselect on th
   jb  <- .bw_joint(pl, .jp_coef, "3", scheme = "pc",
                    constants = .bw_constants(pl, .jp_coef, scheme = "pc", b = pil$b, h_rot = hr))
   rb  <- rdrobust::rdbwselect(yc, xc, vce = "hc1", bwselect = "mserd")$bws
-  expect_equal(pil$b, rb[1, 3], tolerance = 1e-8)
-  expect_equal(jb$h, rb[1, 1], tolerance = 1e-8)
+  expect_equal(pil$b, rb[1, 3], tolerance = .jp_tol)
+  expect_equal(jb$h, rb[1, 1], tolerance = .jp_tol)
   # d enters only through b; rdbwselect does not return it, so check it through the b stage:
   # at a d moved by 10% the b stage moves
   st <- .bw_stage(pl, .jp_coef, "pc", o = 2L, nu = 2L, oB = 3L, h_V = hr, h_B = 1.1 * pil$d,
@@ -107,7 +110,7 @@ test_that("B.4 joint rule — regularization moves b and h but not d; reg_const 
   V <- B <- R <- 0
   for (k in names(coef)) for (sd in c("+", "-")) {
     d <- plist[[k]]; s <- if (sd == "+") d$x >= 0 else d$x < 0
-    hb <- if (identical(hB, "range")) max(abs(d$x[s])) else hB
+    hb <- if (identical(hB, "range")) max(abs(d$x[s])) * (1 + sqrt(.Machine$double.eps)) else hB
     r <- .jp_ref_side(d$y[s], d$x[s], o, nu, oB, hV, hb)
     V <- V + coef[[k]]^2 * r$var_v
     B <- B + coef[[k]] * (if (sd == "+") 1 else -1) * r$bterm
@@ -148,8 +151,8 @@ test_that("B.4 joint rule, mass points — a discrete running variable: no abort
     d3 <- dd[dd$year == 3, ]
     jb <- .bw_joint(list(`3` = data.frame(y = d3$Y, x = d3$R, id = d3$id)), c(`3` = 1), "3", scheme = "cs")
     rb <- suppressWarnings(rdrobust::rdbwselect(d3$Y, d3$R, vce = "hc1", bwselect = "mserd"))$bws
-    expect_equal(jb$h, rb[1, 1], tolerance = 1e-8, info = step)
-    expect_equal(jb$b, rb[1, 3], tolerance = 1e-8, info = step)
+    expect_equal(jb$h, rb[1, 1], tolerance = .jp_tol, info = paste("step", step))
+    expect_equal(jb$b, rb[1, 3], tolerance = .jp_tol, info = paste("step", step))
   }
 })
 
