@@ -62,16 +62,26 @@ test_that("B.4 constants general p — rd_period b_const = (p+1)! (D - D_bc) / h
   }
 })
 
-test_that("B.4 bias design moment — rd_period's bmom is rdrobust's BConst", {
+test_that("B.4 bias design moment — rd_period's bmom and curv, from scratch", {
+  # bmom is the intercept of the kernel-weighted order-p regression of ((x - c)/h)^{p+1} on the
+  # design (rdrobust's BConst in rdbwselect; checked against rdrobust 2.2's internal
+  # rdrobust_bw on 2026-10-27, not tested here because that internal is not a stable API);
+  # curv is the coefficient on (x - c)^{p+1} of the order-q fit at b
   d <- .b4_panel("pc"); d3 <- d[d$year == 3, ]
-  f <- rd_period(d3$Y, d3$R, h = 0.35, b = 0.5, id = d3$id)
-  up <- d3$R >= 0
-  o <- rdrobust:::rdrobust_bw(d3$Y[up], d3$R[up], NULL, NULL, NULL, 0, c = 0, o = 1, nu = 0,
-                              o_B = 2, h_V = 0.35, h_B = 0.5, scale = 0, vce = "hc1",
-                              nnmatch = 3, kernel = "tri", dups = 0, dupsid = 0,
-                              covs_drop_coll = 0, ginv.tol = 1e-20)
-  # rdrobust's B = sqrt(2 (p + 1 - nu)) BConst beta_B[p + 2], with beta_B[p + 2] = curv
-  expect_equal(as.numeric(o$B) / (2 * f$sides[["+"]]$curv), f$sides[["+"]]$bmom, tolerance = 1e-10)
+  tri <- function(u) pmax(0, 1 - abs(u))
+  for (p in 1:2) {
+    q <- p + 1L
+    f <- rd_period(d3$Y, d3$R, h = 0.35, b = 0.5, id = d3$id, p = p, q = q)
+    for (sd in c("+", "-")) {
+      s <- if (sd == "+") d3$R >= 0 else d3$R < 0
+      xs <- d3$R[s]; ys <- d3$Y[s]; wh <- tri(xs / 0.35); wb <- tri(xs / 0.5)
+      Xh <- outer(xs, 0:p, `^`); Xb <- outer(xs, 0:q, `^`)
+      bm <- coef(lm((xs / 0.35)^(p + 1) ~ Xh - 1, weights = wh, subset = wh > 0))[[1]]
+      cu <- coef(lm(ys ~ Xb - 1, weights = wb, subset = wb > 0))[[p + 2]]
+      expect_equal(f$sides[[sd]]$bmom, bm, tolerance = 1e-10)
+      expect_equal(f$sides[[sd]]$curv, cu, tolerance = 1e-8)
+    }
+  }
 })
 
 test_that("B.4 common h (eq:common_h_opt) — .bw_joint returns the closed form in its own constants: curvature at per-period pilots, variance and design moments at h_rot, p = 1, 2", {
