@@ -21,7 +21,7 @@ vce = "hc1".'></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">rddid</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9002</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9003</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -150,7 +150,10 @@ conventional and bias-corrected jumps, and <code>n * h * V_D</code>).</p></dd>
 <dd><p>a list with one element per side of the cutoff, <code>"+"</code>
 (above) and <code>"-"</code> (below), each holding the <code>id</code> of the observations
 used, their conventional and bias-corrected <code>g</code> vectors (<code>g</code>, <code>g_bc</code>)
-and <code>g_diff</code> (for the variance of the estimated bias), the intercept
+and <code>g_diff</code> (for the variance of the estimated bias), the two
+factors of the estimated bias <code>bmom</code> (the design moment at <code>h</code>) and
+<code>curv</code> (the order-<code>q</code> coefficient on \((x - c)^{p+1}\)
+at <code>b</code>) with the latter's influence vector <code>g_curv</code>, the intercept
 weights <code>a</code>, <code>a_bc</code> (<code>g</code> is weight times residual), the
 conventional intercept at the cutoff <code>beta0</code>, its bias-corrected
 version <code>beta0_bc</code>, and the conventional <code>slope</code>. The fitted line on a

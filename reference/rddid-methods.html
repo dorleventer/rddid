@@ -11,7 +11,7 @@ scheme; nobs() the number of observations used."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">rddid</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9002</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9003</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -98,14 +98,14 @@ across all periods.</p>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="rddid.html">rddid</a></span><span class="op">(</span><span class="va">rddid_sim</span>, y <span class="op">=</span> <span class="st">"Y"</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Conventional       Robust </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     1.090323     1.138689 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     1.092242     1.141077 </span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                  2.5 %   97.5 %</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Conventional 0.8451498 1.335496</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Robust       0.8489493 1.428429</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Conventional 0.8454070 1.339077</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Robust       0.8493838 1.432769</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint</a></span><span class="op">(</span><span class="va">fit</span>, <span class="st">"Robust"</span>, level <span class="op">=</span> <span class="fl">0.9</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>              5 %     95 %</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Robust 0.8955317 1.381846</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Robust 0.8962803 1.385873</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/stats/nobs.html" class="external-link">nobs</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 3000</span>
 </code></pre></div>

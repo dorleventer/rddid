@@ -105,11 +105,13 @@ An object of class `"rd_period"`, a list with:
   a list with one element per side of the cutoff, `"+"` (above) and
   `"-"` (below), each holding the `id` of the observations used, their
   conventional and bias-corrected `g` vectors (`g`, `g_bc`) and `g_diff`
-  (for the variance of the estimated bias), the intercept weights `a`,
-  `a_bc` (`g` is weight times residual), the conventional intercept at
-  the cutoff `beta0`, its bias-corrected version `beta0_bc`, and the
-  conventional `slope`. The fitted line on a side is
-  `beta0 + slope * (x - c)`.
+  (for the variance of the estimated bias), the two factors of the
+  estimated bias `bmom` (the design moment at `h`) and `curv` (the
+  order-`q` coefficient on \\(x - c)^{p+1}\\ at `b`) with the latter's
+  influence vector `g_curv`, the intercept weights `a`, `a_bc` (`g` is
+  weight times residual), the conventional intercept at the cutoff
+  `beta0`, its bias-corrected version `beta0_bc`, and the conventional
+  `slope`. The fitted line on a side is `beta0 + slope * (x - c)`.
 
 ## Details
 

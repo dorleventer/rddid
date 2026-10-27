@@ -85,11 +85,11 @@ under `"joint"`/fixed `h`, `NA` otherwise), `scheme`, `level`,
 fit <- rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 tidy(fit)
 #>           term estimate std.error statistic      p.value  conf.low conf.high
-#> 1 Conventional 1.090323 0.1250905  8.716269 2.875204e-18 0.8451498  1.335496
-#> 2       Robust 1.138689 0.1478291  7.702739 1.331800e-14 0.8489493  1.428429
+#> 1 Conventional 1.092242 0.1259386  8.672816 4.215617e-18 0.8454070  1.339077
+#> 2       Robust 1.141077 0.1488256  7.667206 1.757833e-14 0.8493838  1.432769
 glance(fit)
 #>   nobs t_rd comparisons rd_weights    trend  weights bwselect         h scheme
-#> 1 3000    3        1, 2          1 constant 0.5, 0.5    joint 0.2734096     pc
+#> 1 3000    3        1, 2          1 constant 0.5, 0.5    joint 0.2694485     pc
 #>   level weighting
 #> 1  0.95       ols
 tidy(rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3))

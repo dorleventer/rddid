@@ -311,12 +311,12 @@ res_atu
 #>   Comparison periods: 1, 2   (constant confounding trend)
 #>   Comparison weights: 1: 0.500, 2: 0.500
 #>   Sampling scheme: panel, no unit changes side of the cutoff (detected)
-#>   Bandwidth: common h = 0.3389 (rule "joint": one bandwidth, chosen for the RD-DID estimate)
-#>   Pilot bandwidth b (period = value): 1 = 0.5064, 2 = 0.5256, 3 = 0.4946
+#>   Bandwidth: common h = 0.3392 (rule "joint": one bandwidth, chosen for the RD-DID estimate)
+#>   Pilot bandwidth b (period = value): 1 = 0.5069, 2 = 0.5261, 3 = 0.4951
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI
-#>   Conventional                 1.0784     0.0955   11.29   <0.001   [0.8911, 1.2656]
-#>   Robust (bias-corrected)      1.1125     0.1149    9.68   <0.001   [0.8872, 1.3377]
+#>   Conventional                 1.0782     0.0955   11.29   <0.001   [0.8910, 1.2654]
+#>   Robust (bias-corrected)      1.1124     0.1149    9.68   <0.001   [0.8872, 1.3375]
 #> 
 #>   summary() shows the per-period fits and the s.e. under every sampling scheme.
 tau0

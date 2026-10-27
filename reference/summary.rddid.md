@@ -59,28 +59,28 @@ summary(fit)
 #>   Comparison periods: 1, 2   (constant confounding trend)
 #>   Comparison weights: 1: 0.500, 2: 0.500
 #>   Sampling scheme: panel, no unit changes side of the cutoff (detected)
-#>   Bandwidth: common h = 0.2734 (rule "joint": one bandwidth, chosen for the RD-DID estimate)
-#>   Pilot bandwidth b (period = value): 1 = 0.4197, 2 = 0.3958, 3 = 0.4043
+#>   Bandwidth: common h = 0.2694 (rule "joint": one bandwidth, chosen for the RD-DID estimate)
+#>   Pilot bandwidth b (period = value): 1 = 0.4136, 2 = 0.3901, 3 = 0.3984
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI
-#>   Conventional                 1.0903     0.1251    8.72   <0.001   [0.8451, 1.3355]
-#>   Robust (bias-corrected)      1.1387     0.1478    7.70   <0.001   [0.8489, 1.4284]
+#>   Conventional                 1.0922     0.1259    8.67   <0.001   [0.8454, 1.3391]
+#>   Robust (bias-corrected)      1.1411     0.1488    7.67   <0.001   [0.8494, 1.4328]
 #> 
 #>   Per-period local-linear fits (Conventional = sum of coef x jump; Robust = sum of coef x jump (bc)):
 #>   period   role           coef      n        h        b       jump      s.e.  jump (bc) s.e. (rb)
-#>   1        comparison   -0.500   1000   0.2734   0.4197     0.5152    0.1672     0.4653    0.1932
-#>   2        comparison   -0.500   1000   0.2734   0.3958     0.6308    0.1667     0.6269    0.1991
-#>   3        RD            1.000   1000   0.2734   0.4043     1.6633    0.1624     1.6848    0.1912
+#>   1        comparison   -0.500   1000   0.2694   0.4136     0.5129    0.1683     0.4642    0.1942
+#>   2        comparison   -0.500   1000   0.2694   0.3901     0.6306    0.1679     0.6249    0.2004
+#>   3        RD            1.000   1000   0.2694   0.3984     1.6640    0.1635     1.6856    0.1924
 #> 
 #>   Robust s.e. under each sampling scheme (the printed one is for "pc"; the others are for comparison):
-#>     cross-section 0.2362   panel, no unit changes side 0.1478   panel, some change side 0.1478
+#>     cross-section 0.2377   panel, no unit changes side 0.1488   panel, some change side 0.1488
 summary(fit)$per_period
 #>   period       role coef    n         h         b      jump        se   jump_bc
-#> 1      1 comparison -0.5 1000 0.2734096 0.4196687 0.5152062 0.1672386 0.4652979
-#> 2      2 comparison -0.5 1000 0.2734096 0.3958158 0.6307688 0.1666649 0.6268708
-#> 3      3         RD  1.0 1000 0.2734096 0.4042511 1.6633103 0.1624416 1.6847733
+#> 1      1 comparison -0.5 1000 0.2694485 0.4135886 0.5128736 0.1682545 0.4641595
+#> 2      2 comparison -0.5 1000 0.2694485 0.3900813 0.6305524 0.1678831 0.6248868
+#> 3      3         RD  1.0 1000 0.2694485 0.3983944 1.6639551 0.1635322 1.6855998
 #>       se_rb
-#> 1 0.1932246
-#> 2 0.1990750
-#> 3 0.1911622
+#> 1 0.1942384
+#> 2 0.2004214
+#> 3 0.1924041
 ```
