@@ -1,6 +1,7 @@
 # bandwidth_joint.R -- the bandwidth rules that target the RD-DID estimate itself:
-# .bw_constants() estimates the bias constants at each period's own CCT pilot and the variance
-# constants at one rule-of-thumb bandwidth shared by every period (.bw_rot());
+# .bw_constants() estimates the curvature at each period's own CCT pilot, and the variance
+# constants and the bias design moments at one rule-of-thumb bandwidth shared by every period
+# (.bw_rot());
 # .bw_joint() minimises the aggregate AMSE over one common h (bwselect = "joint", the default).
 # Labels such as eq:common_h_opt, lem:agg-var or "B.4 P3" in the internal notes below point into the
 # paper's Appendix B; the code-to-paper map is dev/appB_map.md (developer material, not shipped).
@@ -47,12 +48,15 @@
 #'
 #' Used by the joint selector; the paper's "Bandwidth estimation" paragraph of App. B.4.
 #' Two sets of fits, as in CCT's own selector:
-#'   * bias side: every period at its OWN pilot pair (default: its CCT pair from
-#'     [rd_bw_cct()]); gives the curvature constant `B-hat_t` (`rd_period`'s `b_const`), the
-#'     pilot `b/h` ratios, and the covariance matrix of the `B-hat_t` for the regularization,
-#'     with the cross-period covariances the scheme allows (none under `"cs"`, same side
-#'     under `"pc"`, same minus opposite side under `"pv"`, as for the jumps);
-#'   * variance side: every period at ONE rule-of-thumb bandwidth `h_rot` ([.bw_rot()]); gives
+#'   * curvature: every period at its OWN pilot pair (default: its CCT pair from
+#'     [rd_bw_cct()]); gives the order-q coefficient on `(x - c)^{p+1}` at `b_t` on each side
+#'     (`curv`) and the pilot `b/h` ratios;
+#'   * design side: every period at ONE rule-of-thumb bandwidth `h_rot` ([.bw_rot()]); gives
+#'     the bias design moments `bmom` (rdrobust's `BConst`), so that
+#'     `B-hat_t = (p+1)! [bmom_+(h_rot) curv_+(b_t) - bmom_-(h_rot) curv_-(b_t)]`, the
+#'     covariance matrix of the `B-hat_t` for the regularization, with the cross-period
+#'     covariances the scheme allows (none under `"cs"`, same side under `"pc"`, same minus
+#'     opposite side under `"pv"`, as for the jumps), and
 #'     the variance constant `V-hat_t = n_t h_rot V-hat(D_t(h_rot))` (`v_const`) and, under
 #'     `"pc"`, the same-side cross-period term `h_rot Cov-hat(D_t(h_rot), D_s(h_rot))`, estimated
 #'     directly at a bandwidth ratio of one (the ratio the common bandwidth needs). Under
@@ -89,27 +93,39 @@
     rd_period(plist[[k]]$y, plist[[k]]$x, h = h, b = b, id = plist[[k]]$id,
               c = cutoff, p = p, q = q, kernel = kernel)
 
-  # bias side: one pilot fit per period at its own CCT pair; B-hat_t from the conventional /
-  # bias-corrected gap
+  # The estimated bias of D_t on a side is h^{p+1} * bmom * curv: a design moment at h and the
+  # curvature (the order-q coefficient on (x - c)^{p+1}) from the pilot fit at b. As in
+  # rdrobust's selector, the curvature needs its own pilot bandwidth, but the design moment,
+  # like the variance, uses only the running variable, so both are taken at the shared h_rot.
+  # pilot fits: every period at its own CCT pair (the curvature, and the b/h ratios)
   pilot_fits <- stats::setNames(lapply(keys, function(k)
     fit_at(k, pilot_bws[[k]][["h"]], pilot_bws[[k]][["b"]])), keys)
+  # variance-side fits: every period at the common rule-of-thumb bandwidth (the variance
+  # constants and the design moments)
+  var_fits <- stats::setNames(lapply(keys, function(k) fit_at(k, h_rot, h_rot)), keys)
   period_coef <- unname(vapply(keys, function(k) coef[[k]], numeric(1)))
-  bias_const  <- vapply(keys, function(k) pilot_fits[[k]]$b_const, numeric(1))
   ratio       <- vapply(keys, function(k)
     unname(pilot_bws[[k]][["b"]] / pilot_bws[[k]][["h"]]), numeric(1))
   h_pilot     <- vapply(keys, function(k) unname(pilot_bws[[k]][["h"]]), numeric(1))
 
-  # Cov(B-hat_t, B-hat_s) = ((p+1)!)^2 / (h0_t h0_s)^{p+1} Cov(D_t - D_bc_t, D_s - D_bc_s),
-  # from the g_diff influence vectors, matched by id across periods like the jumps' g: this is
-  # what the regularization term adds to the squared bias of the aggregate
-  gd <- function(k, side) pilot_fits[[k]]$sides[[side]]
-  ms <- function(a, sa, b, sb) .match_sum(gd(a, sa)$id, gd(a, sa)$g_diff, gd(b, sb)$id, gd(b, sb)$g_diff)
-  sc <- fp1 / h_pilot^(p + 1)
+  # B-hat_t = (p+1)! [bmom_+(h_rot) curv_+(b_t) - bmom_-(h_rot) curv_-(b_t)]. psi is the
+  # per-unit influence of one side's term, (p+1)! bmom(h_rot) g_curv(b_t), unsigned: the
+  # minus sign of the side below is applied through "same - opp" in the covariances.
+  psi <- function(k, side)
+    fp1 * var_fits[[k]]$sides[[side]]$bmom * pilot_fits[[k]]$sides[[side]]$g_curv
+  bias_const <- vapply(keys, function(k)
+    fp1 * (var_fits[[k]]$sides[["+"]]$bmom * pilot_fits[[k]]$sides[["+"]]$curv -
+           var_fits[[k]]$sides[["-"]]$bmom * pilot_fits[[k]]$sides[["-"]]$curv), numeric(1))
+
+  # Cov(B-hat_t, B-hat_s) from the psi vectors, matched by id across periods like the jumps'
+  # g: this is what the regularization term adds to the squared bias of the aggregate
+  ids <- function(k, side) pilot_fits[[k]]$sides[[side]]$id
+  ms  <- function(a, sa, b, sb) .match_sum(ids(a, sa), psi(a, sa), ids(b, sb), psi(b, sb))
   var_bias <- matrix(0, K, K, dimnames = list(keys, keys))
   for (i in seq_len(K)) for (j in seq_len(K)) {
     a <- keys[i]; b <- keys[j]
-    cij <- if (i == j) {
-      sum(gd(a, "+")$g_diff^2) + sum(gd(a, "-")$g_diff^2)
+    var_bias[i, j] <- if (i == j) {
+      sum(psi(a, "+")^2) + sum(psi(a, "-")^2)
     } else if (scheme == "cs") {
       0
     } else {
@@ -117,11 +133,8 @@
       opp  <- if (scheme == "pv") ms(a, "+", b, "-") + ms(a, "-", b, "+") else 0
       same - opp
     }
-    var_bias[i, j] <- sc[i] * sc[j] * cij
   }
 
-  # variance side: every period at the common rule-of-thumb bandwidth
-  var_fits <- stats::setNames(lapply(keys, function(k) fit_at(k, h_rot, h_rot)), keys)
   var_const <- vapply(keys, function(k) var_fits[[k]]$v_const, numeric(1))
   n_obs     <- vapply(keys, function(k) var_fits[[k]]$n,       numeric(1))
   var_cross <- matrix(0, K, K, dimnames = list(keys, keys))
@@ -141,8 +154,8 @@
 #' Joint AMSE-optimal common bandwidth for the aggregate estimator
 #'
 #' Feasible plug-in for eq:common_h_opt (App. B.4, "Bandwidth estimation"). With the
-#' constants of [.bw_constants()] (bias at each period's own CCT pilot, variance at the
-#' shared rule-of-thumb `h_rot`), the aggregate objective at a common `h` is
+#' constants of [.bw_constants()] (curvature at each period's own CCT pilot; variance and bias
+#' design moments at the shared rule-of-thumb `h_rot`), the aggregate objective at a common `h` is
 #'   AMSE^S(h) = (h^{p+1}/(p+1)!)^2 (B^2 + reg) + Veff / h,
 #'   B    = sum_tau w~_tau B-hat_tau                       (signed; can cancel),
 #'   Veff = sum_tau w~_tau^2 V-hat_tau / n_tau

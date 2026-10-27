@@ -128,17 +128,21 @@ test_that("estimand = \"atu\" returns the same numbers for the aggregate", {
   expect_identical(u$bandwidth, a$bandwidth)
 })
 
-test_that("joint rule: one h for the aggregate, the closed form in B, Veff and reg, with B from pilot fits", {
+test_that("joint rule: one h for the aggregate, the closed form in B, Veff and reg, with B from the pilot curvature and the design moment at h_rot", {
   d <- .agg_data("pc")
   phi <- c(0.2, 0.3, 0.5)
   f <- .fit(d, t_rd = .rd, comparisons = .comps, rd_weights = phi, bwselect = "joint")
   bw <- f$bandwidth
   expect_equal(bw$h, (bw$Veff / (bw$B^2 + bw$reg))^(1 / 5), tolerance = 1e-12)
-  # B-bar^phi = sum_t coef_t B-hat_t, each B-hat_t from a pilot fit at that period's pilot pair
+  # B-bar^phi = sum_t coef_t B-hat_t; on each side of B-hat_t the curvature from the fit at that
+  # period's pilot pair times the design moment at the shared h_rot
   per <- names(f$coef)
   bconst <- vapply(per, function(k) { s <- d[d$year == as.numeric(k), ]
     pb <- bw$pilot_bws[[k]]
-    rd_period(s$Y, s$R, h = pb[["h"]], b = pb[["b"]], id = s$id)$b_const }, numeric(1))
+    fp <- rd_period(s$Y, s$R, h = pb[["h"]], b = pb[["b"]], id = s$id)
+    fr <- rd_period(s$Y, s$R, h = bw$h_rot, b = bw$h_rot, id = s$id)
+    2 * (fr$sides[["+"]]$bmom * fp$sides[["+"]]$curv - fr$sides[["-"]]$bmom * fp$sides[["-"]]$curv)
+  }, numeric(1))
   expect_equal(bw$B, sum(f$coef[per] * bconst), tolerance = 1e-10)
   # every period is fitted at the common h
   expect_true(all(abs(bw$h_by_period - bw$h) < 1e-12))

@@ -3,6 +3,25 @@ package's user-facing NEWS is inst/NEWS.md). -->
 
 # rddid 0.4.0.9000 (development)
 
+## 2026-10-27: the bias design moment at the shared rule-of-thumb bandwidth (0.4.0.9003)
+
+* `bwselect = "joint"`: on each side, the bias constant is the design moment
+  `bmom = e_0'(X'A(h)X)^{-1} X'A(h) ((x - c)/h)^{p+1}` times the curvature (the order-q
+  coefficient on `(x - c)^{p+1}` at `b`). The design moment is now evaluated at `h_rot`, like the
+  variance constants; the curvature still comes from each period's CCT pilot at `b_t`. Before,
+  the design moment was taken at each period's CCT `h_t` (via `b_const`, the gap between the
+  conventional and bias-corrected jumps at the CCT pair). This is what rdrobust's `rdbwselect`
+  does (`BConst` at the preliminary bandwidth `c_bw`, `beta_B` at `b_bw`), so every quantity
+  that depends only on the running variable and the residuals is estimated at the one
+  bandwidth `h_rot`, and only the curvature needs a pilot. The regularization's `Var(B-hat_t)`
+  uses the same factorization.
+* Why: paper App. B.4 "Bandwidth estimation" (2026-10-27): one rule for the variance and design
+  constants, as CCT; the limit is the same (both design moments tend to the kernel constant).
+* `rd_period()` side fields: new `bmom`, `curv`, `g_curv` (with `g_diff = h^{p+1} bmom g_curv`).
+* Golden master (new baseline `dev/snapshots/baseline_bmomrot.rds`, against `baseline_bwrot.rds`):
+  exactly the 31 joint cells change; the other 98 are identical apart from the new fields. On
+  `rddid_sim` the print snapshot's common h moves 0.2734 -> 0.2694.
+
 ## 2026-10-24: the common bandwidth estimates its constants as CCT does (0.4.0.9002)
 
 * `bwselect = "joint"`: the variance constants, and under `"pc"` the same-side cross-period

@@ -30,16 +30,51 @@
 }
 .b4_coef <- c(`3` = 1, `1` = -0.5, `2` = -0.5)
 
+# B-hat_t from scratch (App. B.4, "Bandwidth estimation"): on each side, the design moment
+# e_0'(X'A(h)X)^{-1} X'A(h) ((x - c)/h)^{p+1} at h (an lm intercept) times the coefficient on
+# (x - c)^{p+1} of the order-q fit at b (an lm coefficient), scaled by (p+1)!; triangular kernel
+.b4_Bhat <- function(y, x, h, b, p, q) {
+  tri <- function(u) pmax(0, 1 - abs(u))
+  side <- function(s) {
+    ys <- y[s]; xs <- x[s]; wh <- tri(xs / h); wb <- tri(xs / b)
+    Xh <- outer(xs, 0:p, `^`); Xb <- outer(xs, 0:q, `^`)
+    bm <- coef(lm((xs / h)^(p + 1) ~ Xh - 1, weights = wh, subset = wh > 0))[[1]]
+    cu <- coef(lm(ys ~ Xb - 1, weights = wb, subset = wb > 0))[[p + 2]]
+    bm * cu
+  }
+  factorial(p + 1) * (side(x >= 0) - side(x < 0))
+}
+
 test_that("B.4 constants general p — rd_period b_const = (p+1)! (D - D_bc) / h^{p+1}", {
   d <- .b4_panel("pc"); d3 <- d[d$year == 3, ]
   for (p in 1:3) {
     f <- rd_period(d3$Y, d3$R, h = 0.35, b = 0.5, id = d3$id, p = p, q = p + 1L)
     expect_equal(f$b_const, factorial(p + 1) * (f$D - f$D_bc) / 0.35^(p + 1), tolerance = 1e-12)
     expect_equal(f$v_const, f$n * 0.35 * f$V_D, tolerance = 1e-12)   # eq:per-period-orders
+    # the two factors of the estimated bias on each side: D - D_bc = h^{p+1} bmom curv, and
+    # the influence of D - D_bc is h^{p+1} bmom times that of curv
+    for (sd in c("+", "-")) {
+      S <- f$sides[[sd]]
+      # (a difference of two intercepts: at p = 3 the cancellation leaves ~1e-10 relative error)
+      expect_equal(S$beta0 - S$beta0_bc, 0.35^(p + 1) * S$bmom * S$curv, tolerance = 1e-8)
+      expect_equal(S$g_diff, 0.35^(p + 1) * S$bmom * S$g_curv, tolerance = 1e-10)
+    }
   }
 })
 
-test_that("B.4 common h (eq:common_h_opt) — .bw_joint returns the closed form in its own constants: bias at per-period pilots, variance at h_rot, p = 1, 2", {
+test_that("B.4 bias design moment — rd_period's bmom is rdrobust's BConst", {
+  d <- .b4_panel("pc"); d3 <- d[d$year == 3, ]
+  f <- rd_period(d3$Y, d3$R, h = 0.35, b = 0.5, id = d3$id)
+  up <- d3$R >= 0
+  o <- rdrobust:::rdrobust_bw(d3$Y[up], d3$R[up], NULL, NULL, NULL, 0, c = 0, o = 1, nu = 0,
+                              o_B = 2, h_V = 0.35, h_B = 0.5, scale = 0, vce = "hc1",
+                              nnmatch = 3, kernel = "tri", dups = 0, dupsid = 0,
+                              covs_drop_coll = 0, ginv.tol = 1e-20)
+  # rdrobust's B = sqrt(2 (p + 1 - nu)) BConst beta_B[p + 2], with beta_B[p + 2] = curv
+  expect_equal(as.numeric(o$B) / (2 * f$sides[["+"]]$curv), f$sides[["+"]]$bmom, tolerance = 1e-10)
+})
+
+test_that("B.4 common h (eq:common_h_opt) — .bw_joint returns the closed form in its own constants: curvature at per-period pilots, variance and design moments at h_rot, p = 1, 2", {
   d <- .b4_panel("pc"); pl <- .b4_plist(d)
   # period-specific pilots (the selector fits each period at its own pilot)
   pb <- list(`3` = c(h = 0.40, b = 0.55), `1` = c(h = 0.30, b = 0.45), `2` = c(h = 0.50, b = 0.62))
@@ -57,13 +92,15 @@ test_that("B.4 common h (eq:common_h_opt) — .bw_joint returns the closed form 
     fits <- lapply(names(.b4_coef), function(k)
       rd_period(pl[[k]]$y, pl[[k]]$x, h = pb[[k]][["h"]], b = pb[[k]][["b"]], id = pl[[k]]$id, p = p, q = q))
     names(fits) <- names(.b4_coef)
-    # B = sum_tau coef_tau B-hat_tau (B.4 P3), from rd_period's b_const
-    B_hand <- sum(.b4_coef * vapply(fits, function(f) f$b_const, numeric(1)))
-    expect_equal(jb$B, B_hand, tolerance = 1e-12)
     # h_rot: rdrobust's rule of thumb on the pooled running variables, N = mean rows per period
     xa <- unlist(lapply(pl, `[[`, "x"))
     h_rot <- 2.576 * min(sd(xa), IQR(xa) / 1.349) * mean(vapply(pl, nrow, 0))^(-1 / 5)
     expect_equal(jb$h_rot, h_rot, tolerance = 1e-12)
+    # B = sum_tau coef_tau B-hat_tau (B.4 P3): design moments at h_rot, curvature at each
+    # period's own pilot b_tau
+    B_hand <- sum(.b4_coef * vapply(names(.b4_coef), function(k)
+      .b4_Bhat(pl[[k]]$y, pl[[k]]$x, h = h_rot, b = pb[[k]][["b"]], p = p, q = q), numeric(1)))
+    expect_equal(jb$B, B_hand, tolerance = 1e-10)
     # Veff = sum_tau coef_tau^2 V-hat_tau / n_tau with V-hat_tau = n_tau h_rot V_D(h_rot): every
     # period at the SAME h_rot (App. B.4 "Bandwidth estimation"; eq:per-period-orders)
     V_hand <- sum(.b4_coef^2 * vapply(names(.b4_coef), function(k)
@@ -71,10 +108,12 @@ test_that("B.4 common h (eq:common_h_opt) — .bw_joint returns the closed form 
       numeric(1)))
     expect_equal(jb$Veff, V_hand, tolerance = 1e-12)
     # regularization under CS (no cross-period covariances):
-    # lambda * sum coef^2 ((p+1)!/h_tau^{p+1})^2 Var(D - D_bc), each at its own pilot
+    # lambda * sum coef^2 Var(B-hat_tau), B-hat_tau's side terms (p+1)! bmom(h_rot) curv(b_tau)
     vd <- sum(.b4_coef^2 * vapply(names(.b4_coef), function(k) {
       f <- fits[[k]]
-      (fp1 / pb[[k]][["h"]]^(p + 1))^2 * (sum(f$sides[["+"]]$g_diff^2) + sum(f$sides[["-"]]$g_diff^2)) }, numeric(1)))
+      fr <- rd_period(pl[[k]]$y, pl[[k]]$x, h = h_rot, b = h_rot, id = pl[[k]]$id, p = p, q = q)
+      fp1^2 * sum(vapply(c("+", "-"), function(sd)
+        fr$sides[[sd]]$bmom^2 * sum(f$sides[[sd]]$g_curv^2), numeric(1))) }, numeric(1)))
     expect_equal(jb$reg, 3 * vd, tolerance = 1e-12)
     if (p == 1L) expect_equal(jb$h, (jb$Veff / (jb$B^2 + jb$reg))^(1 / 5), tolerance = 1e-12)
   }
@@ -134,14 +173,19 @@ test_that("B.4 objective (eq:amse-att, lem:agg-var) — the joint rule's objecti
     fitv <- stats::setNames(lapply(keys, function(k) fit(k, hr, hr)), keys)
     fp1 <- factorial(p + 1)
     h0 <- vapply(keys, function(k) pb[[k]][["h"]], numeric(1))
-    bt <- vapply(fitp, function(f) f$b_const, numeric(1))
+    bt <- vapply(keys, function(k)
+      .b4_Bhat(pl[[k]]$y, pl[[k]]$x, h = hr, b = pb[[k]][["b"]], p = p, q = q), numeric(1))
     # same-side products of two periods' influence vectors, matched by id
     same <- function(fa, fb, el) sum(vapply(c("+", "-"), function(sd) {
       a <- fa$sides[[sd]]; b <- fb$sides[[sd]]; m <- match(a$id, b$id); ok <- !is.na(m)
       sum(a[[el]][ok] * b[[el]][m[ok]]) }, numeric(1)))
-    # Cov(B-hat_t, B-hat_s): the conventional-minus-BC influence g_diff at each period's pilot
+    # Cov(B-hat_t, B-hat_s): per side, (p+1)! bmom(h_rot) times the curvature's influence
+    # g_curv at each period's pilot
+    psi <- lapply(keys, function(k) { f <- fitp[[k]]
+      for (sd in c("+", "-")) f$sides[[sd]]$psi <- fp1 * fitv[[k]]$sides[[sd]]$bmom * f$sides[[sd]]$g_curv
+      f })
     Vb <- outer(seq_along(keys), seq_along(keys), Vectorize(function(i, j)
-      fp1^2 / (h0[i] * h0[j])^(p + 1) * same(fitp[[i]], fitp[[j]], "g_diff")))
+      same(psi[[i]], psi[[j]], "psi")))
     # V(D_t(h_rot)) on the diagonal, the same-side covariances at (h_rot, h_rot) off it
     S <- outer(seq_along(keys), seq_along(keys), Vectorize(function(i, j)
       if (i == j) fitv[[i]]$V_D else same(fitv[[i]], fitv[[j]], "g")))
