@@ -331,12 +331,14 @@ computes differently under \code{"atu"}.
 
 The \code{"joint"} rule is AMSE-optimal: it minimizes the asymptotic mean squared
 error (AMSE) of the RD-DID estimate over a common \code{h}, in the way
-\pkg{rdrobust} chooses a bandwidth for one period. Each period's bias
-constant is estimated from a fit at that period's own CCT bandwidths. Each
-period's variance constant, and under \code{"pc"} the covariances between periods,
-are estimated at one rule-of-thumb bandwidth shared by every period (the
-preliminary bandwidth of \pkg{rdrobust}, computed from the running variables
-of all periods pooled; \code{bandwidth$h_rot} in the result). These are combined,
+\pkg{rdrobust} chooses a bandwidth for one period. Each period's variance
+constant, under \code{"pc"} the covariances between periods, and the design
+moment in each period's bias constant are estimated at one rule-of-thumb
+bandwidth shared by every period (the preliminary bandwidth of
+\pkg{rdrobust}, computed from the running variables of all periods pooled;
+\code{bandwidth$h_rot} in the result). The other factor of the bias constant, the
+curvature of the conditional mean, is estimated from a fit at that period's
+own CCT pilot bandwidth, as \pkg{rdrobust} does. These are combined,
 with the coefficients of the sum above, into the AMSE, which is then
 minimized in closed form. Each period's pilot bandwidth keeps that period's
 CCT ratio \eqn{b/h}{b/h}. Nothing in the rule depends on which period is the

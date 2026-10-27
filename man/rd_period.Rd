@@ -55,7 +55,10 @@ conventional and bias-corrected jumps, and \code{n * h * V_D}).}
 \item{\code{sides}}{a list with one element per side of the cutoff, \code{"+"}
 (above) and \code{"-"} (below), each holding the \code{id} of the observations
 used, their conventional and bias-corrected \code{g} vectors (\code{g}, \code{g_bc})
-and \code{g_diff} (for the variance of the estimated bias), the intercept
+and \code{g_diff} (for the variance of the estimated bias), the two
+factors of the estimated bias \code{bmom} (the design moment at \code{h}) and
+\code{curv} (the order-\code{q} coefficient on \eqn{(x - c)^{p+1}}{(x - c)^(p+1)}
+at \code{b}) with the latter's influence vector \code{g_curv}, the intercept
 weights \code{a}, \code{a_bc} (\code{g} is weight times residual), the
 conventional intercept at the cutoff \code{beta0}, its bias-corrected
 version \code{beta0_bc}, and the conventional \code{slope}. The fitted line on a
