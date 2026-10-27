@@ -1,4 +1,4 @@
-# rddid 0.4.0.9003
+# rddid 0.4.0.9004
 
 First public version.
 
@@ -15,8 +15,11 @@ First public version.
   common bandwidth chosen for the RD-DID estimate, or each period's own CCT bandwidth. The
   common bandwidth is chosen as rdrobust chooses one for a single period: the variance, in a
   panel the covariances between periods, and the design part of the bias at one rule-of-thumb
-  bandwidth shared by every period, the curvature from each period's pilot fit, and a
-  regularization that includes the covariances of the bias estimates between periods.
+  bandwidth shared by every period, the curvature from fits at one pilot bandwidth that is
+  itself chosen for the RD-DID estimate (and used for the bias correction in every period), and a
+  regularization that includes the covariances of the bias estimates between periods. With one
+  period this is `rdrobust::rdbwselect()`; in a panel whose running variable does not move, it is
+  that selector applied to the combined outcome.
 * Tests of the identification assumptions when the running variable moves over time:
   `rd_typecont()`, `rd_compstable()`, `rd_homog()` and `rd_trendcell()`, or all four at once
   with `rd_checks()`.

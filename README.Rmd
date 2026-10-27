@@ -58,7 +58,7 @@ fit
 The ATT is the effect of the treatment on the units just above the cutoff, the
 ones treated in year 3. Years 1 and 2 are the comparison periods, with equal
 weights. `h` is the main bandwidth, one for every year, chosen for the RD-DID
-estimate; `b` is the pilot bandwidth of the bias correction in each year.
+estimate; `b` is the pilot bandwidth of the bias correction, also one for every year.
 `Conventional` is the local-linear estimate with its conventional standard
 error; `Robust (bias-corrected)` is the bias-corrected estimate with its robust
 standard error. A plain RD in year 3 would target 1.5, the effect plus the

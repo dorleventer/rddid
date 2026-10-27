@@ -1,7 +1,9 @@
 # bandwidth_joint.R -- the bandwidth rules that target the RD-DID estimate itself:
-# .bw_constants() estimates the curvature at each period's own CCT pilot, and the variance
-# constants and the bias design moments at one rule-of-thumb bandwidth shared by every period
-# (.bw_rot());
+# .bw_rot() is the rule-of-thumb bandwidth shared by every period;
+# .bw_stage() and .bw_pilots() choose the pilot bandwidths d and b for the aggregate, as
+# rdrobust's selector chooses them for one period;
+# .bw_constants() estimates the variance constants and the bias design moments at h_rot and the
+# curvature at the common b;
 # .bw_joint() minimises the aggregate AMSE over one common h (bwselect = "joint", the default).
 # Labels such as eq:common_h_opt, lem:agg-var or "B.4 P3" in the internal notes below point into the
 # paper's Appendix B; the code-to-paper map is dev/appB_map.md (developer material, not shipped).
@@ -29,31 +31,159 @@
 #'
 #' rdrobust's rule of thumb for the preliminary bandwidth of `rdbwselect()`,
 #' `C_K * min(sd, IQR / 1.349) * N^{-1/5}` (`C_K` = 2.576 triangular, 1.843 uniform, 2.34
-#' Epanechnikov), computed once from the running variables of all periods pooled, with `N` the
-#' average number of rows per period. Every period's variance constant is estimated at it, so
-#' the cross-period covariances are estimated at a bandwidth ratio of one.
+#' Epanechnikov; the IQR from type-2 quantiles, as rdrobust), computed once from the running
+#' variables of all periods pooled, with `N` the average number of rows per period. Every
+#' period's variance constant is estimated at it, so the cross-period covariances are estimated
+#' at a bandwidth ratio of one.
 #' @keywords internal
 #' @noRd
 .bw_rot <- function(plist, kernel = "triangular") {
   x <- unlist(lapply(plist, function(d) d$x), use.names = FALSE)
   x <- x[is.finite(x)]
-  s <- min(stats::sd(x), stats::IQR(x) / 1.349)
+  iqr <- unname(stats::quantile(x, 0.75, type = 2) - stats::quantile(x, 0.25, type = 2))
+  s <- min(stats::sd(x), iqr / 1.349)
   if (!is.finite(s) || s <= 0) s <- stats::sd(x)
   ck <- switch(kernel, triangular = 2.576, uniform = 1.843, epanechnikov = 2.34)
   nbar <- mean(vapply(plist, nrow, numeric(1)))
   ck * s * nbar^(-1 / 5)
 }
 
+#' One side of one period for a stage of the selector
+#'
+#' The order-`o` local polynomial fit at bandwidth `hh` on one side: the coefficient on
+#' `(x - c)^nu`, its per-unit influence times the HC1 residual of this fit (`g`), and rdrobust's
+#' `BConst`, `hh^nu e_nu' (X'A X)^{-1} X'A ((x - c)/hh)^{o+1}` (`bconst`, the paper's design moment
+#' `B_{t,(+-),nu,o}(hh)` divided by `nu!`).
+#' @keywords internal
+#' @noRd
+.bw_side_poly <- function(y, x, id, cutoff, o, nu, hh, kernel) {
+  w <- .rd_kweight((x - cutoff) / hh, kernel)
+  k <- w > 0
+  if (length(unique(x[k])) <= o + 1L)
+    .abort("too few distinct running-variable values on one side of the cutoff for the ",
+           "order-", o, " fit of the bandwidth selector; use bwselect = \"cct\" or pass h.")
+  y <- y[k]; x <- x[k]; id <- id[k]; w <- w[k]
+  X  <- outer(x - cutoff, 0:o, `^`)
+  Gi <- .qrXXinv(sqrt(w) * X)
+  A  <- Gi %*% t(X * w)                                 # coefficients = A y
+  beta <- drop(A %*% y)
+  ns  <- length(y)
+  res <- sqrt(ns / (ns - (o + 1L))) * (y - drop(X %*% beta))
+  bconst <- hh^nu * drop(Gi %*% crossprod(X * w, ((x - cutoff) / hh)^(o + 1L)))[nu + 1L]
+  list(coef = beta[nu + 1L], g = A[nu + 1L, ] * res, id = id, bconst = bconst)
+}
+
+#' Variance of sum_t coef_t (term_{t,+} - term_{t,-}) from per-side influence vectors
+#'
+#' `G[[t]][[side]]` holds `g` and `id`. The own-period blocks always enter; the cross-period
+#' blocks by `cross`: `"none"`, `"same"` (same side, matched by id) or `"same_opp"` (same side
+#' minus opposite side), the rules of [.bw_constants()].
+#' @keywords internal
+#' @noRd
+.bw_agg_var <- function(G, coef, cross) {
+  keys <- names(coef)
+  ms <- function(a, sa, b, sb) .match_sum(G[[a]][[sa]]$id, G[[a]][[sa]]$g, G[[b]][[sb]]$id, G[[b]][[sb]]$g)
+  v <- 0
+  for (a in keys) for (b in keys) {
+    cab <- if (a == b) {
+      sum(G[[a]][["+"]]$g^2) + sum(G[[a]][["-"]]$g^2)
+    } else if (cross == "none") {
+      0
+    } else {
+      same <- ms(a, "+", b, "+") + ms(a, "-", b, "-")
+      opp  <- if (cross == "same_opp") ms(a, "+", b, "-") + ms(a, "-", b, "+") else 0
+      same - opp
+    }
+    v <- v + coef[[a]] * coef[[b]] * cab
+  }
+  v
+}
+
+#' One stage of the selector for the aggregate (App. B.4, "Bandwidth estimation")
+#'
+#' rdrobust's `rdrobust_bw()` stage, in its own units, for the aggregate
+#' `sum_t coef_t (m^{(nu)}_{t,+} - m^{(nu)}_{t,-})` instead of one period's jump: every period at
+#' the same `h_V` (variance, design moments) and `h_B` (the order-`oB` fit for the `(o+1)`-th
+#' derivative),
+#'   V  = (2 nu + 1) h_V^{2 nu + 1} Var(sum_t coef_t (beta_{nu,t,+} - beta_{nu,t,-})),
+#'   B  = sqrt(2 (o + 1 - nu)) sum_t coef_t (BConst_{t,+} beta_{o+1,t,+} - BConst_{t,-} beta_{o+1,t,-}),
+#'   R  = reg_const 2 (o + 1 - nu) Var(the sum in B, BConst held fixed),
+#'   bw = (V / (B^2 + R))^{1 / (2 o + 3)},
+#' the paper's `h^opt(nu, o, V-bar-hat, B-bar-hat)` with `B^2` replaced by `B^2 + R`. `h_B = "range"`
+#' takes, in each period and on each side, the largest distance of the running variable to the
+#' cutoff. The cross-period covariances follow the scheme as in [.bw_constants()]: in `V` the
+#' same-side ones under `"pc"` only; in `R` none under `"cs"`, same side under `"pc"`, same minus
+#' opposite side under `"pv"`.
+#' @keywords internal
+#' @noRd
+.bw_stage <- function(plist, coef, scheme, o, nu, oB, h_V, h_B, reg_const = 0, c = 0,
+                      kernel = "triangular") {
+  cutoff <- c
+  keys <- names(coef)
+  GV <- list(); GB <- list(); Bsum <- 0
+  for (k in keys) {
+    d <- plist[[k]]; GV[[k]] <- list(); GB[[k]] <- list()
+    for (sd in c("+", "-")) {
+      s  <- if (sd == "+") d$x >= cutoff else d$x < cutoff
+      hb <- if (identical(h_B, "range")) max(abs(d$x[s] - cutoff)) else h_B
+      fv <- .bw_side_poly(d$y[s], d$x[s], d$id[s], cutoff, o, nu, h_V, kernel)
+      fb <- .bw_side_poly(d$y[s], d$x[s], d$id[s], cutoff, oB, o + 1L, hb, kernel)
+      sg <- if (sd == "+") 1 else -1
+      Bsum <- Bsum + coef[[k]] * sg * fv$bconst * fb$coef
+      GV[[k]][[sd]] <- list(g = fv$g, id = fv$id)
+      GB[[k]][[sd]] <- list(g = fv$bconst * fb$g, id = fb$id)
+    }
+  }
+  V <- (2 * nu + 1) * h_V^(2 * nu + 1) *
+    .bw_agg_var(GV, coef, if (scheme == "pc") "same" else "none")
+  B <- sqrt(2 * (o + 1 - nu)) * Bsum
+  R <- if (reg_const > 0)
+    reg_const * 2 * (o + 1 - nu) * .bw_agg_var(GB, coef, c(cs = "none", pc = "same", pv = "same_opp")[[scheme]])
+  else 0
+  if (!is.finite(V) || V <= 0)
+    .abort("the bandwidth selector's variance scale is not positive; use bwselect = \"cct\" or pass h.")
+  list(V = V, B = B, R = R, bw = (V / (B^2 + R))^(1 / (2 * o + 3)))
+}
+
+#' Pilot bandwidths d and b for the aggregate (App. B.4, "Bandwidth estimation")
+#'
+#' rdrobust's first two stages (`bwselect = "mserd"`) for the aggregate, every period at the
+#' shared `h_rot`:
+#'   d = h^opt(q+1, q+1, V-bar-hat(q+1, q+1, h_rot), B-bar-hat(q+1, q+1, q+2, h_rot, range)),
+#'       not regularized;
+#'   b = h^opt(p+1, q,   V-bar-hat(p+1, q, h_rot),   B-bar-hat(p+1, q, q+1, h_rot, d)),
+#'       regularized when `regularize`.
+#' Each is capped at the largest distance of the running variable to the cutoff over all
+#' periods, as rdrobust's `bwrestrict = TRUE`. With one period and `coef = 1` these are
+#' rdbwselect's `d` (internal) and `b`; under a balanced PC panel, its `d` and `b` on the composite
+#' outcome `sum_t coef_t Y_t` (at the same `h_rot`).
+#' @return list with `d`, `b` and the two stages (`stage_d`, `stage_b`: `V`, `B`, `R`, `bw`).
+#' @keywords internal
+#' @noRd
+.bw_pilots <- function(plist, coef, scheme = "cs", h_rot = NULL, c = 0, p = 1L, q = 2L,
+                       kernel = "triangular", regularize = TRUE, reg_const = 3) {
+  cutoff <- c
+  if (is.null(h_rot)) h_rot <- .bw_rot(plist[names(coef)], kernel = kernel)
+  radius <- max(vapply(plist[names(coef)], function(d) max(abs(d$x - cutoff)), numeric(1)))
+  st_d <- .bw_stage(plist, coef, scheme, o = q + 1L, nu = q + 1L, oB = q + 2L,
+                    h_V = h_rot, h_B = "range", reg_const = 0, c = cutoff, kernel = kernel)
+  d <- min(st_d$bw, radius)
+  st_b <- .bw_stage(plist, coef, scheme, o = q, nu = p + 1L, oB = q + 1L,
+                    h_V = h_rot, h_B = d, reg_const = if (regularize) reg_const else 0,
+                    c = cutoff, kernel = kernel)
+  b <- min(st_b$bw, radius)
+  list(d = d, b = b, stage_d = st_d, stage_b = st_b)
+}
+
 #' Per-period asymptotic constants for the aggregate AMSE (App. B.4)
 #'
 #' Used by the joint selector; the paper's "Bandwidth estimation" paragraph of App. B.4.
 #' Two sets of fits, as in CCT's own selector:
-#'   * curvature: every period at its OWN pilot pair (default: its CCT pair from
-#'     [rd_bw_cct()]); gives the order-q coefficient on `(x - c)^{p+1}` at `b_t` on each side
-#'     (`curv`) and the pilot `b/h` ratios;
+#'   * curvature: every period at the common pilot bandwidth `b`; gives the order-q
+#'     coefficient on `(x - c)^{p+1}` at `b` on each side (`curv`);
 #'   * design side: every period at ONE rule-of-thumb bandwidth `h_rot` ([.bw_rot()]); gives
 #'     the bias design moments `bmom` (rdrobust's `BConst`), so that
-#'     `B-hat_t = (p+1)! [bmom_+(h_rot) curv_+(b_t) - bmom_-(h_rot) curv_-(b_t)]`, the
+#'     `B-hat_t = (p+1)! [bmom_+(h_rot) curv_+(b) - bmom_-(h_rot) curv_-(b)]`, the
 #'     covariance matrix of the `B-hat_t` for the regularization, with the cross-period
 #'     covariances the scheme allows (none under `"cs"`, same side under `"pc"`, same minus
 #'     opposite side under `"pv"`, as for the jumps), and
@@ -67,26 +197,21 @@
 #'
 #' @param plist named per-period data list; `coef` named period coefficients.
 #' @param scheme one of `"cs"`, `"pc"`, `"pv"`.
-#' @param pilot_bws optional named list of per-period `c(h, b)` for the bias side; defaults
-#'   to CCT.
+#' @param b the common pilot bandwidth of the curvature fits (from [.bw_pilots()]).
 #' @param h_rot optional bandwidth for the variance side; defaults to [.bw_rot()].
 #' @return list with `keys`, `coef` (in `keys` order), `bias_const`, `var_const`, `n_obs`,
 #'   `var_bias` (K x K covariance of the `B-hat_t`), `var_cross` (K x K same-side cross term,
-#'   zero off PC), `h_rot`, `h_pilot`, `ratio`, `pilot_fits`, `var_fits`, `pilot_bws`.
+#'   zero off PC), `h_rot`, `b`, `pilot_fits`, `var_fits`.
 #' @keywords internal
 #' @noRd
-.bw_constants <- function(plist, coef, scheme = "cs", pilot_bws = NULL, h_rot = NULL,
+.bw_constants <- function(plist, coef, scheme = "cs", b, h_rot = NULL,
                           c = 0, p = 1L, q = 2L, kernel = "triangular") {
   cutoff <- c
   keys <- names(coef)
   K    <- length(keys)
   fp1  <- factorial(p + 1)
-  if (is.null(pilot_bws))
-    pilot_bws <- .bw_cct(plist, c = cutoff, p = p, q = q, kernel = kernel)
-  missing_k <- setdiff(keys, names(pilot_bws))
-  if (length(missing_k) > 0L)
-    .abort("`pilot_bws` is missing entries for period(s): ",
-           paste(missing_k, collapse = ", "), ".")
+  if (!is.numeric(b) || length(b) != 1L || !is.finite(b) || b <= 0)
+    .abort("`b` must be one positive pilot bandwidth, common to all periods.")
   if (is.null(h_rot)) h_rot <- .bw_rot(plist[keys], kernel = kernel)
 
   fit_at <- function(k, h, b)
@@ -94,22 +219,19 @@
               c = cutoff, p = p, q = q, kernel = kernel)
 
   # The estimated bias of D_t on a side is h^{p+1} * bmom * curv: a design moment at h and the
-  # curvature (the order-q coefficient on (x - c)^{p+1}) from the pilot fit at b. As in
-  # rdrobust's selector, the curvature needs its own pilot bandwidth, but the design moment,
-  # like the variance, uses only the running variable, so both are taken at the shared h_rot.
-  # pilot fits: every period at its own CCT pair (the curvature, and the b/h ratios)
-  pilot_fits <- stats::setNames(lapply(keys, function(k)
-    fit_at(k, pilot_bws[[k]][["h"]], pilot_bws[[k]][["b"]])), keys)
+  # curvature (the order-q coefficient on (x - c)^{p+1}) from the fit at b. As in rdrobust's
+  # selector, the curvature has its own bandwidth b, but the design moment, like the variance,
+  # uses only the running variable, so both are taken at the shared h_rot.
+  # curvature fits: every period at the common b (main bandwidth b too, so that the active set,
+  # and with it the HC1 factor of the curvature's influence, is the b window alone)
+  pilot_fits <- stats::setNames(lapply(keys, function(k) fit_at(k, b, b)), keys)
   # variance-side fits: every period at the common rule-of-thumb bandwidth (the variance
   # constants and the design moments)
   var_fits <- stats::setNames(lapply(keys, function(k) fit_at(k, h_rot, h_rot)), keys)
   period_coef <- unname(vapply(keys, function(k) coef[[k]], numeric(1)))
-  ratio       <- vapply(keys, function(k)
-    unname(pilot_bws[[k]][["b"]] / pilot_bws[[k]][["h"]]), numeric(1))
-  h_pilot     <- vapply(keys, function(k) unname(pilot_bws[[k]][["h"]]), numeric(1))
 
-  # B-hat_t = (p+1)! [bmom_+(h_rot) curv_+(b_t) - bmom_-(h_rot) curv_-(b_t)]. psi is the
-  # per-unit influence of one side's term, (p+1)! bmom(h_rot) g_curv(b_t), unsigned: the
+  # B-hat_t = (p+1)! [bmom_+(h_rot) curv_+(b) - bmom_-(h_rot) curv_-(b)]. psi is the
+  # per-unit influence of one side's term, (p+1)! bmom(h_rot) g_curv(b), unsigned: the
   # minus sign of the side below is applied through "same - opp" in the covariances.
   psi <- function(k, side)
     fp1 * var_fits[[k]]$sides[[side]]$bmom * pilot_fits[[k]]$sides[[side]]$g_curv
@@ -123,14 +245,14 @@
   ms  <- function(a, sa, b, sb) .match_sum(ids(a, sa), psi(a, sa), ids(b, sb), psi(b, sb))
   var_bias <- matrix(0, K, K, dimnames = list(keys, keys))
   for (i in seq_len(K)) for (j in seq_len(K)) {
-    a <- keys[i]; b <- keys[j]
+    a <- keys[i]; bb <- keys[j]
     var_bias[i, j] <- if (i == j) {
       sum(psi(a, "+")^2) + sum(psi(a, "-")^2)
     } else if (scheme == "cs") {
       0
     } else {
-      same <- ms(a, "+", b, "+") + ms(a, "-", b, "-")
-      opp  <- if (scheme == "pv") ms(a, "+", b, "-") + ms(a, "-", b, "+") else 0
+      same <- ms(a, "+", bb, "+") + ms(a, "-", bb, "-")
+      opp  <- if (scheme == "pv") ms(a, "+", bb, "-") + ms(a, "-", bb, "+") else 0
       same - opp
     }
   }
@@ -146,16 +268,17 @@
             "the cross-period term is identically zero (same as scheme = \"cs\").")
   }
   list(keys = keys, coef = period_coef, bias_const = bias_const, var_const = var_const,
-       n_obs = n_obs, var_bias = var_bias, var_cross = var_cross, h_rot = h_rot,
-       h_pilot = h_pilot, ratio = ratio, pilot_fits = pilot_fits, var_fits = var_fits,
-       pilot_bws = pilot_bws)
+       n_obs = n_obs, var_bias = var_bias, var_cross = var_cross, h_rot = h_rot, b = b,
+       pilot_fits = pilot_fits, var_fits = var_fits)
 }
 
 #' Joint AMSE-optimal common bandwidth for the aggregate estimator
 #'
-#' Feasible plug-in for eq:common_h_opt (App. B.4, "Bandwidth estimation"). With the
-#' constants of [.bw_constants()] (curvature at each period's own CCT pilot; variance and bias
-#' design moments at the shared rule-of-thumb `h_rot`), the aggregate objective at a common `h` is
+#' Feasible plug-in for eq:common_h_opt (App. B.4, "Bandwidth estimation"): the last line of
+#' the paper's display, after `h_rot` ([.bw_rot()]) and the pilots `d` and `b` for the aggregate
+#' ([.bw_pilots()]). With the constants of [.bw_constants()] (curvature at the common `b`;
+#' variance and bias design moments at the shared rule-of-thumb `h_rot`), the aggregate objective
+#' at a common `h` is
 #'   AMSE^S(h) = (h^{p+1}/(p+1)!)^2 (B^2 + reg) + Veff / h,
 #'   B    = sum_tau w~_tau B-hat_tau                       (signed; can cancel),
 #'   Veff = sum_tau w~_tau^2 V-hat_tau / n_tau
@@ -164,10 +287,8 @@
 #' (`Veff` is `V^S(t_RD) / n` of `lem:agg-var` at a common h, so the `n^{-1/(2p+3)}`
 #' factor is absorbed), whose minimizer is
 #'   h* = ( ((p+1)!)^2/(2(p+1)) * Veff / (B^2 + reg) )^{1/(2p+3)}.
-#' The pilot
-#' bandwidth keeps each period's CCT ratio, `b_t = h* b_t^CCT / h_t^CCT` (B.4 after
-#' eq:common_h_opt; consistent with Assumption R(f)).
-#'
+#' Every period's bias correction uses the same pilot bandwidth `b` (B.4 after
+#' eq:common_h_opt; consistent with Assumption R(g), as h*/b -> 0).
 #'
 #' @param plist named per-period data list; `coef` named period coefficients
 #'   (RD period = +1, comparisons = -w_t); `t_rd` the RD-period label (kept for
@@ -176,27 +297,36 @@
 #'   bandwidth. Under `"pc"` the same-side cross-period covariances enter (they are
 #'   O(1/(nh)), `lem:cov-pc`); under `"pv"` they are O(1/n) = o(1/(nh)) (`lem:cov-pv`)
 #'   and drop, so the covariance-free CS form is used (`lem:agg-var`).
-#' @param pilot_bws optional named list of per-period `c(h, b)` pilots; defaults to
-#'   each period's CCT/IK pair.
+#' @param b optional common pilot bandwidth; defaults to the joint `b` of [.bw_pilots()].
 #' @param regularize add the App. B.4 regularization term to the squared bias so a
 #'   small, noisy estimated bias constant cannot inflate `h*` (mirrors the
-#'   `regularize = TRUE` default of [rdrobust::rdbwselect]). Default `TRUE`.
+#'   `regularize = TRUE` default of [rdrobust::rdbwselect]); also regularizes `b`. Default
+#'   `TRUE`.
 #' @param reg_const multiple of the bias-estimate variance used as the
 #'   regularization term (the paper's `lambda`; default 3, the CCT convention).
 #' @param constants optional precomputed [.bw_constants()] output (reuses the
-#'   constants without refitting).
-#' @return list with the common `h`, the per-period pilot bandwidths `b` (named by
-#'   period), the bias constant `B`, the variance scale `Veff`, the regularization
-#'   term `reg`, the rule-of-thumb `h_rot`, the `pilot_bws` used, and the `constants`.
+#'   constants without refitting; its `b` is then the pilot).
+#' @return list with the common `h`, the common pilot `b`, the pilot `d` of `b` (`NA` when
+#'   `b` or `constants` is given), the bias constant `B`, the variance scale `Veff`, the
+#'   regularization term `reg`, the rule-of-thumb `h_rot`, and the `constants`.
 #' @keywords internal
 #' @noRd
-.bw_joint <- function(plist, coef, t_rd = NULL, scheme = "cs", pilot_bws = NULL,
+.bw_joint <- function(plist, coef, t_rd = NULL, scheme = "cs", b = NULL,
                       c = 0, p = 1L, q = 2L, kernel = "triangular",
                       regularize = TRUE, reg_const = 3, constants = NULL) {
   cutoff <- c
-  if (is.null(constants))
-    constants <- .bw_constants(plist, coef, scheme = scheme, pilot_bws = pilot_bws,
+  d <- NA_real_
+  if (is.null(constants)) {
+    h_rot <- .bw_rot(plist[names(coef)], kernel = kernel)
+    if (is.null(b)) {
+      pil <- .bw_pilots(plist, coef, scheme = scheme, h_rot = h_rot, c = cutoff, p = p, q = q,
+                        kernel = kernel, regularize = regularize, reg_const = reg_const)
+      d <- pil$d
+      b <- pil$b
+    }
+    constants <- .bw_constants(plist, coef, scheme = scheme, b = b, h_rot = h_rot,
                                c = cutoff, p = p, q = q, kernel = kernel)
+  }
   const <- constants
   fp1   <- factorial(p + 1)
   K     <- length(const$keys)
@@ -227,7 +357,6 @@
     .warn("joint AMSE-optimal bandwidth h* = ", signif(h_star, 4),
           " exceeds the running-variable radius ", signif(radius, 4),
           " (the period biases nearly cancel); consider bwselect = \"cct\" or a fixed h.")
-  b <- stats::setNames(h_star * const$ratio, const$keys)
-  list(h = h_star, b = b, B = B_agg, Veff = Veff, reg = reg, h_rot = const$h_rot,
-       pilot_bws = const$pilot_bws, constants = const)
+  list(h = h_star, b = const$b, d = d, B = B_agg, Veff = Veff, reg = reg, h_rot = const$h_rot,
+       constants = const)
 }

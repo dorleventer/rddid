@@ -3,6 +3,34 @@ package's user-facing NEWS is inst/NEWS.md). -->
 
 # rddid 0.4.0.9000 (development)
 
+## 2026-10-27: the pilot bandwidths chosen for the aggregate (0.4.0.9004)
+
+* `bwselect = "joint"`: the pilot bandwidth `b` is now one bandwidth for every period, chosen for
+  the RD-DID estimate as rdrobust's `rdbwselect` (mserd) chooses its pilot for one period: `b` is
+  AMSE-optimal for the aggregate `sum_t coef_t` of the periods' `(p+1)`-th derivative jumps (order-q
+  fits), with its own curvature from order-(q+1) fits at a bandwidth `d`, itself AMSE-optimal for
+  the aggregate `(q+1)`-th derivative jump (order-(q+2) fits at each side's full range; not
+  regularized). Every variance and design moment is at the shared `h_rot`; `b` is regularized
+  like `h`; `d` and `b` are capped at the largest distance to the cutoff (rdrobust's
+  `bwrestrict`). The curvature of `h`'s bias is then taken at this `b` in every period, and every
+  period's bias correction uses it. Before, each period's curvature came from its own CCT pilot
+  `b_t^CCT`, and the bias correction used `b_t = h* b_t^CCT / h_t^CCT`.
+* New internals `.bw_stage()` (one rdrobust_bw stage for the aggregate, in rdrobust's units) and
+  `.bw_pilots()`; `.bw_constants()` / `.bw_joint()` take one `b` instead of `pilot_bws`;
+  `bandwidth` in the result has `d` and one `b` (no `pilot_bws`). `.bw_rot()` takes the IQR from
+  type-2 quantiles, as rdrobust (was `IQR()`, type 7; matters only when IQR / 1.349 < sd).
+* Why: paper App. B.4 "Bandwidth estimation" (Overleaf `c0b890c`, 2026-10-27) and the T1787
+  simulations (rd-did `code/simulations/bw_routes`, `docs/bw_routes_note.md` section 8): joint
+  pilots give the most accurate common bandwidth of the routes compared.
+* Checks: one period, `h` and `b` equal `rdbwselect(mserd, hc1)` to 1e-8 (p = 1, 2; both branches
+  of the rule of thumb); balanced PC panel, `b` and `h` equal `rdbwselect` on the composite
+  outcome at the same `h_rot`; `.bw_stage()`'s third stage equals `.bw_joint()`'s `h` (two
+  implementations of eq:common_h_opt).
+* Golden master (new baseline `dev/snapshots/baseline_jointpilots.rds`, against
+  `baseline_bmomrot.rds`): exactly the 31 joint cells change (h by a factor 0.87-1.52); the other
+  98 are identical. On `rddid_sim` the print snapshot's common h moves 0.2694 -> 0.3986, with
+  b = 0.5936 in every period.
+
 ## 2026-10-27: the bias design moment at the shared rule-of-thumb bandwidth (0.4.0.9003)
 
 * `bwselect = "joint"`: on each side, the bias constant is the design moment

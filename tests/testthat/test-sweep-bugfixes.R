@@ -106,7 +106,8 @@ test_that("an NA running variable does not read as a side switch", {
   expect_message(f <- rddid(d, y = "Y", x = "R", time = "year", id = "id", t_rd = 3), "dropped")
   expect_equal(f$scheme, "pc")
   f0 <- rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
-  expect_equal(f$bandwidth$h, f0$bandwidth$h, tolerance = 1e-3)   # one row cannot move h much
+  # one row cannot move h much (it moves h_rot, d, b and h each by ~0.1%)
+  expect_equal(f$bandwidth$h, f0$bandwidth$h, tolerance = 5e-3)
   expect_equal(nobs(f), 2999L)                                     # rows actually used
 })
 
