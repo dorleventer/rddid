@@ -38,16 +38,17 @@ fit_joint$bandwidth$b_by_period
 ```
 
 One main bandwidth for every period, chosen to minimize the asymptotic
-mean squared error of the RD-DID estimate, not of each period’s jump. As
-in rdrobust, everything that depends only on the running variable and
-the residuals is estimated at one rule-of-thumb bandwidth shared by
-every period (`fit_joint$bandwidth$h_rot`): each period’s variance, the
-covariances between periods in a panel, and the design part of each
-period’s bias. Only the curvature of the conditional mean, the other
-part of the bias, needs its own pilot fit, at that period’s CCT pilot
-bandwidth. These inputs to the rule are the same whichever period is the
-RD period. The pilot bandwidth of each period keeps that period’s CCT
-ratio of pilot to main bandwidth. For year 3, from its own CCT pair:
+mean squared error of the diff-in-disc estimate, not of each period’s
+jump. As in rdrobust, everything that depends only on the running
+variable and the residuals is estimated at one rule-of-thumb bandwidth
+shared by every period (`fit_joint$bandwidth$h_rot`): each period’s
+variance, the covariances between periods in a panel, and the design
+part of each period’s bias. Only the curvature of the conditional mean,
+the other part of the bias, needs its own pilot fit, at that period’s
+CCT pilot bandwidth. These inputs to the rule are the same whichever
+period is the RD period. The pilot bandwidth of each period keeps that
+period’s CCT ratio of pilot to main bandwidth. For year 3, from its own
+CCT pair:
 
 ``` r
 
@@ -155,11 +156,11 @@ standard error under each scheme:
 ``` r
 
 summary(fit_pv)
-#> RD-DID estimate of the ATT in period 3
+#> Diff-in-disc estimate of the ATT in period 3
 #>   Comparison periods: 1, 2   (constant confounding trend)
 #>   Comparison weights: 1: 0.500, 2: 0.500
 #>   Sampling scheme: panel, some units change side of the cutoff (detected)
-#>   Bandwidth: common h = 0.2436 (rule "joint": one bandwidth, chosen for the RD-DID estimate)
+#>   Bandwidth: common h = 0.2436 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)
 #>   Pilot bandwidth b (period = value): 1 = 0.4001, 2 = 0.3958, 3 = 0.4047
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI

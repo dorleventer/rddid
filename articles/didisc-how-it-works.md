@@ -1,9 +1,8 @@
 # How didisc() computes the estimate
 
-This article is for readers who want to see the pieces: referees, or
-users checking the package against their own code. It rebuilds the
-RD-DID estimate and two of the validation tests by hand from the two
-building blocks,
+This article is for readers who want to check the computation, for
+example against their own code. It rebuilds the diff-in-disc estimate
+and two of the validation tests by hand from the two building blocks,
 [`rd_bw_cct()`](https://dorleventer.github.io/didisc/reference/rd_bw_cct.md)
 (one period’s CCT bandwidths) and
 [`rd_period()`](https://dorleventer.github.io/didisc/reference/rd_period.md)
@@ -168,7 +167,7 @@ bandwidths, as the loop above did (the default rule,
 
 res <- didisc(dat, y = "Y", x = "R", time = "t", id = "id", t_rd = 3, bwselect = "cct")
 res
-#> RD-DID estimate of the ATT in period 3
+#> Diff-in-disc estimate of the ATT in period 3
 #>   Comparison periods: 1, 2   (constant confounding trend)
 #>   Comparison weights: 1: 0.500, 2: 0.500
 #>   Sampling scheme: panel, no unit changes side of the cutoff (detected)
@@ -307,11 +306,11 @@ among treated units: the confounding jump of 1 plus `tau1 - tau0`.
 res_atu <- didisc(dat_atu, y = "Y", x = "R", time = "t", id = "id", t_rd = 3,
                  estimand = "atu")
 res_atu
-#> RD-DID estimate of the ATU in period 3
+#> Diff-in-disc estimate of the ATU in period 3
 #>   Comparison periods: 1, 2   (constant confounding trend)
 #>   Comparison weights: 1: 0.500, 2: 0.500
 #>   Sampling scheme: panel, no unit changes side of the cutoff (detected)
-#>   Bandwidth: common h = 0.3392 (rule "joint": one bandwidth, chosen for the RD-DID estimate)
+#>   Bandwidth: common h = 0.3392 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)
 #>   Pilot bandwidth b (period = value): 1 = 0.5069, 2 = 0.5261, 3 = 0.4951
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI

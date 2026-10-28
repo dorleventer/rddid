@@ -61,7 +61,7 @@ nonparametric confidence intervals for regression-discontinuity designs.
 
 ## See also
 
-Other RD-DID estimation:
+Other diff-in-disc estimation:
 [`didisc()`](https://dorleventer.github.io/didisc/reference/didisc.md),
 [`plot.didisc()`](https://dorleventer.github.io/didisc/reference/plot.didisc.md),
 [`rd_period()`](https://dorleventer.github.io/didisc/reference/rd_period.md)

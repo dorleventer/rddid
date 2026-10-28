@@ -143,7 +143,7 @@ didisc(
 
   the bandwidth rule, used when `h` is not given: `"joint"` (default;
   the common bandwidth, one `h` for every period, chosen to minimize the
-  asymptotic mean squared error of the RD-DID estimate), `"cct"`
+  asymptotic mean squared error of the diff-in-disc estimate), `"cct"`
   (per-period CCT bandwidths: each period's own MSE-optimal bandwidth of
   Calonico, Cattaneo and Titiunik, from
   [`rd_bw_cct()`](https://dorleventer.github.io/didisc/reference/rd_bw_cct.md)).
@@ -404,9 +404,9 @@ actually used, are in `estimates` and in
 ### Bandwidth rules
 
 - `"joint"` (default), the common bandwidth: one `h` in every period,
-  chosen to minimize the asymptotic mean squared error of the RD-DID
-  estimate, not of each period's jump, so the biases of the period jumps
-  can partly cancel.
+  chosen to minimize the asymptotic mean squared error of the
+  diff-in-disc estimate, not of each period's jump, so the biases of the
+  period jumps can partly cancel.
 
 - `"cct"`, per-period CCT bandwidths: each period gets its own
   MSE-optimal bandwidth from
@@ -439,26 +439,26 @@ computes differently under `"atu"`.
 ### Technical details
 
 The `"joint"` rule is AMSE-optimal: it minimizes the asymptotic mean
-squared error (AMSE) of the RD-DID estimate over a common `h`, in the
-way rdrobust chooses a bandwidth for one period. Each period's variance
-constant, under `"pc"` the covariances between periods, and the design
-moment in each period's bias constant are estimated at one rule-of-thumb
-bandwidth shared by every period (the preliminary bandwidth of rdrobust,
-computed from the running variables of all periods pooled;
-`bandwidth$h_rot` in the result). The other factor of the bias constant,
-the curvature of the conditional mean, is estimated from a fit at that
-period's own CCT pilot bandwidth, as rdrobust does. These are combined,
-with the coefficients of the sum above, into the AMSE, which is then
-minimized in closed form. Each period's pilot bandwidth keeps that
-period's CCT ratio \\b/h\\. Nothing in the rule depends on which period
-is the RD period, so an aggregate of several RD periods gets the same
-bandwidth whatever the order of `t_rd`. With `regularize = TRUE` the
-rule adds `reg_const` times the estimated variance of the aggregate bias
-constant, including its covariances between periods, to the squared
-bias, as rdrobust does, so a near-zero estimated bias cannot make the
-bandwidth very large. Standard errors use the HC1 convention of
-rdrobust. The derivations are in the paper's appendix on estimation and
-bandwidth choice.
+squared error (AMSE) of the diff-in-disc estimate over a common `h`, in
+the way rdrobust chooses a bandwidth for one period. Each period's
+variance constant, under `"pc"` the covariances between periods, and the
+design moment in each period's bias constant are estimated at one
+rule-of-thumb bandwidth shared by every period (the preliminary
+bandwidth of rdrobust, computed from the running variables of all
+periods pooled; `bandwidth$h_rot` in the result). The other factor of
+the bias constant, the curvature of the conditional mean, is estimated
+from a fit at that period's own CCT pilot bandwidth, as rdrobust does.
+These are combined, with the coefficients of the sum above, into the
+AMSE, which is then minimized in closed form. Each period's pilot
+bandwidth keeps that period's CCT ratio \\b/h\\. Nothing in the rule
+depends on which period is the RD period, so an aggregate of several RD
+periods gets the same bandwidth whatever the order of `t_rd`. With
+`regularize = TRUE` the rule adds `reg_const` times the estimated
+variance of the aggregate bias constant, including its covariances
+between periods, to the squared bias, as rdrobust does, so a near-zero
+estimated bias cannot make the bandwidth very large. Standard errors use
+the HC1 convention of rdrobust. The derivations are in the paper's
+appendix on estimation and bandwidth choice.
 
 ## References
 
@@ -489,7 +489,7 @@ the example data
 and
 [didisc_sim_pv](https://dorleventer.github.io/didisc/reference/didisc_sim_pv.md).
 
-Other RD-DID estimation:
+Other diff-in-disc estimation:
 [`plot.didisc()`](https://dorleventer.github.io/didisc/reference/plot.didisc.md),
 [`rd_bw_cct()`](https://dorleventer.github.io/didisc/reference/rd_bw_cct.md),
 [`rd_period()`](https://dorleventer.github.io/didisc/reference/rd_period.md)
@@ -500,11 +500,11 @@ Other RD-DID estimation:
 # didisc_sim: confounding jump 0.5 in every year, treatment effect 1 in year 3
 fit <- didisc(didisc_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 fit            # the estimate, its standard error and confidence interval
-#> RD-DID estimate of the ATT in period 3
+#> Diff-in-disc estimate of the ATT in period 3
 #>   Comparison periods: 1, 2   (constant confounding trend)
 #>   Comparison weights: 1: 0.500, 2: 0.500
 #>   Sampling scheme: panel, no unit changes side of the cutoff (detected)
-#>   Bandwidth: common h = 0.2694 (rule "joint": one bandwidth, chosen for the RD-DID estimate)
+#>   Bandwidth: common h = 0.2694 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)
 #>   Pilot bandwidth b (period = value): 1 = 0.4136, 2 = 0.3901, 3 = 0.3984
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI
@@ -513,11 +513,11 @@ fit            # the estimate, its standard error and confidence interval
 #> 
 #>   summary() shows the per-period fits and the s.e. under every sampling scheme.
 summary(fit)   # the jump in every period, and the s.e. under each scheme
-#> RD-DID estimate of the ATT in period 3
+#> Diff-in-disc estimate of the ATT in period 3
 #>   Comparison periods: 1, 2   (constant confounding trend)
 #>   Comparison weights: 1: 0.500, 2: 0.500
 #>   Sampling scheme: panel, no unit changes side of the cutoff (detected)
-#>   Bandwidth: common h = 0.2694 (rule "joint": one bandwidth, chosen for the RD-DID estimate)
+#>   Bandwidth: common h = 0.2694 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)
 #>   Pilot bandwidth b (period = value): 1 = 0.4136, 2 = 0.3901, 3 = 0.3984
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI
@@ -541,11 +541,11 @@ confint(fit, "Robust")
 # the confounding jump moves linearly in time
 didisc(didisc_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
       trend = "linear")
-#> RD-DID estimate of the ATT in period 3
+#> Diff-in-disc estimate of the ATT in period 3
 #>   Comparison periods: 1, 2   (linear confounding trend)
 #>   Comparison weights: 1: -1.000, 2: 2.000
 #>   Sampling scheme: panel, no unit changes side of the cutoff (detected)
-#>   Bandwidth: common h = 0.306 (rule "joint": one bandwidth, chosen for the RD-DID estimate)
+#>   Bandwidth: common h = 0.306 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)
 #>   Pilot bandwidth b (period = value): 1 = 0.4698, 2 = 0.4431, 3 = 0.4525
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI
@@ -556,11 +556,11 @@ didisc(didisc_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
 # minimum-variance comparison-period weights
 didisc(didisc_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
       weighting = "min_variance")
-#> RD-DID estimate of the ATT in period 3
+#> Diff-in-disc estimate of the ATT in period 3
 #>   Comparison periods: 1, 2   (constant confounding trend)
 #>   Comparison weights (minimum variance): 1: 0.453, 2: 0.547; Robust row: 1: 0.462, 2: 0.538
 #>   Sampling scheme: panel, no unit changes side of the cutoff (detected)
-#>   Bandwidth: common h = 0.2735 (rule "joint": one bandwidth, chosen for the RD-DID estimate)
+#>   Bandwidth: common h = 0.2735 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)
 #>   Pilot bandwidth b (period = value): 1 = 0.4198, 2 = 0.3959, 3 = 0.4043
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI
@@ -572,12 +572,12 @@ didisc(didisc_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
 # second RD year, 4, for illustration)
 sim4 <- rbind(didisc_sim, transform(didisc_sim[didisc_sim$year == 3, ], year = 4))
 didisc(sim4, y = "Y", x = "R", time = "year", id = "id", t_rd = c(3, 4))
-#> RD-DID estimate of the ATT averaged over RD periods 3, 4
+#> Diff-in-disc estimate of the ATT averaged over RD periods 3, 4
 #>   RD-period weights: 3: 0.500, 4: 0.500
 #>   Comparison periods: 1, 2   (constant confounding trend)
 #>   Comparison weights (summed over the RD periods): 1: 0.500, 2: 0.500
 #>   Sampling scheme: panel, no unit changes side of the cutoff (detected)
-#>   Bandwidth: common h = 0.2694 (rule "joint": one bandwidth, chosen for the RD-DID estimate)
+#>   Bandwidth: common h = 0.2694 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)
 #>   Pilot bandwidth b (period = value): 1 = 0.4136, 2 = 0.3901, 3 = 0.3984, 4 = 0.3984
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI

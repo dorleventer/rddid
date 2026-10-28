@@ -2,7 +2,7 @@
 
 ### Get started
 
-- [Get started: estimate an RD-DID
+- [Get started: estimate a diff-in-disc
   effect](https://dorleventer.github.io/didisc/articles/didisc-estimation.md):
 
 ### Articles

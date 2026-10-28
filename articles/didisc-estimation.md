@@ -1,4 +1,4 @@
-# Get started: estimate an RD-DID effect
+# Get started: estimate a diff-in-disc effect
 
 ## The setting
 
@@ -66,11 +66,11 @@ are all periods other than `t_rd`, in sorted order.
 
 fit <- didisc(didisc_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 fit
-#> RD-DID estimate of the ATT in period 3
+#> Diff-in-disc estimate of the ATT in period 3
 #>   Comparison periods: 1, 2   (constant confounding trend)
 #>   Comparison weights: 1: 0.500, 2: 0.500
 #>   Sampling scheme: panel, no unit changes side of the cutoff (detected)
-#>   Bandwidth: common h = 0.2694 (rule "joint": one bandwidth, chosen for the RD-DID estimate)
+#>   Bandwidth: common h = 0.2694 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)
 #>   Pilot bandwidth b (period = value): 1 = 0.4136, 2 = 0.3901, 3 = 0.3984
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI
@@ -82,9 +82,9 @@ fit
 
 Line by line:
 
-- **`RD-DID estimate of the ATT in period 3`**: the estimand and the RD
-  period (`t_rd = 3`). The ATT is the effect of the treatment on the
-  units just above the cutoff, which are the ones treated in the RD
+- **`Diff-in-disc estimate of the ATT in period 3`**: the estimand and
+  the RD period (`t_rd = 3`). The ATT is the effect of the treatment on
+  the units just above the cutoff, which are the ones treated in the RD
   period. If everybody is treated in the comparison periods,
   `estimand = "atu"` labels the same numbers as the ATU (see [the ATU
   section](#atu) below).
@@ -103,7 +103,7 @@ Line by line:
   shows how.
 - **`Bandwidth: common h`**: the default rule, `bwselect = "joint"`,
   uses one main bandwidth `h` in every period, chosen to minimize the
-  asymptotic mean squared error of the RD-DID estimate.
+  asymptotic mean squared error of the diff-in-disc estimate.
   **`Pilot bandwidth b (period = value)`** lists the bandwidth of the
   bias correction in each period, in time order.
 - **The two rows.** `Conventional` is the local-linear estimate with its
@@ -134,11 +134,11 @@ subtracts the average of the year-1 and year-2 jumps, (0.51 + 0.63) / 2
 ``` r
 
 summary(fit)
-#> RD-DID estimate of the ATT in period 3
+#> Diff-in-disc estimate of the ATT in period 3
 #>   Comparison periods: 1, 2   (constant confounding trend)
 #>   Comparison weights: 1: 0.500, 2: 0.500
 #>   Sampling scheme: panel, no unit changes side of the cutoff (detected)
-#>   Bandwidth: common h = 0.2694 (rule "joint": one bandwidth, chosen for the RD-DID estimate)
+#>   Bandwidth: common h = 0.2694 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)
 #>   Pilot bandwidth b (period = value): 1 = 0.4136, 2 = 0.3901, 3 = 0.3984
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI
@@ -200,11 +200,11 @@ fits; [A table for a paper](#a-table-for-a-paper) below has an example.
 fit_lin <- didisc(didisc_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
                  trend = "linear")
 fit_lin
-#> RD-DID estimate of the ATT in period 3
+#> Diff-in-disc estimate of the ATT in period 3
 #>   Comparison periods: 1, 2   (linear confounding trend)
 #>   Comparison weights: 1: -1.000, 2: 2.000
 #>   Sampling scheme: panel, no unit changes side of the cutoff (detected)
-#>   Bandwidth: common h = 0.306 (rule "joint": one bandwidth, chosen for the RD-DID estimate)
+#>   Bandwidth: common h = 0.306 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)
 #>   Pilot bandwidth b (period = value): 1 = 0.4698, 2 = 0.4431, 3 = 0.4525
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI
@@ -243,7 +243,7 @@ sim4 <- rbind(didisc_sim, transform(didisc_sim[didisc_sim$year == 3, ], year = 4
 fit_avg <- didisc(sim4, y = "Y", x = "R", time = "year", id = "id", t_rd = c(3, 4),
                  bwselect = "cct")
 fit_avg
-#> RD-DID estimate of the ATT averaged over RD periods 3, 4
+#> Diff-in-disc estimate of the ATT averaged over RD periods 3, 4
 #>   RD-period weights: 3: 0.500, 4: 0.500
 #>   Comparison periods: 1, 2   (constant confounding trend)
 #>   Comparison weights (summed over the RD periods): 1: 0.500, 2: 0.500
@@ -337,8 +337,8 @@ one at hand. The tests use two versions:
 With two periods, both versions are the unit’s side of the cutoff in the
 other period.
 
-The RD-DID estimate identifies the ATT when the type distribution is
-continuous at the cutoff and the confounding jump within each type is
+The diff-in-disc estimate identifies the ATT when the type distribution
+is continuous at the cutoff and the confounding jump within each type is
 constant over time, and in addition either the type composition is
 stable across periods or the confounding jump is the same for every type
 (Leventer and Nevo, 2024). Four tests check these assumptions.
@@ -350,11 +350,11 @@ below check:
 
 fit_pv <- didisc(didisc_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 fit_pv
-#> RD-DID estimate of the ATT in period 3
+#> Diff-in-disc estimate of the ATT in period 3
 #>   Comparison periods: 1, 2   (constant confounding trend)
 #>   Comparison weights: 1: 0.500, 2: 0.500
 #>   Sampling scheme: panel, some units change side of the cutoff (detected)
-#>   Bandwidth: common h = 0.2436 (rule "joint": one bandwidth, chosen for the RD-DID estimate)
+#>   Bandwidth: common h = 0.2436 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)
 #>   Pilot bandwidth b (period = value): 1 = 0.4001, 2 = 0.3958, 3 = 0.4047
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI
@@ -385,9 +385,9 @@ tc
 #>     ("+" at or above, "-" below).
 #> 
 #>   Joint sup-t (t critical values) max |t| = 1.232 over 9 jumps,  p = 0.869  (largest: period:type 1:+-)
-#>     Period 1: sup-t (t critical values) max |t| = 1.232 over 3 jumps,  p = 0.499
+#>     Period 1: sup-t (t critical values) max |t| = 1.232 over 3 jumps,  p = 0.500
 #>     Period 2: sup-t (t critical values) max |t| = 0.582 over 3 jumps,  p = 0.902
-#>     Period 3: sup-t (t critical values) max |t| = 1.048 over 3 jumps,  p = 0.631
+#>     Period 3: sup-t (t critical values) max |t| = 1.048 over 3 jumps,  p = 0.633
 #>   All joint statistics: x$joint_tests
 ```
 
@@ -515,7 +515,7 @@ One table for all four:
 
 do.call(rbind, lapply(list(tc, cs, hg, tr), tidy))
 #>            test                       assumption statistic df    p.value
-#> 1   rd_typecont                  type continuity 1.2317753 NA 0.86888131
+#> 1   rd_typecont                  type continuity 1.2317753 NA 0.86933131
 #> 2 rd_compstable            composition stability 3.0857080 NA 0.01639984
 #> 3      rd_homog          homogeneous confounding 0.2474976  2 0.88360178
 #> 4  rd_trendcell constant within-type confounding 1.4453616  2 0.48544912
@@ -561,11 +561,11 @@ For illustration, make everybody treated in years 1 and 2 of
 
 sim_atu <- transform(didisc_sim, W = ifelse(year < 3, 1, W), Y = Y + (year < 3))
 didisc(sim_atu, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, estimand = "atu")
-#> RD-DID estimate of the ATU in period 3
+#> Diff-in-disc estimate of the ATU in period 3
 #>   Comparison periods: 1, 2   (constant confounding trend)
 #>   Comparison weights: 1: 0.500, 2: 0.500
 #>   Sampling scheme: panel, no unit changes side of the cutoff (detected)
-#>   Bandwidth: common h = 0.2694 (rule "joint": one bandwidth, chosen for the RD-DID estimate)
+#>   Bandwidth: common h = 0.2694 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)
 #>   Pilot bandwidth b (period = value): 1 = 0.4136, 2 = 0.3901, 3 = 0.3984
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI
@@ -609,8 +609,8 @@ is 1.
   scheme.
 - [How didisc() computes the
   estimate](https://dorleventer.github.io/didisc/articles/didisc-how-it-works.md):
-  the estimate and the tests rebuilt by hand, for referees and readers
-  who want to see the pieces.
+  the estimate and the tests rebuilt by hand, for readers who want to
+  check the computation.
 
 ## References
 

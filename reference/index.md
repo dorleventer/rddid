@@ -8,20 +8,21 @@
 
 ## Estimate
 
-The RD-DID estimator and what to do with a fit.
+The diff-in-disc estimator and what to do with a fit.
 
 - [`didisc()`](https://dorleventer.github.io/didisc/reference/didisc.md)
   : Estimate the effect of a treatment at a cutoff shared with a
   confounding policy
 - [`summary(`*`<didisc>`*`)`](https://dorleventer.github.io/didisc/reference/summary.didisc.md)
   [`print(`*`<summary.didisc>`*`)`](https://dorleventer.github.io/didisc/reference/summary.didisc.md)
-  : Summary of an RD-DID fit
+  : Summary of a diff-in-disc fit
 - [`plot(`*`<didisc>`*`)`](https://dorleventer.github.io/didisc/reference/plot.didisc.md)
-  : Plot the per-period RD fits behind an RD-DID estimate
+  : Plot the per-period RD fits behind a diff-in-disc estimate
 - [`coef(`*`<didisc>`*`)`](https://dorleventer.github.io/didisc/reference/didisc-methods.md)
   [`confint(`*`<didisc>`*`)`](https://dorleventer.github.io/didisc/reference/didisc-methods.md)
   [`nobs(`*`<didisc>`*`)`](https://dorleventer.github.io/didisc/reference/didisc-methods.md)
-  : Coefficients, confidence intervals and sample size of an RD-DID fit
+  : Coefficients, confidence intervals and sample size of a diff-in-disc
+  fit
 - [`tidy(`*`<didisc>`*`)`](https://dorleventer.github.io/didisc/reference/didisc-tidiers.md)
   [`glance(`*`<didisc>`*`)`](https://dorleventer.github.io/didisc/reference/didisc-tidiers.md)
   [`tidy(`*`<rd_typecont>`*`)`](https://dorleventer.github.io/didisc/reference/didisc-tidiers.md)
@@ -29,7 +30,7 @@ The RD-DID estimator and what to do with a fit.
   [`tidy(`*`<rd_homog>`*`)`](https://dorleventer.github.io/didisc/reference/didisc-tidiers.md)
   [`tidy(`*`<rd_trendcell>`*`)`](https://dorleventer.github.io/didisc/reference/didisc-tidiers.md)
   [`tidy(`*`<rd_checks>`*`)`](https://dorleventer.github.io/didisc/reference/didisc-tidiers.md)
-  : Tidy output for RD-DID fits and validation tests
+  : Tidy output for diff-in-disc fits and validation tests
 - [`reexports`](https://dorleventer.github.io/didisc/reference/reexports.md)
   [`tidy`](https://dorleventer.github.io/didisc/reference/reexports.md)
   [`glance`](https://dorleventer.github.io/didisc/reference/reexports.md)
@@ -81,6 +82,6 @@ period by period.
 Simulated panels for trying things out.
 
 - [`didisc_sim`](https://dorleventer.github.io/didisc/reference/didisc_sim.md)
-  : Simulated RD-DID panel (running variable fixed over time)
+  : Simulated diff-in-disc panel (running variable fixed over time)
 - [`didisc_sim_pv`](https://dorleventer.github.io/didisc/reference/didisc_sim_pv.md)
-  : Simulated RD-DID panel (running variable moves over time)
+  : Simulated diff-in-disc panel (running variable moves over time)

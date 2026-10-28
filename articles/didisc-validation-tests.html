@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">didisc</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9004</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9005</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -36,7 +36,7 @@
 <li><a class="dropdown-item" href="../articles/didisc-validation-tests.html">Checking the identification assumptions</a></li>
     <li><a class="dropdown-item" href="../articles/didisc-plots.html">Plots of the estimate and the checks</a></li>
     <li><a class="dropdown-item" href="../articles/didisc-options.html">Bandwidth rules and sampling schemes</a></li>
-    <li><a class="dropdown-item" href="../articles/didisc-how-it-works.html">How didisc() computes the estimate (for referees)</a></li>
+    <li><a class="dropdown-item" href="../articles/didisc-how-it-works.html">How didisc() computes the estimate</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
@@ -83,8 +83,8 @@ in a comparison period, and the difference of the two jumps can mix the
 treatment effect with that difference in who is at the cutoff. A unit’s
 <strong>type</strong> records its side of the cutoff in other periods;
 the table in <a href="didisc-estimation.html#when-the-running-variable-moves-over-time">Get
-started</a> gives the two versions the tests use. The RD-DID estimate
-identifies the ATT when</p>
+started</a> gives the two versions the tests use. The diff-in-disc
+estimate identifies the ATT when</p>
 <ol style="list-style-type: decimal">
 <li>
 <strong>type continuity</strong> holds,</li>
@@ -137,9 +137,9 @@ every period.</strong></p>
 <span><span class="co">#&gt;     ("+" at or above, "-" below).</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Joint sup-t (t critical values) max |t| = 1.232 over 9 jumps,  p = 0.869  (largest: period:type 1:+-)</span></span>
-<span><span class="co">#&gt;     Period 1: sup-t (t critical values) max |t| = 1.232 over 3 jumps,  p = 0.499</span></span>
+<span><span class="co">#&gt;     Period 1: sup-t (t critical values) max |t| = 1.232 over 3 jumps,  p = 0.500</span></span>
 <span><span class="co">#&gt;     Period 2: sup-t (t critical values) max |t| = 0.582 over 3 jumps,  p = 0.902</span></span>
-<span><span class="co">#&gt;     Period 3: sup-t (t critical values) max |t| = 1.048 over 3 jumps,  p = 0.631</span></span>
+<span><span class="co">#&gt;     Period 3: sup-t (t critical values) max |t| = 1.048 over 3 jumps,  p = 0.633</span></span>
 <span><span class="co">#&gt;   All joint statistics: x$joint_tests</span></span></code></pre></div>
 <ul>
 <li>
@@ -165,8 +165,8 @@ alone.</li>
 by construction, so a p-value below 0.05 would be a false rejection.</p>
 <p><strong>If it rejects:</strong> units sort around the cutoff
 according to their side in other periods, so the jump in the outcome
-partly reflects a jump in who the units are. The RD-DID estimate can
-then be biased, whatever the other tests say.</p>
+partly reflects a jump in who the units are. The diff-in-disc estimate
+can then be biased, whatever the other tests say.</p>
 </div>
 <div class="section level2">
 <h2 id="composition-stability-rd_compstable">Composition stability: <code>rd_compstable()</code><a class="anchor" aria-label="anchor" href="#composition-stability-rd_compstable"></a>
@@ -384,11 +384,11 @@ composition stability fails and the other three assumptions hold, so the
 estimate is valid:</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/didisc.html">didisc</a></span><span class="op">(</span><span class="va">didisc_sim_pv</span>, y <span class="op">=</span> <span class="st">"Y"</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
-<span><span class="co">#&gt; RD-DID estimate of the ATT in period 3</span></span>
+<span><span class="co">#&gt; Diff-in-disc estimate of the ATT in period 3</span></span>
 <span><span class="co">#&gt;   Comparison periods: 1, 2   (constant confounding trend)</span></span>
 <span><span class="co">#&gt;   Comparison weights: 1: 0.500, 2: 0.500</span></span>
 <span><span class="co">#&gt;   Sampling scheme: panel, some units change side of the cutoff (detected)</span></span>
-<span><span class="co">#&gt;   Bandwidth: common h = 0.2436 (rule "joint": one bandwidth, chosen for the RD-DID estimate)</span></span>
+<span><span class="co">#&gt;   Bandwidth: common h = 0.2436 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)</span></span>
 <span><span class="co">#&gt;   Pilot bandwidth b (period = value): 1 = 0.4001, 2 = 0.3958, 3 = 0.4047</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;                              Estimate  Std. err.       z  p-value   95% CI</span></span>
@@ -454,9 +454,9 @@ so the alternatives can be compared without running the test again:</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ch</span><span class="op">$</span><span class="va">typecont</span><span class="op">$</span><span class="va">joint_tests</span></span>
 <span><span class="co">#&gt;   method   reference statistic df   p_value</span></span>
-<span><span class="co">#&gt; 1   supt           t  1.231775  9 0.8688813</span></span>
-<span><span class="co">#&gt; 2   supt      normal  1.231775  9 0.8609214</span></span>
-<span><span class="co">#&gt; 3  swald           t  5.110313  9 0.7953520</span></span>
+<span><span class="co">#&gt; 1   supt           t  1.231775  9 0.8693313</span></span>
+<span><span class="co">#&gt; 2   supt      normal  1.231775  9 0.8621414</span></span>
+<span><span class="co">#&gt; 3  swald           t  5.110313  9 0.7955420</span></span>
 <span><span class="co">#&gt; 4  swald      normal  5.110313  9 0.7861821</span></span>
 <span><span class="co">#&gt; 5   wald chi-squared  4.781633  9 0.8529133</span></span></code></pre></div>
 </div>

@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">didisc</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9004</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9005</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -36,7 +36,7 @@
 <li><a class="dropdown-item" href="../articles/didisc-validation-tests.html">Checking the identification assumptions</a></li>
     <li><a class="dropdown-item" href="../articles/didisc-plots.html">Plots of the estimate and the checks</a></li>
     <li><a class="dropdown-item" href="../articles/didisc-options.html">Bandwidth rules and sampling schemes</a></li>
-    <li><a class="dropdown-item" href="../articles/didisc-how-it-works.html">How didisc() computes the estimate (for referees)</a></li>
+    <li><a class="dropdown-item" href="../articles/didisc-how-it-works.html">How didisc() computes the estimate</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
@@ -68,15 +68,14 @@
 
     
     
-<p>This article is for readers who want to see the pieces: referees, or
-users checking the package against their own code. It rebuilds the
-RD-DID estimate and two of the validation tests by hand from the two
-building blocks, <code><a href="../reference/rd_bw_cct.html">rd_bw_cct()</a></code> (one period’s CCT bandwidths)
-and <code><a href="../reference/rd_period.html">rd_period()</a></code> (one period’s local-linear RD), and checks
-that the package returns the same numbers. It then runs the four tests
-on simulated designs in which one assumption fails at a time. All data
-are simulated inline, with the truth known. For everyday use, start with
-<a href="didisc-estimation.html">Get started</a>.</p>
+<p>This article is for readers who want to check the computation, for
+example against their own code. It rebuilds the diff-in-disc estimate
+and two of the validation tests by hand from the two building blocks,
+<code><a href="../reference/rd_bw_cct.html">rd_bw_cct()</a></code> (one period’s CCT bandwidths) and
+<code><a href="../reference/rd_period.html">rd_period()</a></code> (one period’s local-linear RD), and checks that
+the package returns the same numbers. It then runs the four tests on
+simulated designs in which one assumption fails at a time. All data are
+simulated inline, with the truth known. For everyday use, start with <a href="didisc-estimation.html">Get started</a>.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/dorleventer/didisc" class="external-link">didisc</a></span><span class="op">)</span></span>
 <span><span class="va">has_gg</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"ggplot2"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
@@ -267,7 +266,7 @@ instead):</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">res</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/didisc.html">didisc</a></span><span class="op">(</span><span class="va">dat</span>, y <span class="op">=</span> <span class="st">"Y"</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"t"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span>, bwselect <span class="op">=</span> <span class="st">"cct"</span><span class="op">)</span></span>
 <span><span class="va">res</span></span>
-<span><span class="co">#&gt; RD-DID estimate of the ATT in period 3</span></span>
+<span><span class="co">#&gt; Diff-in-disc estimate of the ATT in period 3</span></span>
 <span><span class="co">#&gt;   Comparison periods: 1, 2   (constant confounding trend)</span></span>
 <span><span class="co">#&gt;   Comparison weights: 1: 0.500, 2: 0.500</span></span>
 <span><span class="co">#&gt;   Sampling scheme: panel, no unit changes side of the cutoff (detected)</span></span>
@@ -394,11 +393,11 @@ plus <code>tau1 - tau0</code>.</p>
 <code class="sourceCode R"><span><span class="va">res_atu</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/didisc.html">didisc</a></span><span class="op">(</span><span class="va">dat_atu</span>, y <span class="op">=</span> <span class="st">"Y"</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"t"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span>,</span>
 <span>                 estimand <span class="op">=</span> <span class="st">"atu"</span><span class="op">)</span></span>
 <span><span class="va">res_atu</span></span>
-<span><span class="co">#&gt; RD-DID estimate of the ATU in period 3</span></span>
+<span><span class="co">#&gt; Diff-in-disc estimate of the ATU in period 3</span></span>
 <span><span class="co">#&gt;   Comparison periods: 1, 2   (constant confounding trend)</span></span>
 <span><span class="co">#&gt;   Comparison weights: 1: 0.500, 2: 0.500</span></span>
 <span><span class="co">#&gt;   Sampling scheme: panel, no unit changes side of the cutoff (detected)</span></span>
-<span><span class="co">#&gt;   Bandwidth: common h = 0.3392 (rule "joint": one bandwidth, chosen for the RD-DID estimate)</span></span>
+<span><span class="co">#&gt;   Bandwidth: common h = 0.3392 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)</span></span>
 <span><span class="co">#&gt;   Pilot bandwidth b (period = value): 1 = 0.5069, 2 = 0.5261, 3 = 0.4951</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;                              Estimate  Std. err.       z  p-value   95% CI</span></span>

@@ -27,7 +27,7 @@ confounding-trend assumption: constant (equal weights) or linear in time."></hea
 
     <a class="navbar-brand me-2" href="../index.html">didisc</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9004</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9005</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -41,7 +41,7 @@ confounding-trend assumption: constant (equal weights) or linear in time."></hea
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/didisc-validation-tests.html">Checking the identification assumptions</a></li>
     <li><a class="dropdown-item" href="../articles/didisc-plots.html">Plots of the estimate and the checks</a></li>
     <li><a class="dropdown-item" href="../articles/didisc-options.html">Bandwidth rules and sampling schemes</a></li>
-    <li><a class="dropdown-item" href="../articles/didisc-how-it-works.html">How didisc() computes the estimate (for referees)</a></li>
+    <li><a class="dropdown-item" href="../articles/didisc-how-it-works.html">How didisc() computes the estimate</a></li>
   </ul></li>
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
@@ -198,7 +198,7 @@ either way; see "Targeting the ATU".</p></dd>
 <dt id="arg-bwselect">bwselect<a class="anchor" aria-label="anchor" href="#arg-bwselect"></a></dt>
 <dd><p>the bandwidth rule, used when <code>h</code> is not given: <code>"joint"</code>
 (default; the common bandwidth, one <code>h</code> for every period, chosen to minimize
-the asymptotic mean squared error of the RD-DID estimate), <code>"cct"</code>
+the asymptotic mean squared error of the diff-in-disc estimate), <code>"cct"</code>
 (per-period CCT bandwidths: each period's own MSE-optimal bandwidth of
 Calonico, Cattaneo and Titiunik, from <code><a href="rd_bw_cct.html">rd_bw_cct()</a></code>). See "Bandwidth
 rules".</p></dd>
@@ -455,7 +455,7 @@ three schemes, at the bandwidths actually used, are in <code>estimates</code> an
 <h3 id="bandwidth-rules">Bandwidth rules<a class="anchor" aria-label="anchor" href="#bandwidth-rules"></a></h3>
 
 <ul><li><p><code>"joint"</code> (default), the common bandwidth: one <code>h</code> in every period, chosen
-to minimize the asymptotic mean squared error of the RD-DID estimate, not
+to minimize the asymptotic mean squared error of the diff-in-disc estimate, not
 of each period's jump, so the biases of the period jumps can partly cancel.</p></li>
 <li><p><code>"cct"</code>, per-period CCT bandwidths: each period gets its own MSE-optimal
 bandwidth from <code><a href="https://rdrr.io/pkg/rdrobust/man/rdbwselect.html" class="external-link">rdrobust::rdbwselect()</a></code>, as if it were a stand-alone RD
@@ -487,7 +487,7 @@ computes differently under <code>"atu"</code>.</p>
 
 
 <p>The <code>"joint"</code> rule is AMSE-optimal: it minimizes the asymptotic mean squared
-error (AMSE) of the RD-DID estimate over a common <code>h</code>, in the way
+error (AMSE) of the diff-in-disc estimate over a common <code>h</code>, in the way
 <span class="pkg">rdrobust</span> chooses a bandwidth for one period. Each period's variance
 constant, under <code>"pc"</code> the covariances between periods, and the design
 moment in each period's bias constant are estimated at one rule-of-thumb
@@ -525,7 +525,7 @@ confidence intervals for regression-discontinuity designs. <em>Econometrica</em>
 <code><a href="https://rdrr.io/r/stats/nobs.html" class="external-link">nobs()</a></code>) for the fitted object; the tests of the assumptions
 <code><a href="rd_typecont.html">rd_typecont()</a></code>, <code><a href="rd_compstable.html">rd_compstable()</a></code>, <code><a href="rd_homog.html">rd_homog()</a></code> and <code><a href="rd_trendcell.html">rd_trendcell()</a></code>; the
 example data <a href="didisc_sim.html">didisc_sim</a> and <a href="didisc_sim_pv.html">didisc_sim_pv</a>.</p>
-<p>Other RD-DID estimation:
+<p>Other diff-in-disc estimation:
 <code><a href="plot.didisc.html">plot.didisc()</a></code>,
 <code><a href="rd_bw_cct.html">rd_bw_cct()</a></code>,
 <code><a href="rd_period.html">rd_period()</a></code></p></div>
@@ -536,11 +536,11 @@ example data <a href="didisc_sim.html">didisc_sim</a> and <a href="didisc_sim_pv
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># didisc_sim: confounding jump 0.5 in every year, treatment effect 1 in year 3</span></span></span>
 <span class="r-in"><span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu">didisc</span><span class="op">(</span><span class="va">didisc_sim</span>, y <span class="op">=</span> <span class="st">"Y"</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">fit</span>            <span class="co"># the estimate, its standard error and confidence interval</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> RD-DID estimate of the ATT in period 3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Diff-in-disc estimate of the ATT in period 3</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Comparison periods: 1, 2   (constant confounding trend)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Comparison weights: 1: 0.500, 2: 0.500</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Sampling scheme: panel, no unit changes side of the cutoff (detected)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Bandwidth: common h = 0.2694 (rule "joint": one bandwidth, chosen for the RD-DID estimate)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Bandwidth: common h = 0.2694 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Pilot bandwidth b (period = value): 1 = 0.4136, 2 = 0.3901, 3 = 0.3984</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                              Estimate  Std. err.       z  p-value   95% CI</span>
@@ -549,11 +549,11 @@ example data <a href="didisc_sim.html">didisc_sim</a> and <a href="didisc_sim_pv
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   summary() shows the per-period fits and the s.e. under every sampling scheme.</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span>   <span class="co"># the jump in every period, and the s.e. under each scheme</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> RD-DID estimate of the ATT in period 3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Diff-in-disc estimate of the ATT in period 3</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Comparison periods: 1, 2   (constant confounding trend)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Comparison weights: 1: 0.500, 2: 0.500</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Sampling scheme: panel, no unit changes side of the cutoff (detected)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Bandwidth: common h = 0.2694 (rule "joint": one bandwidth, chosen for the RD-DID estimate)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Bandwidth: common h = 0.2694 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Pilot bandwidth b (period = value): 1 = 0.4136, 2 = 0.3901, 3 = 0.3984</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                              Estimate  Std. err.       z  p-value   95% CI</span>
@@ -577,11 +577,11 @@ example data <a href="didisc_sim.html">didisc_sim</a> and <a href="didisc_sim_pv
 <span class="r-in"><span><span class="co"># the confounding jump moves linearly in time</span></span></span>
 <span class="r-in"><span><span class="fu">didisc</span><span class="op">(</span><span class="va">didisc_sim</span>, y <span class="op">=</span> <span class="st">"Y"</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span>,</span></span>
 <span class="r-in"><span>      trend <span class="op">=</span> <span class="st">"linear"</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> RD-DID estimate of the ATT in period 3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Diff-in-disc estimate of the ATT in period 3</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Comparison periods: 1, 2   (linear confounding trend)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Comparison weights: 1: -1.000, 2: 2.000</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Sampling scheme: panel, no unit changes side of the cutoff (detected)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Bandwidth: common h = 0.306 (rule "joint": one bandwidth, chosen for the RD-DID estimate)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Bandwidth: common h = 0.306 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Pilot bandwidth b (period = value): 1 = 0.4698, 2 = 0.4431, 3 = 0.4525</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                              Estimate  Std. err.       z  p-value   95% CI</span>
@@ -592,11 +592,11 @@ example data <a href="didisc_sim.html">didisc_sim</a> and <a href="didisc_sim_pv
 <span class="r-in"><span><span class="co"># minimum-variance comparison-period weights</span></span></span>
 <span class="r-in"><span><span class="fu">didisc</span><span class="op">(</span><span class="va">didisc_sim</span>, y <span class="op">=</span> <span class="st">"Y"</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span>,</span></span>
 <span class="r-in"><span>      weighting <span class="op">=</span> <span class="st">"min_variance"</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> RD-DID estimate of the ATT in period 3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Diff-in-disc estimate of the ATT in period 3</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Comparison periods: 1, 2   (constant confounding trend)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Comparison weights (minimum variance): 1: 0.453, 2: 0.547; Robust row: 1: 0.462, 2: 0.538</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Sampling scheme: panel, no unit changes side of the cutoff (detected)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Bandwidth: common h = 0.2735 (rule "joint": one bandwidth, chosen for the RD-DID estimate)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Bandwidth: common h = 0.2735 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Pilot bandwidth b (period = value): 1 = 0.4198, 2 = 0.3959, 3 = 0.4043</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                              Estimate  Std. err.       z  p-value   95% CI</span>
@@ -608,12 +608,12 @@ example data <a href="didisc_sim.html">didisc_sim</a> and <a href="didisc_sim_pv
 <span class="r-in"><span><span class="co"># second RD year, 4, for illustration)</span></span></span>
 <span class="r-in"><span><span class="va">sim4</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span><span class="va">didisc_sim</span>, <span class="fu"><a href="https://rdrr.io/r/base/transform.html" class="external-link">transform</a></span><span class="op">(</span><span class="va">didisc_sim</span><span class="op">[</span><span class="va">didisc_sim</span><span class="op">$</span><span class="va">year</span> <span class="op">==</span> <span class="fl">3</span>, <span class="op">]</span>, year <span class="op">=</span> <span class="fl">4</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">didisc</span><span class="op">(</span><span class="va">sim4</span>, y <span class="op">=</span> <span class="st">"Y"</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">3</span>, <span class="fl">4</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> RD-DID estimate of the ATT averaged over RD periods 3, 4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Diff-in-disc estimate of the ATT averaged over RD periods 3, 4</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   RD-period weights: 3: 0.500, 4: 0.500</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Comparison periods: 1, 2   (constant confounding trend)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Comparison weights (summed over the RD periods): 1: 0.500, 2: 0.500</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Sampling scheme: panel, no unit changes side of the cutoff (detected)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Bandwidth: common h = 0.2694 (rule "joint": one bandwidth, chosen for the RD-DID estimate)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Bandwidth: common h = 0.2694 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Pilot bandwidth b (period = value): 1 = 0.4136, 2 = 0.3901, 3 = 0.3984, 4 = 0.3984</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                              Estimate  Std. err.       z  p-value   95% CI</span>

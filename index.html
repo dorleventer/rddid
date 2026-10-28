@@ -5,14 +5,14 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Regression Discontinuity with a Confounding Policy (RD-DID) • didisc</title>
+<title>Regression Discontinuity with a Confounding Policy (Diff-in-Disc) • didisc</title>
 <script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
 <script src="deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Regression Discontinuity with a Confounding Policy (RD-DID)">
-<meta name="description" content="Estimation and inference for the regression-discontinuity difference-in-discontinuities (RD-DID) design of Leventer and Nevo (2024) &lt;arXiv:2408.05847&gt;, which recovers a causal effect when a confounding policy switches at the same cutoff as the treatment of interest. The discontinuity is estimated period by period with standard local-linear RD and aggregated across periods following the identification result. Variances are provided for three sampling schemes (repeated cross-section, panel with time-constant running variable, panel with time-varying running variable), and the common bandwidth can be chosen either per period (the Imbens-Kalyanaraman / CCT within-period MSE-optimal rule) or jointly to minimise the asymptotic MSE of the aggregate estimator.">
-<meta property="og:description" content="Estimation and inference for the regression-discontinuity difference-in-discontinuities (RD-DID) design of Leventer and Nevo (2024) &lt;arXiv:2408.05847&gt;, which recovers a causal effect when a confounding policy switches at the same cutoff as the treatment of interest. The discontinuity is estimated period by period with standard local-linear RD and aggregated across periods following the identification result. Variances are provided for three sampling schemes (repeated cross-section, panel with time-constant running variable, panel with time-varying running variable), and the common bandwidth can be chosen either per period (the Imbens-Kalyanaraman / CCT within-period MSE-optimal rule) or jointly to minimise the asymptotic MSE of the aggregate estimator.">
+<script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Regression Discontinuity with a Confounding Policy (Diff-in-Disc)">
+<meta name="description" content="Estimation and inference for the regression-discontinuity difference-in-discontinuities (diff-in-disc) design of Leventer and Nevo (2024) &lt;arXiv:2408.05847&gt;, which recovers a causal effect when a confounding policy switches at the same cutoff as the treatment of interest. The discontinuity is estimated period by period with standard local-linear RD and aggregated across periods following the identification result. Variances are provided for three sampling schemes (repeated cross-section, panel with time-constant running variable, panel with time-varying running variable), and the common bandwidth can be chosen either per period (the Imbens-Kalyanaraman / CCT within-period MSE-optimal rule) or jointly to minimise the asymptotic MSE of the aggregate estimator.">
+<meta property="og:description" content="Estimation and inference for the regression-discontinuity difference-in-discontinuities (diff-in-disc) design of Leventer and Nevo (2024) &lt;arXiv:2408.05847&gt;, which recovers a causal effect when a confounding policy switches at the same cutoff as the treatment of interest. The discontinuity is estimated period by period with standard local-linear RD and aggregated across periods following the identification result. Variances are provided for three sampling schemes (repeated cross-section, panel with time-constant running variable, panel with time-varying running variable), and the common bandwidth can be chosen either per period (the Imbens-Kalyanaraman / CCT within-period MSE-optimal rule) or jointly to minimise the asymptotic MSE of the aggregate estimator.">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -22,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="index.html">didisc</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9004</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9005</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,7 +38,7 @@
 <li><a class="dropdown-item" href="articles/didisc-validation-tests.html">Checking the identification assumptions</a></li>
     <li><a class="dropdown-item" href="articles/didisc-plots.html">Plots of the estimate and the checks</a></li>
     <li><a class="dropdown-item" href="articles/didisc-options.html">Bandwidth rules and sampling schemes</a></li>
-    <li><a class="dropdown-item" href="articles/didisc-how-it-works.html">How didisc() computes the estimate (for referees)</a></li>
+    <li><a class="dropdown-item" href="articles/didisc-how-it-works.html">How didisc() computes the estimate</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="reference/index.html">Reference</a></li>
@@ -78,10 +78,10 @@
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/dorleventer/didisc" class="external-link">didisc</a></span><span class="op">)</span></span>
 <span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/didisc.html">didisc</a></span><span class="op">(</span><span class="va">didisc_sim</span>, y <span class="op">=</span> <span class="st">"Y"</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="va">fit</span></span>
-<span><span class="co">#&gt; RD-DID estimate of the ATT in period 3</span></span>
+<span><span class="co">#&gt; Diff-in-disc estimate of the ATT in period 3</span></span>
 <span><span class="co">#&gt;   Comparison periods: 1, 2   (constant confounding trend; weights 0.5, 0.5)</span></span>
 <span><span class="co">#&gt;   Sampling scheme: panel, no unit changes side of the cutoff (detected)</span></span>
-<span><span class="co">#&gt;   Bandwidth: common h = 0.2672 (rule "joint": one bandwidth, chosen for the RD-DID estimate)</span></span>
+<span><span class="co">#&gt;   Bandwidth: common h = 0.2672 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)</span></span>
 <span><span class="co">#&gt;   Pilot bandwidth b (period = value): 1 = 0.4102, 2 = 0.3868, 3 = 0.3951</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;                              Estimate  Std. err.       z  p-value   95% CI</span></span>
@@ -89,7 +89,7 @@
 <span><span class="co">#&gt;   Robust (bias-corrected)      1.1414     0.1494    7.64   &lt;0.001   [0.8486, 1.4342]</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   summary() shows the per-period fits and the s.e. under every sampling scheme.</span></span></code></pre></div>
-<p>The ATT is the effect of the treatment on the units just above the cutoff, the ones treated in year 3. Years 1 and 2 are the comparison periods, with equal weights. <code>h</code> is the main bandwidth, one for every year, chosen for the RD-DID estimate; <code>b</code> is the pilot bandwidth of the bias correction in each year. <code>Conventional</code> is the local-linear estimate with its conventional standard error; <code>Robust (bias-corrected)</code> is the bias-corrected estimate with its robust standard error. A plain RD in year 3 would target 1.5, the effect plus the confounding jump. <a href="https://dorleventer.github.io/didisc/articles/didisc-estimation.html">Get started</a> reads every line.</p>
+<p>The ATT is the effect of the treatment on the units just above the cutoff, the ones treated in year 3. Years 1 and 2 are the comparison periods, with equal weights. <code>h</code> is the main bandwidth, one for every year, chosen for the diff-in-disc estimate; <code>b</code> is the pilot bandwidth of the bias correction in each year. <code>Conventional</code> is the local-linear estimate with its conventional standard error; <code>Robust (bias-corrected)</code> is the bias-corrected estimate with its robust standard error. A plain RD in year 3 would target 1.5, the effect plus the confounding jump. <a href="https://dorleventer.github.io/didisc/articles/didisc-estimation.html">Get started</a> reads every line.</p>
 <p>When the running variable moves over time, so that units can change side of the cutoff between periods, four tests check the assumptions this adds, for example type continuity:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/rd_typecont.html">rd_typecont</a></span><span class="op">(</span><span class="va">didisc_sim_pv</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>

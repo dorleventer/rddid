@@ -1,4 +1,4 @@
-# Simulated RD-DID panel (running variable fixed over time)
+# Simulated diff-in-disc panel (running variable fixed over time)
 
 A simulated panel in the setting of Leventer and Nevo: 1,000 units
 observed in three years. A confounding policy `V` switches on above the
@@ -76,11 +76,11 @@ head(didisc_sim)
 #> 5  5    1 -0.7321141 0 0 -0.04729411
 #> 6  6    1  0.8406841 1 0  1.59100391
 didisc(didisc_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
-#> RD-DID estimate of the ATT in period 3
+#> Diff-in-disc estimate of the ATT in period 3
 #>   Comparison periods: 1, 2   (constant confounding trend)
 #>   Comparison weights: 1: 0.500, 2: 0.500
 #>   Sampling scheme: panel, no unit changes side of the cutoff (detected)
-#>   Bandwidth: common h = 0.2694 (rule "joint": one bandwidth, chosen for the RD-DID estimate)
+#>   Bandwidth: common h = 0.2694 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)
 #>   Pilot bandwidth b (period = value): 1 = 0.4136, 2 = 0.3901, 3 = 0.3984
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI

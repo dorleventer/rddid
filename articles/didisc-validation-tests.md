@@ -16,8 +16,8 @@ period, and the difference of the two jumps can mix the treatment effect
 with that difference in who is at the cutoff. A unit’s **type** records
 its side of the cutoff in other periods; the table in [Get
 started](https://dorleventer.github.io/didisc/articles/didisc-estimation.html#when-the-running-variable-moves-over-time)
-gives the two versions the tests use. The RD-DID estimate identifies the
-ATT when
+gives the two versions the tests use. The diff-in-disc estimate
+identifies the ATT when
 
 1.  **type continuity** holds,
 2.  **constant within-type confounding** holds, and
@@ -72,9 +72,9 @@ tc
 #>     ("+" at or above, "-" below).
 #> 
 #>   Joint sup-t (t critical values) max |t| = 1.232 over 9 jumps,  p = 0.869  (largest: period:type 1:+-)
-#>     Period 1: sup-t (t critical values) max |t| = 1.232 over 3 jumps,  p = 0.499
+#>     Period 1: sup-t (t critical values) max |t| = 1.232 over 3 jumps,  p = 0.500
 #>     Period 2: sup-t (t critical values) max |t| = 0.582 over 3 jumps,  p = 0.902
-#>     Period 3: sup-t (t critical values) max |t| = 1.048 over 3 jumps,  p = 0.631
+#>     Period 3: sup-t (t critical values) max |t| = 1.048 over 3 jumps,  p = 0.633
 #>   All joint statistics: x$joint_tests
 ```
 
@@ -99,8 +99,8 @@ construction, so a p-value below 0.05 would be a false rejection.
 
 **If it rejects:** units sort around the cutoff according to their side
 in other periods, so the jump in the outcome partly reflects a jump in
-who the units are. The RD-DID estimate can then be biased, whatever the
-other tests say.
+who the units are. The diff-in-disc estimate can then be biased,
+whatever the other tests say.
 
 ## Composition stability: `rd_compstable()`
 
@@ -330,11 +330,11 @@ valid:
 ``` r
 
 didisc(didisc_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
-#> RD-DID estimate of the ATT in period 3
+#> Diff-in-disc estimate of the ATT in period 3
 #>   Comparison periods: 1, 2   (constant confounding trend)
 #>   Comparison weights: 1: 0.500, 2: 0.500
 #>   Sampling scheme: panel, some units change side of the cutoff (detected)
-#>   Bandwidth: common h = 0.2436 (rule "joint": one bandwidth, chosen for the RD-DID estimate)
+#>   Bandwidth: common h = 0.2436 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)
 #>   Pilot bandwidth b (period = value): 1 = 0.4001, 2 = 0.3958, 3 = 0.4047
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI
@@ -408,9 +408,9 @@ alternatives can be compared without running the test again:
 
 ch$typecont$joint_tests
 #>   method   reference statistic df   p_value
-#> 1   supt           t  1.231775  9 0.8688813
-#> 2   supt      normal  1.231775  9 0.8609214
-#> 3  swald           t  5.110313  9 0.7953520
+#> 1   supt           t  1.231775  9 0.8693313
+#> 2   supt      normal  1.231775  9 0.8621414
+#> 3  swald           t  5.110313  9 0.7955420
 #> 4  swald      normal  5.110313  9 0.7861821
 #> 5   wald chi-squared  4.781633  9 0.8529133
 ```

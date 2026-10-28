@@ -1,4 +1,4 @@
-# Plot the per-period RD fits behind an RD-DID estimate
+# Plot the per-period RD fits behind a diff-in-disc estimate
 
 One panel per period, in time order: the outcome averaged within `bins`
 equal-width bins of the running variable on each side of the cutoff, and
@@ -6,8 +6,8 @@ the two local-linear fits of that period drawn over their bandwidth on
 each side. The jump between the two lines at the cutoff is the period's
 discontinuity \\D_t\\;
 [`summary()`](https://rdrr.io/r/base/summary.html) lists every \\D_t\\
-and the RD-DID estimate they combine into. Green panels are comparison
-periods, pink the RD period.
+and the diff-in-disc estimate they combine into. Green panels are
+comparison periods, pink the RD period.
 
 ## Usage
 
@@ -40,7 +40,7 @@ A ggplot object (ggplot2 must be installed), which can be changed with
 
 ## See also
 
-Other RD-DID estimation:
+Other diff-in-disc estimation:
 [`didisc()`](https://dorleventer.github.io/didisc/reference/didisc.md),
 [`rd_bw_cct()`](https://dorleventer.github.io/didisc/reference/rd_bw_cct.md),
 [`rd_period()`](https://dorleventer.github.io/didisc/reference/rd_period.md)

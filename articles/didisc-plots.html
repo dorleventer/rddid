@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">didisc</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9004</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9005</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -36,7 +36,7 @@
 <li><a class="dropdown-item" href="../articles/didisc-validation-tests.html">Checking the identification assumptions</a></li>
     <li><a class="dropdown-item" href="../articles/didisc-plots.html">Plots of the estimate and the checks</a></li>
     <li><a class="dropdown-item" href="../articles/didisc-options.html">Bandwidth rules and sampling schemes</a></li>
-    <li><a class="dropdown-item" href="../articles/didisc-how-it-works.html">How didisc() computes the estimate (for referees)</a></li>
+    <li><a class="dropdown-item" href="../articles/didisc-how-it-works.html">How didisc() computes the estimate</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
@@ -94,7 +94,7 @@ the bandwidth the estimate used (<code>summary(fit)</code> lists the
 bandwidth and every jump). The vertical distance between the two lines
 at the cutoff is the period’s jump
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>D</mi><mi>t</mi></msub><annotation encoding="application/x-tex">D_t</annotation></semantics></math>.
-The RD-DID estimate is the RD-period jump minus the weighted
+The diff-in-disc estimate is the RD-period jump minus the weighted
 comparison-period jumps: here the confounding jump of about 0.5 shows up
 in years 1 and 2, and the year-3 jump of about 1.5 is the effect plus
 the confounding jump. The figures carry no titles or statistics by

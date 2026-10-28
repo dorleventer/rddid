@@ -48,10 +48,10 @@ year 3, the RD period.
 library(didisc)
 fit <- didisc(didisc_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 fit
-#> RD-DID estimate of the ATT in period 3
+#> Diff-in-disc estimate of the ATT in period 3
 #>   Comparison periods: 1, 2   (constant confounding trend; weights 0.5, 0.5)
 #>   Sampling scheme: panel, no unit changes side of the cutoff (detected)
-#>   Bandwidth: common h = 0.2672 (rule "joint": one bandwidth, chosen for the RD-DID estimate)
+#>   Bandwidth: common h = 0.2672 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)
 #>   Pilot bandwidth b (period = value): 1 = 0.4102, 2 = 0.3868, 3 = 0.3951
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI
@@ -64,8 +64,8 @@ fit
 The ATT is the effect of the treatment on the units just above the
 cutoff, the ones treated in year 3. Years 1 and 2 are the comparison
 periods, with equal weights. `h` is the main bandwidth, one for every
-year, chosen for the RD-DID estimate; `b` is the pilot bandwidth of the
-bias correction in each year. `Conventional` is the local-linear
+year, chosen for the diff-in-disc estimate; `b` is the pilot bandwidth
+of the bias correction in each year. `Conventional` is the local-linear
 estimate with its conventional standard error; `Robust (bias-corrected)`
 is the bias-corrected estimate with its robust standard error. A plain
 RD in year 3 would target 1.5, the effect plus the confounding jump.

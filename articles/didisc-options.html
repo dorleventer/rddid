@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">didisc</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9004</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9005</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -36,7 +36,7 @@
 <li><a class="dropdown-item" href="../articles/didisc-validation-tests.html">Checking the identification assumptions</a></li>
     <li><a class="dropdown-item" href="../articles/didisc-plots.html">Plots of the estimate and the checks</a></li>
     <li><a class="dropdown-item" href="../articles/didisc-options.html">Bandwidth rules and sampling schemes</a></li>
-    <li><a class="dropdown-item" href="../articles/didisc-how-it-works.html">How didisc() computes the estimate (for referees)</a></li>
+    <li><a class="dropdown-item" href="../articles/didisc-how-it-works.html">How didisc() computes the estimate</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
@@ -99,7 +99,7 @@ default)<a class="anchor" aria-label="anchor" href="#the-common-bandwidth-bwsele
 <span><span class="co">#&gt;         3         1         2 </span></span>
 <span><span class="co">#&gt; 0.3983944 0.4135886 0.3900813</span></span></code></pre></div>
 <p>One main bandwidth for every period, chosen to minimize the
-asymptotic mean squared error of the RD-DID estimate, not of each
+asymptotic mean squared error of the diff-in-disc estimate, not of each
 period’s jump. As in rdrobust, everything that depends only on the
 running variable and the residuals is estimated at one rule-of-thumb
 bandwidth shared by every period
@@ -245,11 +245,11 @@ running variable drifts between years.</p>
 scheme:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit_pv</span><span class="op">)</span></span>
-<span><span class="co">#&gt; RD-DID estimate of the ATT in period 3</span></span>
+<span><span class="co">#&gt; Diff-in-disc estimate of the ATT in period 3</span></span>
 <span><span class="co">#&gt;   Comparison periods: 1, 2   (constant confounding trend)</span></span>
 <span><span class="co">#&gt;   Comparison weights: 1: 0.500, 2: 0.500</span></span>
 <span><span class="co">#&gt;   Sampling scheme: panel, some units change side of the cutoff (detected)</span></span>
-<span><span class="co">#&gt;   Bandwidth: common h = 0.2436 (rule "joint": one bandwidth, chosen for the RD-DID estimate)</span></span>
+<span><span class="co">#&gt;   Bandwidth: common h = 0.2436 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)</span></span>
 <span><span class="co">#&gt;   Pilot bandwidth b (period = value): 1 = 0.4001, 2 = 0.3958, 3 = 0.4047</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;                              Estimate  Std. err.       z  p-value   95% CI</span></span>

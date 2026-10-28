@@ -1,4 +1,4 @@
-# Coefficients, confidence intervals and sample size of an RD-DID fit
+# Coefficients, confidence intervals and sample size of a diff-in-disc fit
 
 [`coef()`](https://rdrr.io/r/stats/coef.html) returns the two estimates
 of an

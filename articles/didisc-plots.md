@@ -32,12 +32,12 @@ within 20 equal-width bins of the running variable; the two lines are
 the local-linear fits on each side of the cutoff, drawn over the
 bandwidth the estimate used (`summary(fit)` lists the bandwidth and
 every jump). The vertical distance between the two lines at the cutoff
-is the period’s jump $`D_t`$. The RD-DID estimate is the RD-period jump
-minus the weighted comparison-period jumps: here the confounding jump of
-about 0.5 shows up in years 1 and 2, and the year-3 jump of about 1.5 is
-the effect plus the confounding jump. The figures carry no titles or
-statistics by design: the numbers are in the printed objects, and a
-title is one `+ labs()` away (last section).
+is the period’s jump $`D_t`$. The diff-in-disc estimate is the RD-period
+jump minus the weighted comparison-period jumps: here the confounding
+jump of about 0.5 shows up in years 1 and 2, and the year-3 jump of
+about 1.5 is the effect plus the confounding jump. The figures carry no
+titles or statistics by design: the numbers are in the printed objects,
+and a title is one `+ labs()` away (last section).
 
 ## Who switches side: the running variable in two periods
 
