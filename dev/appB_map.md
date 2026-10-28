@@ -1,4 +1,4 @@
-# rddid ↔ Appendix B map
+# didisc ↔ Appendix B map
 
 **Purpose.** One row per object the package computes that has a definition in the paper
 (Leventer & Nevo, RD-DID; `rd-did/writing/main_revamp/main.tex`, Section 5 and Appendix B).
@@ -104,7 +104,7 @@ Labels that were removed from the paper on 2026-09-08 and must not be cited: `le
 | $V^{\mathrm{PC}}$ (`eq:var-pc`) | $V^{\mathrm{CS}}-2\sum_{t_0}w_{t_0}C^{\mathrm{same}}_{t_{\mathrm{RD}},t_0}+\sum_{t_0}\sum_{s_0\ne t_0}w_{t_0}w_{s_0}C^{\mathrm{same}}_{t_0,s_0}$ | `V_pc = V_cs + Σ_{i<j} 2 coef_i coef_j pc_ij` | ordered double sum = $2\times$ unordered | MATCH* | same |
 | $V^{\mathrm{PV}}$ (`eq:var-pv`) | $V^{\mathrm{PC}}+2\sum_{t_0}w_{t_0}C^{\mathrm{opp}}_{t_{\mathrm{RD}},t_0}-\sum_{t_0}\sum_{s_0\ne t_0}w_{t_0}w_{s_0}C^{\mathrm{opp}}_{t_0,s_0}$ | `V_pv = V_cs + Σ_{i<j} 2 coef_i coef_j (pc_ij - pv_ij)` | — | MATCH* | same |
 | Sampling scheme ("Sampling scheme" paragraph) | CS: $\boldsymbol\Sigma_{t,s}=0$; PC: opposite-side covariances zero; PV: all four | `.detect_scheme()`: no repeated ids → `cs`; repeated, never switching side → `pc`; else `pv`. All three variances always returned; `scheme` picks the headline SE | the paper defines the scheme by design, the package infers it from the data | MATCH (structural) | `PC data: C^opp = 0 ...` |
-| Inference (`sec:est-inf`) | $\widehat{\att}\pm z_{1-\alpha/2}\widehat V^{1/2}$ | `rddid()$estimates`: `se`, `ci_l`, `ci_u` at `scheme`; rows Conventional / Robust (BC point + BC variance) | — | MATCH | `test-rddid.R` |
+| Inference (`sec:est-inf`) | $\widehat{\att}\pm z_{1-\alpha/2}\widehat V^{1/2}$ | `didisc()$estimates`: `se`, `ci_l`, `ci_u` at `scheme`; rows Conventional / Robust (BC point + BC variance) | — | MATCH | `test-didisc.R` |
 
 ### 2.4 B.3 Asymptotics (`app:est-asy`)
 
@@ -129,7 +129,7 @@ Labels that were removed from the paper on 2026-09-08 and must not be cited: `le
 | $h^{\star,\mathrm S}$ (`eq:common_h_opt`) | $\bigl(\tfrac{((p+1)!)^2}{2(p+1)}\tfrac{\mathcal V^{\mathrm S}(t_{\mathrm{RD}})}{\mathcal B(t_{\mathrm{RD}})^2}\bigr)^{1/(2p+3)}n^{-1/(2p+3)}$ | `h_star <- (factorial(p+1)^2 / (2*(p+1)) * Veff / (B^2 + reg))^(1/(2*p+3))`; **was `(Veff/denom)^(1/5)`** | $n$ is inside `Veff`; `reg` = regularization below | MISMATCH → fixed (identical at $p=1$) | `B.4 common h` |
 | Pilot bandwidth $b_t$ for the aggregate | B.4 after `eq:common_h_opt` (since `4ce8526`): $b^\star=h^{\star,\mathrm S}b^{\mathrm{CCT}}_{t_{\mathrm{RD}}}/h^{\mathrm{CCT}}_{t_{\mathrm{RD}}}$; $b_t=h_t\,b^{\mathrm{CCT}}_t/h^{\mathrm{CCT}}_t$ | `.bw_joint`: $b_t=h^\star\cdot b^{\mathrm{CCT}}_t/h^{\mathrm{CCT}}_t$ **per period** (since 2026-09-10; was the RD period's ratio for all periods); `.bw_joint_iter`: $b_t=h_t\cdot b^{\mathrm{CCT}}_t/h^{\mathrm{CCT}}_t$ per period | paper's `joint` sentence still anchors on $t_{\mathrm{RD}}$: **paper-side edit pending** (replace by the per-period ratio, as already written for the period-specific rule) | PACKAGE AHEAD OF PAPER | — |
 | Update step (`eq:update`, `alg:coorddesc`, P4) | $h_\tau\leftarrow\arg\min_{h_\tau}\mathrm{AMSE}^{\mathrm S}(h_\tau\mid\{h_t\}_{t\ne\tau})$, cycled until no bandwidth moves more than a tolerance or 50 sweeps | **Removed** after tag `v0.4.0.9000-iter` (rule dropped from the paper, T1633). Was `.bw_joint_iter()`: `optimize(obj, c(lo, hmax))` per period, sweeps until `max|Δh| < tol*hmax` or `maxit = 50`; `lo = 0.03*hmax`, `hmax` = running-variable radius; a boundary solution now raises a warning | the paper's argmin is unconstrained; the search box is the package's (with `regularize = TRUE` no boundary hit was found in any design tried) | MATCH* | `B.4 objective` |
-| Start of the descent (P4, `sec:est-bw`) | common $h^{\star,\mathrm S}$ or per-period $h^{\mathrm{CCT}}_t$ | **Removed** after tag `v0.4.0.9000-iter` (rule dropped from the paper, T1633). Was `start = "hstar"` (default) / `"cct"` / numeric | — | MATCH | `test-rddid.R` |
+| Start of the descent (P4, `sec:est-bw`) | common $h^{\star,\mathrm S}$ or per-period $h^{\mathrm{CCT}}_t$ | **Removed** after tag `v0.4.0.9000-iter` (rule dropped from the paper, T1633). Was `start = "hstar"` (default) / `"cct"` / numeric | — | MATCH | `test-didisc.R` |
 | PC cross term in the update (P4) | $\mathbf 1\{\mathrm S=\mathrm{PC}\}\,2\sum_{s\ne\tau}\tilde w_\tau\tilde w_s\mathcal C_{\tau,s}/(nh_s)$ with $\mathcal C_{\tau,s}=\mathcal C_{\tau,s}(\rho_{\tau,s})$, $\rho_{\tau,s}=h_\tau/h_s$ | `cov_term = 2 Σ_{i<j} cf_i cf_j Σ_side κ̂_side_ij · .kc_c(p, side, hv_i/hv_j) / hv_j` (see §2.4) | symmetric in $(i,j)$ by $\omega(1/\rho)=\rho\omega(\rho)$; **was `P_ij * max(h0_i,h0_j) / max(hv_i,hv_j)`** | MISMATCH → fixed | `B.4 PC cross term` |
 | Regularization | add $\lambda\sum_\tau\tilde w_\tau^2\bigl(h_\tau^{p+1}/(p+1)!\bigr)^2\operatorname{Var}(\widehat{\mathcal B}_\tau)$ to `eq:amse-att`, default $\lambda=3$; $\operatorname{Var}(\widehat{\mathcal B}_\tau)$ from the per-unit influence of $\widehat{\mathcal B}_\tau$ | `pen <- reg_const * sum(cf^2 * (hv^(p+1)/factorial(p+1))^2 * var_b)`, `var_b <- (factorial(p+1)/h0^(p+1))^2 * Σ g_diff^2`, `g_diff = (a_c - a_bc) * res_c` (influence of $\widehat D-\widehat D^{\mathrm{BC}}$); common-$h$ case enters as `denom <- B^2 + reg` | `reg_const` = $\lambda$; `g_diff` uses the $q$-fit-at-$b$ residuals (D4); **exponents were $p=1$** | MISMATCH → fixed | `B.4 common h` (reg term), `B.4 objective` (pen) |
 | $\widehat{\mathcal B}_\tau$ (B.4 "Bandwidth estimation") | $\widehat\beta^{(p+1)}_{\tau,(+),q}(b^{\mathrm{CCT}}_\tau)B_{\tau,(+),p}(h^{\mathrm{rot}})-\widehat\beta^{(p+1)}_{\tau,(-),q}(b^{\mathrm{CCT}}_\tau)B_{\tau,(-),p}(h^{\mathrm{rot}})$ | `.bw_constants()`: `fp1 * (bmom_+ curv_+ - bmom_- curv_-)`, `bmom` from the fit at `h_rot`, `curv` (= $\widehat\beta^{(p+1)}/(p+1)!$) from the pilot fit at $b_\tau$; `bmom` = rdrobust's `BConst` (checked against rdrobust 2.2's internal `rdrobust_bw` on 2026-10-27; the tests hand-code `bmom` and `curv` with `lm()`) | finite-sample $B(h)\to_p\nu$ | MATCH (2026-10-27) | `B.4 constants general p` |
@@ -151,10 +151,10 @@ Function-level map only. B.5 has not changed in substance since the 2026-06-30 c
 
 | Package | Paper | Note |
 |---|---|---|
-| `.rddid_weights()` (`constant` = equal $1/m$; `linear` = OLS line through the comparison periods extrapolated to $t_{\mathrm{RD}}$) | Corollary `cor:trend`, Section 3 | admissibility ($\sum w=1$ for constant, line weights for linear) |
+| `.didisc_weights()` (`constant` = equal $1/m$; `linear` = OLS line through the comparison periods extrapolated to $t_{\mathrm{RD}}$) | Corollary `cor:trend`, Section 3 | admissibility ($\sum w=1$ for constant, line weights for linear) |
 | `rd_typecont`, `rd_compstable`, `rd_homog`, `rd_trendcell` | Section 4.4 (`sec:tvrv-assess`); simulations `app:sim-val` | mapped in `dev/tests_map.md` (this repo) |
 | `.detect_scheme()` | Section 5.2 prose | data-driven; the paper defines schemes by design |
-| `estimand = "atu"` on `rddid()` and the four tests | Section 6 (`sec:atu`): mirrored design $\tilde R=c-R$, $\tilde W=1-W$, $\tilde V=1-V$; $\widehat{\tilde D}_t=-\widehat D_t$, SEs and bandwidths identical, three tests unchanged, composition stability on the below-cutoff shares | label only except `rd_compstable()`, which sets `x <- c - x; c <- 0` (ties at `x == c` error); invariance pinned by `test-mirror-invariance.R`, the API by `test-estimand.R` (plan: `dev/atu_estimand_plan.md`, 2026-09-10) |
+| `estimand = "atu"` on `didisc()` and the four tests | Section 6 (`sec:atu`): mirrored design $\tilde R=c-R$, $\tilde W=1-W$, $\tilde V=1-V$; $\widehat{\tilde D}_t=-\widehat D_t$, SEs and bandwidths identical, three tests unchanged, composition stability on the below-cutoff shares | label only except `rd_compstable()`, which sets `x <- c - x; c <- 0` (ties at `x == c` error); invariance pinned by `test-mirror-invariance.R`, the API by `test-estimand.R` (plan: `dev/atu_estimand_plan.md`, 2026-09-10) |
 
 ---
 
@@ -184,7 +184,7 @@ Function-level map only. B.5 has not changed in substance since the 2026-06-30 c
   the scheme superscript, the $\mathbf 1\{\mathrm S=\mathrm{PC}\}$ indicator and the $\mathcal C_{t,s}/(nh_s)$
   normalization; the common-$h$ line uses $\mathcal B(t_{\mathrm{RD}})$, $\mathcal V^{\mathrm S}(t_{\mathrm{RD}})$ and
   cites `eq:common_h_opt`. The body stays at $p=1$ by design; App. B.4 is general $p$.
-- **D4 — RESOLVED (Dor, 2026-09-08; rddid this commit).** The curvature-variance estimate
+- **D4 — RESOLVED (Dor, 2026-09-08; didisc this commit).** The curvature-variance estimate
   $\widehat{\operatorname{Var}}(\widehat{\mathcal B}_\tau)=\bigl((p+1)!/h_0^{p+1}\bigr)^2\sum_i g^{\mathrm{diff}}_i{}^2$ now uses
   `g_diff = (a_c - a_bc) * res_b`: influence weights supported on the pilot window paired with the $q$-fit-at-$b$
   residuals, the same convention as the BC variance (D1). Before: `res_c` ($p$-fit at $h$). At the CCT pilot ratio
@@ -209,5 +209,5 @@ Function-level map only. B.5 has not changed in substance since the 2026-06-30 c
 - `tests/testthat/test-kernel-constants.R`: kernel constants vs Gauss–Legendre and closed forms.
 - `tests/testthat/test-appB-bandwidth.R`: B.4 objectives and selectors vs hand-coded formulas.
 - `dev/check_appB_labels.R`: label existence in `main.tex`.
-- `dev/snapshot_rddid.R`: numerical regression snapshot (run before/after any change to
+- `dev/snapshot_didisc.R`: numerical regression snapshot (run before/after any change to
   `rd_period`, `aggregate.R`, `bandwidth.R`; diff the `.txt`).

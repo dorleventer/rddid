@@ -1,8 +1,8 @@
 ---
-title: "How rddid() computes the estimate"
+title: "How didisc() computes the estimate"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{How rddid() computes the estimate}
+  %\VignetteIndexEntry{How didisc() computes the estimate}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -18,10 +18,10 @@ and two of the validation tests by hand from the two building blocks,
 local-linear RD), and checks that the package returns the same numbers. It
 then runs the four tests on simulated designs in which one assumption fails at
 a time. All data are simulated inline, with the truth known. For everyday use,
-start with [Get started](rddid-estimation.html).
+start with [Get started](didisc-estimation.html).
 
 ```{r setup, message = FALSE}
-library(rddid)
+library(didisc)
 has_gg <- requireNamespace("ggplot2", quietly = TRUE)
 if (has_gg) library(ggplot2)
 fmt <- function(x, d = 2) formatC(x, format = "f", digits = d)
@@ -137,13 +137,13 @@ one, $\hat D_3 = `r fmt(tab$D[3])`$, estimates the confounding jump plus the ATT
 Averaging the two comparison-period jumps,
 $(\hat D_1 + \hat D_2)/2 = `r fmt((tab$D[1] + tab$D[2]) / 2)`$, and subtracting
 the average from $\hat D_3 = `r fmt(tab$D[3])`$ gives
-`r fmt(tab$D[3] - (tab$D[1] + tab$D[2]) / 2)`. `rddid()` does the same
+`r fmt(tab$D[3] - (tab$D[1] + tab$D[2]) / 2)`. `didisc()` does the same
 aggregation. With `bwselect = "cct"` it fits each period at its own
 `rd_bw_cct()` bandwidths, as the loop above did (the default rule,
 `bwselect = "joint"`, would use one common bandwidth instead):
 
-```{r rddid-call}
-res <- rddid(dat, y = "Y", x = "R", time = "t", id = "id", t_rd = 3, bwselect = "cct")
+```{r didisc-call}
+res <- didisc(dat, y = "Y", x = "R", time = "t", id = "id", t_rd = 3, bwselect = "cct")
 res
 ```
 
@@ -166,7 +166,7 @@ column, reproduces the repeated cross-section standard error
 (`res$estimates["Conventional", "se_cs"]`). The printed standard error,
 `r fmt(res$estimates["Conventional", "se"], 3)`, is smaller: the same units enter
 every period (the scheme is "panel, running variable fixed over time"), and
-`rddid()` adds the cross-period covariances of the jumps. `summary(res)` prints
+`didisc()` adds the cross-period covariances of the jumps. `summary(res)` prints
 the robust standard error under all three sampling schemes.
 
 ## A confounding jump that moves linearly
@@ -174,7 +174,7 @@ the robust standard error under all three sampling schemes.
 ```{r linear-conf}
 conf_lin <- 0.5 + 0.5 * (1:3)
 dat_lin <- dgp_a(conf = conf_lin, tau = tau_true)
-res_const <- rddid(dat_lin, y = "Y", x = "R", time = "t", id = "id", t_rd = 3,
+res_const <- didisc(dat_lin, y = "Y", x = "R", time = "t", id = "id", t_rd = 3,
                    trend = "constant", bwselect = "cct")
 res_const$estimates[, c("est", "se")]
 bias_truth <- conf_lin[3] - mean(conf_lin[1:2])
@@ -189,11 +189,11 @@ against an effect of `r tau_true`: the conventional estimate,
 `r fmt(res_const$estimates["Conventional", "est"])`, sits near
 `r fmt(tau_true + bias_truth)`.
 
-With `trend = "linear"`, `rddid()` extrapolates the line through the
+With `trend = "linear"`, `didisc()` extrapolates the line through the
 comparison-period jumps to the RD period:
 
 ```{r linear-weights}
-res_lin <- rddid(dat_lin, y = "Y", x = "R", time = "t", id = "id", t_rd = 3,
+res_lin <- didisc(dat_lin, y = "Y", x = "R", time = "t", id = "id", t_rd = 3,
                  trend = "linear", bwselect = "cct")
 res_lin$weights
 res_lin$estimates[, c("est", "se")]
@@ -219,7 +219,7 @@ Under a constant confounding jump any weights that sum to one are valid; on the
 first data set:
 
 ```{r custom-weights}
-res_custom <- rddid(dat, y = "Y", x = "R", time = "t", id = "id", t_rd = 3,
+res_custom <- didisc(dat, y = "Y", x = "R", time = "t", id = "id", t_rd = 3,
                     trend = c(0.3, 0.7), bwselect = "cct")
 res_custom$estimates[, c("est", "se")]
 ```
@@ -274,8 +274,8 @@ head(dat_atu)
 period, so a comparison-period jump is now the confounding jump among treated
 units: the confounding jump of 1 plus `tau1 - tau0`.
 
-```{r rddid-atu-call}
-res_atu <- rddid(dat_atu, y = "Y", x = "R", time = "t", id = "id", t_rd = 3,
+```{r didisc-atu-call}
+res_atu <- didisc(dat_atu, y = "Y", x = "R", time = "t", id = "id", t_rd = 3,
                  estimand = "atu")
 res_atu
 tau0
@@ -315,7 +315,7 @@ the *other* period(s). Write $\pi_{t,(+)}(v)$ and $\pi_{t,(-)}(v)$ for the share
 of type $v$ just above and just below the cutoff in period $t$. The paper's
 treatment of a time-varying running variable states four assumptions on these
 shares and on the confounding jump within each type, and a test for each. Every test function takes the same long data
-frame (`id`, `t`, `R`, `Y`) that `rddid()` takes.
+frame (`id`, `t`, `R`, `Y`) that `didisc()` takes.
 
 ```{r dgp-b}
 m_b <- function(r) r + r^2 * (r >= 0)
@@ -405,7 +405,7 @@ knitr::kable(tab_ss, digits = 3, col.names = c("scenario", "t", "jump", "SE"))
 across periods, with the cross-period covariance of the two jumps (the same
 units enter both regressions) inside it. Its default joint statistic is sup-t
 (the largest |t|, studentized; see [Checking the identification
-assumptions](rddid-validation-tests.html)); with `joint = "wald"`, used here to
+assumptions](didisc-validation-tests.html)); with `joint = "wald"`, used here to
 rebuild it by hand, it is the chi-squared Wald statistic. The statistic, its
 degrees of freedom and p-value are `$statistic`, `$df`, `$p_value`; the
 per-period Wald tests sit in `$per_period[[t]]$ll_wald`:
@@ -637,7 +637,7 @@ ggplot(tab_tr, aes(period, jump, colour = cell)) +
 
 ## What each test detects
 
-The p-values of the tests and the `rddid()` estimate in each scenario, first the
+The p-values of the tests and the `didisc()` estimate in each scenario, first the
 two-period designs S0 to S3, then the three-period designs S0_3 and S4:
 
 ```{r summary-tests, echo = FALSE}
@@ -648,7 +648,7 @@ cs3 <- rd_compstable(S3, x = "R", time = "t", id = "id", t_rd = 2, comparisons =
 h0 <- rd_homog(S0, y = "Y", x = "R", time = "t", id = "id", t_rd = 2, comparisons = 1, bwselect = "cct", bc = FALSE)
 h3 <- rd_homog(S3, y = "Y", x = "R", time = "t", id = "id", t_rd = 2, comparisons = 1, bwselect = "cct", bc = FALSE)
 
-rid <- function(dat, ...) rddid(dat, y = "Y", x = "R", time = "t", id = "id", t_rd = max(dat$t), bwselect = "cct", ...)
+rid <- function(dat, ...) didisc(dat, y = "Y", x = "R", time = "t", id = "id", t_rd = max(dat$t), bwselect = "cct", ...)
 estfmt <- function(r) sprintf("%s (%s)", fmt(r$estimates["Conventional", "est"]), fmt(r$estimates["Conventional", "se"]))
 r0 <- rid(S0); r1 <- rid(S1); r2 <- rid(S2); r3 <- rid(S3)
 r0_3 <- rid(S0_3); r4c <- rid(S4); r0_3l <- rid(S0_3, trend = "linear"); r4l <- rid(S4, trend = "linear")
@@ -658,18 +658,18 @@ tab1 <- data.frame(
   type_cont_p    = fmtp(c(tc0$p_value, tc1$p_value, tc2$p_value, tc3$p_value)),
   comp_stable_p  = fmtp(c(p0$ll_wald$p, p1$ll_wald$p, cs2$pairs[["2::1"]]$ll_wald$p, cs3$pairs[["2::1"]]$ll_wald$p)),
   homog_p        = fmtp(c(h0$p_value, h1$p_value, h2$p_value, h3$p_value)),
-  rddid_est_se   = c(estfmt(r0), estfmt(r1), estfmt(r2), estfmt(r3)),
+  didisc_est_se   = c(estfmt(r0), estfmt(r1), estfmt(r2), estfmt(r3)),
   truth = 1
 )
 knitr::kable(tab1, col.names = c("scenario", "type continuity p", "composition stability p",
-                                 "homogeneous confounding p", "rddid() est (SE)", "truth"))
+                                 "homogeneous confounding p", "didisc() est (SE)", "truth"))
 
 tab2 <- data.frame(
   scenario = c("S0_3", "S4"), trendcell_p = fmtp(c(tr0$p_value, tr4$p_value)),
   est_constant = c(estfmt(r0_3), estfmt(r4c)), est_linear = c(estfmt(r0_3l), estfmt(r4l)), truth = 1
 )
 knitr::kable(tab2, col.names = c("scenario", "constant within-type confounding p",
-                                 "rddid() est (SE), constant", "rddid() est (SE), linear", "truth"))
+                                 "didisc() est (SE), constant", "didisc() est (SE), linear", "truth"))
 ```
 
 ```{r zdist, include = FALSE}

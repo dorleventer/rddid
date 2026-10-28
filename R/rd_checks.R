@@ -3,7 +3,7 @@
 
 #' Run the four tests of the identification assumptions
 #'
-#' When the running variable moves over time, the estimate of [rddid()] is
+#' When the running variable moves over time, the estimate of [didisc()] is
 #' identified under type continuity, constant within-type confounding, and
 #' either composition stability or homogeneous confounding (Leventer and Nevo,
 #' 2024). `rd_checks()` runs the four tests, [rd_typecont()],
@@ -22,12 +22,12 @@
 #' the cutoff) gives a row with its error message and `NA` results.
 #'
 #' The printout ends with a reading at the confidence level `level`, as in
-#' [rddid()]: a test rejects its assumption when its p-value is below
+#' [didisc()]: a test rejects its assumption when its p-value is below
 #' `1 - level`. Not rejecting an assumption does not establish it; constant
 #' within-type confounding concerns the RD period and is checked in the
 #' comparison periods only (a pre-trends check).
 #'
-#' @param data,y,x,time,id as in [rddid()]; `id` is required.
+#' @param data,y,x,time,id as in [didisc()]; `id` is required.
 #' @param t_rd the RD period (required).
 #' @param comparisons,estimand,c,kernel,scheme,bc shared by the four tests;
 #'   defaults as in each test.
@@ -45,19 +45,19 @@
 #' @param typecont,compstable,homog,trendcell lists of further arguments for
 #'   one test, which override the shared ones.
 #' @param level the confidence level of the reading in the printout (default
-#'   0.95, as in [rddid()]): a test rejects when its p-value is below `1 - level`.
+#'   0.95, as in [didisc()]): a test rejects when its p-value is below `1 - level`.
 #' @return An object of class `"rd_checks"`: a list with `table` (one row per
 #'   test: `test`, `assumption`, `statistic`, `p_value`, `method`, `bandwidth`,
 #'   `error`), the four test results `typecont`, `compstable`, `homog`,
 #'   `trendcell` (`NULL` where a test failed), `level` and `call`.
 #' @seealso [rd_typecont()], [rd_compstable()], [rd_homog()], [rd_trendcell()];
-#'   `tidy()` in [rddid-tidiers].
+#'   `tidy()` in [didisc-tidiers].
 #' @family tests of the assumptions
 #' @examples
-#' ch <- rd_checks(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
+#' ch <- rd_checks(didisc_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 #' ch
 #' # switch options: the chi-squared Wald and per-cell bandwidths everywhere
-#' rd_checks(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
+#' rd_checks(didisc_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
 #'           joint = "wald", outcome_bwselect = "cct")
 #' @export
 rd_checks <- function(data, y, x, time, id, t_rd,

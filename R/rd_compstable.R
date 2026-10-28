@@ -309,11 +309,11 @@
 #' null that **the share of each type among the units just above the cutoff is the
 #' same in the RD period and in each comparison period**. Composition
 #' stability and homogeneous confounding ([rd_homog()]) are alternatives: the
-#' estimate of [rddid()] needs one of the two (together with type continuity,
+#' estimate of [didisc()] needs one of the two (together with type continuity,
 #' [rd_typecont()]). A rejection here alone therefore does not invalidate the
 #' estimate; if homogeneous confounding is rejected as well, the comparison
 #' periods mix the types differently from the RD period and the estimate can
-#' be biased. With a running variable fixed over time (as in [rddid_sim]) the
+#' be biased. With a running variable fixed over time (as in [didisc_sim]) the
 #' types are degenerate and the test is not informative.
 #'
 #' @details
@@ -359,7 +359,7 @@
 #' ## Options
 #'
 #' `bc = TRUE` (default) tests the bias-corrected jumps with their robust
-#' variance, as in the `Robust` row of [rddid()]; `bc = FALSE` uses the
+#' variance, as in the `Robust` row of [didisc()]; `bc = FALSE` uses the
 #' conventional jumps and variances. With `bwselect = "cct"` (default) each
 #' type-indicator regression in the reflected sample gets its own CCT
 #' bandwidths from [rd_bw_cct()]. With `bwselect = "rot"` the rule of thumb is
@@ -388,7 +388,7 @@
 #'   variable, period or id are dropped, with a message.
 #' @param id name of the unit-identifier column (a string). Required: types are
 #'   read across periods.
-#' @param estimand `"att"` (default) or `"atu"`, as in [rddid()]. Under `"atu"`
+#' @param estimand `"att"` (default) or `"atu"`, as in [didisc()]. Under `"atu"`
 #'   the test is on the shares among the units below the cutoff; see "ATU
 #'   designs" in Details.
 #' @param h a bandwidth to use, as both main and pilot bandwidth, in every
@@ -399,9 +399,9 @@
 #' @param scheme the sampling scheme for the covariance between the two groups
 #'   of a pair: `"auto"` (default; `"pv"` for a pair in which some unit is above
 #'   the cutoff in both periods, `"cs"` otherwise), `"cs"`, `"pc"` or `"pv"`
-#'   (as in [rddid()]). See Details.
+#'   (as in [didisc()]). See Details.
 #' @param bc logical. `TRUE` (default): test the bias-corrected jumps with their
-#'   robust variance, as in the `Robust` row of [rddid()]; `FALSE`: the
+#'   robust variance, as in the `Robust` row of [didisc()]; `FALSE`: the
 #'   conventional jumps and variances.
 #' @param joint the statistic of each pair's test and of the joint test:
 #'   `"supt"` (default), `"swald"` or `"wald"`, as in [rd_typecont()]. See "The
@@ -411,7 +411,7 @@
 #'   [rd_typecont()].
 #' @param t_rd the RD period: the value of `time` in which the treatment of
 #'   interest switches on at the cutoff.
-#' @inheritParams rddid
+#' @inheritParams didisc
 #'
 #' @return An object of class `"rd_compstable"`, a list with:
 #'   \describe{
@@ -465,19 +465,19 @@
 #' confidence intervals for regression-discontinuity designs. *Econometrica*
 #' 82(6), 2295-2326.
 #'
-#' @seealso [rddid()] for the estimate; [rddid_sim_pv] for example data;
-#'   `tidy()` in [rddid-tidiers] for a one-row summary.
+#' @seealso [didisc()] for the estimate; [didisc_sim_pv] for example data;
+#'   `tidy()` in [didisc-tidiers] for a one-row summary.
 #' @family tests of the assumptions
 #'
 #' @examples
-#' # rddid_sim_pv: the running variable moves, so some units change side
-#' cs <- rd_compstable(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
+#' # didisc_sim_pv: the running variable moves, so some units change side
+#' cs <- rd_compstable(didisc_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
 #' cs          # one test per (RD period, comparison period) pair, then the joint test
 #' cs$pairs[["3::1"]]$jumps
 #' # the chi-squared Wald instead of sup-t
-#' rd_compstable(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3, joint = "wald")
+#' rd_compstable(didisc_sim_pv, x = "R", time = "year", id = "id", t_rd = 3, joint = "wald")
 #' # comparison periods uniformly treated: the shares below the cutoff
-#' rd_compstable(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3,
+#' rd_compstable(didisc_sim_pv, x = "R", time = "year", id = "id", t_rd = 3,
 #'               estimand = "atu")
 #' @export
 rd_compstable <- function(data, x, time, id, t_rd,

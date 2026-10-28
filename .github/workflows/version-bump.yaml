@@ -2,7 +2,7 @@
 # (between releases: the fourth component, 0.4.0.9001 -> 0.4.0.9002; usethis::use_version("dev")).
 # Outputs made with the package record its version, so each code change gets its own number.
 # Code = R/, data/, src/, NAMESPACE. Documentation, tests, vignettes and CI changes need no bump.
-# The first heading of inst/NEWS.md carries the same version ("# rddid <version>"); R's news()
+# The first heading of inst/NEWS.md carries the same version ("# didisc <version>"); R's news()
 # does not parse a "(development version)" heading.
 name: version-bump
 
@@ -25,8 +25,8 @@ jobs:
         run: |
           ver=$(sed -n 's/^Version: *//p' DESCRIPTION)
           head1=$(grep -m 1 '^# ' inst/NEWS.md)
-          if [ "$head1" != "# rddid $ver" ]; then
-            echo "::error::inst/NEWS.md starts with '$head1'; expected '# rddid $ver'."
+          if [ "$head1" != "# didisc $ver" ]; then
+            echo "::error::inst/NEWS.md starts with '$head1'; expected '# didisc $ver'."
             exit 1
           fi
 

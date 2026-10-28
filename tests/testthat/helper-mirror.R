@@ -8,7 +8,7 @@ mirror_x <- function(d, x = "R") {
   d
 }
 
-# ---- dgp_a: verbatim from vignettes/rddid-estimation.Rmd, chunk `dgp` -------
+# ---- dgp_a: verbatim from vignettes/didisc-estimation.Rmd, chunk `dgp` -------
 # 3 periods, time-invariant running variable R, PC (panel, constant-side) scheme.
 m_a <- function(r, theta) r + (theta / 2) * r^2 * (r >= 0)
 dgp_a <- function(n = 2000, alpha = c(1, 1, 1), theta = c(2, 2, 2), tau = 1, seed = 1) {
@@ -23,7 +23,7 @@ dgp_a <- function(n = 2000, alpha = c(1, 1, 1), theta = c(2, 2, 2), tau = 1, see
   }))
 }
 
-# ---- dgp_b: verbatim from vignettes/rddid-validation-tests.Rmd, chunk `dgp` -
+# ---- dgp_b: verbatim from vignettes/didisc-validation-tests.Rmd, chunk `dgp` -
 # 2 or 3 periods, time-varying running variable R, PV (panel, side-switching)
 # scheme.
 m_b <- function(r) r + r^2 * (r >= 0)

@@ -121,7 +121,7 @@ test_that("rd_typecont LL-Wald is correctly sized under the null", {
   # share eta, so P(type = 1 | R2) is a steep but CONTINUOUS S-curve through the
   # cutoff, and with finite q the CK statistic (a difference of type means in
   # the q-nearest windows) picks that slope up and over-rejects.  That finite-q
-  # sensitivity is tracked separately; see the rddid task board.
+  # sensitivity is tracked separately; see the didisc task board.
   ll <- vapply(seq_len(12), function(s) {
     d     <- dgp_s3_local(2000, "null", seed = s)
     panel <- xsec_to_panel(d)

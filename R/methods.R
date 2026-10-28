@@ -4,21 +4,21 @@
 
 # Standard methods for the objects the package returns: summary(), coef(), confint(), nobs(),
 # and broom-style tidy()/glance() (registered for the `generics` package when it is loaded).
-# Everything here is computed from fields that rddid()/the tests already store; nothing is
+# Everything here is computed from fields that didisc()/the tests already store; nothing is
 # re-estimated.
 
 #' Summary of an RD-DID fit
 #'
-#' `summary()` of an [rddid()] object adds, to what `print()` shows, a per-period table (the
+#' `summary()` of an [didisc()] object adds, to what `print()` shows, a per-period table (the
 #' local-linear jump in every period with its bandwidths and sample size, and its coefficient
 #' in the estimate) and the standard error of the estimate under each of the three sampling
 #' schemes.
 #'
-#' @param object an object of class `"rddid"`.
+#' @param object an object of class `"didisc"`.
 #' @param digits number of decimals in the printed tables.
-#' @param x a `"summary.rddid"` object.
+#' @param x a `"summary.didisc"` object.
 #' @param ... unused.
-#' @return `summary()` returns an object of class `"summary.rddid"`: a list with `fit` (the
+#' @return `summary()` returns an object of class `"summary.didisc"`: a list with `fit` (the
 #'   object) and `per_period`, a data frame with one row per period in time order and columns
 #'   `period`, `role` (`"RD"` or `"comparison"`), `coef` (the period's coefficient in the
 #'   conventional estimate: the RD period's weight in `rd_weights`, 1 for a single RD period,
@@ -27,18 +27,18 @@
 #'   (bias-corrected jump, robust standard error) and, under `weighting = "min_variance"`,
 #'   `coef_bc` (the coefficients of the bias-corrected estimate, which has its own weights).
 #' @examples
-#' fit <- rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
+#' fit <- didisc(didisc_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 #' summary(fit)
 #' summary(fit)$per_period
 #' @export
-summary.rddid <- function(object, ...) {
-  structure(list(fit = object, per_period = .rddid_period_table(object)),
-            class = "summary.rddid")
+summary.didisc <- function(object, ...) {
+  structure(list(fit = object, per_period = .didisc_period_table(object)),
+            class = "summary.didisc")
 }
 
-#' @rdname summary.rddid
+#' @rdname summary.didisc
 #' @export
-print.summary.rddid <- function(x, digits = 4, ...) {
+print.summary.didisc <- function(x, digits = 4, ...) {
   fit <- x$fit
   print(fit, digits = digits, hint = FALSE)
   tab <- x$per_period
@@ -63,10 +63,10 @@ print.summary.rddid <- function(x, digits = 4, ...) {
   invisible(x)
 }
 
-#' Per-period table behind summary.rddid(): role, coefficient, n, bandwidths, jumps
+#' Per-period table behind summary.didisc(): role, coefficient, n, bandwidths, jumps
 #' @keywords internal
 #' @noRd
-.rddid_period_table <- function(x) {
+.didisc_period_table <- function(x) {
   per <- .fit_period_order(x)              # rows in time order ...
   f   <- x$fits[per]                       # ... and every column taken in that same order
   out <- data.frame(
@@ -88,41 +88,41 @@ print.summary.rddid <- function(x, digits = 4, ...) {
 
 #' Coefficients, confidence intervals and sample size of an RD-DID fit
 #'
-#' `coef()` returns the two estimates of an [rddid()] fit, `Conventional` (local-linear) and
+#' `coef()` returns the two estimates of an [didisc()] fit, `Conventional` (local-linear) and
 #' `Robust` (bias-corrected); `confint()` their confidence intervals under the fit's sampling
 #' scheme; `nobs()` the number of observations used.
 #'
-#' @param object an object of class `"rddid"`.
+#' @param object an object of class `"didisc"`.
 #' @param parm which rows of the estimate table: `"Conventional"` (local-linear estimate,
 #'   conventional standard error), `"Robust"` (bias-corrected estimate, robust standard
 #'   error), or both (default).
 #' @param level confidence level; `NULL` (default) returns the interval stored in the object
-#'   (at the `level` given to [rddid()]).
+#'   (at the `level` given to [didisc()]).
 #' @param ... unused.
 #' @return `coef()` a named numeric vector, the `Conventional` and `Robust` estimates;
 #'   `confint()` a matrix with one row per `parm` and
 #'   columns giving the lower and upper limits; `nobs()` the number of unit-period rows used
 #'   across all periods.
 #' @examples
-#' fit <- rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
+#' fit <- didisc(didisc_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 #' coef(fit)
 #' confint(fit)
 #' confint(fit, "Robust", level = 0.9)
 #' nobs(fit)
-#' @name rddid-methods
+#' @name didisc-methods
 #' @importFrom stats coef confint nobs
 NULL
 
-#' @rdname rddid-methods
+#' @rdname didisc-methods
 #' @export
-coef.rddid <- function(object, ...) {
+coef.didisc <- function(object, ...) {
   e <- object$estimates
   stats::setNames(e$est, rownames(e))
 }
 
-#' @rdname rddid-methods
+#' @rdname didisc-methods
 #' @export
-confint.rddid <- function(object, parm = c("Conventional", "Robust"), level = NULL, ...) {
+confint.didisc <- function(object, parm = c("Conventional", "Robust"), level = NULL, ...) {
   parm <- match.arg(parm, several.ok = TRUE)
   e <- object$estimates[parm, , drop = FALSE]
   if (is.null(level)) {
@@ -137,9 +137,9 @@ confint.rddid <- function(object, parm = c("Conventional", "Robust"), level = NU
   ci
 }
 
-#' @rdname rddid-methods
+#' @rdname didisc-methods
 #' @export
-nobs.rddid <- function(object, ...) as.integer(sum(object$n_by_period))
+nobs.didisc <- function(object, ...) as.integer(sum(object$n_by_period))
 
 # ---- tidy / glance (broom conventions) -----------------------------------------------------
 
@@ -149,7 +149,7 @@ nobs.rddid <- function(object, ...) as.integer(sum(object$n_by_period))
 #' can be passed to table makers such as `modelsummary`. The generics come from the
 #' `generics` package; the methods are registered when that package (or `broom`) is loaded.
 #'
-#' @param x an object returned by [rddid()], [rd_typecont()], [rd_compstable()],
+#' @param x an object returned by [didisc()], [rd_typecont()], [rd_compstable()],
 #'   [rd_homog()] or [rd_trendcell()].
 #' @param conf.int,conf.level for `tidy()` of a fit: include the confidence interval (default
 #'   `TRUE`) and at which level (default the fit's `level`; another value recomputes the
@@ -169,11 +169,11 @@ nobs.rddid <- function(object, ...) as.integer(sum(object$n_by_period))
 #'   `bwselect`, `h` (the common bandwidth under `"joint"`/fixed `h`, `NA` otherwise),
 #'   `scheme`, `level`, `weighting`).
 #' @examples
-#' fit <- rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
+#' fit <- didisc(didisc_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 #' tidy(fit)
 #' glance(fit)
-#' tidy(rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3))
-#' @name rddid-tidiers
+#' tidy(rd_typecont(didisc_sim_pv, x = "R", time = "year", id = "id", t_rd = 3))
+#' @name didisc-tidiers
 NULL
 
 #' @importFrom generics tidy
@@ -184,9 +184,9 @@ generics::tidy
 #' @export
 generics::glance
 
-#' @rdname rddid-tidiers
+#' @rdname didisc-tidiers
 #' @export
-tidy.rddid <- function(x, conf.int = TRUE, conf.level = NULL, ...) {
+tidy.didisc <- function(x, conf.int = TRUE, conf.level = NULL, ...) {
   e <- x$estimates
   out <- data.frame(term = rownames(e), estimate = e$est, std.error = e$se, statistic = e$z,
                     p.value = e$p, row.names = NULL, stringsAsFactors = FALSE)
@@ -203,10 +203,10 @@ tidy.rddid <- function(x, conf.int = TRUE, conf.level = NULL, ...) {
   out
 }
 
-#' @rdname rddid-tidiers
+#' @rdname didisc-tidiers
 #' @export
-glance.rddid <- function(x, ...) {
-  data.frame(nobs = nobs.rddid(x),
+glance.didisc <- function(x, ...) {
+  data.frame(nobs = nobs.didisc(x),
              t_rd = if (length(x$t_rd) == 1L) x$t_rd else paste(x$t_rd, collapse = ", "),
              comparisons = paste(x$comparisons, collapse = ", "),
              rd_weights = paste(signif(x$rd_weights, 3), collapse = ", "),
@@ -229,16 +229,16 @@ glance.rddid <- function(x, ...) {
              df = if (wald) x$df else NA_integer_, p.value = x$p_value,
              method = .checks_method(x), row.names = NULL, stringsAsFactors = FALSE)
 }
-#' @rdname rddid-tidiers
+#' @rdname didisc-tidiers
 #' @export
 tidy.rd_typecont <- function(x, ...) .tidy_test(x, "rd_typecont", "type continuity")
-#' @rdname rddid-tidiers
+#' @rdname didisc-tidiers
 #' @export
 tidy.rd_compstable <- function(x, ...) .tidy_test(x, "rd_compstable", "composition stability")
-#' @rdname rddid-tidiers
+#' @rdname didisc-tidiers
 #' @export
 tidy.rd_homog <- function(x, ...) .tidy_test(x, "rd_homog", "homogeneous confounding")
-#' @rdname rddid-tidiers
+#' @rdname didisc-tidiers
 #' @export
 tidy.rd_trendcell <- function(x, ...)
   .tidy_test(x, "rd_trendcell", paste(x$trend, "within-type confounding"))
@@ -319,7 +319,7 @@ tidy.rd_trendcell <- function(x, ...)
 #' @keywords internal
 #' @noRd
 `%||%` <- function(a, b) if (is.null(a)) b else a
-#' @rdname rddid-tidiers
+#' @rdname didisc-tidiers
 #' @export
 tidy.rd_checks <- function(x, ...) {
   out <- x$table

@@ -1,19 +1,19 @@
 # conditions.R -- errors and warnings that name the function the user called.
 # Every user-facing error goes through .abort(): its header is the user's own call
-# ("Error in rddid(...)"), wherever in the package the check sits, so no internal helper's
+# ("Error in didisc(...)"), wherever in the package the check sits, so no internal helper's
 # name reaches the user and no message needs a "fn: " prefix.
 
-#' The outermost call to an exported rddid function on the call stack (or NULL)
+#' The outermost call to an exported didisc function on the call stack (or NULL)
 #' @keywords internal
 #' @noRd
 .user_call <- function() {
-  exported <- getNamespaceExports("rddid")
+  exported <- getNamespaceExports("didisc")
   for (cl in sys.calls()) {
     fn <- cl[[1L]]
     if (is.call(fn) && identical(fn[[1L]], as.name("::"))) fn <- fn[[3L]]
     if (is.name(fn) && as.character(fn) %in% exported) return(cl)
-    if (is.function(fn)) {                 # do.call(rddid, ...): name the function, not its data
-      ns  <- asNamespace("rddid")
+    if (is.function(fn)) {                 # do.call(didisc, ...): name the function, not its data
+      ns  <- asNamespace("didisc")
       hit <- Filter(function(e) identical(fn, get(e, envir = ns)), exported)
       if (length(hit)) return(as.call(list(as.name(hit[[1L]]))))
     }

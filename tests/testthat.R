@@ -1,4 +1,4 @@
 library(testthat)
-library(rddid)
+library(didisc)
 
-test_check("rddid")
+test_check("didisc")

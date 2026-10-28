@@ -1,5 +1,5 @@
 # ---------------------------------------------------------------------------
-# Conformance of rddid's four validation tests against Section 4.4 of
+# Conformance of didisc's four validation tests against Section 4.4 of
 # Leventer and Nevo.
 #
 # Every expectation compares a package quantity to the independent reference in

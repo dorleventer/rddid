@@ -39,10 +39,10 @@ outcome still gives its unit's side of the cutoff and is left out of the fits.}
 
 \item{time}{name of the period column (a string). The column is usually
 numeric (a year); character or factor labels work as well, except under
-\code{trend = "linear"} (in \code{\link[=rddid]{rddid()}} or \code{\link[=rd_trendcell]{rd_trendcell()}}), where the line is
+\code{trend = "linear"} (in \code{\link[=didisc]{didisc()}} or \code{\link[=rd_trendcell]{rd_trendcell()}}), where the line is
 fitted on the period values: these then need to be numeric and are the
 time scale of the line (so 2015, 2017, 2018 are unequally spaced);
-\code{as.numeric()} converts character labels such as \code{"2019"}. In \code{\link[=rddid]{rddid()}}
+\code{as.numeric()} converts character labels such as \code{"2019"}. In \code{\link[=didisc]{didisc()}}
 the default comparison periods are every period other than \code{t_rd}, in
 sorted order of the values (alphabetical for character or factor labels),
 the order a numeric \code{trend} follows.}
@@ -57,7 +57,7 @@ The test does not use the RD period's outcomes.}
 \item{comparisons}{the comparison periods in which the test runs. \code{NULL}
 (default) uses every period other than \code{t_rd}.}
 
-\item{estimand}{\code{"att"} (default) or \code{"atu"}, as in \code{\link[=rddid]{rddid()}}. Label only:
+\item{estimand}{\code{"att"} (default) or \code{"atu"}, as in \code{\link[=didisc]{didisc()}}. Label only:
 the test is the same either way.}
 
 \item{c}{the cutoff (default 0). A unit with \code{x >= c} is above the cutoff.}
@@ -77,15 +77,15 @@ cell's own CCT bandwidths from \code{\link[=rd_bw_cct]{rd_bw_cct()}}) or \code{"
 
 \item{scheme}{the sampling scheme, which sets the covariance across
 comparison periods in the test: \code{"cs"}, \code{"pc"} or \code{"pv"} (as in
-\code{\link[=rddid]{rddid()}}), or \code{"auto"} (default), which reads it off the comparison
-periods by the rule of \code{\link[=rddid]{rddid()}}. See Details.}
+\code{\link[=didisc]{didisc()}}), or \code{"auto"} (default), which reads it off the comparison
+periods by the rule of \code{\link[=didisc]{didisc()}}. See Details.}
 
 \item{min_n}{the minimum number of observations on each side of the cutoff
 for a (period, type) cell to enter the test (default 10). Smaller cells
 are dropped, with a message listing them.}
 
 \item{bc}{logical. \code{TRUE} (default): test the bias-corrected jumps with their
-robust variance, as in the \code{Robust} row of \code{\link[=rddid]{rddid()}}; \code{FALSE}: the
+robust variance, as in the \code{Robust} row of \code{\link[=didisc]{didisc()}}; \code{FALSE}: the
 conventional jumps and variances.}
 
 \item{type_by}{how types are defined: \code{"rd_side"} (default; the unit's side
@@ -131,12 +131,12 @@ period. \code{rd_homog()} tests the null that \strong{in each comparison period 
 confounding jump is the same for every type}, using the comparison periods
 only, where the jump in the outcome is the confounding jump. Homogeneous
 confounding and composition stability (\code{\link[=rd_compstable]{rd_compstable()}}) are alternatives:
-the estimate of \code{\link[=rddid]{rddid()}} needs one of the two (together with type
+the estimate of \code{\link[=didisc]{didisc()}} needs one of the two (together with type
 continuity, \code{\link[=rd_typecont]{rd_typecont()}}). A rejection here alone therefore does not
 invalidate the estimate; if composition stability is rejected as well, the
 comparison periods mix the types differently from the RD period and the
 estimate can be biased. With a running variable fixed over time (as in
-\link{rddid_sim}) the types are degenerate and the test is not informative.
+\link{didisc_sim}) the types are degenerate and the test is not informative.
 }
 \details{
 \subsection{What is estimated}{
@@ -161,7 +161,7 @@ and the covariance follows \code{scheme}, matching units on \code{id}: none unde
 \code{"cs"}; from the units on the same side of the cutoff in both periods under
 \code{"pc"}; under \code{"pv"} also from the units that change side, with the opposite
 sign. \code{"auto"} reads the scheme off the comparison periods, by the rule of
-\code{\link[=rddid]{rddid()}}.
+\code{\link[=didisc]{didisc()}}.
 }
 
 \subsection{Options}{
@@ -174,7 +174,7 @@ difference; units not observed in the RD period are left out.
 side of the cutoff is dropped, and a message lists the dropped cells; a
 period with fewer than two types is skipped. \code{bc = TRUE} (default) tests the
 bias-corrected jumps with their robust variance, as in the \code{Robust} row of
-\code{\link[=rddid]{rddid()}}; \code{bc = FALSE} uses the conventional jumps and variances. With
+\code{\link[=didisc]{didisc()}}; \code{bc = FALSE} uses the conventional jumps and variances. With
 \code{bwselect = "cct"} each cell gets its own CCT bandwidths from
 \code{\link[=rd_bw_cct]{rd_bw_cct()}}, computed on that cell's outcome and running variable. With
 \code{bwselect = "rot"} the rule of thumb is \code{h = b = 0.2} times the range of the
@@ -205,12 +205,12 @@ same, so \code{estimand} only labels the output.
 }
 }
 \examples{
-# rddid_sim_pv: the running variable moves, so some units change side
-hc <- rd_homog(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
+# didisc_sim_pv: the running variable moves, so some units change side
+hc <- rd_homog(didisc_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 hc          # the Wald test, then each type's jump in each comparison period
 hc$period_type_jumps
 # one CCT bandwidth per cell instead of one pooled bandwidth
-rd_homog(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, bwselect = "cct")
+rd_homog(didisc_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, bwselect = "cct")
 }
 \references{
 Leventer, D. and D. Nevo (2024). \emph{Correcting Invalid Regression Discontinuity
@@ -222,8 +222,8 @@ confidence intervals for regression-discontinuity designs. \emph{Econometrica}
 82(6), 2295-2326.
 }
 \seealso{
-\code{\link[=rddid]{rddid()}} for the estimate; \link{rddid_sim_pv} for example data;
-\code{tidy()} in \link{rddid-tidiers} for a one-row summary.
+\code{\link[=didisc]{didisc()}} for the estimate; \link{didisc_sim_pv} for example data;
+\code{tidy()} in \link{didisc-tidiers} for a one-row summary.
 
 Other tests of the assumptions: 
 \code{\link{plot.rd_compstable}()},

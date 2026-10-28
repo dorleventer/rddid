@@ -2,7 +2,7 @@
 # validation figures of the paper's application: binned shares of a type by running variable
 # with the local-linear fits on each side (type continuity, composition stability), point-range
 # plots of the within-type confounding jumps (homogeneous confounding, constant within-type
-# jump), the per-period RD plots behind an rddid() fit, and the switchers picture.
+# jump), the per-period RD plots behind a didisc() fit, and the switchers picture.
 # House rules: no titles, subtitles or statistics in a figure (they are in print()/summary());
 # short axis labels; a small bottom legend without a title; theme_bw; one comparison period
 # against one RD period, one line per side; periods in time order; stable colours (green =
@@ -28,7 +28,7 @@ utils::globalVariables(c("x", "y", "side", "jump", "lo", "hi", "x_a", "x_b", "st
 .pt_size   <- 1.8
 .lwd       <- 1
 
-.rddid_theme <- function() {
+.didisc_theme <- function() {
   ggplot2::theme_bw(base_size = 11) +
     ggplot2::theme(legend.position = "bottom", legend.title = ggplot2::element_blank(),
                    legend.text = ggplot2::element_text(size = 9),
@@ -53,7 +53,7 @@ utils::globalVariables(c("x", "y", "side", "jump", "lo", "hi", "x_a", "x_b", "st
   if (!anyNA(num)) labels[order(num)] else labels
 }
 
-#' The periods of an rddid() fit in time order (level order for a factor period column)
+#' The periods of a didisc() fit in time order (level order for a factor period column)
 #' @keywords internal
 #' @noRd
 .fit_period_order <- function(x) {
@@ -136,7 +136,7 @@ utils::globalVariables(c("x", "y", "side", "jump", "lo", "hi", "x_a", "x_b", "st
   stats::setNames(cols, levels)
 }
 
-# ---- rddid fit: the per-period RD plots --------------------------------------------------
+# ---- didisc fit: the per-period RD plots --------------------------------------------------
 
 #' Plot the per-period RD fits behind an RD-DID estimate
 #'
@@ -146,18 +146,18 @@ utils::globalVariables(c("x", "y", "side", "jump", "lo", "hi", "x_a", "x_b", "st
 #' is the period's discontinuity \eqn{D_t}; `summary()` lists every \eqn{D_t} and the RD-DID
 #' estimate they combine into. Green panels are comparison periods, pink the RD period.
 #'
-#' @param x an object returned by [rddid()].
+#' @param x an object returned by [didisc()].
 #' @param bins number of equal-width bins on each side of the cutoff (default 20, over the
 #'   running variable's range in each period).
 #' @param ... unused.
 #' @return A ggplot object (ggplot2 must be installed), which can be changed with `+` and
 #'   saved with `ggplot2::ggsave()`.
 #' @examples
-#' fit <- rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
+#' fit <- didisc(didisc_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 #' if (requireNamespace("ggplot2", quietly = TRUE)) plot(fit)
 #' @family RD-DID estimation
 #' @export
-plot.rddid <- function(x, bins = 20L, ...) {
+plot.didisc <- function(x, bins = 20L, ...) {
   .need_ggplot2()
   cutoff  <- x$c
   periods <- .fit_period_order(x)              # panels in time order
@@ -183,7 +183,7 @@ plot.rddid <- function(x, bins = 20L, ...) {
     ggplot2::scale_x_continuous(n.breaks = 4) +
     ggplot2::scale_colour_manual(values = .col_pair, name = NULL, guide = "none") +
     ggplot2::labs(x = "Running variable", y = "Outcome") +
-    .rddid_theme()
+    .didisc_theme()
 }
 
 # ---- rd_typecont: one comparison period against one RD period ------------------------------
@@ -209,7 +209,7 @@ plot.rddid <- function(x, bins = 20L, ...) {
 #' @param ... unused.
 #' @return A ggplot object (ggplot2 must be installed).
 #' @examples
-#' tc <- rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
+#' tc <- rd_typecont(didisc_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
 #' if (requireNamespace("ggplot2", quietly = TRUE)) plot(tc, comparison = 1)
 #' @family tests of the assumptions
 #' @export
@@ -254,7 +254,7 @@ plot.rd_typecont <- function(x, t_rd = NULL, comparison = NULL, bins = 20L, ...)
     ggplot2::scale_x_continuous(n.breaks = 4) +
     ggplot2::scale_colour_manual(values = .col_pair, name = NULL, guide = "none") +
     ggplot2::labs(x = "Running variable", y = "Pr(above cutoff in other period)") +
-    .rddid_theme()
+    .didisc_theme()
 }
 
 # ---- rd_compstable: the reflected sample of one pair -------------------------------------
@@ -281,7 +281,7 @@ plot.rd_typecont <- function(x, t_rd = NULL, comparison = NULL, bins = 20L, ...)
 #' @param ... unused.
 #' @return A ggplot object (ggplot2 must be installed).
 #' @examples
-#' cs <- rd_compstable(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
+#' cs <- rd_compstable(didisc_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
 #' if (requireNamespace("ggplot2", quietly = TRUE)) plot(cs)
 #' @family tests of the assumptions
 #' @export
@@ -327,7 +327,7 @@ plot.rd_compstable <- function(x, pair = 1L, bins = 20L, ...) {
     ggplot2::scale_x_continuous(labels = fold, n.breaks = 6) +
     ggplot2::scale_colour_manual(values = stats::setNames(unname(.col_pair), roles), name = NULL) +
     ggplot2::labs(x = "Running variable", y = "Pr(above cutoff in other period)") +
-    .rddid_theme()
+    .didisc_theme()
 }
 
 # ---- rd_homog / rd_trendcell: the within-type confounding jumps ---------------------------
@@ -349,7 +349,7 @@ plot.rd_compstable <- function(x, pair = 1L, bins = 20L, ...) {
     ggplot2::geom_point(position = dodge, size = 2.2) +
     ggplot2::scale_colour_manual(values = .type_palette(lv), name = NULL) +
     ggplot2::labs(x = "Comparison period", y = "Jump at cutoff (95% CI)") +
-    .rddid_theme()
+    .didisc_theme()
   if (!is.null(ref_line)) {
     ref_line$grp <- factor(ref_line$grp, levels = lv)
     ref_line$xval <- factor(ref_line$period, levels = levels(tab$xval))
@@ -372,7 +372,7 @@ plot.rd_compstable <- function(x, pair = 1L, bins = 20L, ...) {
 #' @param ... unused.
 #' @return A ggplot object (ggplot2 must be installed).
 #' @examples
-#' hg <- rd_homog(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
+#' hg <- rd_homog(didisc_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 #' if (requireNamespace("ggplot2", quietly = TRUE)) plot(hg)
 #' @family tests of the assumptions
 #' @export
@@ -395,7 +395,7 @@ plot.rd_homog <- function(x, ...) {
 #' @param ... unused.
 #' @return A ggplot object (ggplot2 must be installed).
 #' @examples
-#' tr <- rd_trendcell(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
+#' tr <- rd_trendcell(didisc_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 #' if (requireNamespace("ggplot2", quietly = TRUE)) plot(tr)
 #' @family tests of the assumptions
 #' @export
@@ -423,7 +423,7 @@ plot.rd_trendcell <- function(x, ...) {
 #' second; blue, above and then below; grey, the same side in both. A message gives the share
 #' of switchers.
 #'
-#' @inheritParams rddid
+#' @inheritParams didisc
 #' @param data a data frame in long format, one row per unit and period: a
 #'   repeated cross-section (different units in each period) or a panel (the
 #'   same units in several periods; it need not be balanced).
@@ -433,7 +433,7 @@ plot.rd_trendcell <- function(x, ...) {
 #' @return A ggplot object (ggplot2 must be installed).
 #' @examples
 #' if (requireNamespace("ggplot2", quietly = TRUE))
-#'   plot_switchers(rddid_sim_pv, x = "R", time = "year", id = "id", periods = c(1, 3))
+#'   plot_switchers(didisc_sim_pv, x = "R", time = "year", id = "id", periods = c(1, 3))
 #' @family tests of the assumptions
 #' @export
 plot_switchers <- function(data, x, time, id, periods = NULL, c = 0, ...) {
@@ -466,5 +466,5 @@ plot_switchers <- function(data, x, time, id, periods = NULL, c = 0, ...) {
     ggplot2::scale_colour_manual(values = cols, name = NULL, drop = FALSE) +
     ggplot2::labs(x = sprintf("Running variable, period %s", periods[1]),
                   y = sprintf("Running variable, period %s", periods[2])) +
-    .rddid_theme()
+    .didisc_theme()
 }

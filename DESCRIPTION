@@ -1,6 +1,6 @@
-Package: rddid
+Package: didisc
 Title: Regression Discontinuity with a Confounding Policy (RD-DID)
-Version: 0.4.0.9003
+Version: 0.4.0.9004
 Authors@R: c(
     person("Dor", "Leventer", , "leventerdor@gmail.com", role = c("aut", "cre", "cph")),
     person("Daniel", "Nevo", role = "aut"))

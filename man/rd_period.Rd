@@ -66,9 +66,9 @@ side is \code{beta0 + slope * (x - c)}.}
 }
 }
 \description{
-The building block that \code{\link[=rddid]{rddid()}} runs in every period: the jump in the
+The building block that \code{\link[=didisc]{didisc()}} runs in every period: the jump in the
 outcome at the cutoff in one period, estimated by local-linear RD, both
-conventional and bias-corrected, with standard errors. Unlike \code{\link[=rddid]{rddid()}} it
+conventional and bias-corrected, with standard errors. Unlike \code{\link[=didisc]{didisc()}} it
 takes vectors (\code{y}, \code{x}, \code{id}), not a data frame and column names, and the
 bandwidths must be given, for example from \code{\link[=rd_bw_cct]{rd_bw_cct()}}. At a given pair
 (\code{h}, \code{b}) it reproduces the conventional and bias-corrected estimates and
@@ -89,8 +89,8 @@ coefficients; the bias-corrected variance uses the residuals of the order-\code{
 pilot fit at \code{b}.
 }
 \examples{
-# the RD period (year 3) of rddid_sim, where the jump is 0.5 + 1 = 1.5
-d3 <- rddid_sim[rddid_sim$year == 3, ]
+# the RD period (year 3) of didisc_sim, where the jump is 0.5 + 1 = 1.5
+d3 <- didisc_sim[didisc_sim$year == 3, ]
 bw <- rd_bw_cct(y = d3$Y, x = d3$R)
 fit <- rd_period(y = d3$Y, x = d3$R, h = bw[["h"]], b = bw[["b"]], id = d3$id)
 fit
@@ -103,8 +103,8 @@ confidence intervals for regression-discontinuity designs. \emph{Econometrica}
 }
 \seealso{
 Other RD-DID estimation: 
-\code{\link{plot.rddid}()},
-\code{\link{rd_bw_cct}()},
-\code{\link{rddid}()}
+\code{\link{didisc}()},
+\code{\link{plot.didisc}()},
+\code{\link{rd_bw_cct}()}
 }
 \concept{RD-DID estimation}

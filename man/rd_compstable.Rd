@@ -33,10 +33,10 @@ variable, period or id are dropped, with a message.}
 
 \item{time}{name of the period column (a string). The column is usually
 numeric (a year); character or factor labels work as well, except under
-\code{trend = "linear"} (in \code{\link[=rddid]{rddid()}} or \code{\link[=rd_trendcell]{rd_trendcell()}}), where the line is
+\code{trend = "linear"} (in \code{\link[=didisc]{didisc()}} or \code{\link[=rd_trendcell]{rd_trendcell()}}), where the line is
 fitted on the period values: these then need to be numeric and are the
 time scale of the line (so 2015, 2017, 2018 are unequally spaced);
-\code{as.numeric()} converts character labels such as \code{"2019"}. In \code{\link[=rddid]{rddid()}}
+\code{as.numeric()} converts character labels such as \code{"2019"}. In \code{\link[=didisc]{didisc()}}
 the default comparison periods are every period other than \code{t_rd}, in
 sorted order of the values (alphabetical for character or factor labels),
 the order a numeric \code{trend} follows.}
@@ -53,7 +53,7 @@ treatment of interest is uniform at the cutoff (nobody treated, or, with
 other than \code{t_rd}; pass the periods explicitly when the data contain
 periods that belong in neither.}
 
-\item{estimand}{\code{"att"} (default) or \code{"atu"}, as in \code{\link[=rddid]{rddid()}}. Under \code{"atu"}
+\item{estimand}{\code{"att"} (default) or \code{"atu"}, as in \code{\link[=didisc]{didisc()}}. Under \code{"atu"}
 the test is on the shares among the units below the cutoff; see "ATU
 designs" in Details.}
 
@@ -72,10 +72,10 @@ rule of thumb \code{0.5 * IQR(x)}, the same in every regression).}
 \item{scheme}{the sampling scheme for the covariance between the two groups
 of a pair: \code{"auto"} (default; \code{"pv"} for a pair in which some unit is above
 the cutoff in both periods, \code{"cs"} otherwise), \code{"cs"}, \code{"pc"} or \code{"pv"}
-(as in \code{\link[=rddid]{rddid()}}). See Details.}
+(as in \code{\link[=didisc]{didisc()}}). See Details.}
 
 \item{bc}{logical. \code{TRUE} (default): test the bias-corrected jumps with their
-robust variance, as in the \code{Robust} row of \code{\link[=rddid]{rddid()}}; \code{FALSE}: the
+robust variance, as in the \code{Robust} row of \code{\link[=didisc]{didisc()}}; \code{FALSE}: the
 conventional jumps and variances.}
 
 \item{joint}{the statistic of each pair's test and of the joint test:
@@ -138,11 +138,11 @@ other period" or "below in the other period". \code{rd_compstable()} tests the
 null that \strong{the share of each type among the units just above the cutoff is the
 same in the RD period and in each comparison period}. Composition
 stability and homogeneous confounding (\code{\link[=rd_homog]{rd_homog()}}) are alternatives: the
-estimate of \code{\link[=rddid]{rddid()}} needs one of the two (together with type continuity,
+estimate of \code{\link[=didisc]{didisc()}} needs one of the two (together with type continuity,
 \code{\link[=rd_typecont]{rd_typecont()}}). A rejection here alone therefore does not invalidate the
 estimate; if homogeneous confounding is rejected as well, the comparison
 periods mix the types differently from the RD period and the estimate can
-be biased. With a running variable fixed over time (as in \link{rddid_sim}) the
+be biased. With a running variable fixed over time (as in \link{didisc_sim}) the
 types are degenerate and the test is not informative.
 }
 \details{
@@ -191,7 +191,7 @@ pair.
 \subsection{Options}{
 
 \code{bc = TRUE} (default) tests the bias-corrected jumps with their robust
-variance, as in the \code{Robust} row of \code{\link[=rddid]{rddid()}}; \code{bc = FALSE} uses the
+variance, as in the \code{Robust} row of \code{\link[=didisc]{didisc()}}; \code{bc = FALSE} uses the
 conventional jumps and variances. With \code{bwselect = "cct"} (default) each
 type-indicator regression in the reflected sample gets its own CCT
 bandwidths from \code{\link[=rd_bw_cct]{rd_bw_cct()}}. With \code{bwselect = "rot"} the rule of thumb is
@@ -216,14 +216,14 @@ support points (e.g. \code{c = 4999.5} for integer populations).
 }
 }
 \examples{
-# rddid_sim_pv: the running variable moves, so some units change side
-cs <- rd_compstable(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
+# didisc_sim_pv: the running variable moves, so some units change side
+cs <- rd_compstable(didisc_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
 cs          # one test per (RD period, comparison period) pair, then the joint test
 cs$pairs[["3::1"]]$jumps
 # the chi-squared Wald instead of sup-t
-rd_compstable(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3, joint = "wald")
+rd_compstable(didisc_sim_pv, x = "R", time = "year", id = "id", t_rd = 3, joint = "wald")
 # comparison periods uniformly treated: the shares below the cutoff
-rd_compstable(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3,
+rd_compstable(didisc_sim_pv, x = "R", time = "year", id = "id", t_rd = 3,
               estimand = "atu")
 }
 \references{
@@ -236,8 +236,8 @@ confidence intervals for regression-discontinuity designs. \emph{Econometrica}
 82(6), 2295-2326.
 }
 \seealso{
-\code{\link[=rddid]{rddid()}} for the estimate; \link{rddid_sim_pv} for example data;
-\code{tidy()} in \link{rddid-tidiers} for a one-row summary.
+\code{\link[=didisc]{didisc()}} for the estimate; \link{didisc_sim_pv} for example data;
+\code{tidy()} in \link{didisc-tidiers} for a one-row summary.
 
 Other tests of the assumptions: 
 \code{\link{plot.rd_compstable}()},

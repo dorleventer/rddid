@@ -142,10 +142,10 @@ test_that("B.4 the joint selector does not depend on which period carries the t_
     expect_equal(ja$b[names(coef_a)], jb$b[names(coef_a)], tolerance = 1e-12, info = sc)
     expect_equal(c(ja$B, ja$Veff, ja$reg), c(jb$B, jb$Veff, jb$reg), tolerance = 1e-12, info = sc)
   }
-  # through rddid(): relabelling t_rd with the matching comparison weights
-  ra <- rddid(d, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, comparisons = c(2, 1),
+  # through didisc(): relabelling t_rd with the matching comparison weights
+  ra <- didisc(d, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, comparisons = c(2, 1),
               trend = c(-1, 2), bwselect = "joint", scheme = "pc")
-  rb <- rddid(d, y = "Y", x = "R", time = "year", id = "id", t_rd = 2, comparisons = c(3, 1),
+  rb <- didisc(d, y = "Y", x = "R", time = "year", id = "id", t_rd = 2, comparisons = c(3, 1),
               trend = c(-1, 2), bwselect = "joint", scheme = "pc")
   cols <- c("est", "se_cs", "se_pc", "se_pv")
   expect_equal(ra$estimates[, cols], rb$estimates[, cols], tolerance = 1e-10)

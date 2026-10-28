@@ -19,17 +19,17 @@ d3 <- rbind(mk(1, R1), mk(2, R1 + rnorm(n, 0, 0.2)), mk(3, R2))
 # ============================================================================
 
 test_that("estimand accepts att/atu, errors on other values, and stores the field", {
-  # rddid(): $estimand
-  r_att <- rddid(d, y = "Y", x = "R", time = "t", id = "id", t_rd = 2,
+  # didisc(): $estimand
+  r_att <- didisc(d, y = "Y", x = "R", time = "t", id = "id", t_rd = 2,
                  comparisons = 1, bwselect = "cct", scheme = "pv")
-  r_atu <- rddid(d, y = "Y", x = "R", time = "t", id = "id", t_rd = 2,
+  r_atu <- didisc(d, y = "Y", x = "R", time = "t", id = "id", t_rd = 2,
                  comparisons = 1, bwselect = "cct", scheme = "pv", estimand = "atu")
-  r_def <- rddid(d, y = "Y", x = "R", time = "t", id = "id", t_rd = 2,
+  r_def <- didisc(d, y = "Y", x = "R", time = "t", id = "id", t_rd = 2,
                  comparisons = 1, bwselect = "cct", scheme = "pv")
   expect_identical(r_att$estimand, "att")
   expect_identical(r_atu$estimand, "atu")
   expect_identical(r_def$estimand, "att")
-  expect_error(rddid(d, y = "Y", x = "R", time = "t", id = "id", t_rd = 2,
+  expect_error(didisc(d, y = "Y", x = "R", time = "t", id = "id", t_rd = 2,
                       comparisons = 1, bwselect = "cct", scheme = "pv", estimand = "x"))
 
   # rd_typecont(): $meta$estimand
@@ -71,13 +71,13 @@ test_that("estimand accepts att/atu, errors on other values, and stores the fiel
 })
 
 # ============================================================================
-# 2. Label only: rddid, rd_typecont, rd_homog, rd_trendcell
+# 2. Label only: didisc, rd_typecont, rd_homog, rd_trendcell
 # ============================================================================
 
-test_that("rddid(): atu is numerically identical to att (label only)", {
-  r_att <- rddid(d, y = "Y", x = "R", time = "t", id = "id", t_rd = 2,
+test_that("didisc(): atu is numerically identical to att (label only)", {
+  r_att <- didisc(d, y = "Y", x = "R", time = "t", id = "id", t_rd = 2,
                  comparisons = 1, bwselect = "cct", scheme = "pv")
-  r_atu <- rddid(d, y = "Y", x = "R", time = "t", id = "id", t_rd = 2,
+  r_atu <- didisc(d, y = "Y", x = "R", time = "t", id = "id", t_rd = 2,
                  comparisons = 1, bwselect = "cct", scheme = "pv", estimand = "atu")
   expect_equal(r_att$estimates, r_atu$estimates, tolerance = 1e-12)
 })
@@ -233,9 +233,9 @@ test_that("estimand = 'atu' errors on ties at the cutoff; 'att' does not", {
 # ============================================================================
 
 test_that("print methods label ATU designs and stay silent on 'estimand' for att", {
-  r_att <- rddid(d, y = "Y", x = "R", time = "t", id = "id", t_rd = 2,
+  r_att <- didisc(d, y = "Y", x = "R", time = "t", id = "id", t_rd = 2,
                  comparisons = 1, bwselect = "cct", scheme = "pv")
-  r_atu <- rddid(d, y = "Y", x = "R", time = "t", id = "id", t_rd = 2,
+  r_atu <- didisc(d, y = "Y", x = "R", time = "t", id = "id", t_rd = 2,
                  comparisons = 1, bwselect = "cct", scheme = "pv", estimand = "atu")
   expect_output(print(r_atu), "estimate of the ATU")
   expect_output(print(r_atu), "ATU in period")

@@ -213,12 +213,12 @@
 #' confounding jump is the same for every type**, using the comparison periods
 #' only, where the jump in the outcome is the confounding jump. Homogeneous
 #' confounding and composition stability ([rd_compstable()]) are alternatives:
-#' the estimate of [rddid()] needs one of the two (together with type
+#' the estimate of [didisc()] needs one of the two (together with type
 #' continuity, [rd_typecont()]). A rejection here alone therefore does not
 #' invalidate the estimate; if composition stability is rejected as well, the
 #' comparison periods mix the types differently from the RD period and the
 #' estimate can be biased. With a running variable fixed over time (as in
-#' [rddid_sim]) the types are degenerate and the test is not informative.
+#' [didisc_sim]) the types are degenerate and the test is not informative.
 #'
 #' @details
 #' ## What is estimated
@@ -242,7 +242,7 @@
 #' `"cs"`; from the units on the same side of the cutoff in both periods under
 #' `"pc"`; under `"pv"` also from the units that change side, with the opposite
 #' sign. `"auto"` reads the scheme off the comparison periods, by the rule of
-#' [rddid()].
+#' [didisc()].
 #'
 #' ## Options
 #'
@@ -254,7 +254,7 @@
 #' side of the cutoff is dropped, and a message lists the dropped cells; a
 #' period with fewer than two types is skipped. `bc = TRUE` (default) tests the
 #' bias-corrected jumps with their robust variance, as in the `Robust` row of
-#' [rddid()]; `bc = FALSE` uses the conventional jumps and variances. With
+#' [didisc()]; `bc = FALSE` uses the conventional jumps and variances. With
 #' `bwselect = "cct"` each cell gets its own CCT bandwidths from
 #' [rd_bw_cct()], computed on that cell's outcome and running variable. With
 #' `bwselect = "rot"` the rule of thumb is `h = b = 0.2` times the range of the
@@ -294,7 +294,7 @@
 #'   The test does not use the RD period's outcomes.
 #' @param comparisons the comparison periods in which the test runs. `NULL`
 #'   (default) uses every period other than `t_rd`.
-#' @param estimand `"att"` (default) or `"atu"`, as in [rddid()]. Label only:
+#' @param estimand `"att"` (default) or `"atu"`, as in [didisc()]. Label only:
 #'   the test is the same either way.
 #' @param h a bandwidth to use, as both main and pilot bandwidth, in every cell.
 #'   If given, `bwselect` is ignored.
@@ -309,10 +309,10 @@
 #'   are dropped, with a message listing them.
 #' @param scheme the sampling scheme, which sets the covariance across
 #'   comparison periods in the test: `"cs"`, `"pc"` or `"pv"` (as in
-#'   [rddid()]), or `"auto"` (default), which reads it off the comparison
-#'   periods by the rule of [rddid()]. See Details.
+#'   [didisc()]), or `"auto"` (default), which reads it off the comparison
+#'   periods by the rule of [didisc()]. See Details.
 #' @param bc logical. `TRUE` (default): test the bias-corrected jumps with their
-#'   robust variance, as in the `Robust` row of [rddid()]; `FALSE`: the
+#'   robust variance, as in the `Robust` row of [didisc()]; `FALSE`: the
 #'   conventional jumps and variances.
 #' @param type_by how types are defined: `"rd_side"` (default; the unit's side
 #'   of the cutoff in the RD period) or `"pattern"` (its sides in the other
@@ -320,7 +320,7 @@
 #' @param p,q orders of the local polynomials in every cell, for the point
 #'   estimate and the bias correction (defaults 1 and 2; `q` must exceed `p`).
 #'   The per-cell CCT bandwidths are chosen for the order-`p` fit.
-#' @inheritParams rddid
+#' @inheritParams didisc
 #'
 #' @return An object of class `"rd_homog"`, a list with:
 #'   \describe{
@@ -357,17 +357,17 @@
 #' confidence intervals for regression-discontinuity designs. *Econometrica*
 #' 82(6), 2295-2326.
 #'
-#' @seealso [rddid()] for the estimate; [rddid_sim_pv] for example data;
-#'   `tidy()` in [rddid-tidiers] for a one-row summary.
+#' @seealso [didisc()] for the estimate; [didisc_sim_pv] for example data;
+#'   `tidy()` in [didisc-tidiers] for a one-row summary.
 #' @family tests of the assumptions
 #'
 #' @examples
-#' # rddid_sim_pv: the running variable moves, so some units change side
-#' hc <- rd_homog(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
+#' # didisc_sim_pv: the running variable moves, so some units change side
+#' hc <- rd_homog(didisc_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 #' hc          # the Wald test, then each type's jump in each comparison period
 #' hc$period_type_jumps
 #' # one CCT bandwidth per cell instead of one pooled bandwidth
-#' rd_homog(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, bwselect = "cct")
+#' rd_homog(didisc_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, bwselect = "cct")
 #' @export
 rd_homog <- function(data, y, x, time, id,
                      t_rd, comparisons = NULL,

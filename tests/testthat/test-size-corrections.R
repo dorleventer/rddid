@@ -68,7 +68,7 @@ test_that(".jump_df matches the Bell-McCaffrey degrees of freedom of the robust 
   # with M_s the residual maker of the order-q pilot fit (the bias-corrected residuals)
   bm_side <- function(xs) {
     w <- pmax(0, 1 - abs(xs) / 0.8); act <- w > 0; xs <- xs[act]; w <- w[act]
-    side <- rddid:::.rd_side_fit(rep(0, length(xs)), xs, seq_along(xs), 0, 0.5, 0.8, 1L, 2L,
+    side <- didisc:::.rd_side_fit(rep(0, length(xs)), xs, seq_along(xs), 0, 0.5, 0.8, 1L, 2L,
                                  "triangular")
     Rq <- outer(xs, 0:2, `^`); P <- Rq %*% solve(crossprod(Rq * w, Rq)) %*% t(Rq * w)
     M <- diag(length(xs)) - P; B <- crossprod(M, side$a_bc^2 * M)
@@ -79,8 +79,8 @@ test_that(".jump_df matches the Bell-McCaffrey degrees of freedom of the robust 
 })
 
 test_that("rd_typecont: joint = 'wald' reproduces the Wald, and all three are reported", {
-  tc_s <- rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
-  tc_w <- rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3, joint = "wald")
+  tc_s <- rd_typecont(didisc_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
+  tc_w <- rd_typecont(didisc_sim_pv, x = "R", time = "year", id = "id", t_rd = 3, joint = "wald")
   expect_identical(tc_w$statistic, tc_w$ll_wald$stat)
   expect_identical(tc_w$p_value, tc_w$ll_wald$p)
   expect_identical(tc_s$ll_wald, tc_w$ll_wald)
@@ -89,14 +89,14 @@ test_that("rd_typecont: joint = 'wald' reproduces the Wald, and all three are re
   expect_true(tc_s$studentize)
   expect_equal(tc_s$statistic, max(abs(tc_s$t_stats)))
   expect_equal(tc_s$p_value, tc_s$joint_tests$p_value[1])
-  tc_n <- rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3, studentize = FALSE)
+  tc_n <- rd_typecont(didisc_sim_pv, x = "R", time = "year", id = "id", t_rd = 3, studentize = FALSE)
   expect_equal(tc_n$p_value, tc_s$joint_tests$p_value[2])
-  sw <- rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3, joint = "swald")
+  sw <- rd_typecont(didisc_sim_pv, x = "R", time = "year", id = "id", t_rd = 3, joint = "swald")
   expect_equal(sw$statistic, sum(sw$t_stats^2))
 })
 
 test_that("rd_compstable: the joint test stacks the pairs with their cross-pair covariance", {
-  cs <- rd_compstable(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
+  cs <- rd_compstable(didisc_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
   th <- cs$joint$theta
   S  <- cs$joint$Sigma
   expect_length(th, sum(vapply(cs$pairs, function(p) length(p$jumps), 1L)))
@@ -121,7 +121,7 @@ test_that("rd_compstable: the joint test stacks the pairs with their cross-pair 
 })
 
 test_that("rd_compstable with one comparison period: the joint test is the pair's test", {
-  cs <- rd_compstable(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3,
+  cs <- rd_compstable(didisc_sim_pv, x = "R", time = "year", id = "id", t_rd = 3,
                       comparisons = 1)
   pr <- cs$pairs[[1]]
   expect_identical(cs$joint$ll_wald$stat, pr$ll_wald$stat)
@@ -129,7 +129,7 @@ test_that("rd_compstable with one comparison period: the joint test is the pair'
 })
 
 test_that("rd_homog / rd_trendcell: bwselect = 'common' is the pooled comparison-period CCT h", {
-  d <- rddid_sim_pv
+  d <- didisc_sim_pv
   pooled <- d[d$year %in% c(1, 2), ]
   h_ref <- unname(rd_bw_cct(pooled$Y, pooled$R, c = 0, p = 1L, kernel = "triangular")[["h"]])
   hg <- rd_homog(d, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
@@ -147,29 +147,29 @@ test_that("rd_homog / rd_trendcell: bwselect = 'common' is the pooled comparison
 })
 
 test_that("rd_checks() equals the four separate calls and passes options through", {
-  ch <- rd_checks(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
-  tc <- rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
-  hg <- rd_homog(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
+  ch <- rd_checks(didisc_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
+  tc <- rd_typecont(didisc_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
+  hg <- rd_homog(didisc_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
   expect_identical(ch$table$p_value[1], tc$p_value)
   expect_identical(ch$table$p_value[3], hg$p_value)
   expect_identical(ch$typecont$p_value, tc$p_value)
-  ch2 <- rd_checks(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
+  ch2 <- rd_checks(didisc_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
                    joint = "wald", outcome_bwselect = "cct", homog = list(bwselect = "pooled"))
   expect_identical(ch2$typecont$joint_method, "wald")
   expect_identical(ch2$homog$bandwidth$method, "pooled")      # the per-test list wins
   expect_identical(ch2$trendcell$bandwidth$method, "cct")
   expect_named(tidy(ch), c("test", "assumption", "statistic", "p.value", "method", "bandwidth",
                            "error"))
-  ch3 <- rd_checks(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
+  ch3 <- rd_checks(didisc_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
   expect_true(all(!is.na(ch3$table$error)))                    # no switchers: every test says why
   expect_output(print(ch), "Reading at level 0.95, rejecting when p < 0.05", fixed = TRUE)
   # a per-test `data` replaces the shared one (not merged; the code review's bug)
-  d2 <- rddid_sim_pv[rddid_sim_pv$id <= 600, ]
-  ch4 <- rd_checks(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
+  d2 <- didisc_sim_pv[didisc_sim_pv$id <= 600, ]
+  ch4 <- rd_checks(didisc_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
                    homog = list(data = d2))
   expect_true(is.na(ch4$table$error[3]))
   expect_identical(ch4$homog$p_value,
                    rd_homog(d2, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)$p_value)
-  expect_error(rd_checks(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
+  expect_error(rd_checks(didisc_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
                          studentize = NA), "TRUE or FALSE")
 })

@@ -34,10 +34,10 @@ or id are dropped, with a message.}
 
 \item{time}{name of the period column (a string). The column is usually
 numeric (a year); character or factor labels work as well, except under
-\code{trend = "linear"} (in \code{\link[=rddid]{rddid()}} or \code{\link[=rd_trendcell]{rd_trendcell()}}), where the line is
+\code{trend = "linear"} (in \code{\link[=didisc]{didisc()}} or \code{\link[=rd_trendcell]{rd_trendcell()}}), where the line is
 fitted on the period values: these then need to be numeric and are the
 time scale of the line (so 2015, 2017, 2018 are unequally spaced);
-\code{as.numeric()} converts character labels such as \code{"2019"}. In \code{\link[=rddid]{rddid()}}
+\code{as.numeric()} converts character labels such as \code{"2019"}. In \code{\link[=didisc]{didisc()}}
 the default comparison periods are every period other than \code{t_rd}, in
 sorted order of the values (alphabetical for character or factor labels),
 the order a numeric \code{trend} follows.}
@@ -49,9 +49,9 @@ read across periods.}
 \code{comparisons}; \code{comparisons = NULL} (default) uses every period in \code{data}
 (other than \code{t_rd}, which is then used too). The test treats all periods
 alike, so \code{t_rd} is optional: it lets you write the same call as for
-\code{\link[=rddid]{rddid()}}.}
+\code{\link[=didisc]{didisc()}}.}
 
-\item{estimand}{\code{"att"} (default) or \code{"atu"}, as in \code{\link[=rddid]{rddid()}}. Label only:
+\item{estimand}{\code{"att"} (default) or \code{"atu"}, as in \code{\link[=didisc]{didisc()}}. Label only:
 the test is the same either way.}
 
 \item{c}{the cutoff (default 0). A unit with \code{x >= c} is above the cutoff.}
@@ -67,11 +67,11 @@ rule of thumb \code{0.5 * IQR(x)}, the same in every regression).}
 \code{"uniform"}.}
 
 \item{scheme}{the sampling scheme, which sets the covariance across periods
-in the test: \code{"cs"}, \code{"pc"} or \code{"pv"} (as in \code{\link[=rddid]{rddid()}}), or \code{"auto"}
-(default), which reads it off the data as \code{\link[=rddid]{rddid()}} does. See Details.}
+in the test: \code{"cs"}, \code{"pc"} or \code{"pv"} (as in \code{\link[=didisc]{didisc()}}), or \code{"auto"}
+(default), which reads it off the data as \code{\link[=didisc]{didisc()}} does. See Details.}
 
 \item{bc}{logical. \code{TRUE} (default): test the bias-corrected jumps with their
-robust variance, as in the \code{Robust} row of \code{\link[=rddid]{rddid()}}; \code{FALSE}: the
+robust variance, as in the \code{Robust} row of \code{\link[=didisc]{didisc()}}; \code{FALSE}: the
 conventional jumps and variances.}
 
 \item{joint}{the joint statistic: \code{"supt"} (default; the largest |t| against
@@ -127,8 +127,8 @@ other period" or "below in the other period". \code{rd_typecont()} tests the
 null that \strong{the share of each type jumps by zero at the cutoff, in every
 period}. A rejection means that units sort across the cutoff by type, so
 the jump in the outcome at the cutoff can reflect who is on each side as
-well as the policies, and the estimate of \code{\link[=rddid]{rddid()}} can be biased. With a
-running variable fixed over time (as in \link{rddid_sim}) every unit's type is
+well as the policies, and the estimate of \code{\link[=didisc]{didisc()}} can be biased. With a
+running variable fixed over time (as in \link{didisc_sim}) every unit's type is
 its own side, the shares jump from 0 to 1 by construction, and the test is
 not informative.
 }
@@ -179,13 +179,13 @@ covariance always enters. Across periods it follows \code{scheme}, matching unit
 on \code{id}: none under \code{"cs"}; from the units on the same side of the cutoff in
 both periods under \code{"pc"}; under \code{"pv"} also from the units that change
 side, with the opposite sign. \code{"auto"} reads the scheme off the data as
-\code{\link[=rddid]{rddid()}} does.
+\code{\link[=didisc]{didisc()}} does.
 }
 
 \subsection{Options}{
 
 \code{bc = TRUE} (default) tests the bias-corrected jumps with their robust
-variance, as in the \code{Robust} row of \code{\link[=rddid]{rddid()}}; \code{bc = FALSE} uses the
+variance, as in the \code{Robust} row of \code{\link[=didisc]{didisc()}}; \code{bc = FALSE} uses the
 conventional jumps and variances. With \code{bwselect = "cct"} (default) each
 (period, type) regression gets its own CCT bandwidths from \code{\link[=rd_bw_cct]{rd_bw_cct()}}.
 With \code{bwselect = "rot"} the rule of thumb is \code{h = b = 0.5 * IQR(x)}, the
@@ -201,14 +201,14 @@ under \code{estimand = "att"} and \code{"atu"}; \code{estimand} only labels the 
 }
 }
 \examples{
-# rddid_sim_pv: the running variable moves, so some units change side
-tc <- rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
+# didisc_sim_pv: the running variable moves, so some units change side
+tc <- rd_typecont(didisc_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
 tc          # the null, the joint sup-t test, then each period's own test
 tc$p_value
 tc$joint_tests   # every statistic side by side
 # the chi-squared Wald, or sup-t with normal critical values:
-rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3, joint = "wald")
-rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3, studentize = FALSE)
+rd_typecont(didisc_sim_pv, x = "R", time = "year", id = "id", t_rd = 3, joint = "wald")
+rd_typecont(didisc_sim_pv, x = "R", time = "year", id = "id", t_rd = 3, studentize = FALSE)
 }
 \references{
 Leventer, D. and D. Nevo (2024). \emph{Correcting Invalid Regression Discontinuity
@@ -220,8 +220,8 @@ confidence intervals for regression-discontinuity designs. \emph{Econometrica}
 82(6), 2295-2326.
 }
 \seealso{
-\code{\link[=rddid]{rddid()}} for the estimate; \link{rddid_sim_pv} for example data;
-\code{tidy()} in \link{rddid-tidiers} for a one-row summary.
+\code{\link[=didisc]{didisc()}} for the estimate; \link{didisc_sim_pv} for example data;
+\code{tidy()} in \link{didisc-tidiers} for a one-row summary.
 
 Other tests of the assumptions: 
 \code{\link{plot.rd_compstable}()},
