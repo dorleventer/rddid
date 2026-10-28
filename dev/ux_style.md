@@ -55,5 +55,5 @@ Also: Calonico, S., M. D. Cattaneo and R. Titiunik (2014). Robust nonparametric 
 - British/American: American spelling ("minimize" is fine either way; be consistent within a file).
 
 ## Site structure (pkgdown)
-Navbar: Get started · Articles (Checking the identification assumptions · Plots of the estimate and the checks · Bandwidth rules and sampling schemes · How didisc() computes the estimate (for referees)) · Reference · GitHub. No changelog page: the package's `NEWS.md` lives in `inst/`, so it is installed (`news(package = "didisc")`) but pkgdown builds no page from it.
+Navbar: Get started · Articles (Checking the identification assumptions · Plots of the estimate and the checks · Bandwidth rules and sampling schemes · How didisc() computes the estimate) · Reference · GitHub. No changelog page: the package's `NEWS.md` lives in `inst/`, so it is installed (`news(package = "didisc")`) but pkgdown builds no page from it.
 Reference groups: **Package overview** (`didisc-package`) · **Estimate** (`didisc`, `summary.didisc`, `plot.didisc`, `didisc-methods`, `didisc-tidiers`, `reexports`) · **Check the assumptions** (`rd_checks`, the four tests, their `plot` methods, `plot_switchers`) · **Building blocks** (`rd_period`, `rd_bw_cct`) · **Data** (`didisc_sim`, `didisc_sim_pv`).

@@ -406,8 +406,8 @@ The numbers are those of `fit`, now labeled the ATU; the true ATU here is 1.
 - [Bandwidth rules and sampling schemes](didisc-options.html): `bwselect`, fixed
   bandwidths, and the standard error under each scheme.
 - [How didisc() computes the estimate](didisc-how-it-works.html): the estimate and
-  the tests rebuilt by hand, for referees and readers who want to see the
-  pieces.
+  the tests rebuilt by hand, for readers who want to check the
+  computation.
 
 ## References
 
