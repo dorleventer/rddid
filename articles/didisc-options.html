@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">didisc</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9007</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9008</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -94,10 +94,10 @@ default)<a class="anchor" aria-label="anchor" href="#the-common-bandwidth-bwsele
 <code class="sourceCode R"><span><span class="va">fit_joint</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/didisc.html">didisc</a></span><span class="op">(</span><span class="va">didisc_sim</span>, y <span class="op">=</span> <span class="st">"Y"</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="va">fit_joint</span><span class="op">$</span><span class="va">bandwidth</span><span class="op">$</span><span class="va">h_by_period</span></span>
 <span><span class="co">#&gt;         3         1         2 </span></span>
-<span><span class="co">#&gt; 0.2694485 0.2694485 0.2694485</span></span>
+<span><span class="co">#&gt; 0.3985921 0.3985921 0.3985921</span></span>
 <span><span class="va">fit_joint</span><span class="op">$</span><span class="va">bandwidth</span><span class="op">$</span><span class="va">b_by_period</span></span>
-<span><span class="co">#&gt;         3         1         2 </span></span>
-<span><span class="co">#&gt; 0.3983944 0.4135886 0.3900813</span></span></code></pre></div>
+<span><span class="co">#&gt;       3       1       2 </span></span>
+<span><span class="co">#&gt; 0.59356 0.59356 0.59356</span></span></code></pre></div>
 <p>One main bandwidth for every period, chosen to minimize the
 asymptotic mean squared error of the diff-in-disc estimate, not of each
 period’s jump. As in rdrobust, everything that depends only on the
@@ -106,16 +106,22 @@ bandwidth shared by every period
 (<code>fit_joint$bandwidth$h_rot</code>): each period’s variance, the
 covariances between periods in a panel, and the design part of each
 period’s bias. Only the curvature of the conditional mean, the other
-part of the bias, needs its own pilot fit, at that period’s CCT pilot
-bandwidth. These inputs to the rule are the same whichever period is the
-RD period. The pilot bandwidth of each period keeps that period’s CCT
-ratio of pilot to main bandwidth. For year 3, from its own CCT pair:</p>
+part of the bias, needs its own fit, at the pilot bandwidth
+<code>b</code>, which is also the bandwidth of the bias correction.
+<code>b</code> is chosen the same way, for the same difference of jumps
+one derivative up, with its own curvature from fits at a bandwidth
+<code>d</code> (<code>fit_joint$bandwidth$d</code>), as rdrobust chooses
+its pilot for one period. So one <code>b</code> serves every period:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">y3</span>  <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">didisc_sim</span>, <span class="va">year</span> <span class="op">==</span> <span class="fl">3</span><span class="op">)</span></span>
-<span><span class="va">bw3</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rd_bw_cct.html">rd_bw_cct</a></span><span class="op">(</span><span class="va">y3</span><span class="op">$</span><span class="va">Y</span>, <span class="va">y3</span><span class="op">$</span><span class="va">R</span><span class="op">)</span></span>
-<span><span class="va">fit_joint</span><span class="op">$</span><span class="va">bandwidth</span><span class="op">$</span><span class="va">h</span> <span class="op">*</span> <span class="va">bw3</span><span class="op">[[</span><span class="st">"b"</span><span class="op">]</span><span class="op">]</span> <span class="op">/</span> <span class="va">bw3</span><span class="op">[[</span><span class="st">"h"</span><span class="op">]</span><span class="op">]</span></span>
-<span><span class="co">#&gt; [1] 0.3983944</span></span></code></pre></div>
-<p>which is the year-3 entry of <code>b_by_period</code> above.</p>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>h <span class="op">=</span> <span class="va">fit_joint</span><span class="op">$</span><span class="va">bandwidth</span><span class="op">$</span><span class="va">h</span>, b <span class="op">=</span> <span class="va">fit_joint</span><span class="op">$</span><span class="va">bandwidth</span><span class="op">$</span><span class="va">b</span>, d <span class="op">=</span> <span class="va">fit_joint</span><span class="op">$</span><span class="va">bandwidth</span><span class="op">$</span><span class="va">d</span><span class="op">)</span></span>
+<span><span class="co">#&gt;         h         b         d </span></span>
+<span><span class="co">#&gt; 0.3985921 0.5935600 0.9750591</span></span></code></pre></div>
+<p>These inputs to the rule are the same whichever period is the RD
+period. With a single period the rule is
+<code><a href="https://rdrr.io/pkg/rdrobust/man/rdbwselect.html" class="external-link">rdrobust::rdbwselect()</a></code> (<code>bwselect = "mserd"</code>,
+<code>vce = "hc1"</code>); in a panel whose running variable does not
+move, it is that selector applied to the combined outcome, the RD-period
+outcome minus the weighted comparison outcomes.</p>
 </div>
 <div class="section level3">
 <h3 id="per-period-cct-bandwidths-bwselect-cct">Per-period CCT bandwidths: <code>bwselect = "cct"</code><a class="anchor" aria-label="anchor" href="#per-period-cct-bandwidths-bwselect-cct"></a>
@@ -177,11 +183,11 @@ two estimates (standard errors in parentheses):</p>
 <tbody>
 <tr class="odd">
 <td align="left">joint</td>
-<td align="right">0.269</td>
-<td align="right">0.269</td>
-<td align="right">0.269</td>
-<td align="left">1.092 (0.126)</td>
-<td align="left">1.141 (0.149)</td>
+<td align="right">0.399</td>
+<td align="right">0.399</td>
+<td align="right">0.399</td>
+<td align="left">1.008 (0.106)</td>
+<td align="left">1.025 (0.126)</td>
 </tr>
 <tr class="even">
 <td align="left">cct</td>
@@ -202,8 +208,8 @@ two estimates (standard errors in parentheses):</p>
 </tbody>
 </table>
 <p>The rules give different bandwidths, from 0.264 to 0.414, and, on
-these data, conventional estimates from 1.040 to 1.092, with standard
-errors of about 0.12; the truth is 1.</p>
+these data, conventional estimates from 1.008 to 1.068, with standard
+errors of about 0.11; the truth is 1.</p>
 </div>
 </div>
 <div class="section level2">
@@ -249,25 +255,25 @@ scheme:</p>
 <span><span class="co">#&gt;   Comparison periods: 1, 2   (constant confounding trend)</span></span>
 <span><span class="co">#&gt;   Comparison weights: 1: 0.500, 2: 0.500</span></span>
 <span><span class="co">#&gt;   Sampling scheme: panel, some units change side of the cutoff (detected)</span></span>
-<span><span class="co">#&gt;   Bandwidth: common h = 0.2436 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)</span></span>
-<span><span class="co">#&gt;   Pilot bandwidth b (period = value): 1 = 0.4001, 2 = 0.3958, 3 = 0.4047</span></span>
+<span><span class="co">#&gt;   Bandwidth: common h = 0.242 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)</span></span>
+<span><span class="co">#&gt;   Pilot bandwidth b = 0.3679 (also chosen for the diff-in-disc estimate)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;                              Estimate  Std. err.       z  p-value   95% CI</span></span>
-<span><span class="co">#&gt;   Conventional                 0.9698     0.1901    5.10   &lt;0.001   [0.5972, 1.3424]</span></span>
-<span><span class="co">#&gt;   Robust (bias-corrected)      0.9943     0.2256    4.41   &lt;0.001   [0.5522, 1.4364]</span></span>
+<span><span class="co">#&gt;   Conventional                 0.9689     0.1909    5.08   &lt;0.001   [0.5948, 1.3430]</span></span>
+<span><span class="co">#&gt;   Robust (bias-corrected)      0.9735     0.2332    4.17   &lt;0.001   [0.5164, 1.4305]</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Per-period local-linear fits:</span></span>
 <span><span class="co">#&gt;                                                        Conventional         Robust (bias-corrected)</span></span>
 <span><span class="co">#&gt;   Period   Role             n        h        b          Jump   Std. err.          Jump   Std. err.</span></span>
-<span><span class="co">#&gt;   1        comparison    1000   0.2436   0.4001        0.7495      0.1565        0.7845      0.1866</span></span>
-<span><span class="co">#&gt;   2        comparison    1000   0.2436   0.3958        0.7243      0.1787        0.7842      0.2189</span></span>
-<span><span class="co">#&gt;   3        RD            1000   0.2436   0.4047        1.7067      0.1540        1.7786      0.1795</span></span>
+<span><span class="co">#&gt;   1        comparison    1000   0.2420   0.3679        0.7499      0.1573        0.7991      0.1921</span></span>
+<span><span class="co">#&gt;   2        comparison    1000   0.2420   0.3679        0.7260      0.1796        0.8058      0.2264</span></span>
+<span><span class="co">#&gt;   3        RD            1000   0.2420   0.3679        1.7069      0.1545        1.7759      0.1850</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Std. err. of the estimate under each sampling scheme (the estimate table at the top uses PV):</span></span>
 <span><span class="co">#&gt;                                                    Conventional   Robust (bias-corrected)</span></span>
-<span><span class="co">#&gt;   RCS  repeated cross-section                            0.1945                    0.2300</span></span>
-<span><span class="co">#&gt;   PC   panel, no unit changes side of the cutoff         0.1874                    0.2223</span></span>
-<span><span class="co">#&gt;   PV   panel, some units change side of the cutoff       0.1901                    0.2256</span></span></code></pre></div>
+<span><span class="co">#&gt;   RCS  repeated cross-section                            0.1952                    0.2372</span></span>
+<span><span class="co">#&gt;   PC   panel, no unit changes side of the cutoff         0.1881                    0.2292</span></span>
+<span><span class="co">#&gt;   PV   panel, some units change side of the cutoff       0.1909                    0.2332</span></span></code></pre></div>
 <p>The same line for the three data sets:</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">se_tab</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span><span class="va">fit_cs</span><span class="op">$</span><span class="va">estimates</span><span class="op">[</span><span class="st">"Robust"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"se_cs"</span>, <span class="st">"se_pc"</span>, <span class="st">"se_pv"</span><span class="op">)</span><span class="op">]</span>,</span>
@@ -292,21 +298,21 @@ scheme:</p>
 <tbody>
 <tr class="odd">
 <td align="left">cross-section data</td>
-<td align="right">0.398</td>
-<td align="right">0.398</td>
-<td align="right">0.398</td>
+<td align="right">0.409</td>
+<td align="right">0.409</td>
+<td align="right">0.409</td>
 </tr>
 <tr class="even">
 <td align="left">panel data, R fixed</td>
-<td align="right">0.238</td>
-<td align="right">0.149</td>
-<td align="right">0.149</td>
+<td align="right">0.200</td>
+<td align="right">0.126</td>
+<td align="right">0.126</td>
 </tr>
 <tr class="odd">
 <td align="left">panel data, R varies</td>
-<td align="right">0.230</td>
-<td align="right">0.222</td>
-<td align="right">0.226</td>
+<td align="right">0.237</td>
+<td align="right">0.229</td>
+<td align="right">0.233</td>
 </tr>
 </tbody>
 </table>
@@ -314,14 +320,14 @@ scheme:</p>
 <li>
 <strong>Cross-section data.</strong> No unit appears in two periods,
 so the jumps of different periods are independent and the three formulas
-coincide (0.398).</li>
+coincide (0.409).</li>
 <li>
 <strong>Panel data, running variable fixed</strong>
 (<code>didisc_sim</code>). Every unit enters every year’s fit, on the
 same side of the cutoff. Its unit effect makes the yearly jumps
 positively correlated, and because the comparison jumps are subtracted,
-that correlation lowers the variance. The panel standard error is 0.149;
-the cross-section one, which ignores the correlation, is 0.238. With
+that correlation lowers the variance. The panel standard error is 0.126;
+the cross-section one, which ignores the correlation, is 0.200. With
 nobody changing side, the formula for a moving running variable reduces
 to the one for a fixed running variable.</li>
 <li>
@@ -329,7 +335,7 @@ to the one for a fixed running variable.</li>
 (<code>didisc_sim_pv</code>). Units move, so a unit can be above the
 cutoff in one year and below it in another. The cross-period covariances
 are then small (in large samples they vanish relative to the variances);
-here the three standard errors range from 0.222 to 0.230.</li>
+here the three standard errors range from 0.229 to 0.237.</li>
 </ul>
 <p>The scheme describes how the data were sampled; the printout reports
 the column for that scheme, and the other columns show the other
@@ -348,8 +354,8 @@ negligible in large samples under <code>"pv"</code>). On
 <span><span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span>pc <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>h <span class="op">=</span> <span class="va">fit_pc</span><span class="op">$</span><span class="va">bandwidth</span><span class="op">$</span><span class="va">h</span>, <span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">fit_pc</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>      cs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>h <span class="op">=</span> <span class="va">fit_as_cs</span><span class="op">$</span><span class="va">bandwidth</span><span class="op">$</span><span class="va">h</span>, <span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">fit_as_cs</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;            h Conventional   Robust</span></span>
-<span><span class="co">#&gt; pc 0.2694485     1.092242 1.141077</span></span>
-<span><span class="co">#&gt; cs 0.3193447     1.050182 1.086684</span></span></code></pre></div>
+<span><span class="co">#&gt; pc 0.3985921     1.007537 1.024654</span></span>
+<span><span class="co">#&gt; cs 0.4196584     1.004214 1.021247</span></span></code></pre></div>
 <p>Treating the panel as a cross-section changes the common bandwidth
 and so the estimate. Only with a fixed <code>h</code> or
 <code>bwselect = "cct"</code> do the bandwidths not depend on the
@@ -379,18 +385,18 @@ bias-corrected jumps.</p>
 <span>                 weighting <span class="op">=</span> <span class="st">"min_variance"</span><span class="op">)</span></span>
 <span><span class="va">fit_mv</span><span class="op">$</span><span class="va">weights</span>                      <span class="co"># the conventional estimate's weights</span></span>
 <span><span class="co">#&gt;         1         2 </span></span>
-<span><span class="co">#&gt; 0.4526799 0.5473201</span></span>
+<span><span class="co">#&gt; 0.4794084 0.5205916</span></span>
 <span><span class="va">fit_mv</span><span class="op">$</span><span class="va">weights_detail</span><span class="op">$</span><span class="va">weights_bc</span>    <span class="co"># the bias-corrected estimate's weights</span></span>
 <span><span class="co">#&gt;         1         2 </span></span>
-<span><span class="co">#&gt; 0.4616643 0.5383357</span></span>
+<span><span class="co">#&gt; 0.4652808 0.5347192</span></span>
 <span><span class="va">se</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">cbind</a></span><span class="op">(</span>ols <span class="op">=</span> <span class="va">fit_ols</span><span class="op">$</span><span class="va">estimates</span><span class="op">$</span><span class="va">se</span>, min_variance <span class="op">=</span> <span class="va">fit_mv</span><span class="op">$</span><span class="va">estimates</span><span class="op">$</span><span class="va">se</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">se</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">fit_ols</span><span class="op">$</span><span class="va">estimates</span><span class="op">)</span></span>
 <span><span class="va">se</span>                                  <span class="co"># standard errors under the two weightings</span></span>
 <span><span class="co">#&gt;                    ols min_variance</span></span>
-<span><span class="co">#&gt; Conventional 0.1259386    0.1248738</span></span>
-<span><span class="co">#&gt; Robust       0.1488256    0.1476525</span></span></code></pre></div>
-<p>The conventional weights on years 1 and 2 are 0.453 and 0.547, the
-bias-corrected ones 0.462 and 0.538; the standard errors barely move. In
+<span><span class="co">#&gt; Conventional 0.1061519    0.1047821</span></span>
+<span><span class="co">#&gt; Robust       0.1256024    0.1241868</span></span></code></pre></div>
+<p>The conventional weights on years 1 and 2 are 0.479 and 0.521, the
+bias-corrected ones 0.465 and 0.535; the standard errors barely move. In
 <code>didisc_sim</code> the two comparison years are equally noisy
 (their jumps have the same variance), so the weights stay near one half.
 The tilt toward year 2 comes from the panel: the same units appear every
@@ -404,7 +410,7 @@ inverse-variance weights.</p>
 are chosen in three steps: the common bandwidth with the
 <code>"ols"</code> weights, the minimum-variance weights at that
 bandwidth, and the bandwidths (common <code>h</code> and pilot
-<code>b</code>) again with those weights (here 0.269 and then 0.273).
+<code>b</code>) again with those weights (here 0.399 and then 0.409).
 With <code>bwselect = "cct"</code> or a fixed <code>h</code> the
 bandwidths do not depend on the weights, so the weights are computed
 once. The standard errors treat the weights as known; in large samples,

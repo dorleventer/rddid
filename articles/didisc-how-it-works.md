@@ -310,19 +310,19 @@ res_atu
 #>   Comparison periods: 1, 2   (constant confounding trend)
 #>   Comparison weights: 1: 0.500, 2: 0.500
 #>   Sampling scheme: panel, no unit changes side of the cutoff (detected)
-#>   Bandwidth: common h = 0.3392 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)
-#>   Pilot bandwidth b (period = value): 1 = 0.5069, 2 = 0.5261, 3 = 0.4951
+#>   Bandwidth: common h = 0.3807 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)
+#>   Pilot bandwidth b = 0.5992 (also chosen for the diff-in-disc estimate)
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI
-#>   Conventional                 1.0782     0.0955   11.29   <0.001   [0.8910, 1.2654]
-#>   Robust (bias-corrected)      1.1124     0.1149    9.68   <0.001   [0.8872, 1.3375]
+#>   Conventional                 1.0621     0.0907   11.71   <0.001   [0.8843, 1.2400]
+#>   Robust (bias-corrected)      1.0845     0.1064   10.19   <0.001   [0.8759, 1.2931]
 #> 
 #>   summary() shows the per-period fits and the s.e. under every sampling scheme.
 tau0
 #> [1] 1
 ```
 
-The estimate is 1.08 (standard error 0.10), against the true ATU `tau0`
+The estimate is 1.06 (standard error 0.09), against the true ATU `tau0`
 = 1.
 
 ## Part 2: the tests

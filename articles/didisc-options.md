@@ -31,10 +31,10 @@ order).
 fit_joint <- didisc(didisc_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 fit_joint$bandwidth$h_by_period
 #>         3         1         2 
-#> 0.2694485 0.2694485 0.2694485
+#> 0.3985921 0.3985921 0.3985921
 fit_joint$bandwidth$b_by_period
-#>         3         1         2 
-#> 0.3983944 0.4135886 0.3900813
+#>       3       1       2 
+#> 0.59356 0.59356 0.59356
 ```
 
 One main bandwidth for every period, chosen to minimize the asymptotic
@@ -44,21 +44,26 @@ variable and the residuals is estimated at one rule-of-thumb bandwidth
 shared by every period (`fit_joint$bandwidth$h_rot`): each period’s
 variance, the covariances between periods in a panel, and the design
 part of each period’s bias. Only the curvature of the conditional mean,
-the other part of the bias, needs its own pilot fit, at that period’s
-CCT pilot bandwidth. These inputs to the rule are the same whichever
-period is the RD period. The pilot bandwidth of each period keeps that
-period’s CCT ratio of pilot to main bandwidth. For year 3, from its own
-CCT pair:
+the other part of the bias, needs its own fit, at the pilot bandwidth
+`b`, which is also the bandwidth of the bias correction. `b` is chosen
+the same way, for the same difference of jumps one derivative up, with
+its own curvature from fits at a bandwidth `d`
+(`fit_joint$bandwidth$d`), as rdrobust chooses its pilot for one period.
+So one `b` serves every period:
 
 ``` r
 
-y3  <- subset(didisc_sim, year == 3)
-bw3 <- rd_bw_cct(y3$Y, y3$R)
-fit_joint$bandwidth$h * bw3[["b"]] / bw3[["h"]]
-#> [1] 0.3983944
+c(h = fit_joint$bandwidth$h, b = fit_joint$bandwidth$b, d = fit_joint$bandwidth$d)
+#>         h         b         d 
+#> 0.3985921 0.5935600 0.9750591
 ```
 
-which is the year-3 entry of `b_by_period` above.
+These inputs to the rule are the same whichever period is the RD period.
+With a single period the rule is
+[`rdrobust::rdbwselect()`](https://rdrr.io/pkg/rdrobust/man/rdbwselect.html)
+(`bwselect = "mserd"`, `vce = "hc1"`); in a panel whose running variable
+does not move, it is that selector applied to the combined outcome, the
+RD-period outcome minus the weighted comparison outcomes.
 
 ### Per-period CCT bandwidths: `bwselect = "cct"`
 
@@ -108,13 +113,13 @@ estimates (standard errors in parentheses):
 
 | rule          | h, year 1 | h, year 2 | h, year 3 | Conventional  | Robust        |
 |:--------------|----------:|----------:|----------:|:--------------|:--------------|
-| joint         |     0.269 |     0.269 |     0.269 | 1.092 (0.126) | 1.141 (0.149) |
+| joint         |     0.399 |     0.399 |     0.399 | 1.008 (0.106) | 1.025 (0.126) |
 | cct           |     0.264 |     0.326 |     0.414 | 1.040 (0.117) | 1.096 (0.141) |
 | fixed h = 0.3 |     0.300 |     0.300 |     0.300 | 1.068 (0.120) | 1.118 (0.161) |
 
 The rules give different bandwidths, from 0.264 to 0.414, and, on these
-data, conventional estimates from 1.040 to 1.092, with standard errors
-of about 0.12; the truth is 1.
+data, conventional estimates from 1.008 to 1.068, with standard errors
+of about 0.11; the truth is 1.
 
 ## Sampling schemes
 
@@ -160,25 +165,25 @@ summary(fit_pv)
 #>   Comparison periods: 1, 2   (constant confounding trend)
 #>   Comparison weights: 1: 0.500, 2: 0.500
 #>   Sampling scheme: panel, some units change side of the cutoff (detected)
-#>   Bandwidth: common h = 0.2436 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)
-#>   Pilot bandwidth b (period = value): 1 = 0.4001, 2 = 0.3958, 3 = 0.4047
+#>   Bandwidth: common h = 0.242 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)
+#>   Pilot bandwidth b = 0.3679 (also chosen for the diff-in-disc estimate)
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI
-#>   Conventional                 0.9698     0.1901    5.10   <0.001   [0.5972, 1.3424]
-#>   Robust (bias-corrected)      0.9943     0.2256    4.41   <0.001   [0.5522, 1.4364]
+#>   Conventional                 0.9689     0.1909    5.08   <0.001   [0.5948, 1.3430]
+#>   Robust (bias-corrected)      0.9735     0.2332    4.17   <0.001   [0.5164, 1.4305]
 #> 
 #>   Per-period local-linear fits:
 #>                                                        Conventional         Robust (bias-corrected)
 #>   Period   Role             n        h        b          Jump   Std. err.          Jump   Std. err.
-#>   1        comparison    1000   0.2436   0.4001        0.7495      0.1565        0.7845      0.1866
-#>   2        comparison    1000   0.2436   0.3958        0.7243      0.1787        0.7842      0.2189
-#>   3        RD            1000   0.2436   0.4047        1.7067      0.1540        1.7786      0.1795
+#>   1        comparison    1000   0.2420   0.3679        0.7499      0.1573        0.7991      0.1921
+#>   2        comparison    1000   0.2420   0.3679        0.7260      0.1796        0.8058      0.2264
+#>   3        RD            1000   0.2420   0.3679        1.7069      0.1545        1.7759      0.1850
 #> 
 #>   Std. err. of the estimate under each sampling scheme (the estimate table at the top uses PV):
 #>                                                    Conventional   Robust (bias-corrected)
-#>   RCS  repeated cross-section                            0.1945                    0.2300
-#>   PC   panel, no unit changes side of the cutoff         0.1874                    0.2223
-#>   PV   panel, some units change side of the cutoff       0.1901                    0.2256
+#>   RCS  repeated cross-section                            0.1952                    0.2372
+#>   PC   panel, no unit changes side of the cutoff         0.1881                    0.2292
+#>   PV   panel, some units change side of the cutoff       0.1909                    0.2332
 ```
 
 The same line for the three data sets:
@@ -195,26 +200,26 @@ knitr::kable(se_tab, digits = 3)
 
 |  | cross-section s.e. | panel, R fixed s.e. | panel, R varies s.e. |
 |:---|---:|---:|---:|
-| cross-section data | 0.398 | 0.398 | 0.398 |
-| panel data, R fixed | 0.238 | 0.149 | 0.149 |
-| panel data, R varies | 0.230 | 0.222 | 0.226 |
+| cross-section data | 0.409 | 0.409 | 0.409 |
+| panel data, R fixed | 0.200 | 0.126 | 0.126 |
+| panel data, R varies | 0.237 | 0.229 | 0.233 |
 
 - **Cross-section data.** No unit appears in two periods, so the jumps
   of different periods are independent and the three formulas coincide
-  (0.398).
+  (0.409).
 - **Panel data, running variable fixed** (`didisc_sim`). Every unit
   enters every year’s fit, on the same side of the cutoff. Its unit
   effect makes the yearly jumps positively correlated, and because the
   comparison jumps are subtracted, that correlation lowers the variance.
-  The panel standard error is 0.149; the cross-section one, which
-  ignores the correlation, is 0.238. With nobody changing side, the
+  The panel standard error is 0.126; the cross-section one, which
+  ignores the correlation, is 0.200. With nobody changing side, the
   formula for a moving running variable reduces to the one for a fixed
   running variable.
 - **Panel data, running variable varies** (`didisc_sim_pv`). Units move,
   so a unit can be above the cutoff in one year and below it in another.
   The cross-period covariances are then small (in large samples they
   vanish relative to the variances); here the three standard errors
-  range from 0.222 to 0.230.
+  range from 0.229 to 0.237.
 
 The scheme describes how the data were sampled; the printout reports the
 column for that scheme, and the other columns show the other formulas on
@@ -233,8 +238,8 @@ fit_as_cs <- didisc(didisc_sim, y = "Y", x = "R", time = "year", id = "id", t_rd
 rbind(pc = c(h = fit_pc$bandwidth$h, coef(fit_pc)),
       cs = c(h = fit_as_cs$bandwidth$h, coef(fit_as_cs)))
 #>            h Conventional   Robust
-#> pc 0.2694485     1.092242 1.141077
-#> cs 0.3193447     1.050182 1.086684
+#> pc 0.3985921     1.007537 1.024654
+#> cs 0.4196584     1.004214 1.021247
 ```
 
 Treating the panel as a cross-section changes the common bandwidth and
@@ -266,20 +271,20 @@ fit_mv  <- didisc(didisc_sim, y = "Y", x = "R", time = "year", id = "id", t_rd =
                  weighting = "min_variance")
 fit_mv$weights                      # the conventional estimate's weights
 #>         1         2 
-#> 0.4526799 0.5473201
+#> 0.4794084 0.5205916
 fit_mv$weights_detail$weights_bc    # the bias-corrected estimate's weights
 #>         1         2 
-#> 0.4616643 0.5383357
+#> 0.4652808 0.5347192
 se <- cbind(ols = fit_ols$estimates$se, min_variance = fit_mv$estimates$se)
 rownames(se) <- rownames(fit_ols$estimates)
 se                                  # standard errors under the two weightings
 #>                    ols min_variance
-#> Conventional 0.1259386    0.1248738
-#> Robust       0.1488256    0.1476525
+#> Conventional 0.1061519    0.1047821
+#> Robust       0.1256024    0.1241868
 ```
 
-The conventional weights on years 1 and 2 are 0.453 and 0.547, the
-bias-corrected ones 0.462 and 0.538; the standard errors barely move. In
+The conventional weights on years 1 and 2 are 0.479 and 0.521, the
+bias-corrected ones 0.465 and 0.535; the standard errors barely move. In
 `didisc_sim` the two comparison years are equally noisy (their jumps
 have the same variance), so the weights stay near one half. The tilt
 toward year 2 comes from the panel: the same units appear every year,
@@ -294,7 +299,7 @@ Under the default bandwidth rule the weights and the common bandwidth
 are chosen in three steps: the common bandwidth with the `"ols"`
 weights, the minimum-variance weights at that bandwidth, and the
 bandwidths (common `h` and pilot `b`) again with those weights (here
-0.269 and then 0.273). With `bwselect = "cct"` or a fixed `h` the
+0.399 and then 0.409). With `bwselect = "cct"` or a fixed `h` the
 bandwidths do not depend on the weights, so the weights are computed
 once. The standard errors treat the weights as known; in large samples,
 estimating them does not change the distribution of the estimate,

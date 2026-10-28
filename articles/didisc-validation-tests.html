@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">didisc</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9007</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9008</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -137,9 +137,9 @@ every period.</strong></p>
 <span><span class="co">#&gt;     ("+" at or above, "-" below).</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Joint sup-t (t critical values) max |t| = 1.232 over 9 jumps,  p = 0.869  (largest: period:type 1:+-)</span></span>
-<span><span class="co">#&gt;     Period 1: sup-t (t critical values) max |t| = 1.232 over 3 jumps,  p = 0.500</span></span>
+<span><span class="co">#&gt;     Period 1: sup-t (t critical values) max |t| = 1.232 over 3 jumps,  p = 0.499</span></span>
 <span><span class="co">#&gt;     Period 2: sup-t (t critical values) max |t| = 0.582 over 3 jumps,  p = 0.902</span></span>
-<span><span class="co">#&gt;     Period 3: sup-t (t critical values) max |t| = 1.048 over 3 jumps,  p = 0.633</span></span>
+<span><span class="co">#&gt;     Period 3: sup-t (t critical values) max |t| = 1.048 over 3 jumps,  p = 0.631</span></span>
 <span><span class="co">#&gt;   All joint statistics: x$joint_tests</span></span></code></pre></div>
 <ul>
 <li>
@@ -388,12 +388,12 @@ estimate is valid:</p>
 <span><span class="co">#&gt;   Comparison periods: 1, 2   (constant confounding trend)</span></span>
 <span><span class="co">#&gt;   Comparison weights: 1: 0.500, 2: 0.500</span></span>
 <span><span class="co">#&gt;   Sampling scheme: panel, some units change side of the cutoff (detected)</span></span>
-<span><span class="co">#&gt;   Bandwidth: common h = 0.2436 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)</span></span>
-<span><span class="co">#&gt;   Pilot bandwidth b (period = value): 1 = 0.4001, 2 = 0.3958, 3 = 0.4047</span></span>
+<span><span class="co">#&gt;   Bandwidth: common h = 0.242 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)</span></span>
+<span><span class="co">#&gt;   Pilot bandwidth b = 0.3679 (also chosen for the diff-in-disc estimate)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;                              Estimate  Std. err.       z  p-value   95% CI</span></span>
-<span><span class="co">#&gt;   Conventional                 0.9698     0.1901    5.10   &lt;0.001   [0.5972, 1.3424]</span></span>
-<span><span class="co">#&gt;   Robust (bias-corrected)      0.9943     0.2256    4.41   &lt;0.001   [0.5522, 1.4364]</span></span>
+<span><span class="co">#&gt;   Conventional                 0.9689     0.1909    5.08   &lt;0.001   [0.5948, 1.3430]</span></span>
+<span><span class="co">#&gt;   Robust (bias-corrected)      0.9735     0.2332    4.17   &lt;0.001   [0.5164, 1.4305]</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   summary() shows the per-period fits and the s.e. under every sampling scheme.</span></span></code></pre></div>
 <p>The true effect is 1.</p>
@@ -454,9 +454,9 @@ so the alternatives can be compared without running the test again:</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ch</span><span class="op">$</span><span class="va">typecont</span><span class="op">$</span><span class="va">joint_tests</span></span>
 <span><span class="co">#&gt;   method   reference statistic df   p_value</span></span>
-<span><span class="co">#&gt; 1   supt           t  1.231775  9 0.8693313</span></span>
-<span><span class="co">#&gt; 2   supt      normal  1.231775  9 0.8621414</span></span>
-<span><span class="co">#&gt; 3  swald           t  5.110313  9 0.7955420</span></span>
+<span><span class="co">#&gt; 1   supt           t  1.231775  9 0.8688813</span></span>
+<span><span class="co">#&gt; 2   supt      normal  1.231775  9 0.8609214</span></span>
+<span><span class="co">#&gt; 3  swald           t  5.110313  9 0.7953520</span></span>
 <span><span class="co">#&gt; 4  swald      normal  5.110313  9 0.7861821</span></span>
 <span><span class="co">#&gt; 5   wald chi-squared  4.781633  9 0.8529133</span></span></code></pre></div>
 </div>

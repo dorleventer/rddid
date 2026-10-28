@@ -27,7 +27,7 @@ confounding-trend assumption: constant (equal weights) or linear in time."></hea
 
     <a class="navbar-brand me-2" href="../index.html">didisc</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9007</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9008</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -317,9 +317,9 @@ periods used.</p></dd>
 when <code>h</code> is given); <code>h_by_period</code> and <code>b_by_period</code> (named numeric
 vectors, the main and pilot bandwidth used in each period, whatever the
 rule); for <code>"fixed"</code> and <code>"joint"</code>, the common main bandwidth <code>h</code> and
-the pilot <code>b</code> (one number for <code>"fixed"</code>, one per period for
-<code>"joint"</code>); and intermediate quantities of the rule (<code>bws</code> for <code>"cct"</code>;
-<code>B</code>, <code>Veff</code>, <code>reg</code>, <code>pilot_bws</code> for <code>"joint"</code>).</p></dd>
+the pilot <code>b</code>, one number each; and intermediate quantities of the
+rule (<code>bws</code> for <code>"cct"</code>; <code>h_rot</code>, <code>d</code>, <code>B</code>, <code>Veff</code>, <code>reg</code> for
+<code>"joint"</code>).</p></dd>
 
 <dt><code>fits</code></dt>
 <dd><p>named list of the per-period <code><a href="rd_period.html">rd_period()</a></code> fits, the RD
@@ -494,17 +494,24 @@ moment in each period's bias constant are estimated at one rule-of-thumb
 bandwidth shared by every period (the preliminary bandwidth of
 <span class="pkg">rdrobust</span>, computed from the running variables of all periods pooled;
 <code>bandwidth$h_rot</code> in the result). The other factor of the bias constant, the
-curvature of the conditional mean, is estimated from a fit at that period's
-own CCT pilot bandwidth, as <span class="pkg">rdrobust</span> does. These are combined,
-with the signed weights of the sum above, into the AMSE, which is then
-minimized in closed form. Each period's pilot bandwidth keeps that period's
-CCT ratio \(b/h\). Nothing in the rule depends on which period is the
+curvature of the conditional mean, is estimated in every period from a fit at
+one pilot bandwidth <code>b</code>, which is itself chosen for the diff-in-disc estimate as
+<span class="pkg">rdrobust</span> chooses its pilot for one period: <code>b</code> is AMSE-optimal for the
+same combination of the periods' \((p+1)\)-th derivatives, with its
+own curvature from fits at a bandwidth <code>d</code> chosen the same way one order up
+(<code>bandwidth$d</code>). These are combined, with the signed weights of the sum above,
+into the AMSE, which is then minimized in closed form. Every period's bias
+correction uses the same <code>b</code>. With one period this is
+<code><a href="https://rdrr.io/pkg/rdrobust/man/rdbwselect.html" class="external-link">rdrobust::rdbwselect()</a></code> (<code>bwselect = "mserd"</code>, <code>vce = "hc1"</code>); in a panel
+with a running variable fixed over time, <span class="pkg">rdrobust</span>'s selector applied
+to the combined outcome. Nothing in the rule depends on which period is the
 RD period, so an aggregate of several RD periods gets the same bandwidth
 whatever the order of <code>t_rd</code>.
 With <code>regularize = TRUE</code> the rule adds <code>reg_const</code> times the estimated
 variance of the aggregate bias constant, including its covariances between
-periods, to the squared bias, as <span class="pkg">rdrobust</span> does, so a near-zero
-estimated bias cannot make the bandwidth very large. Standard errors use the HC1 convention
+periods, to the squared bias of <code>h</code> and of <code>b</code> (not of <code>d</code>), as
+<span class="pkg">rdrobust</span> does, so a near-zero estimated bias cannot make a bandwidth
+very large. Standard errors use the HC1 convention
 of <span class="pkg">rdrobust</span>. The derivations are in the paper's appendix on estimation
 and bandwidth choice.</p>
 </div>
@@ -540,12 +547,12 @@ example data <a href="didisc_sim.html">didisc_sim</a> and <a href="didisc_sim_pv
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Comparison periods: 1, 2   (constant confounding trend)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Comparison weights: 1: 0.500, 2: 0.500</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Sampling scheme: panel, no unit changes side of the cutoff (detected)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Bandwidth: common h = 0.2694 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Pilot bandwidth b (period = value): 1 = 0.4136, 2 = 0.3901, 3 = 0.3984</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Bandwidth: common h = 0.3986 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Pilot bandwidth b = 0.5936 (also chosen for the diff-in-disc estimate)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                              Estimate  Std. err.       z  p-value   95% CI</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Conventional                 1.0922     0.1259    8.67   &lt;0.001   [0.8454, 1.3391]</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Robust (bias-corrected)      1.1411     0.1488    7.67   &lt;0.001   [0.8494, 1.4328]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Conventional                 1.0075     0.1062    9.49   &lt;0.001   [0.7995, 1.2156]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Robust (bias-corrected)      1.0247     0.1256    8.16   &lt;0.001   [0.7785, 1.2708]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   summary() shows the per-period fits and the s.e. under every sampling scheme.</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span>   <span class="co"># the jump in every period, and the s.e. under each scheme</span></span></span>
@@ -553,31 +560,31 @@ example data <a href="didisc_sim.html">didisc_sim</a> and <a href="didisc_sim_pv
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Comparison periods: 1, 2   (constant confounding trend)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Comparison weights: 1: 0.500, 2: 0.500</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Sampling scheme: panel, no unit changes side of the cutoff (detected)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Bandwidth: common h = 0.2694 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Pilot bandwidth b (period = value): 1 = 0.4136, 2 = 0.3901, 3 = 0.3984</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Bandwidth: common h = 0.3986 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Pilot bandwidth b = 0.5936 (also chosen for the diff-in-disc estimate)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                              Estimate  Std. err.       z  p-value   95% CI</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Conventional                 1.0922     0.1259    8.67   &lt;0.001   [0.8454, 1.3391]</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Robust (bias-corrected)      1.1411     0.1488    7.67   &lt;0.001   [0.8494, 1.4328]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Conventional                 1.0075     0.1062    9.49   &lt;0.001   [0.7995, 1.2156]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Robust (bias-corrected)      1.0247     0.1256    8.16   &lt;0.001   [0.7785, 1.2708]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Per-period local-linear fits:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                                        Conventional         Robust (bias-corrected)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Period   Role             n        h        b          Jump   Std. err.          Jump   Std. err.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   1        comparison    1000   0.2694   0.4136        0.5129      0.1683        0.4642      0.1942</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   2        comparison    1000   0.2694   0.3901        0.6306      0.1679        0.6249      0.2004</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   3        RD            1000   0.2694   0.3984        1.6640      0.1635        1.6856      0.1924</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   1        comparison    1000   0.3986   0.5936        0.5768      0.1393        0.5716      0.1672</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   2        comparison    1000   0.3986   0.5936        0.6308      0.1387        0.6558      0.1655</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   3        RD            1000   0.3986   0.5936        1.6113      0.1364        1.6383      0.1624</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Std. err. of the estimate under each sampling scheme (the estimate table at the top uses PC):</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                                                    Conventional   Robust (bias-corrected)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   RCS  repeated cross-section                            0.2022                    0.2377</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   PC   panel, no unit changes side of the cutoff         0.1259                    0.1488</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   PV   panel, some units change side of the cutoff       0.1259                    0.1488</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   RCS  repeated cross-section                            0.1681                    0.2005</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   PC   panel, no unit changes side of the cutoff         0.1062                    0.1256</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   PV   panel, some units change side of the cutoff       0.1062                    0.1256</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Conventional       Robust </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     1.092242     1.141077 </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     1.007537     1.024654 </span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/stats/confint.html" class="external-link">confint</a></span><span class="op">(</span><span class="va">fit</span>, <span class="st">"Robust"</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>            2.5 %   97.5 %</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Robust 0.8493838 1.432769</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>            2.5 %  97.5 %</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> Robust 0.7784777 1.27083</span>
 <span class="r-in"><span><span class="co"># the confounding jump moves linearly in time</span></span></span>
 <span class="r-in"><span><span class="fu">didisc</span><span class="op">(</span><span class="va">didisc_sim</span>, y <span class="op">=</span> <span class="st">"Y"</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span>,</span></span>
 <span class="r-in"><span>      trend <span class="op">=</span> <span class="st">"linear"</span><span class="op">)</span></span></span>
@@ -585,12 +592,12 @@ example data <a href="didisc_sim.html">didisc_sim</a> and <a href="didisc_sim_pv
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Comparison periods: 1, 2   (linear confounding trend)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Comparison weights: 1: -1.000, 2: 2.000</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Sampling scheme: panel, no unit changes side of the cutoff (detected)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Bandwidth: common h = 0.306 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Pilot bandwidth b (period = value): 1 = 0.4698, 2 = 0.4431, 3 = 0.4525</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Bandwidth: common h = 0.2629 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Pilot bandwidth b = 0.3943 (also chosen for the diff-in-disc estimate)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                              Estimate  Std. err.       z  p-value   95% CI</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Conventional                 0.9198     0.2423    3.80   &lt;0.001   [0.4448, 1.3948]</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Robust (bias-corrected)      0.8801     0.2882    3.05    0.002   [0.3153, 1.4449]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Conventional                 0.9106     0.2599    3.50   &lt;0.001   [0.4012, 1.4200]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Robust (bias-corrected)      0.8874     0.3060    2.90    0.004   [0.2877, 1.4871]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   summary() shows the per-period fits and the s.e. under every sampling scheme.</span>
 <span class="r-in"><span><span class="co"># minimum-variance comparison-period weights</span></span></span>
@@ -598,14 +605,14 @@ example data <a href="didisc_sim.html">didisc_sim</a> and <a href="didisc_sim_pv
 <span class="r-in"><span>      weighting <span class="op">=</span> <span class="st">"min_variance"</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Diff-in-disc estimate of the ATT in period 3</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Comparison periods: 1, 2   (constant confounding trend)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Comparison weights (minimum variance): 1: 0.453, 2: 0.547; Robust row: 1: 0.462, 2: 0.538</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Comparison weights (minimum variance): 1: 0.479, 2: 0.521; Robust row: 1: 0.465, 2: 0.535</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Sampling scheme: panel, no unit changes side of the cutoff (detected)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Bandwidth: common h = 0.2735 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Pilot bandwidth b (period = value): 1 = 0.4198, 2 = 0.3959, 3 = 0.4043</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Bandwidth: common h = 0.4095 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Pilot bandwidth b = 0.6074 (also chosen for the diff-in-disc estimate)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                              Estimate  Std. err.       z  p-value   95% CI</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Conventional                 1.0848     0.1249    8.69   &lt;0.001   [0.8401, 1.3296]</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Robust (bias-corrected)      1.1324     0.1477    7.67   &lt;0.001   [0.8431, 1.4218]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Conventional                 1.0047     0.1048    9.59   &lt;0.001   [0.7994, 1.2101]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Robust (bias-corrected)      1.0193     0.1242    8.21   &lt;0.001   [0.7759, 1.2627]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   summary() shows the per-period fits and the s.e. under every sampling scheme.</span>
 <span class="r-in"><span><span class="co"># several RD periods: the average of their effects (year 3 copied as a</span></span></span>
@@ -617,12 +624,12 @@ example data <a href="didisc_sim.html">didisc_sim</a> and <a href="didisc_sim_pv
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Comparison periods: 1, 2   (constant confounding trend)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Comparison weights (summed over the RD periods): 1: 0.500, 2: 0.500</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Sampling scheme: panel, no unit changes side of the cutoff (detected)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Bandwidth: common h = 0.2694 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Pilot bandwidth b (period = value): 1 = 0.4136, 2 = 0.3901, 3 = 0.3984, 4 = 0.3984</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Bandwidth: common h = 0.3986 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Pilot bandwidth b = 0.5936 (also chosen for the diff-in-disc estimate)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                              Estimate  Std. err.       z  p-value   95% CI</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Conventional                 1.0922     0.1259    8.67   &lt;0.001   [0.8454, 1.3391]</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Robust (bias-corrected)      1.1411     0.1488    7.67   &lt;0.001   [0.8494, 1.4328]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Conventional                 1.0075     0.1062    9.49   &lt;0.001   [0.7995, 1.2156]</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Robust (bias-corrected)      1.0247     0.1256    8.16   &lt;0.001   [0.7785, 1.2708]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   summary() shows the per-period fits and the s.e. under every sampling scheme.</span>
 <span class="r-in"><span><span class="co"># comparison periods uniformly treated: add estimand = "atu" (same numbers)</span></span></span>

@@ -49,14 +49,15 @@ library(didisc)
 fit <- didisc(didisc_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 fit
 #> Diff-in-disc estimate of the ATT in period 3
-#>   Comparison periods: 1, 2   (constant confounding trend; weights 0.5, 0.5)
+#>   Comparison periods: 1, 2   (constant confounding trend)
+#>   Comparison weights: 1: 0.500, 2: 0.500
 #>   Sampling scheme: panel, no unit changes side of the cutoff (detected)
-#>   Bandwidth: common h = 0.2672 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)
-#>   Pilot bandwidth b (period = value): 1 = 0.4102, 2 = 0.3868, 3 = 0.3951
+#>   Bandwidth: common h = 0.3986 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)
+#>   Pilot bandwidth b = 0.5936 (also chosen for the diff-in-disc estimate)
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI
-#>   Conventional                 1.0927     0.1264    8.64   <0.001   [0.8450, 1.3405]
-#>   Robust (bias-corrected)      1.1414     0.1494    7.64   <0.001   [0.8486, 1.4342]
+#>   Conventional                 1.0075     0.1062    9.49   <0.001   [0.7995, 1.2156]
+#>   Robust (bias-corrected)      1.0247     0.1256    8.16   <0.001   [0.7785, 1.2708]
 #> 
 #>   summary() shows the per-period fits and the s.e. under every sampling scheme.
 ```
@@ -65,11 +66,11 @@ The ATT is the effect of the treatment on the units just above the
 cutoff, the ones treated in year 3. Years 1 and 2 are the comparison
 periods, with equal weights. `h` is the main bandwidth, one for every
 year, chosen for the diff-in-disc estimate; `b` is the pilot bandwidth
-of the bias correction in each year. `Conventional` is the local-linear
-estimate with its conventional standard error; `Robust (bias-corrected)`
-is the bias-corrected estimate with its robust standard error. A plain
-RD in year 3 would target 1.5, the effect plus the confounding jump.
-[Get
+of the bias correction, also one for every year. `Conventional` is the
+local-linear estimate with its conventional standard error;
+`Robust (bias-corrected)` is the bias-corrected estimate with its robust
+standard error. A plain RD in year 3 would target 1.5, the effect plus
+the confounding jump. [Get
 started](https://dorleventer.github.io/didisc/articles/didisc-estimation.html)
 reads every line.
 
@@ -84,10 +85,12 @@ rd_typecont(didisc_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
 #>   H0: the share of each type jumps by zero at the cutoff, in every period
 #>   Sampling scheme: panel, some units change side of the cutoff (detected)
 #>   Periods: 1, 2, 3   Types: ++, +-, -+, --   Bandwidth: CCT MSE-optimal, chosen per cell
+#>   Type in a period: a unit's sides of the cutoff in the other periods, in time order
+#>     ("+" at or above, "-" below).
 #> 
-#>   Joint sup-t (t critical values) max |t| = 1.232 over 9 jumps,  p = 0.868  (largest: period:type 1:+-)
-#>     Period 1: sup-t (t critical values) max |t| = 1.232 over 3 jumps,  p = 0.500
-#>     Period 2: sup-t (t critical values) max |t| = 0.582 over 3 jumps,  p = 0.901
+#>   Joint sup-t (t critical values) max |t| = 1.232 over 9 jumps,  p = 0.869  (largest: period:type 1:+-)
+#>     Period 1: sup-t (t critical values) max |t| = 1.232 over 3 jumps,  p = 0.499
+#>     Period 2: sup-t (t critical values) max |t| = 0.582 over 3 jumps,  p = 0.902
 #>     Period 3: sup-t (t critical values) max |t| = 1.048 over 3 jumps,  p = 0.631
 #>   All joint statistics: x$joint_tests
 ```

@@ -59,14 +59,14 @@ rows used across all periods.
 fit <- didisc(didisc_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 coef(fit)
 #> Conventional       Robust 
-#>     1.092242     1.141077 
+#>     1.007537     1.024654 
 confint(fit)
 #>                  2.5 %   97.5 %
-#> Conventional 0.8454070 1.339077
-#> Robust       0.8493838 1.432769
+#> Conventional 0.7994833 1.215591
+#> Robust       0.7784777 1.270830
 confint(fit, "Robust", level = 0.9)
 #>              5 %     95 %
-#> Robust 0.8962803 1.385873
+#> Robust 0.8180563 1.231252
 nobs(fit)
 #> [1] 3000
 ```

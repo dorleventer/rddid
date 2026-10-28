@@ -72,9 +72,9 @@ tc
 #>     ("+" at or above, "-" below).
 #> 
 #>   Joint sup-t (t critical values) max |t| = 1.232 over 9 jumps,  p = 0.869  (largest: period:type 1:+-)
-#>     Period 1: sup-t (t critical values) max |t| = 1.232 over 3 jumps,  p = 0.500
+#>     Period 1: sup-t (t critical values) max |t| = 1.232 over 3 jumps,  p = 0.499
 #>     Period 2: sup-t (t critical values) max |t| = 0.582 over 3 jumps,  p = 0.902
-#>     Period 3: sup-t (t critical values) max |t| = 1.048 over 3 jumps,  p = 0.633
+#>     Period 3: sup-t (t critical values) max |t| = 1.048 over 3 jumps,  p = 0.631
 #>   All joint statistics: x$joint_tests
 ```
 
@@ -334,12 +334,12 @@ didisc(didisc_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 #>   Comparison periods: 1, 2   (constant confounding trend)
 #>   Comparison weights: 1: 0.500, 2: 0.500
 #>   Sampling scheme: panel, some units change side of the cutoff (detected)
-#>   Bandwidth: common h = 0.2436 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)
-#>   Pilot bandwidth b (period = value): 1 = 0.4001, 2 = 0.3958, 3 = 0.4047
+#>   Bandwidth: common h = 0.242 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)
+#>   Pilot bandwidth b = 0.3679 (also chosen for the diff-in-disc estimate)
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI
-#>   Conventional                 0.9698     0.1901    5.10   <0.001   [0.5972, 1.3424]
-#>   Robust (bias-corrected)      0.9943     0.2256    4.41   <0.001   [0.5522, 1.4364]
+#>   Conventional                 0.9689     0.1909    5.08   <0.001   [0.5948, 1.3430]
+#>   Robust (bias-corrected)      0.9735     0.2332    4.17   <0.001   [0.5164, 1.4305]
 #> 
 #>   summary() shows the per-period fits and the s.e. under every sampling scheme.
 ```
@@ -408,9 +408,9 @@ alternatives can be compared without running the test again:
 
 ch$typecont$joint_tests
 #>   method   reference statistic df   p_value
-#> 1   supt           t  1.231775  9 0.8693313
-#> 2   supt      normal  1.231775  9 0.8621414
-#> 3  swald           t  5.110313  9 0.7955420
+#> 1   supt           t  1.231775  9 0.8688813
+#> 2   supt      normal  1.231775  9 0.8609214
+#> 3  swald           t  5.110313  9 0.7953520
 #> 4  swald      normal  5.110313  9 0.7861821
 #> 5   wald chi-squared  4.781633  9 0.8529133
 ```

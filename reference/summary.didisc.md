@@ -60,32 +60,32 @@ summary(fit)
 #>   Comparison periods: 1, 2   (constant confounding trend)
 #>   Comparison weights: 1: 0.500, 2: 0.500
 #>   Sampling scheme: panel, no unit changes side of the cutoff (detected)
-#>   Bandwidth: common h = 0.2694 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)
-#>   Pilot bandwidth b (period = value): 1 = 0.4136, 2 = 0.3901, 3 = 0.3984
+#>   Bandwidth: common h = 0.3986 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)
+#>   Pilot bandwidth b = 0.5936 (also chosen for the diff-in-disc estimate)
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI
-#>   Conventional                 1.0922     0.1259    8.67   <0.001   [0.8454, 1.3391]
-#>   Robust (bias-corrected)      1.1411     0.1488    7.67   <0.001   [0.8494, 1.4328]
+#>   Conventional                 1.0075     0.1062    9.49   <0.001   [0.7995, 1.2156]
+#>   Robust (bias-corrected)      1.0247     0.1256    8.16   <0.001   [0.7785, 1.2708]
 #> 
 #>   Per-period local-linear fits:
 #>                                                        Conventional         Robust (bias-corrected)
 #>   Period   Role             n        h        b          Jump   Std. err.          Jump   Std. err.
-#>   1        comparison    1000   0.2694   0.4136        0.5129      0.1683        0.4642      0.1942
-#>   2        comparison    1000   0.2694   0.3901        0.6306      0.1679        0.6249      0.2004
-#>   3        RD            1000   0.2694   0.3984        1.6640      0.1635        1.6856      0.1924
+#>   1        comparison    1000   0.3986   0.5936        0.5768      0.1393        0.5716      0.1672
+#>   2        comparison    1000   0.3986   0.5936        0.6308      0.1387        0.6558      0.1655
+#>   3        RD            1000   0.3986   0.5936        1.6113      0.1364        1.6383      0.1624
 #> 
 #>   Std. err. of the estimate under each sampling scheme (the estimate table at the top uses PC):
 #>                                                    Conventional   Robust (bias-corrected)
-#>   RCS  repeated cross-section                            0.2022                    0.2377
-#>   PC   panel, no unit changes side of the cutoff         0.1259                    0.1488
-#>   PV   panel, some units change side of the cutoff       0.1259                    0.1488
+#>   RCS  repeated cross-section                            0.1681                    0.2005
+#>   PC   panel, no unit changes side of the cutoff         0.1062                    0.1256
+#>   PV   panel, some units change side of the cutoff       0.1062                    0.1256
 summary(fit)$per_period
-#>   period       role weight    n         h         b      jump        se
-#> 1      1 comparison   -0.5 1000 0.2694485 0.4135886 0.5128736 0.1682545
-#> 2      2 comparison   -0.5 1000 0.2694485 0.3900813 0.6305524 0.1678831
-#> 3      3         RD    1.0 1000 0.2694485 0.3983944 1.6639551 0.1635322
-#>     jump_bc     se_rb
-#> 1 0.4641595 0.1942384
-#> 2 0.6248868 0.2004214
-#> 3 1.6855998 0.1924041
+#>   period       role weight    n         h       b      jump        se   jump_bc
+#> 1      1 comparison   -0.5 1000 0.3985921 0.59356 0.5767858 0.1393244 0.5715896
+#> 2      2 comparison   -0.5 1000 0.3985921 0.59356 0.6308135 0.1387137 0.6557607
+#> 3      3         RD    1.0 1000 0.3985921 0.59356 1.6113369 0.1363900 1.6383291
+#>       se_rb
+#> 1 0.1671519
+#> 2 0.1654705
+#> 3 0.1623620
 ```
