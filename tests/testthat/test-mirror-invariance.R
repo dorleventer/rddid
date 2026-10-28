@@ -1,6 +1,6 @@
 # Mirror invariance of the RD-DID estimator and three of the four validation
 # tests (dev/atu_estimand_plan.md S1, S4 items 1-3, paper Section 6): mirroring
-# the running variable (x -> -x, cutoff 0) negates the rddid() estimate and
+# the running variable (x -> -x, cutoff 0) negates the didisc() estimate and
 # leaves everything else (SEs, bandwidths, scheme detection, the three tests
 # other than rd_compstable()) numerically unchanged. Mirroring is applied by
 # hand via mirror_x() (helper-mirror.R) -- no `estimand` argument exists in
@@ -12,21 +12,21 @@
 dat_a <- dgp_a()   # 3 periods, PC scheme (defaults: n = 2000)
 
 # =============================================================================
-# A. rddid()
+# A. didisc()
 # =============================================================================
 
-rddid_configs <- list(
+didisc_configs <- list(
   list(name = "dgp_a", data = dat_a, t_rd = 3, comparisons = c(1, 2), scheme = "pc"),
   list(name = "S1",    data = S1,    t_rd = 2, comparisons = 1,       scheme = "pv")
 )
 
-check_rddid_invariance <- function(cfg, bwselect, weights = "constant") {
+check_didisc_invariance <- function(cfg, bwselect, weights = "constant") {
   info0 <- sprintf("data=%s bwselect=%s weights=%s", cfg$name, bwselect, weights)
 
-  orig <- rddid(cfg$data, y = "Y", x = "R", time = "t", id = "id",
+  orig <- didisc(cfg$data, y = "Y", x = "R", time = "t", id = "id",
                 t_rd = cfg$t_rd, comparisons = cfg$comparisons,
                 scheme = cfg$scheme, bwselect = bwselect, trend = weights)
-  mir  <- rddid(mirror_x(cfg$data), y = "Y", x = "R", time = "t", id = "id",
+  mir  <- didisc(mirror_x(cfg$data), y = "Y", x = "R", time = "t", id = "id",
                 t_rd = cfg$t_rd, comparisons = cfg$comparisons,
                 scheme = cfg$scheme, bwselect = bwselect, trend = weights)
 
@@ -56,16 +56,16 @@ check_rddid_invariance <- function(cfg, bwselect, weights = "constant") {
                     info = paste(info0, "scheme_detected"))
 }
 
-for (cfg in rddid_configs) {
+for (cfg in didisc_configs) {
   for (bw in c("cct", "joint")) {
-    test_that(sprintf("rddid() mirror invariance: %s, bwselect=%s", cfg$name, bw), {
-      check_rddid_invariance(cfg, bw)
+    test_that(sprintf("didisc() mirror invariance: %s, bwselect=%s", cfg$name, bw), {
+      check_didisc_invariance(cfg, bw)
     })
   }
 }
 
-test_that("rddid() mirror invariance: dgp_a, weights=linear, bwselect=joint", {
-  check_rddid_invariance(rddid_configs[[1]], "joint", weights = "linear")
+test_that("didisc() mirror invariance: dgp_a, weights=linear, bwselect=joint", {
+  check_didisc_invariance(didisc_configs[[1]], "joint", weights = "linear")
 })
 
 # =============================================================================

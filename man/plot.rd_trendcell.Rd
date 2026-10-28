@@ -21,7 +21,7 @@ least-squares line through its jumps (\code{trend = "linear"}). Under the null t
 the dashed line, up to sampling error.
 }
 \examples{
-tr <- rd_trendcell(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
+tr <- rd_trendcell(didisc_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 if (requireNamespace("ggplot2", quietly = TRUE)) plot(tr)
 }
 \seealso{

@@ -14,7 +14,7 @@ mask_sim_p <- function(x) {
 
 test_that("print and summary of a fit", {
   local_width()
-  fit <- rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
+  fit <- didisc(didisc_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
   expect_snapshot(print(fit))
   expect_snapshot(print(summary(fit)))
   expect_snapshot(print(coef(fit)))
@@ -23,32 +23,32 @@ test_that("print and summary of a fit", {
 
 test_that("print of the four tests", {
   local_width()
-  expect_snapshot(print(rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)),
+  expect_snapshot(print(rd_typecont(didisc_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)),
                   transform = mask_sim_p)
-  expect_snapshot(print(rd_compstable(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)),
+  expect_snapshot(print(rd_compstable(didisc_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)),
                   transform = mask_sim_p)
-  expect_snapshot(print(rd_homog(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)))
-  expect_snapshot(print(rd_trendcell(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)))
+  expect_snapshot(print(rd_homog(didisc_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)))
+  expect_snapshot(print(rd_trendcell(didisc_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)))
 })
 
 test_that("the main error and message texts", {
   local_width()
-  expect_snapshot(error = TRUE, rddid(rddid_sim, y = "Yy", x = "R", time = "year", id = "id", t_rd = 3))
-  expect_snapshot(error = TRUE, rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
+  expect_snapshot(error = TRUE, didisc(didisc_sim, y = "Yy", x = "R", time = "year", id = "id", t_rd = 3))
+  expect_snapshot(error = TRUE, didisc(didisc_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
                                       comparisons = c(1, 7)))
-  expect_snapshot(error = TRUE, rd_typecont(rddid_sim, x = "R", time = "year", id = "id"))
-  expect_snapshot(rddid(rddid_sim, y = "Y", x = "R", time = "year", t_rd = 3, bwselect = "cct")$scheme)
+  expect_snapshot(error = TRUE, rd_typecont(didisc_sim, x = "R", time = "year", id = "id"))
+  expect_snapshot(didisc(didisc_sim, y = "Y", x = "R", time = "year", t_rd = 3, bwselect = "cct")$scheme)
 })
 
 test_that("print of rd_checks()", {
   skip_on_cran()
-  expect_snapshot(print(rd_checks(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id",
+  expect_snapshot(print(rd_checks(didisc_sim_pv, y = "Y", x = "R", time = "year", id = "id",
                                   t_rd = 3)), transform = mask_sim_p)
 })
 
 test_that("simulated p-values of the printed examples, to Monte Carlo precision", {
-  tc <- rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
-  cs <- rd_compstable(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
+  tc <- rd_typecont(didisc_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
+  cs <- rd_compstable(didisc_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
   expect_lt(abs(tc$p_value - 0.868), 0.01)
   expect_lt(abs(cs$p_value - 0.016), 0.005)
 })

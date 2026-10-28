@@ -1,14 +1,14 @@
 cff-version: 1.2.0
-message: "If you use rddid, please cite the paper it implements."
+message: "If you use didisc, please cite the paper it implements."
 type: software
-title: "rddid: Regression Discontinuity with a Confounding Policy (RD-DID)"
+title: "didisc: Regression Discontinuity with a Confounding Policy (RD-DID)"
 authors:
   - family-names: Leventer
     given-names: Dor
   - family-names: Nevo
     given-names: Daniel
-repository-code: "https://github.com/dorleventer/rddid"
-url: "https://dorleventer.github.io/rddid/"
+repository-code: "https://github.com/dorleventer/didisc"
+url: "https://dorleventer.github.io/didisc/"
 license: MIT
 preferred-citation:
   type: article

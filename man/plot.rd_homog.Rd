@@ -21,7 +21,7 @@ side (blue: below the cutoff in the RD period; orange: above). Under the null th
 jumps coincide within each period.
 }
 \examples{
-hg <- rd_homog(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
+hg <- rd_homog(didisc_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 if (requireNamespace("ggplot2", quietly = TRUE)) plot(hg)
 }
 \seealso{

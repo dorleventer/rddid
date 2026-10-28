@@ -1,3 +1,11 @@
+# didisc 0.4.0.9004
+
+* The package is renamed from rddid to didisc, after the name the paper gives the design
+  (difference-in-discontinuities) and its estimator (DiDisc). The main function is now
+  `didisc()`, its class `"didisc"` (with `summary.didisc()`, `plot.didisc()` and the other
+  methods), and the simulated data `didisc_sim` and `didisc_sim_pv`. The old names are gone, with
+  no aliases. Estimates are unchanged.
+
 # rddid 0.4.0.9003
 
 First public version.

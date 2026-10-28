@@ -1,7 +1,7 @@
 # Aggregate over several RD periods (paper: Corollary cor:agg, Section 5.6 sec:est-agg).
 # ATT^phi = sum_t phi_t ATT(t) is estimated by one linear combination of the per-period jumps:
 # coefficient phi_t on each RD period and -w^phi_t0 = -sum_t phi_t w_t0(t) on each comparison
-# period. Every expected value below is computed outside rddid()'s aggregation code: from the
+# period. Every expected value below is computed outside didisc()'s aggregation code: from the
 # single-period estimates, from rd_period() fits, or from the per-unit influence vectors.
 
 # five periods: comparisons 1, 2; RD periods 3, 4, 5. Confounding jump linear in t, effect
@@ -26,7 +26,7 @@
   })
   do.call(rbind, rows)
 }
-.fit <- function(d, ...) suppressMessages(rddid(d, y = "Y", x = "R", time = "year", id = "id", ...))
+.fit <- function(d, ...) suppressMessages(didisc(d, y = "Y", x = "R", time = "year", id = "id", ...))
 .rd <- 3:5
 .comps <- c(1, 2)
 
@@ -258,7 +258,7 @@ test_that("character and factor period labels give the same aggregate as numeric
 })
 
 test_that("linear-trend weights are exact with calendar years and invariant to shifting the labels", {
-  w <- function(comps, t) unname(.rddid_weights("linear", comps, t))
+  w <- function(comps, t) unname(.didisc_weights("linear", comps, t))
   expect_equal(w(c(1999, 2000), 2004), c(-4, 5), tolerance = 1e-14)
   expect_equal(w(c(1999, 2000), 2001), c(-1, 2), tolerance = 1e-14)
   # three comparison periods: the OLS line, same weights whatever the origin of the time axis

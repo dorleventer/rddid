@@ -1,12 +1,12 @@
 # trend_weights.R -- comparison-period weights implied by the confounding-trend assumption
 # (constant: equal weights; linear: the least-squares line through the comparison jumps extrapolated to the RD
 # period; numeric: as given), the RD-period weights of an aggregate over several RD periods,
-# and the minimum-variance weights. Used by rddid().
+# and the minimum-variance weights. Used by didisc().
 
 #' Period coefficients from a trend / weighting scheme
 #' @keywords internal
 #' @noRd
-.rddid_weights <- function(weights, comps, t_rd) {
+.didisc_weights <- function(weights, comps, t_rd) {
   m <- length(comps)
   if (is.numeric(weights)) {
     if (length(weights) != m)
@@ -37,7 +37,7 @@
 #' researcher's choice of estimand); named weights are matched to `t_rd` by name.
 #' @keywords internal
 #' @noRd
-.rddid_rd_weights <- function(rd_weights, t_rd) {
+.didisc_rd_weights <- function(rd_weights, t_rd) {
   J <- length(t_rd)
   if (is.null(rd_weights)) return(stats::setNames(rep(1 / J, J), as.character(t_rd)))
   if (J == 1L)
@@ -54,14 +54,14 @@
 
 #' Comparison weights for each RD period (one row per target, one column per comparison)
 #'
-#' Row t holds the weights w_{t0}(t) of Corollary cor:trend for target t: `.rddid_weights()`
+#' Row t holds the weights w_{t0}(t) of Corollary cor:trend for target t: `.didisc_weights()`
 #' applied to each RD period. A numeric vector `trend` gives the same weights to every target;
 #' a numeric matrix gives one row per RD period (rows in `t_rd` order or named by period,
 #' columns in `comps` order or named by period).
 #' @return numeric matrix, J x m, with dimnames (RD periods, comparison periods).
 #' @keywords internal
 #' @noRd
-.rddid_weights_by_target <- function(trend, comps, t_rd) {
+.didisc_weights_by_target <- function(trend, comps, t_rd) {
   J <- length(t_rd)
   if (is.matrix(trend)) {
     if (!is.numeric(trend) || nrow(trend) != J || ncol(trend) != length(comps))
@@ -71,11 +71,11 @@
       trend <- trend[.match_names(stats::setNames(seq_len(J), rownames(trend)), t_rd,
                                   "the rows of a matrix `trend`", "RD periods"), , drop = FALSE]
     rows <- lapply(seq_len(J), function(j)
-      .rddid_weights(stats::setNames(trend[j, ], colnames(trend)), comps, t_rd[j]))
+      .didisc_weights(stats::setNames(trend[j, ], colnames(trend)), comps, t_rd[j]))
   } else if (is.numeric(trend)) {
-    rows <- rep(list(.rddid_weights(trend, comps, t_rd[1])), J)   # same weights for every target
+    rows <- rep(list(.didisc_weights(trend, comps, t_rd[1])), J)   # same weights for every target
   } else {
-    rows <- lapply(seq_len(J), function(j) .rddid_weights(trend, comps, t_rd[j]))
+    rows <- lapply(seq_len(J), function(j) .didisc_weights(trend, comps, t_rd[j]))
   }
   W <- do.call(rbind, rows)
   dimnames(W) <- list(as.character(t_rd), as.character(comps))

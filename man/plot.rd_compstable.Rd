@@ -35,7 +35,7 @@ With more than two periods the test's types also record the unit's sides in the 
 periods; the picture shows the pairwise version.
 }
 \examples{
-cs <- rd_compstable(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
+cs <- rd_compstable(didisc_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
 if (requireNamespace("ggplot2", quietly = TRUE)) plot(cs)
 }
 \seealso{

@@ -1,4 +1,4 @@
-# rddid.R -- the main estimator rddid() and its print method. The pieces it calls live in:
+# didisc.R -- the main estimator didisc() and its print method. The pieces it calls live in:
 # trend_weights.R (weights), sampling_scheme.R (scheme), bandwidth_*.R (bandwidth rules),
 # rd_period.R (per-period fits), cross_period_covariance.R (aggregation and variances).
 
@@ -11,7 +11,7 @@
 #' **comparison periods** the treatment of interest is uniform at the cutoff
 #' (nobody treated, or everybody treated), so, provided the
 #' treatment of interest has no anticipation or carry-over effects there (which the
-#' paper assumes), the jump there *is* the confounding jump. `rddid()` estimates the jump in every period by
+#' paper assumes), the jump there *is* the confounding jump. `didisc()` estimates the jump in every period by
 #' local-linear RD and subtracts a weighted average of the comparison-period
 #' jumps from the RD-period jump. How the weights are set is the
 #' **confounding-trend assumption**: constant (equal weights) or linear in time.
@@ -28,7 +28,7 @@
 #'
 #' ## Several RD periods
 #'
-#' With a vector `t_rd`, `rddid()` estimates the weighted average of the RD
+#' With a vector `t_rd`, `didisc()` estimates the weighted average of the RD
 #' periods' effects, \eqn{\mathrm{ATT}^\phi = \sum_t \phi_t \mathrm{ATT}(t)}{ATT^phi = sum_t phi_t ATT(t)},
 #' with weights \eqn{\phi_t}{phi_t} from `rd_weights` (equal by default; any
 #' finite weights are allowed, as they define the estimand). Each period's jump
@@ -79,7 +79,7 @@
 #' every allowed set of weights cancels the confounding jump exactly, so an
 #' error in the weights multiplies only the estimation error of the jumps. With
 #' one comparison period under `"constant"`, or two under `"linear"`, the
-#' assumption allows only one set of weights; `rddid()` returns it and sets
+#' assumption allows only one set of weights; `didisc()` returns it and sets
 #' `weights_detail$pinned` to `TRUE`.
 #'
 #' ## Sampling schemes
@@ -158,10 +158,10 @@
 #' @param x name of the running-variable column (a string).
 #' @param time name of the period column (a string). The column is usually
 #'   numeric (a year); character or factor labels work as well, except under
-#'   `trend = "linear"` (in [rddid()] or [rd_trendcell()]), where the line is
+#'   `trend = "linear"` (in [didisc()] or [rd_trendcell()]), where the line is
 #'   fitted on the period values: these then need to be numeric and are the
 #'   time scale of the line (so 2015, 2017, 2018 are unequally spaced);
-#'   `as.numeric()` converts character labels such as `"2019"`. In [rddid()]
+#'   `as.numeric()` converts character labels such as `"2019"`. In [didisc()]
 #'   the default comparison periods are every period other than `t_rd`, in
 #'   sorted order of the values (alphabetical for character or factor labels),
 #'   the order a numeric `trend` follows.
@@ -183,7 +183,7 @@
 #'   jump moves linearly in time; needs at least two comparison periods). A
 #'   numeric vector gives the weights directly, one per entry of `comparisons`
 #'   in that order. Weights that sum to one cancel a constant confounding
-#'   jump; `rddid()` warns when they do not. With several RD periods a numeric
+#'   jump; `didisc()` warns when they do not. With several RD periods a numeric
 #'   vector applies to every RD period, and a numeric matrix gives one row of
 #'   weights per RD period (rows in `t_rd` order or named by period; columns in
 #'   `comparisons` order or named by period).
@@ -237,7 +237,7 @@
 #' @param reg_const the regularization constant: the multiple of the estimated
 #'   variance of the bias constants added to the squared bias (default 3).
 #'
-#' @return An object of class `"rddid"`, a list with:
+#' @return An object of class `"didisc"`, a list with:
 #'   \describe{
 #'     \item{`estimates`}{a data frame with two rows, `Conventional` (the
 #'       local-linear estimate with its conventional standard error) and
@@ -282,7 +282,7 @@
 #'     \item{`n_by_period`}{the number of observations in each period.}
 #'     \item{`level`, `c`, `p`, `q`, `kernel`}{as passed.}
 #'     \item{`data`}{the per-period data used (a named list of data frames with
-#'       columns `y`, `x`, `id`), for [plot.rddid()].}
+#'       columns `y`, `x`, `id`), for [plot.didisc()].}
 #'     \item{`call`}{the matched call.}
 #'     \item{`weighting`}{`"ols"` or `"min_variance"`, as passed.}
 #'     \item{`weights_detail`}{`NULL` for `"ols"`; for `"min_variance"` a list
@@ -304,32 +304,32 @@
 #' confidence intervals for regression-discontinuity designs. *Econometrica*
 #' 82(6), 2295-2326.
 #'
-#' @seealso [summary.rddid()] and [rddid-methods] (`coef()`, `confint()`,
+#' @seealso [summary.didisc()] and [didisc-methods] (`coef()`, `confint()`,
 #'   `nobs()`) for the fitted object; the tests of the assumptions
 #'   [rd_typecont()], [rd_compstable()], [rd_homog()] and [rd_trendcell()]; the
-#'   example data [rddid_sim] and [rddid_sim_pv].
+#'   example data [didisc_sim] and [didisc_sim_pv].
 #' @family RD-DID estimation
 #'
 #' @examples
-#' # rddid_sim: confounding jump 0.5 in every year, treatment effect 1 in year 3
-#' fit <- rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
+#' # didisc_sim: confounding jump 0.5 in every year, treatment effect 1 in year 3
+#' fit <- didisc(didisc_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 #' fit            # the estimate, its standard error and confidence interval
 #' summary(fit)   # the jump in every period, and the s.e. under each scheme
 #' coef(fit)
 #' confint(fit, "Robust")
 #' # the confounding jump moves linearly in time
-#' rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
+#' didisc(didisc_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
 #'       trend = "linear")
 #' # minimum-variance comparison-period weights
-#' rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
+#' didisc(didisc_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
 #'       weighting = "min_variance")
 #' # several RD periods: the average of their effects (year 3 copied as a
 #' # second RD year, 4, for illustration)
-#' sim4 <- rbind(rddid_sim, transform(rddid_sim[rddid_sim$year == 3, ], year = 4))
-#' rddid(sim4, y = "Y", x = "R", time = "year", id = "id", t_rd = c(3, 4))
+#' sim4 <- rbind(didisc_sim, transform(didisc_sim[didisc_sim$year == 3, ], year = 4))
+#' didisc(sim4, y = "Y", x = "R", time = "year", id = "id", t_rd = c(3, 4))
 #' # comparison periods uniformly treated: add estimand = "atu" (same numbers)
 #' @export
-rddid <- function(data, y, x, time, id = NULL, t_rd,
+didisc <- function(data, y, x, time, id = NULL, t_rd,
                   comparisons = NULL, trend = "constant", rd_weights = NULL,
                   weighting = c("ols", "min_variance"),
                   estimand = c("att", "atu"),
@@ -356,9 +356,9 @@ rddid <- function(data, y, x, time, id = NULL, t_rd,
   # ---- periods and data -------------------------------------------------------------------
   # one shared prepare step (input_checks.R): checks, factor periods, duplicates, missing rows.
   # Without an id every row is its own unit, numbered by its row in the data as passed.
-  if (is.null(id)) data$.rddid_row_id <- seq_len(nrow(data))
+  if (is.null(id)) data$.didisc_row_id <- seq_len(nrow(data))
   if (missing(t_rd)) t_rd <- NULL
-  prep <- .prepare_input(data, "rddid()", x = x, time = time, id = id, y = y, t_rd = t_rd,
+  prep <- .prepare_input(data, "didisc()", x = x, time = time, id = id, y = y, t_rd = t_rd,
                          comparisons = comparisons, t_rd_scalar = FALSE)
   data <- prep$data; t_rd <- prep$t_rd; comparisons <- prep$comparisons
   time_col <- data[[time]]
@@ -372,17 +372,17 @@ rddid <- function(data, y, x, time, id = NULL, t_rd,
   if (!is.null(h) && (!is.numeric(h) || length(h) != 1L || !is.finite(h) || h <= 0))
     .abort("`h` must be a single positive number.")
   if (is.null(id) && scheme == "auto")
-    message("rddid(): no `id` given, so every row is treated as a different unit ",
+    message("didisc(): no `id` given, so every row is treated as a different unit ",
             "(repeated cross-section standard errors).")
   periods <- c(t_rd, comparisons)          # the RD period first, then the comparisons
   period_order <- as.character(if (is.factor(time_col)) intersect(levels(time_col), periods)
                                else sort(periods))   # time order, for printouts and plots
-  plist   <- .rddid_period_frames(data, y, x, id, time_col, periods)
+  plist   <- .didisc_period_frames(data, y, x, id, time_col, periods)
 
   # ---- the estimator's coefficients: phi_t on each RD period (1 for a single one), minus the
   # aggregated weight w^phi_t0 = sum_t phi_t w_t0(t) on each comparison period (Cor. cor:agg)
-  rd_w <- .rddid_rd_weights(rd_weights, t_rd)
-  weights_by_target <- .rddid_weights_by_target(trend, comparisons, t_rd)
+  rd_w <- .didisc_rd_weights(rd_weights, t_rd)
+  weights_by_target <- .didisc_weights_by_target(trend, comparisons, t_rd)
   comp_weights <- colSums(rd_w * weights_by_target)
   period_coef  <- c(rd_w, -comp_weights)
   if (weighting == "min_variance") {
@@ -401,7 +401,7 @@ rddid <- function(data, y, x, time, id = NULL, t_rd,
     .warn("scheme = \"", scheme, "\" requested but no unit id repeats across periods; ",
           "all cross-period covariances are zero, so the reported SE equals the CS one.")
   else if (scheme != "auto" && scheme != detected)
-    message("rddid(): scheme = \"", scheme, "\" as requested; the data look like \"", detected,
+    message("didisc(): scheme = \"", scheme, "\" as requested; the data look like \"", detected,
             "\" (", .scheme_label(detected), ").")
 
   # ---- bandwidths, then one local-linear fit per period at those bandwidths ---------------
@@ -409,7 +409,7 @@ rddid <- function(data, y, x, time, id = NULL, t_rd,
     rd_period(plist[[k]]$y, plist[[k]]$x, h = bw$bws[[k]]["h"], b = bw$bws[[k]]["b"],
               id = plist[[k]]$id, c = cutoff, p = p, q = q, kernel = kernel)),
     as.character(periods))
-  bw <- .rddid_bandwidths(plist, period_coef, t_rd, periods, use_scheme, h, b, bwselect,
+  bw <- .didisc_bandwidths(plist, period_coef, t_rd, periods, use_scheme, h, b, bwselect,
                           cutoff, p, q, kernel, regularize, reg_const)
   fits <- fit_all(bw)
 
@@ -433,7 +433,7 @@ rddid <- function(data, y, x, time, id = NULL, t_rd,
     period_coef    <- c(rd_w, -comp_weights)
     period_coef_bc <- c(rd_w, -rd_w[[1]] * mv_bc$w)
     if (is.null(h) && bwselect == "joint" && !mv$pinned) {
-      bw <- .rddid_bandwidths(plist, period_coef, t_rd, periods, use_scheme, h, b, bwselect,
+      bw <- .didisc_bandwidths(plist, period_coef, t_rd, periods, use_scheme, h, b, bwselect,
                               cutoff, p, q, kernel, regularize, reg_const)
       fits <- fit_all(bw)
     }
@@ -445,7 +445,7 @@ rddid <- function(data, y, x, time, id = NULL, t_rd,
   agg_bc   <- .aggregate_fits(fits, period_coef_bc, bc = TRUE)
 
   structure(list(
-    estimates = .rddid_estimate_table(agg_conv, agg_bc, use_scheme, level),
+    estimates = .didisc_estimate_table(agg_conv, agg_bc, use_scheme, level),
     coef = period_coef, weights = comp_weights,
     rd_weights = rd_w, weights_by_target = weights_by_target, coef_bc = period_coef_bc,
     weights_type = if (is.numeric(trend)) "custom" else trend,
@@ -458,14 +458,14 @@ rddid <- function(data, y, x, time, id = NULL, t_rd,
     data = plist,
     call = cl,
     weighting = weighting, weights_detail = weights_detail
-  ), class = "rddid")
+  ), class = "didisc")
 }
 
 #' One (y, x, id) data frame per period, the RD period first
 #' @keywords internal
 #' @noRd
-.rddid_period_frames <- function(data, y, x, id, time_col, periods) {
-  unit_id <- if (is.null(id)) data$.rddid_row_id else data[[id]]
+.didisc_period_frames <- function(data, y, x, id, time_col, periods) {
+  unit_id <- if (is.null(id)) data$.didisc_row_id else data[[id]]
   frames <- stats::setNames(lapply(periods, function(tv) {
     rows <- which(time_col == tv)
     data.frame(y = data[[y]][rows], x = data[[x]][rows], id = unit_id[rows])
@@ -480,7 +480,7 @@ rddid <- function(data, y, x, time, id = NULL, t_rd,
     d[ok, , drop = FALSE]
   })
   if (dropped > 0L)
-    message("rddid(): ", dropped, " row(s) with a missing outcome, running variable or id dropped.")
+    message("didisc(): ", dropped, " row(s) with a missing outcome, running variable or id dropped.")
   frames
 }
 
@@ -491,7 +491,7 @@ rddid <- function(data, y, x, time, id = NULL, t_rd,
 #'   per-period `h_by_period` / `b_by_period`).
 #' @keywords internal
 #' @noRd
-.rddid_bandwidths <- function(plist, period_coef, t_rd, periods, use_scheme, h, b, bwselect,
+.didisc_bandwidths <- function(plist, period_coef, t_rd, periods, use_scheme, h, b, bwselect,
                               cutoff, p, q, kernel, regularize, reg_const) {
   labels <- as.character(periods)
   if (!is.null(h)) {
@@ -520,7 +520,7 @@ rddid <- function(data, y, x, time, id = NULL, t_rd,
 #' The two-row estimate table (Conventional, Robust) at the scheme's standard error
 #' @keywords internal
 #' @noRd
-.rddid_estimate_table <- function(agg_conv, agg_bc, use_scheme, level) {
+.didisc_estimate_table <- function(agg_conv, agg_bc, use_scheme, level) {
   var_field <- c(cs = "V_cs", pc = "V_pc", pv = "V_pv")
   z_crit    <- stats::qnorm(1 - (1 - level) / 2)
   make_row  <- function(agg) {
@@ -536,7 +536,7 @@ rddid <- function(data, y, x, time, id = NULL, t_rd,
 }
 
 #' @export
-print.rddid <- function(x, digits = 4, hint = TRUE, ...) {
+print.didisc <- function(x, digits = 4, hint = TRUE, ...) {
   est <- if (is.null(x$estimand)) "att" else x$estimand
   # weights as "period: weight", three decimals
   fmt_w <- function(w) {
@@ -570,7 +570,7 @@ print.rddid <- function(x, digits = 4, hint = TRUE, ...) {
   invisible(x)
 }
 
-# ---- print helpers shared by print.rddid / summary.rddid ------------------------------------
+# ---- print helpers shared by print.didisc / summary.didisc ------------------------------------
 #' Sampling scheme in words, for printouts
 #' @keywords internal
 #' @noRd
@@ -587,7 +587,7 @@ print.rddid <- function(x, digits = 4, hint = TRUE, ...) {
   switch(wt, constant = "constant confounding trend", linear = "linear confounding trend",
          custom = "user-supplied weights", wt)
 }
-#' Bandwidth rule and the values used, for print.rddid
+#' Bandwidth rule and the values used, for print.didisc
 #' @keywords internal
 #' @noRd
 .bandwidth_label <- function(bw) {
@@ -602,7 +602,7 @@ print.rddid <- function(x, digits = 4, hint = TRUE, ...) {
                     bw$h, by_t(bw$b_by_period)),
     cct   = sprintf("per-period CCT MSE-optimal (rule \"cct\"): h (period = value) %s", by_t(bw$h_by_period)))
 }
-#' The two-row estimate table of print.rddid
+#' The two-row estimate table of print.didisc
 #' @keywords internal
 #' @noRd
 .print_estimates <- function(x, digits = 4) {

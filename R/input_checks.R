@@ -25,7 +25,7 @@
 #'   (in time order; in level order for a factor period column).
 #' @param t_rd_required stop if `t_rd` is `NULL` (only [rd_typecont()] runs without it, on
 #'   `comparisons`, by default every period).
-#' @param t_rd_scalar stop if `t_rd` has more than one period (only `rddid()` takes several).
+#' @param t_rd_scalar stop if `t_rd` has more than one period (only `didisc()` takes several).
 #' @param complete_cols the columns a row must have to be kept (default: every used column).
 #' @return list: `data` (the rows used), `t_rd`, `comparisons`.
 #' @keywords internal
@@ -69,7 +69,7 @@
   if (!is.null(t_rd)) {
     if (length(t_rd) < 1L) .abort("`t_rd` must give at least one RD period.")
     if (t_rd_scalar && length(t_rd) > 1L)
-      .abort("`t_rd` must be a single period here (several RD periods are for rddid()).")
+      .abort("`t_rd` must be a single period here (several RD periods are for didisc()).")
     if (anyDuplicated(t_rd)) .abort("`t_rd` contains a period more than once.")
     missing_rd <- t_rd[!t_rd %in% time_col]
     if (length(missing_rd))

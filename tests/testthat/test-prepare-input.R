@@ -1,11 +1,11 @@
 # The shared input step (.prepare_input(), input_checks.R): the same checks and messages in
-# rddid() and the four tests, and the same handling of missing values.
+# didisc() and the four tests, and the same handling of missing values.
 
-d <- rddid_sim_pv
+d <- didisc_sim_pv
 no_call <- function(obj) { obj <- unclass(obj); obj[setdiff(names(obj), "call")] }
 
 calls <- list(
-  rddid         = function(dat, ...) rddid(dat, y = "Y", x = "R", time = "year", id = "id", h = 0.5, ...),
+  didisc         = function(dat, ...) didisc(dat, y = "Y", x = "R", time = "year", id = "id", h = 0.5, ...),
   rd_typecont   = function(dat, ...) rd_typecont(dat, x = "R", time = "year", id = "id", h = 0.5, ...),
   rd_compstable = function(dat, ...) rd_compstable(dat, x = "R", time = "year", id = "id", h = 0.5, ...),
   rd_homog      = function(dat, ...) rd_homog(dat, y = "Y", x = "R", time = "year", id = "id", h = 0.5, ...),
@@ -32,29 +32,29 @@ test_that("every entry point gives the same message for the same input error, un
 })
 
 test_that("the four tests say plainly that they take one RD period", {
-  for (fn in setdiff(names(calls), "rddid"))
+  for (fn in setdiff(names(calls), "didisc"))
     expect_error(calls[[fn]](d, t_rd = c(2, 3), comparisons = 1), "must be a single period")
-  expect_error(rddid(d, y = "Y", x = "R", time = "year", id = "id"), "`t_rd` (the RD period) is required",
+  expect_error(didisc(d, y = "Y", x = "R", time = "year", id = "id"), "`t_rd` (the RD period) is required",
                fixed = TRUE)
 })
 
 test_that("a period with no complete row is named", {
   na_x <- d; na_x$R[na_x$year == 1] <- NA
-  expect_message(expect_error(calls$rddid(na_x, t_rd = 3), "no complete row in period(s) 1", fixed = TRUE),
+  expect_message(expect_error(calls$didisc(na_x, t_rd = 3), "no complete row in period(s) 1", fixed = TRUE),
                  "3000|1000")
 })
 
-test_that("rddid(): rows with a missing value are dropped, with a message", {
+test_that("didisc(): rows with a missing value are dropped, with a message", {
   na_y <- d; na_y$Y[c(5, 1500)] <- NA
-  expect_message(f_na <- calls$rddid(na_y, t_rd = 3), "2 row(s) with a missing `Y` dropped", fixed = TRUE)
-  f_drop <- calls$rddid(d[-c(5, 1500), ], t_rd = 3)
+  expect_message(f_na <- calls$didisc(na_y, t_rd = 3), "2 row(s) with a missing `Y` dropped", fixed = TRUE)
+  f_drop <- calls$didisc(d[-c(5, 1500), ], t_rd = 3)
   expect_equal(f_na$estimates, f_drop$estimates, tolerance = 0)
 })
 
-test_that("rddid(): duplicates in a period that is not used do not matter", {
+test_that("didisc(): duplicates in a period that is not used do not matter", {
   dup <- rbind(d, d[d$year == 1, ][1:2, ])
-  expect_equal(calls$rddid(dup, t_rd = 3, comparisons = 2)$estimates,
-               calls$rddid(d, t_rd = 3, comparisons = 2)$estimates, tolerance = 0)
+  expect_equal(calls$didisc(dup, t_rd = 3, comparisons = 2)$estimates,
+               calls$didisc(d, t_rd = 3, comparisons = 2)$estimates, tolerance = 0)
 })
 
 test_that("rd_homog / rd_trendcell: a missing outcome drops the row from the fits, not the type", {

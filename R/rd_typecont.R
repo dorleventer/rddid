@@ -14,7 +14,7 @@
   # The scheme is a property of the design (repeated ids, side switching), so it is read from
   # every unit with a type, not from a bandwidth window: a window misses the switchers outside
   # it, and per-cell CCT bandwidths can reach beyond any common window. Only units with a type
-  # enter (observed in every period), unlike rddid(), which uses every row. A unit on the
+  # enter (observed in every period), unlike didisc(), which uses every row. A unit on the
   # cutoff counts as above it.
   long <- do.call(rbind, lapply(period_labels, function(k) {
     units_k <- period_types[[k]]
@@ -156,8 +156,8 @@
 #' null that **the share of each type jumps by zero at the cutoff, in every
 #' period**. A rejection means that units sort across the cutoff by type, so
 #' the jump in the outcome at the cutoff can reflect who is on each side as
-#' well as the policies, and the estimate of [rddid()] can be biased. With a
-#' running variable fixed over time (as in [rddid_sim]) every unit's type is
+#' well as the policies, and the estimate of [didisc()] can be biased. With a
+#' running variable fixed over time (as in [didisc_sim]) every unit's type is
 #' its own side, the shares jump from 0 to 1 by construction, and the test is
 #' not informative.
 #'
@@ -206,12 +206,12 @@
 #' on `id`: none under `"cs"`; from the units on the same side of the cutoff in
 #' both periods under `"pc"`; under `"pv"` also from the units that change
 #' side, with the opposite sign. `"auto"` reads the scheme off the data as
-#' [rddid()] does.
+#' [didisc()] does.
 #'
 #' ## Options
 #'
 #' `bc = TRUE` (default) tests the bias-corrected jumps with their robust
-#' variance, as in the `Robust` row of [rddid()]; `bc = FALSE` uses the
+#' variance, as in the `Robust` row of [didisc()]; `bc = FALSE` uses the
 #' conventional jumps and variances. With `bwselect = "cct"` (default) each
 #' (period, type) regression gets its own CCT bandwidths from [rd_bw_cct()].
 #' With `bwselect = "rot"` the rule of thumb is `h = b = 0.5 * IQR(x)`, the
@@ -236,8 +236,8 @@
 #'   `comparisons`; `comparisons = NULL` (default) uses every period in `data`
 #'   (other than `t_rd`, which is then used too). The test treats all periods
 #'   alike, so `t_rd` is optional: it lets you write the same call as for
-#'   [rddid()].
-#' @param estimand `"att"` (default) or `"atu"`, as in [rddid()]. Label only:
+#'   [didisc()].
+#' @param estimand `"att"` (default) or `"atu"`, as in [didisc()]. Label only:
 #'   the test is the same either way.
 #' @param h a bandwidth to use, as both main and pilot bandwidth, in every
 #'   regression of the test. If given, `bwselect` is ignored.
@@ -245,10 +245,10 @@
 #'   each regression's own CCT bandwidths from [rd_bw_cct()]) or `"rot"` (the
 #'   rule of thumb `0.5 * IQR(x)`, the same in every regression).
 #' @param scheme the sampling scheme, which sets the covariance across periods
-#'   in the test: `"cs"`, `"pc"` or `"pv"` (as in [rddid()]), or `"auto"`
-#'   (default), which reads it off the data as [rddid()] does. See Details.
+#'   in the test: `"cs"`, `"pc"` or `"pv"` (as in [didisc()]), or `"auto"`
+#'   (default), which reads it off the data as [didisc()] does. See Details.
 #' @param bc logical. `TRUE` (default): test the bias-corrected jumps with their
-#'   robust variance, as in the `Robust` row of [rddid()]; `FALSE`: the
+#'   robust variance, as in the `Robust` row of [didisc()]; `FALSE`: the
 #'   conventional jumps and variances.
 #' @param joint the joint statistic: `"supt"` (default; the largest |t| against
 #'   a sup-t critical value), `"swald"` (the sum of squared t's) or `"wald"` (the
@@ -256,7 +256,7 @@
 #' @param studentize logical, for `joint = "supt"` or `"swald"`. `TRUE`
 #'   (default): t-based critical values that account for the noise in each
 #'   jump's estimated standard error; `FALSE`: normal critical values.
-#' @inheritParams rddid
+#' @inheritParams didisc
 #'
 #' @return An object of class `"rd_typecont"`, a list with:
 #'   \describe{
@@ -303,19 +303,19 @@
 #' confidence intervals for regression-discontinuity designs. *Econometrica*
 #' 82(6), 2295-2326.
 #'
-#' @seealso [rddid()] for the estimate; [rddid_sim_pv] for example data;
-#'   `tidy()` in [rddid-tidiers] for a one-row summary.
+#' @seealso [didisc()] for the estimate; [didisc_sim_pv] for example data;
+#'   `tidy()` in [didisc-tidiers] for a one-row summary.
 #' @family tests of the assumptions
 #'
 #' @examples
-#' # rddid_sim_pv: the running variable moves, so some units change side
-#' tc <- rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
+#' # didisc_sim_pv: the running variable moves, so some units change side
+#' tc <- rd_typecont(didisc_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
 #' tc          # the null, the joint sup-t test, then each period's own test
 #' tc$p_value
 #' tc$joint_tests   # every statistic side by side
 #' # the chi-squared Wald, or sup-t with normal critical values:
-#' rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3, joint = "wald")
-#' rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3, studentize = FALSE)
+#' rd_typecont(didisc_sim_pv, x = "R", time = "year", id = "id", t_rd = 3, joint = "wald")
+#' rd_typecont(didisc_sim_pv, x = "R", time = "year", id = "id", t_rd = 3, studentize = FALSE)
 #' @export
 rd_typecont <- function(data, x, time, id,
                         t_rd = NULL, comparisons = NULL,

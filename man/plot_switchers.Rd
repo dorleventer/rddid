@@ -15,10 +15,10 @@ same units in several periods; it need not be balanced).}
 
 \item{time}{name of the period column (a string). The column is usually
 numeric (a year); character or factor labels work as well, except under
-\code{trend = "linear"} (in \code{\link[=rddid]{rddid()}} or \code{\link[=rd_trendcell]{rd_trendcell()}}), where the line is
+\code{trend = "linear"} (in \code{\link[=didisc]{didisc()}} or \code{\link[=rd_trendcell]{rd_trendcell()}}), where the line is
 fitted on the period values: these then need to be numeric and are the
 time scale of the line (so 2015, 2017, 2018 are unequally spaced);
-\code{as.numeric()} converts character labels such as \code{"2019"}. In \code{\link[=rddid]{rddid()}}
+\code{as.numeric()} converts character labels such as \code{"2019"}. In \code{\link[=didisc]{didisc()}}
 the default comparison periods are every period other than \code{t_rd}, in
 sorted order of the values (alphabetical for character or factor labels),
 the order a numeric \code{trend} follows.}
@@ -46,7 +46,7 @@ of switchers.
 }
 \examples{
 if (requireNamespace("ggplot2", quietly = TRUE))
-  plot_switchers(rddid_sim_pv, x = "R", time = "year", id = "id", periods = c(1, 3))
+  plot_switchers(didisc_sim_pv, x = "R", time = "year", id = "id", periods = c(1, 3))
 }
 \seealso{
 Other tests of the assumptions: 

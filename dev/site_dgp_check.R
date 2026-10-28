@@ -7,7 +7,7 @@
 # Rscript from this directory; ~3 min. Not part of the package build.
 # Result (2026-09-09): all claims hold; S3 uses kappa = 2, sort_p = 0.5.
 # ---------------------------------------------------------------------------
-suppressPackageStartupMessages(library(rddid))
+suppressPackageStartupMessages(library(didisc))
 options(warn = 1)
 tic <- function() assign(".t0", proc.time()[["elapsed"]], envir = globalenv())
 toc <- function(lab) cat(sprintf("   [%s: %.1fs]\n", lab, proc.time()[["elapsed"]] - .t0))
@@ -49,7 +49,7 @@ dgp_b <- function(n = 4000, d = 0, alpha = c(1, 1), kappa = 0, sort_p = 0, sort_
 }
 
 fit <- function(dat, trend = "constant", bwselect = "cct", scheme = "auto", ...) {
-  r <- rddid(dat, y = "Y", x = "R", time = "t", id = "id", t_rd = max(dat$t),
+  r <- didisc(dat, y = "Y", x = "R", time = "t", id = "id", t_rd = max(dat$t),
              trend = trend, bwselect = bwselect, scheme = scheme, ...)
   e <- r$estimates
   c(est = e["Conventional", "est"], se = e["Conventional", "se"],
@@ -57,7 +57,7 @@ fit <- function(dat, trend = "constant", bwselect = "cct", scheme = "auto", ...)
 }
 
 cat("=========== DGP-A ===========\n")
-tic(); a1 <- dgp_a(); f <- fit(a1); toc("rddid cct pc")
+tic(); a1 <- dgp_a(); f <- fit(a1); toc("didisc cct pc")
 cat("A const, constant w:", round(as.numeric(f[1:4]), 3), f[5], " (truth 1)\n")
 f <- fit(a1, trend = "linear"); cat("A const, linear w  :", round(as.numeric(f[1:4]), 3), "\n")
 a2 <- dgp_a(alpha = 0.5 + 0.5 * (1:3))
@@ -74,12 +74,12 @@ cat("A 20 seeds: const mean est", round(mean(res[,1]),3), "sd", round(sd(res[,1]
 cat("\n--- V2 bandwidths, theta=(1,6,3) ---\n")
 a3 <- dgp_a(theta = c(1, 6, 3))
 for (rule in c("cct", "joint")) { tic()
-  r <- rddid(a3, y = "Y", x = "R", time = "t", id = "id", t_rd = 3, bwselect = rule)
+  r <- didisc(a3, y = "Y", x = "R", time = "t", id = "id", t_rd = 3, bwselect = rule)
   hs <- vapply(r$fits, function(f) unname(f$h), 1); hs <- hs[order(as.numeric(names(hs)))]  # r$fits lists the RD period first
   e <- r$estimates
   cat(sprintf("%-5s h=%s  est=%.3f (%.3f) bc=%.3f (%.3f)", rule, paste(round(hs, 3), collapse = "/"), e[1,"est"], e[1,"se"], e[2,"est"], e[2,"se"])); toc(rule) }
 cat("\n--- V2 schemes ---\n")
-for (sc in c("cs", "pc", "pv")) { r <- rddid(dgp_a(scheme = sc), y = "Y", x = "R", time = "t", id = if (sc == "cs") NULL else "id", t_rd = 3, bwselect = "cct")
+for (sc in c("cs", "pc", "pv")) { r <- didisc(dgp_a(scheme = sc), y = "Y", x = "R", time = "t", id = if (sc == "cs") NULL else "id", t_rd = 3, bwselect = "cct")
   e <- r$estimates; cat(sprintf("data %s -> detected %s | est %.3f  se_cs %.3f se_pc %.3f se_pv %.3f\n", sc, r$scheme, e[1,"est"], e[1,"se_cs"], e[1,"se_pc"], e[1,"se_pv"])) }
 
 cat("\n=========== DGP-B oracle (4e6 draws) ===========\n")

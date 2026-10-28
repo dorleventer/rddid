@@ -61,7 +61,7 @@
 # print of the four tests
 
     Code
-      print(rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3))
+      print(rd_typecont(didisc_sim_pv, x = "R", time = "year", id = "id", t_rd = 3))
     Output
       Test of type continuity  [rd_typecont()]
         H0: the share of each type jumps by zero at the cutoff, in every period
@@ -79,7 +79,7 @@
 ---
 
     Code
-      print(rd_compstable(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3))
+      print(rd_compstable(didisc_sim_pv, x = "R", time = "year", id = "id", t_rd = 3))
     Output
       Test of composition stability  [rd_compstable()]
         H0: the share of each type among the units just above the cutoff is the same in the RD period and in each comparison period
@@ -97,7 +97,7 @@
 ---
 
     Code
-      print(rd_homog(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3))
+      print(rd_homog(didisc_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3))
     Output
       Test of homogeneous confounding  [rd_homog()]
         H0: in each comparison period the confounding jump is the same for every type
@@ -117,7 +117,7 @@
 ---
 
     Code
-      print(rd_trendcell(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id",
+      print(rd_trendcell(didisc_sim_pv, y = "Y", x = "R", time = "year", id = "id",
         t_rd = 3))
     Output
       Test of constant within-type confounding  [rd_trendcell()]
@@ -139,24 +139,24 @@
 # the main error and message texts
 
     Code
-      rddid(rddid_sim, y = "Yy", x = "R", time = "year", id = "id", t_rd = 3)
+      didisc(didisc_sim, y = "Yy", x = "R", time = "year", id = "id", t_rd = 3)
     Condition
-      Error in `rddid()`:
+      Error in `didisc()`:
       ! not a column of `data`: `y` = "Yy". The columns are id, year, R, V, W, Y.
 
 ---
 
     Code
-      rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
+      didisc(didisc_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
         comparisons = c(1, 7))
     Condition
-      Error in `rddid()`:
+      Error in `didisc()`:
       ! comparison period(s) 7 not in `year` (its periods: 1, 2, 3).
 
 ---
 
     Code
-      rd_typecont(rddid_sim, x = "R", time = "year", id = "id")
+      rd_typecont(didisc_sim, x = "R", time = "year", id = "id")
     Condition
       Error in `rd_typecont()`:
       ! no unit changes side of the cutoff between the periods, so every unit has the same type in every period and the test is not defined. The tests are for a running variable that varies over time (see ?rd_typecont).
@@ -164,17 +164,18 @@
 ---
 
     Code
-      rddid(rddid_sim, y = "Y", x = "R", time = "year", t_rd = 3, bwselect = "cct")$
+      didisc(didisc_sim, y = "Y", x = "R", time = "year", t_rd = 3, bwselect = "cct")$
         scheme
     Message
-      rddid(): no `id` given, so every row is treated as a different unit (repeated cross-section standard errors).
+      didisc(): no `id` given, so every row is treated as a different unit (repeated cross-section standard errors).
     Output
       [1] "cs"
 
 # print of rd_checks()
 
     Code
-      print(rd_checks(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3))
+      print(rd_checks(didisc_sim_pv, y = "Y", x = "R", time = "year", id = "id",
+        t_rd = 3))
     Output
       Tests of the identification assumptions  [rd_checks()]
       

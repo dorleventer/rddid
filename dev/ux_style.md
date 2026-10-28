@@ -1,9 +1,9 @@
-# rddid documentation style and vocabulary (UX sweep, 2026-10-08)
+# didisc documentation style and vocabulary (UX sweep, 2026-10-08)
 
 Shared brief for everyone writing user-facing text (roxygen, vignettes, README, pkgdown). The reader is an applied economist who knows `rdrobust` and wants an RD-DID estimate plus the validation tests. Numbers are never changed by documentation work; **in `R/*.R` files only lines starting with `#'` may be edited** (plus the removal of stale `# Manuscript ref:` header comments).
 
 ## The one-paragraph story (use it, in these words)
-A treatment of interest switches on at a cutoff of a running variable in one period, the **RD period**. A **confounding policy** switches at the same cutoff, in every period, so the jump in the outcome at the cutoff in the RD period mixes the treatment effect with the **confounding jump**. In the **comparison periods** the treatment of interest is uniform at the cutoff (nobody treated, or everybody treated), so, provided the treatment of interest has no anticipation or carry-over effects there (which the paper assumes), the jump there *is* the confounding jump. `rddid()` estimates the jump in every period by local-linear RD and subtracts a weighted average of the comparison-period jumps from the RD-period jump. How the weights are set is the **confounding-trend assumption**: constant (equal weights) or linear in time.
+A treatment of interest switches on at a cutoff of a running variable in one period, the **RD period**. A **confounding policy** switches at the same cutoff, in every period, so the jump in the outcome at the cutoff in the RD period mixes the treatment effect with the **confounding jump**. In the **comparison periods** the treatment of interest is uniform at the cutoff (nobody treated, or everybody treated), so, provided the treatment of interest has no anticipation or carry-over effects there (which the paper assumes), the jump there *is* the confounding jump. `didisc()` estimates the jump in every period by local-linear RD and subtracts a weighted average of the comparison-period jumps from the RD-period jump. How the weights are set is the **confounding-trend assumption**: constant (equal weights) or linear in time.
 
 Display equation (use once per document, define every symbol in words right after it):
 `ATT(t_RD) = D_{t_RD} - sum_t w_t D_t`, where `D_t` is the jump in the outcome at the cutoff in period `t` and `w_t` are the comparison-period weights.
@@ -36,7 +36,7 @@ Nulls of the four tests, in words (the print methods use exactly these):
 - homogeneous confounding: in each comparison period the confounding jump is the same for every type;
 - constant within-type confounding: within each type, the confounding jump is the same in every comparison period (`trend = "linear"`: moves linearly).
 
-When the running variable does not move (`rddid_sim`), the types are degenerate and the tests are not informative; show them on `rddid_sim_pv`.
+When the running variable does not move (`didisc_sim`), the types are degenerate and the tests are not informative; show them on `didisc_sim_pv`.
 
 ## Citation (use this everywhere)
 Leventer, D. and D. Nevo (2024). *Correcting Invalid Regression Discontinuity Designs Using Multiple Time-Period Data.* arXiv:2408.05847. Refer to parts of the paper by topic ("the paper's treatment of a time-varying running variable"), not by section number.
@@ -44,16 +44,16 @@ Leventer, D. and D. Nevo (2024). *Correcting Invalid Regression Discontinuity De
 Also: Calonico, S., M. D. Cattaneo and R. Titiunik (2014). Robust nonparametric confidence intervals for regression-discontinuity designs. *Econometrica* 82(6), 2295–2326.
 
 ## Rules for examples and vignettes
-- Every example uses `rddid_sim` (fixed running variable) or `rddid_sim_pv` (moving; for the tests), is at most 10 lines, runs in under 5 seconds, no `\dontrun`.
+- Every example uses `didisc_sim` (fixed running variable) or `didisc_sim_pv` (moving; for the tests), is at most 10 lines, runs in under 5 seconds, no `\dontrun`.
 - Name every argument in examples (`y = "Y"`, never positional beyond `data`).
-- Defaults are the headline: the first `rddid()` call in any document uses defaults except `t_rd`.
+- Defaults are the headline: the first `didisc()` call in any document uses defaults except `t_rd`.
 - Show output and read it: after a printout, say in one or two sentences what each line means.
 - Get started reaches the first estimate within its first 10 lines of code.
 - No LaTeX labels (`eq:`, `thm:`, `ass:`, `app:`, `prop:`), no `dev/` paths, no theorem numbers in titles.
 - Jargon is defined at first use, in the sentence that uses it.
-- Shared `@param` text: `data`, `y`, `x`, `time`, `id`, `t_rd`, `comparisons`, `estimand`, `c`, `h`, `b`, `kernel`, `scheme`, `bwselect`, `p`, `q`, `level` are documented once on `rddid()` and pulled in with `@inheritParams rddid` where the meaning is the same; where a function's option set differs (e.g. `bwselect` in the tests: `"cct"`/`"rot"`), document it locally.
+- Shared `@param` text: `data`, `y`, `x`, `time`, `id`, `t_rd`, `comparisons`, `estimand`, `c`, `h`, `b`, `kernel`, `scheme`, `bwselect`, `p`, `q`, `level` are documented once on `didisc()` and pulled in with `@inheritParams didisc` where the meaning is the same; where a function's option set differs (e.g. `bwselect` in the tests: `"cct"`/`"rot"`), document it locally.
 - British/American: American spelling ("minimize" is fine either way; be consistent within a file).
 
 ## Site structure (pkgdown)
-Navbar: Get started · Articles (Checking the identification assumptions · Plots of the estimate and the checks · Bandwidth rules and sampling schemes · How rddid() computes the estimate (for referees)) · Reference · GitHub. No changelog page: the package's `NEWS.md` lives in `inst/`, so it is installed (`news(package = "rddid")`) but pkgdown builds no page from it.
-Reference groups: **Package overview** (`rddid-package`) · **Estimate** (`rddid`, `summary.rddid`, `plot.rddid`, `rddid-methods`, `rddid-tidiers`, `reexports`) · **Check the assumptions** (`rd_checks`, the four tests, their `plot` methods, `plot_switchers`) · **Building blocks** (`rd_period`, `rd_bw_cct`) · **Data** (`rddid_sim`, `rddid_sim_pv`).
+Navbar: Get started · Articles (Checking the identification assumptions · Plots of the estimate and the checks · Bandwidth rules and sampling schemes · How didisc() computes the estimate (for referees)) · Reference · GitHub. No changelog page: the package's `NEWS.md` lives in `inst/`, so it is installed (`news(package = "didisc")`) but pkgdown builds no page from it.
+Reference groups: **Package overview** (`didisc-package`) · **Estimate** (`didisc`, `summary.didisc`, `plot.didisc`, `didisc-methods`, `didisc-tidiers`, `reexports`) · **Check the assumptions** (`rd_checks`, the four tests, their `plot` methods, `plot_switchers`) · **Building blocks** (`rd_period`, `rd_bw_cct`) · **Data** (`didisc_sim`, `didisc_sim_pv`).

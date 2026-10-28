@@ -34,7 +34,7 @@ With more than two periods the test itself uses the full sign pattern of the oth
 as the type; the picture shows the pairwise version, one pair of periods at a time.
 }
 \examples{
-tc <- rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
+tc <- rd_typecont(didisc_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
 if (requireNamespace("ggplot2", quietly = TRUE)) plot(tc, comparison = 1)
 }
 \seealso{

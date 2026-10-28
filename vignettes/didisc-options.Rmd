@@ -12,16 +12,16 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 fmt <- function(x, d = 3) formatC(x, format = "f", digits = d)
 ```
 
-This article covers the `rddid()` arguments that set the bandwidths, the main
+This article covers the `didisc()` arguments that set the bandwidths, the main
 bandwidth `h` (for the point estimate) and the pilot bandwidth `b` (for the bias
 correction), the standard error under the three sampling schemes, and the
 choice of the comparison-period weights. It uses
-`rddid_sim`, a simulated panel with RD period 3, comparison periods 1 and 2 and
-a true effect of 1; [Get started](rddid-estimation.html) introduces the data and
+`didisc_sim`, a simulated panel with RD period 3, comparison periods 1 and 2 and
+a true effect of 1; [Get started](didisc-estimation.html) introduces the data and
 the estimator.
 
 ```{r}
-library(rddid)
+library(didisc)
 ```
 
 ## Bandwidth rules
@@ -34,7 +34,7 @@ time order).
 ### The common bandwidth: `bwselect = "joint"` (the default)
 
 ```{r}
-fit_joint <- rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
+fit_joint <- didisc(didisc_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 fit_joint$bandwidth$h_by_period
 fit_joint$bandwidth$b_by_period
 ```
@@ -52,7 +52,7 @@ The pilot bandwidth of each period keeps that period's CCT ratio of pilot to
 main bandwidth. For year 3, from its own CCT pair:
 
 ```{r}
-y3  <- subset(rddid_sim, year == 3)
+y3  <- subset(didisc_sim, year == 3)
 bw3 <- rd_bw_cct(y3$Y, y3$R)
 fit_joint$bandwidth$h * bw3[["b"]] / bw3[["h"]]
 ```
@@ -62,7 +62,7 @@ which is the year-3 entry of `b_by_period` above.
 ### Per-period CCT bandwidths: `bwselect = "cct"`
 
 ```{r}
-fit_cct <- rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
+fit_cct <- didisc(didisc_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
                  bwselect = "cct")
 fit_cct$bandwidth$h_by_period
 ```
@@ -70,12 +70,12 @@ fit_cct$bandwidth$h_by_period
 Each period gets its own MSE-optimal bandwidth from `rdrobust::rdbwselect`
 (Calonico, Cattaneo and Titiunik, 2014), computed by `rd_bw_cct()`, ignoring the
 other periods. Each bandwidth is optimal for its own jump; the common bandwidth
-is optimal for the difference of jumps that `rddid()` reports.
+is optimal for the difference of jumps that `didisc()` reports.
 
 ### Fixed bandwidths
 
 ```{r}
-fit_fixed <- rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
+fit_fixed <- didisc(didisc_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
                    h = 0.3)
 fit_fixed$bandwidth$method
 fit_fixed$bandwidth$h_by_period
@@ -87,7 +87,7 @@ defaults to `h`.
 `regularize` (default `TRUE`) adds an `rdrobust`-style regularization term to
 the squared bias in the `"joint"` rule, so that a near-zero
 estimated curvature does not blow the bandwidth up; `reg_const` (default
-`r eval(formals(rddid)$reg_const)`) is its constant.
+`r eval(formals(didisc)$reg_const)`) is its constant.
 
 ### The rules side by side
 
@@ -128,22 +128,22 @@ The sampling scheme describes how the data were collected:
 - `"pv"`, panel, running variable varies over time: some units change side
   between periods (switchers).
 
-With `scheme = "auto"` (the default) `rddid()` reads the scheme off the data:
+With `scheme = "auto"` (the default) `didisc()` reads the scheme off the data:
 no `id`, or no unit observed in more than one period, gives `"cs"`; units
 observed in more than one period, each on the same side of the cutoff in every
 period, give `"pc"`; any unit on different sides in different periods gives
-`"pv"`. Without `id`, `rddid()` treats every row as a different unit and says
+`"pv"`. Without `id`, `didisc()` treats every row as a different unit and says
 so; a panel needs `id`.
 
-Three data sets, one per scheme: a repeated cross-section made from `rddid_sim`
-by keeping each unit in one year only, `rddid_sim` itself, and `rddid_sim_pv`,
+Three data sets, one per scheme: a repeated cross-section made from `didisc_sim`
+by keeping each unit in one year only, `didisc_sim` itself, and `didisc_sim_pv`,
 whose running variable drifts between years.
 
 ```{r}
-sim_cs <- rddid_sim[rddid_sim$id %% 3 == rddid_sim$year %% 3, ]  # each unit in one year
-fit_cs <- rddid(sim_cs, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
+sim_cs <- didisc_sim[didisc_sim$id %% 3 == didisc_sim$year %% 3, ]  # each unit in one year
+fit_cs <- didisc(sim_cs, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 fit_pc <- fit_joint
-fit_pv <- rddid(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
+fit_pv <- didisc(didisc_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 c(cs = fit_cs$scheme, pc = fit_pc$scheme, pv = fit_pv$scheme)
 ```
 
@@ -182,7 +182,7 @@ stopifnot(
 - **Cross-section data.** No unit appears in two periods, so the jumps of
   different periods are independent and the three formulas coincide
   (`r fmt(se(fit_cs, "se_cs"))`).
-- **Panel data, running variable fixed** (`rddid_sim`). Every unit enters every
+- **Panel data, running variable fixed** (`didisc_sim`). Every unit enters every
   year's fit, on the same side of the cutoff. Its unit effect makes the yearly
   jumps positively correlated, and because the comparison jumps are subtracted,
   that correlation lowers the variance. The panel standard error is
@@ -190,7 +190,7 @@ stopifnot(
   correlation, is `r fmt(se(fit_pc, "se_cs"))`. With nobody
   changing side, the formula for a moving running variable reduces to the one
   for a fixed running variable.
-- **Panel data, running variable varies** (`rddid_sim_pv`). Units move, so a
+- **Panel data, running variable varies** (`didisc_sim_pv`). Units move, so a
   unit can be above the cutoff in one year and below it in another. The
   cross-period covariances are then small (in large samples they vanish
   relative to the variances); here the three standard errors range from
@@ -203,10 +203,10 @@ standard error is reported and, under the `"joint"` (default) bandwidth rule,
 it also enters the bandwidth: this rule weighs bias against
 the asymptotic variance of the estimate, and that variance
 has a cross-period covariance term under `"pc"` only (the term is zero under
-`"cs"` and negligible in large samples under `"pv"`). On `rddid_sim`:
+`"cs"` and negligible in large samples under `"pv"`). On `didisc_sim`:
 
 ```{r}
-fit_as_cs <- rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
+fit_as_cs <- didisc(didisc_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
                    scheme = "cs")
 rbind(pc = c(h = fit_pc$bandwidth$h, coef(fit_pc)),
       cs = c(h = fit_as_cs$bandwidth$h, coef(fit_as_cs)))
@@ -222,7 +222,7 @@ only the reported standard error.
 Under `trend = "constant"` any comparison-period weights that sum to one remove the
 confounding jump, and under `"linear"` any weights that also extrapolate the
 comparison periods to the RD period do. All of them estimate the same effect;
-they differ in precision. By default (`weighting = "ols"`) `rddid()` uses equal
+they differ in precision. By default (`weighting = "ols"`) `didisc()` uses equal
 weights under `"constant"` and the least-squares line under `"linear"`.
 `weighting = "min_variance"` uses the minimum-variance weights instead: the
 allowed weights that make the variance of the estimate smallest, computed from
@@ -232,8 +232,8 @@ bias-corrected (robust) estimate gets its own, from the variances and
 covariances of the bias-corrected jumps.
 
 ```{r}
-fit_ols <- rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
-fit_mv  <- rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
+fit_ols <- didisc(didisc_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
+fit_mv  <- didisc(didisc_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
                  weighting = "min_variance")
 fit_mv$weights                      # the conventional estimate's weights
 fit_mv$weights_detail$weights_bc    # the bias-corrected estimate's weights
@@ -247,7 +247,7 @@ The conventional weights on years 1 and 2 are `r fmt(fit_mv$weights[[1]])` and
 `r fmt(fit_mv$weights_detail$weights_bc[[1]])` and
 `r fmt(fit_mv$weights_detail$weights_bc[[2]])`; the standard errors barely
 move. In
-`rddid_sim` the two comparison years are equally noisy (their jumps have the
+`didisc_sim` the two comparison years are equally noisy (their jumps have the
 same variance), so the weights stay near one half. The tilt toward year 2 comes
 from the panel: the same units appear every year, and the estimated year-2 jump
 covaries more with the year-3 jump than the year-1 jump does, so weighting it
