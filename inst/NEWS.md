@@ -1,3 +1,9 @@
+# didisc 0.4.0.9005
+
+* The documentation and printed output call the design and its estimate "diff-in-disc"
+  (difference-in-discontinuities), as the paper does, in place of "RD-DID". `print()` of a fit
+  now starts "Diff-in-disc estimate of the ATT ...". Estimates are unchanged.
+
 # didisc 0.4.0.9004
 
 * The package is renamed from rddid to didisc, after the name the paper gives the design

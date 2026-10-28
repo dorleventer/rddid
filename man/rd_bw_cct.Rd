@@ -48,9 +48,9 @@ confidence intervals for regression-discontinuity designs. \emph{Econometrica}
 82(6), 2295-2326.
 }
 \seealso{
-Other RD-DID estimation: 
+Other diff-in-disc estimation: 
 \code{\link{didisc}()},
 \code{\link{plot.didisc}()},
 \code{\link{rd_period}()}
 }
-\concept{RD-DID estimation}
+\concept{diff-in-disc estimation}

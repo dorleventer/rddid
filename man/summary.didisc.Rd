@@ -3,7 +3,7 @@
 \name{summary.didisc}
 \alias{summary.didisc}
 \alias{print.summary.didisc}
-\title{Summary of an RD-DID fit}
+\title{Summary of a diff-in-disc fit}
 \usage{
 \method{summary}{didisc}(object, ...)
 

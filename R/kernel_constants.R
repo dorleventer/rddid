@@ -4,7 +4,7 @@
 # Labels such as eq:... in the notes below point into the paper's Appendix B; see dev/appB_map.md.
 
 # Kernel constants of Appendix B.3 ("Single-period asymptotics" and
-# "Additional definitions") of the paper (Leventer & Nevo, RD-DID).
+# "Additional definitions") of the paper (Leventer & Nevo, diff-in-disc).
 #
 # Implements, for r_p(u) = [1, u, ..., u^p]' and a kernel K supported on
 # [-1, 1], with side "+" integrating over [0, 1] and side "-" over [-1, 0]:

@@ -1,8 +1,8 @@
 ---
-title: "Get started: estimate an RD-DID effect"
+title: "Get started: estimate a diff-in-disc effect"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Get started: estimate an RD-DID effect}
+  %\VignetteIndexEntry{Get started: estimate a diff-in-disc effect}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -74,7 +74,7 @@ stopifnot(  # the worked arithmetic below adds up
 
 Line by line:
 
-- **`RD-DID estimate of the ATT in period 3`**: the estimand and the RD period
+- **`Diff-in-disc estimate of the ATT in period 3`**: the estimand and the RD period
   (`t_rd = 3`). The ATT is the effect of the treatment on the units just above
   the cutoff, which are the ones treated in the RD period. If everybody is
   treated in the comparison periods, `estimand = "atu"` labels the same numbers
@@ -93,7 +93,7 @@ Line by line:
   shows how.
 - **`Bandwidth: common h`**: the default rule, `bwselect = "joint"`, uses one
   main bandwidth `h` in every period, chosen to minimize the asymptotic mean
-  squared error of the RD-DID estimate. **`Pilot bandwidth b (period = value)`**
+  squared error of the diff-in-disc estimate. **`Pilot bandwidth b (period = value)`**
   lists the bandwidth of the bias correction in each period, in time order.
 - **The two rows.** `Conventional` is the local-linear estimate with its
   conventional standard error. `Robust (bias-corrected)` is the bias-corrected
@@ -249,7 +249,7 @@ than the one at hand. The tests use two versions:
 With two periods, both versions are the unit's side of the cutoff in the other
 period.
 
-The RD-DID estimate identifies the ATT when the type distribution is
+The diff-in-disc estimate identifies the ATT when the type distribution is
 continuous at the cutoff and the confounding jump within each type is constant
 over time, and in addition either the type composition is stable across periods
 or the confounding jump is the same for every type (Leventer and Nevo, 2024).

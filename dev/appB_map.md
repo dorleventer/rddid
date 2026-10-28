@@ -1,7 +1,7 @@
 # didisc ↔ Appendix B map
 
 **Purpose.** One row per object the package computes that has a definition in the paper
-(Leventer & Nevo, RD-DID; `rd-did/writing/main_revamp/main.tex`, Section 5 and Appendix B).
+(Leventer & Nevo, diff-in-disc; `rd-did/writing/main_revamp/main.tex`, Section 5 and Appendix B).
 Each row gives the paper's exact expression, the package symbol that implements it, the
 scaling/convention difference (if any), the audit status, and the test that pins it.
 The paper is the source of truth; the package follows.

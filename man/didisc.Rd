@@ -99,7 +99,7 @@ either way; see "Targeting the ATU".}
 
 \item{bwselect}{the bandwidth rule, used when \code{h} is not given: \code{"joint"}
 (default; the common bandwidth, one \code{h} for every period, chosen to minimize
-the asymptotic mean squared error of the RD-DID estimate), \code{"cct"}
+the asymptotic mean squared error of the diff-in-disc estimate), \code{"cct"}
 (per-period CCT bandwidths: each period's own MSE-optimal bandwidth of
 Calonico, Cattaneo and Titiunik, from \code{\link[=rd_bw_cct]{rd_bw_cct()}}). See "Bandwidth
 rules".}
@@ -300,7 +300,7 @@ three schemes, at the bandwidths actually used, are in \code{estimates} and in
 \subsection{Bandwidth rules}{
 \itemize{
 \item \code{"joint"} (default), the common bandwidth: one \code{h} in every period, chosen
-to minimize the asymptotic mean squared error of the RD-DID estimate, not
+to minimize the asymptotic mean squared error of the diff-in-disc estimate, not
 of each period's jump, so the biases of the period jumps can partly cancel.
 \item \code{"cct"}, per-period CCT bandwidths: each period gets its own MSE-optimal
 bandwidth from \code{\link[rdrobust:rdbwselect]{rdrobust::rdbwselect()}}, as if it were a stand-alone RD
@@ -330,7 +330,7 @@ computes differently under \code{"atu"}.
 \subsection{Technical details}{
 
 The \code{"joint"} rule is AMSE-optimal: it minimizes the asymptotic mean squared
-error (AMSE) of the RD-DID estimate over a common \code{h}, in the way
+error (AMSE) of the diff-in-disc estimate over a common \code{h}, in the way
 \pkg{rdrobust} chooses a bandwidth for one period. Each period's variance
 constant, under \code{"pc"} the covariances between periods, and the design
 moment in each period's bias constant are estimated at one rule-of-thumb
@@ -386,9 +386,9 @@ confidence intervals for regression-discontinuity designs. \emph{Econometrica}
 \code{\link[=rd_typecont]{rd_typecont()}}, \code{\link[=rd_compstable]{rd_compstable()}}, \code{\link[=rd_homog]{rd_homog()}} and \code{\link[=rd_trendcell]{rd_trendcell()}}; the
 example data \link{didisc_sim} and \link{didisc_sim_pv}.
 
-Other RD-DID estimation: 
+Other diff-in-disc estimation: 
 \code{\link{plot.didisc}()},
 \code{\link{rd_bw_cct}()},
 \code{\link{rd_period}()}
 }
-\concept{RD-DID estimation}
+\concept{diff-in-disc estimation}

@@ -1,4 +1,4 @@
-# bandwidth_joint.R -- the bandwidth rules that target the RD-DID estimate itself:
+# bandwidth_joint.R -- the bandwidth rules that target the diff-in-disc estimate itself:
 # .bw_constants() estimates the curvature at each period's own CCT pilot, and the variance
 # constants and the bias design moments at one rule-of-thumb bandwidth shared by every period
 # (.bw_rot());
@@ -7,7 +7,7 @@
 # paper's Appendix B; the code-to-paper map is dev/appB_map.md (developer material, not shipped).
 
 # Original file header:
-# Bandwidth selection for the aggregate RD-DID estimator.
+# Bandwidth selection for the aggregate diff-in-disc estimator.
 #
 # Two modes, matching Section 5.4 (sec:est-bw) and Appendix B.4 (app:est-bw) of
 # Leventer and Nevo; the code <-> equation map is dev/appB_map.md (section 2.5).

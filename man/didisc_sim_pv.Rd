@@ -3,7 +3,7 @@
 \docType{data}
 \name{didisc_sim_pv}
 \alias{didisc_sim_pv}
-\title{Simulated RD-DID panel (running variable moves over time)}
+\title{Simulated diff-in-disc panel (running variable moves over time)}
 \format{
 A data frame with 3,000 rows and the same 6 columns as \link{didisc_sim}.
 }

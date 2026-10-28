@@ -26,7 +26,7 @@ from the units at the cutoff in a comparison period, and the difference of the
 two jumps can mix the treatment effect with that difference in who is at the
 cutoff. A unit's **type** records its side of the cutoff in other periods; the
 table in [Get started](didisc-estimation.html#when-the-running-variable-moves-over-time)
-gives the two versions the tests use. The RD-DID estimate identifies the ATT when
+gives the two versions the tests use. The diff-in-disc estimate identifies the ATT when
 
 1. **type continuity** holds,
 2. **constant within-type confounding** holds, and
@@ -87,7 +87,7 @@ construction, so a p-value below 0.05 would be a false rejection.
 
 **If it rejects:** units sort around the cutoff according to their side in other
 periods, so the jump in the outcome partly reflects a jump in who the units are.
-The RD-DID estimate can then be biased, whatever the other tests say.
+The diff-in-disc estimate can then be biased, whatever the other tests say.
 
 ## Composition stability: `rd_compstable()`
 

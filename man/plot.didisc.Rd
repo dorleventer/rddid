@@ -2,7 +2,7 @@
 % Please edit documentation in R/plots.R
 \name{plot.didisc}
 \alias{plot.didisc}
-\title{Plot the per-period RD fits behind an RD-DID estimate}
+\title{Plot the per-period RD fits behind a diff-in-disc estimate}
 \usage{
 \method{plot}{didisc}(x, bins = 20L, ...)
 }
@@ -22,7 +22,7 @@ saved with \code{ggplot2::ggsave()}.
 One panel per period, in time order: the outcome averaged within \code{bins} equal-width bins
 of the running variable on each side of the cutoff, and the two local-linear fits of that
 period drawn over their bandwidth on each side. The jump between the two lines at the cutoff
-is the period's discontinuity \eqn{D_t}; \code{summary()} lists every \eqn{D_t} and the RD-DID
+is the period's discontinuity \eqn{D_t}; \code{summary()} lists every \eqn{D_t} and the diff-in-disc
 estimate they combine into. Green panels are comparison periods, pink the RD period.
 }
 \examples{
@@ -30,9 +30,9 @@ fit <- didisc(didisc_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 if (requireNamespace("ggplot2", quietly = TRUE)) plot(fit)
 }
 \seealso{
-Other RD-DID estimation: 
+Other diff-in-disc estimation: 
 \code{\link{didisc}()},
 \code{\link{rd_bw_cct}()},
 \code{\link{rd_period}()}
 }
-\concept{RD-DID estimation}
+\concept{diff-in-disc estimation}

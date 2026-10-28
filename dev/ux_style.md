@@ -1,6 +1,6 @@
 # didisc documentation style and vocabulary (UX sweep, 2026-10-08)
 
-Shared brief for everyone writing user-facing text (roxygen, vignettes, README, pkgdown). The reader is an applied economist who knows `rdrobust` and wants an RD-DID estimate plus the validation tests. Numbers are never changed by documentation work; **in `R/*.R` files only lines starting with `#'` may be edited** (plus the removal of stale `# Manuscript ref:` header comments).
+Shared brief for everyone writing user-facing text (roxygen, vignettes, README, pkgdown). The reader is an applied economist who knows `rdrobust` and wants a diff-in-disc estimate plus the validation tests. Numbers are never changed by documentation work; **in `R/*.R` files only lines starting with `#'` may be edited** (plus the removal of stale `# Manuscript ref:` header comments).
 
 ## The one-paragraph story (use it, in these words)
 A treatment of interest switches on at a cutoff of a running variable in one period, the **RD period**. A **confounding policy** switches at the same cutoff, in every period, so the jump in the outcome at the cutoff in the RD period mixes the treatment effect with the **confounding jump**. In the **comparison periods** the treatment of interest is uniform at the cutoff (nobody treated, or everybody treated), so, provided the treatment of interest has no anticipation or carry-over effects there (which the paper assumes), the jump there *is* the confounding jump. `didisc()` estimates the jump in every period by local-linear RD and subtracts a weighted average of the comparison-period jumps from the RD-period jump. How the weights are set is the **confounding-trend assumption**: constant (equal weights) or linear in time.
@@ -21,7 +21,7 @@ Display equation (use once per document, define every symbol in words right afte
 | `scheme = "pc"` | panel, running variable fixed over time: the same units, each on the same side of the cutoff in every period | time-constant |
 | `scheme = "pv"` | panel, running variable varies over time: some units change side between periods ("switchers") | time-varying |
 | what the scheme does | sets which standard error is reported; under `"joint"` it also enters the common bandwidth (so the estimate); with a fixed `h` or `"cct"` the estimate is unchanged | "only changes the s.e." |
-| `bwselect = "joint"` (default) | the common bandwidth: one `h` for every period, chosen to minimise the asymptotic mean squared error of the RD-DID estimate | AMSE-optimal (only in the Details) |
+| `bwselect = "joint"` (default) | the common bandwidth: one `h` for every period, chosen to minimise the asymptotic mean squared error of the diff-in-disc estimate | AMSE-optimal (only in the Details) |
 | `bwselect = "cct"` | per-period CCT bandwidths: each period's own MSE-optimal bandwidth from `rdrobust::rdbwselect` (Calonico, Cattaneo and Titiunik, 2014) | |
 | `h`, `b` | the main bandwidth (point estimate) and the pilot bandwidth (bias correction) | |
 | `weighting = "min_variance"` | the minimum-variance weights: the comparison-period weights the confounding-trend assumption allows that make the variance of the estimate smallest | GLS weights, MV, optimal weights |

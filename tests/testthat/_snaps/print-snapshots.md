@@ -3,11 +3,11 @@
     Code
       print(fit)
     Output
-      RD-DID estimate of the ATT in period 3
+      Diff-in-disc estimate of the ATT in period 3
         Comparison periods: 1, 2   (constant confounding trend)
         Comparison weights: 1: 0.500, 2: 0.500
         Sampling scheme: panel, no unit changes side of the cutoff (detected)
-        Bandwidth: common h = 0.2694 (rule "joint": one bandwidth, chosen for the RD-DID estimate)
+        Bandwidth: common h = 0.2694 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)
         Pilot bandwidth b (period = value): 1 = 0.4136, 2 = 0.3901, 3 = 0.3984
       
                                    Estimate  Std. err.       z  p-value   95% CI
@@ -21,11 +21,11 @@
     Code
       print(summary(fit))
     Output
-      RD-DID estimate of the ATT in period 3
+      Diff-in-disc estimate of the ATT in period 3
         Comparison periods: 1, 2   (constant confounding trend)
         Comparison weights: 1: 0.500, 2: 0.500
         Sampling scheme: panel, no unit changes side of the cutoff (detected)
-        Bandwidth: common h = 0.2694 (rule "joint": one bandwidth, chosen for the RD-DID estimate)
+        Bandwidth: common h = 0.2694 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)
         Pilot bandwidth b (period = value): 1 = 0.4136, 2 = 0.3901, 3 = 0.3984
       
                                    Estimate  Std. err.       z  p-value   95% CI

@@ -86,7 +86,7 @@
 #'
 #' Among the weights the confounding-trend assumption admits (they sum to one; under
 #' `"linear"` they also extrapolate the comparison periods to the RD period), the ones that
-#' minimize the variance of the RD-DID estimate. The variances and covariances are those of
+#' minimize the variance of the diff-in-disc estimate. The variances and covariances are those of
 #' the conventional per-period jumps under `scheme`, the same objects the standard errors
 #' use. Closed form: w = Xi^{-1} [xi + L'(L Xi^{-1} L')^{-1}(l - L Xi^{-1} xi)], with Xi the
 #' covariance matrix of the comparison jumps, xi their covariances with the RD-period jump and

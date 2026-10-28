@@ -3,7 +3,7 @@
 \docType{data}
 \name{didisc_sim}
 \alias{didisc_sim}
-\title{Simulated RD-DID panel (running variable fixed over time)}
+\title{Simulated diff-in-disc panel (running variable fixed over time)}
 \format{
 A data frame with 3,000 rows (one per unit-year) and 6 columns:
 \describe{

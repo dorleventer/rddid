@@ -42,7 +42,7 @@
 #' confidence intervals for regression-discontinuity designs. *Econometrica*
 #' 82(6), 2295-2326.
 #'
-#' @family RD-DID estimation
+#' @family diff-in-disc estimation
 #'
 #' @examples
 #' # each year of didisc_sim gets its own bandwidths (what bwselect = "cct" uses)
