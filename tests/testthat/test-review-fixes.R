@@ -85,9 +85,9 @@ test_that("summary(): time order for text periods; the robust coefficients under
   expect_identical(summary(g)$per_period$period, c("early", "mid", "late"))
   mv <- fit(t_rd = 3, weighting = "min_variance")
   tab <- summary(mv)$per_period
-  expect_equal(sum(tab$coef_bc * tab$jump_bc), mv$estimates["Robust", "est"], tolerance = 1e-12)
-  expect_equal(sum(tab$coef * tab$jump), mv$estimates["Conventional", "est"], tolerance = 1e-12)
-  expect_null(summary(fit(t_rd = 3))$per_period$coef_bc)
+  expect_equal(sum(tab$weight_bc * tab$jump_bc), mv$estimates["Robust", "est"], tolerance = 1e-12)
+  expect_equal(sum(tab$weight * tab$jump), mv$estimates["Conventional", "est"], tolerance = 1e-12)
+  expect_null(summary(fit(t_rd = 3))$per_period$weight_bc)
 })
 
 test_that("tidy() of a test: df only for Wald statistics; test and assumption columns", {

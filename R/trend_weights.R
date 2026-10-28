@@ -3,7 +3,7 @@
 # period; numeric: as given), the RD-period weights of an aggregate over several RD periods,
 # and the minimum-variance weights. Used by didisc().
 
-#' Period coefficients from a trend / weighting scheme
+#' Comparison-period weights from a trend / weighting scheme
 #' @keywords internal
 #' @noRd
 .didisc_weights <- function(weights, comps, t_rd) {

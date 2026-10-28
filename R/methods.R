@@ -9,8 +9,8 @@
 
 #' Summary of a diff-in-disc fit
 #'
-#' `summary()` of an [didisc()] object adds, to what `print()` shows, a per-period table (the
-#' local-linear jump in every period with its bandwidths and sample size, and its coefficient
+#' `summary()` of a [didisc()] object adds, to what `print()` shows, a per-period table (the
+#' local-linear jump in every period with its bandwidths and sample size, and its signed weight
 #' in the estimate) and the standard error of the estimate under each of the three sampling
 #' schemes.
 #'
@@ -20,12 +20,12 @@
 #' @param ... unused.
 #' @return `summary()` returns an object of class `"summary.didisc"`: a list with `fit` (the
 #'   object) and `per_period`, a data frame with one row per period in time order and columns
-#'   `period`, `role` (`"RD"` or `"comparison"`), `coef` (the period's coefficient in the
+#'   `period`, `role` (`"RD"` or `"comparison"`), `weight` (the period's signed weight in the
 #'   conventional estimate: the RD period's weight in `rd_weights`, 1 for a single RD period,
 #'   and minus its weight for a comparison period), `n`, `h`, `b`, `jump` and `se` (the
 #'   conventional local-linear jump and its standard error), `jump_bc`, `se_rb`
 #'   (bias-corrected jump, robust standard error) and, under `weighting = "min_variance"`,
-#'   `coef_bc` (the coefficients of the bias-corrected estimate, which has its own weights).
+#'   `weight_bc` (the signed weights of the bias-corrected estimate, which has its own weights).
 #' @examples
 #' fit <- didisc(didisc_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 #' summary(fit)
@@ -42,18 +42,18 @@ print.summary.didisc <- function(x, digits = 4, ...) {
   fit <- x$fit
   print(fit, digits = digits, hint = FALSE)
   tab <- x$per_period
-  own_bc <- !is.null(tab$coef_bc)              # the bias-corrected estimate has its own weights
-  cat("\n  Per-period local-linear fits (Conventional = sum of coef x jump; Robust = sum of",
-      if (own_bc) "coef (bc) x jump (bc)):\n" else "coef x jump (bc)):\n")
+  own_bc <- !is.null(tab$weight_bc)              # the bias-corrected estimate has its own weights
+  cat("\n  Per-period local-linear fits (Conventional = sum of weight x jump; Robust = sum of",
+      if (own_bc) "weight (bc) x jump (bc)):\n" else "weight x jump (bc)):\n")
   fmt  <- function(v, d = digits) formatC(v, digits = d, format = "f")
   fmtc <- function(v) formatC(v, digits = 3, format = "f")
-  cat(sprintf("  %-8s %-11s %7s %6s %8s %8s %10s %9s%s %10s %9s\n", "period", "role", "coef",
-              "n", "h", "b", "jump", "s.e.", if (own_bc) sprintf(" %9s", "coef (bc)") else "",
+  cat(sprintf("  %-8s %-11s %7s %6s %8s %8s %10s %9s%s %10s %9s\n", "period", "role", "weight",
+              "n", "h", "b", "jump", "s.e.", if (own_bc) sprintf(" %11s", "weight (bc)") else "",
               "jump (bc)", "s.e. (rb)"))
   for (i in seq_len(nrow(tab)))
     cat(sprintf("  %-8s %-11s %7s %6d %8s %8s %10s %9s%s %10s %9s\n", tab$period[i], tab$role[i],
-                fmtc(tab$coef[i]), tab$n[i], fmt(tab$h[i]), fmt(tab$b[i]), fmt(tab$jump[i]),
-                fmt(tab$se[i]), if (own_bc) sprintf(" %9s", fmtc(tab$coef_bc[i])) else "",
+                fmtc(tab$weight[i]), tab$n[i], fmt(tab$h[i]), fmt(tab$b[i]), fmt(tab$jump[i]),
+                fmt(tab$se[i]), if (own_bc) sprintf(" %11s", fmtc(tab$weight_bc[i])) else "",
                 fmt(tab$jump_bc[i]), fmt(tab$se_rb[i])))
   e <- fit$estimates
   cat("\n  Robust s.e. under each sampling scheme (the printed one is for \"", fit$scheme,
@@ -63,7 +63,7 @@ print.summary.didisc <- function(x, digits = 4, ...) {
   invisible(x)
 }
 
-#' Per-period table behind summary.didisc(): role, coefficient, n, bandwidths, jumps
+#' Per-period table behind summary.didisc(): role, weight, n, bandwidths, jumps
 #' @keywords internal
 #' @noRd
 .didisc_period_table <- function(x) {
@@ -72,7 +72,7 @@ print.summary.didisc <- function(x, digits = 4, ...) {
   out <- data.frame(
     period  = per,
     role    = ifelse(per %in% as.character(x$t_rd), "RD", "comparison"),
-    coef    = unname(x$coef[per]),
+    weight  = unname(x$period_weights[per]),
     n       = vapply(f, function(z) as.integer(z$n), integer(1)),
     h       = vapply(f, function(z) unname(z$h), numeric(1)),
     b       = vapply(f, function(z) unname(z$b), numeric(1)),
@@ -81,14 +81,14 @@ print.summary.didisc <- function(x, digits = 4, ...) {
     jump_bc = vapply(f, function(z) z$D_bc, numeric(1)),
     se_rb   = vapply(f, function(z) sqrt(z$V_D_bc), numeric(1)),
     row.names = NULL, stringsAsFactors = FALSE)
-  if (!is.null(x$coef_bc) && !isTRUE(all.equal(x$coef_bc, x$coef)))
-    out$coef_bc <- unname(x$coef_bc[per])
+  if (!is.null(x$period_weights_bc) && !isTRUE(all.equal(x$period_weights_bc, x$period_weights)))
+    out$weight_bc <- unname(x$period_weights_bc[per])
   out
 }
 
 #' Coefficients, confidence intervals and sample size of a diff-in-disc fit
 #'
-#' `coef()` returns the two estimates of an [didisc()] fit, `Conventional` (local-linear) and
+#' `coef()` returns the two estimates of a [didisc()] fit, `Conventional` (local-linear) and
 #' `Robust` (bias-corrected); `confint()` their confidence intervals under the fit's sampling
 #' scheme; `nobs()` the number of observations used.
 #'

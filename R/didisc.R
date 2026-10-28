@@ -24,7 +24,7 @@
 #' estimated by a local-linear RD on that period's observations;
 #' \eqn{t_{\mathrm{RD}}}{t_RD} is the RD period (`t_rd`); the sum runs over the
 #' comparison periods; and \eqn{w_t} is the weight of comparison period
-#' \eqn{t}. `summary()` lists every \eqn{D_t} with its coefficient in the sum.
+#' \eqn{t}. `summary()` lists every \eqn{D_t} with its signed weight in the sum.
 #'
 #' ## Several RD periods
 #'
@@ -137,7 +137,7 @@
 #' `bandwidth$h_rot` in the result). The other factor of the bias constant, the
 #' curvature of the conditional mean, is estimated from a fit at that period's
 #' own CCT pilot bandwidth, as \pkg{rdrobust} does. These are combined,
-#' with the coefficients of the sum above, into the AMSE, which is then
+#' with the signed weights of the sum above, into the AMSE, which is then
 #' minimized in closed form. Each period's pilot bandwidth keeps that period's
 #' CCT ratio \eqn{b/h}{b/h}. Nothing in the rule depends on which period is the
 #' RD period, so an aggregate of several RD periods gets the same bandwidth
@@ -247,12 +247,12 @@
 #'       statistic and p-value under `scheme`) and `se_cs`, `se_pc`, `se_pv`
 #'       (that row's standard error under each sampling scheme, at the same
 #'       bandwidths).}
-#'     \item{`coef`}{named numeric vector, the coefficient of each period's jump
-#'       in the estimate: \eqn{\phi_t}{phi_t} for each RD period (1 for a single
+#'     \item{`period_weights`}{named numeric vector, the signed weight of each period's
+#'       jump in the estimate: \eqn{\phi_t}{phi_t} for each RD period (1 for a single
 #'       RD period), minus its (aggregated) weight for each comparison period.
 #'       [coef()] returns the estimate itself.}
-#'     \item{`coef_bc`}{the same for the bias-corrected estimate; it differs
-#'       from `coef` only under `weighting = "min_variance"`.}
+#'     \item{`period_weights_bc`}{the same for the bias-corrected estimate; it
+#'       differs from `period_weights` only under `weighting = "min_variance"`.}
 #'     \item{`weights`}{named numeric vector of the comparison-period weights;
 #'       with several RD periods, the aggregated weights
 #'       \eqn{w^\phi_s}{w^phi_s}; under `weighting = "min_variance"`, those of
@@ -379,12 +379,12 @@ didisc <- function(data, y, x, time, id = NULL, t_rd,
                                else sort(periods))   # time order, for printouts and plots
   plist   <- .didisc_period_frames(data, y, x, id, time_col, periods)
 
-  # ---- the estimator's coefficients: phi_t on each RD period (1 for a single one), minus the
+  # ---- the signed period weights: phi_t on each RD period (1 for a single one), minus the
   # aggregated weight w^phi_t0 = sum_t phi_t w_t0(t) on each comparison period (Cor. cor:agg)
   rd_w <- .didisc_rd_weights(rd_weights, t_rd)
   weights_by_target <- .didisc_weights_by_target(trend, comparisons, t_rd)
   comp_weights <- colSums(rd_w * weights_by_target)
-  period_coef  <- c(rd_w, -comp_weights)
+  period_weights  <- c(rd_w, -comp_weights)
   if (weighting == "min_variance") {
     if (is.numeric(trend))
       .abort("`weighting = \"min_variance\"` chooses the comparison weights and a numeric `trend` ",
@@ -409,7 +409,7 @@ didisc <- function(data, y, x, time, id = NULL, t_rd,
     rd_period(plist[[k]]$y, plist[[k]]$x, h = bw$bws[[k]]["h"], b = bw$bws[[k]]["b"],
               id = plist[[k]]$id, c = cutoff, p = p, q = q, kernel = kernel)),
     as.character(periods))
-  bw <- .didisc_bandwidths(plist, period_coef, t_rd, periods, use_scheme, h, b, bwselect,
+  bw <- .didisc_bandwidths(plist, period_weights, t_rd, periods, use_scheme, h, b, bwselect,
                           cutoff, p, q, kernel, regularize, reg_const)
   fits <- fit_all(bw)
 
@@ -417,7 +417,7 @@ didisc <- function(data, y, x, time, id = NULL, t_rd,
   # under "joint" the common bandwidth is then chosen again with them -- three steps, no
   # iteration, as the weights do not depend on a common bandwidth to first order
   weights_detail <- NULL
-  period_coef_bc <- NULL                       # the bias-corrected row's coefficients, if different
+  period_weights_bc <- NULL                       # the bias-corrected row's weights, if different
   if (weighting == "min_variance") {
     # the unscaled weights of the single RD period (setNames: [1, ] drops the names of a 1 x 1 matrix)
     w_pilot <- stats::setNames(as.numeric(weights_by_target[1, ]), colnames(weights_by_target))
@@ -430,24 +430,24 @@ didisc <- function(data, y, x, time, id = NULL, t_rd,
                            weights_bc = rd_w[[1]] * mv_bc$w, Xi_bc = mv_bc$Xi, xi_bc = mv_bc$xi)
     comp_weights <- rd_w[[1]] * mv$w
     weights_by_target[1, ] <- mv$w
-    period_coef    <- c(rd_w, -comp_weights)
-    period_coef_bc <- c(rd_w, -rd_w[[1]] * mv_bc$w)
+    period_weights    <- c(rd_w, -comp_weights)
+    period_weights_bc <- c(rd_w, -rd_w[[1]] * mv_bc$w)
     if (is.null(h) && bwselect == "joint" && !mv$pinned) {
-      bw <- .didisc_bandwidths(plist, period_coef, t_rd, periods, use_scheme, h, b, bwselect,
+      bw <- .didisc_bandwidths(plist, period_weights, t_rd, periods, use_scheme, h, b, bwselect,
                               cutoff, p, q, kernel, regularize, reg_const)
       fits <- fit_all(bw)
     }
   }
 
   # ---- aggregate: estimate and variance under every scheme, conventional and bias-corrected
-  agg_conv <- .aggregate_fits(fits, period_coef, bc = FALSE)
-  if (is.null(period_coef_bc)) period_coef_bc <- period_coef
-  agg_bc   <- .aggregate_fits(fits, period_coef_bc, bc = TRUE)
+  agg_conv <- .aggregate_fits(fits, period_weights, bc = FALSE)
+  if (is.null(period_weights_bc)) period_weights_bc <- period_weights
+  agg_bc   <- .aggregate_fits(fits, period_weights_bc, bc = TRUE)
 
   structure(list(
     estimates = .didisc_estimate_table(agg_conv, agg_bc, use_scheme, level),
-    coef = period_coef, weights = comp_weights,
-    rd_weights = rd_w, weights_by_target = weights_by_target, coef_bc = period_coef_bc,
+    period_weights = period_weights, weights = comp_weights,
+    rd_weights = rd_w, weights_by_target = weights_by_target, period_weights_bc = period_weights_bc,
     weights_type = if (is.numeric(trend)) "custom" else trend,
     estimand = estimand,
     t_rd = t_rd, comparisons = comparisons, period_order = period_order,
@@ -491,7 +491,7 @@ didisc <- function(data, y, x, time, id = NULL, t_rd,
 #'   per-period `h_by_period` / `b_by_period`).
 #' @keywords internal
 #' @noRd
-.didisc_bandwidths <- function(plist, period_coef, t_rd, periods, use_scheme, h, b, bwselect,
+.didisc_bandwidths <- function(plist, period_weights, t_rd, periods, use_scheme, h, b, bwselect,
                               cutoff, p, q, kernel, regularize, reg_const) {
   labels <- as.character(periods)
   if (!is.null(h)) {
@@ -502,7 +502,7 @@ didisc <- function(data, y, x, time, id = NULL, t_rd,
     bws  <- .bw_cct(plist, c = cutoff, p = p, q = q, kernel = kernel)
     info <- list(method = "cct", bws = bws)
   } else {
-    jb <- .bw_joint(plist, period_coef, as.character(t_rd), scheme = use_scheme,
+    jb <- .bw_joint(plist, period_weights, as.character(t_rd), scheme = use_scheme,
                     c = cutoff, p = p, q = q, kernel = kernel,
                     regularize = regularize, reg_const = reg_const)
     # one common h; each period's pilot b keeps its own CCT ratio b/h

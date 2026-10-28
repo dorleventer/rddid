@@ -55,7 +55,7 @@ test_that("fixed h: weights, estimate and standard error match a computation by 
   # the bias-corrected row: its own minimum-variance weights, from the bias-corrected blocks
   bb <- blocks_of(ols, bc = TRUE); wb <- kkt_weights(bb$Xi, bb$xi, matrix(1, 1, 2), 1)
   expect_equal(unname(mv$weights_detail$weights_bc), wb, tolerance = 1e-10)
-  expect_equal(unname(mv$coef_bc), c(1, -wb), tolerance = 1e-10)
+  expect_equal(unname(mv$period_weights_bc), c(1, -wb), tolerance = 1e-10)
   Db <- vapply(c("3", "1", "2"), function(k) ols$fits[[k]]$D_bc, numeric(1))
   expect_equal(mv$estimates["Robust", "est"], Db[["3"]] - sum(wb * Db[c("1", "2")]), tolerance = 1e-12)
   vb <- function(w) ols$fits[["3"]]$V_D_bc - 2 * sum(w * bb$xi) + c(t(w) %*% bb$Xi %*% w)
@@ -114,7 +114,7 @@ test_that("clear errors: numeric trend, unknown bandwidth rule, singular covaria
 test_that("the default is unchanged", {
   a <- run(); b <- run(weighting = "ols")
   expect_identical(a$estimates, b$estimates)
-  expect_identical(a$coef, b$coef)
+  expect_identical(a$period_weights, b$period_weights)
   expect_identical(a$bandwidth, b$bandwidth)
   expect_identical(a$weighting, "ols")
   expect_null(a$weights_detail)

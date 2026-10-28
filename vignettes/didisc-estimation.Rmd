@@ -67,7 +67,7 @@ fmtp <- function(p) if (p < 0.001) "below 0.001" else fmt(p, 3)
 pp <- summary(fit)$per_period
 D <- setNames(pp$jump, pp$period)
 stopifnot(  # the worked arithmetic below adds up
-  isTRUE(all.equal(sum(pp$coef * pp$jump), unname(coef(fit)[["Conventional"]]))),
+  isTRUE(all.equal(sum(pp$weight * pp$jump), unname(coef(fit)[["Conventional"]]))),
   isTRUE(all.equal(unname(D[["3"]]), unname(fit$fits[["3"]]$D)))
 )
 ```
@@ -122,10 +122,10 @@ summary(fit)
 ```
 
 `summary()` adds the per-period fits. Each row gives the period's role, its
-coefficient in the estimate (+1 for the RD period, minus its weight for a
+signed weight in the estimate (+1 for the RD period, minus its weight for a
 comparison period), its number of observations, its bandwidths, and its jump
 with standard error, conventional (`jump`, `s.e.`) and bias-corrected
-(`jump (bc)`, `s.e. (rb)`). The estimate is the sum of coefficient times jump:
+(`jump (bc)`, `s.e. (rb)`). The estimate is the sum of weight times jump:
 `r fmt(D[["3"]], 3)` - 0.5 × `r fmt(D[["1"]], 3)` - 0.5 × `r fmt(D[["2"]], 3)`
 = `r fmt(coef(fit)[["Conventional"]], 3)`.
 

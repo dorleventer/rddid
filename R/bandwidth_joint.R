@@ -65,20 +65,20 @@
 #' Nothing here depends on which period is the RD period, so the selector built on it is
 #' invariant to that label; this matters when the estimator aggregates several RD periods.
 #'
-#' @param plist named per-period data list; `coef` named period coefficients.
+#' @param plist named per-period data list; `w` named signed period weights.
 #' @param scheme one of `"cs"`, `"pc"`, `"pv"`.
 #' @param pilot_bws optional named list of per-period `c(h, b)` for the bias side; defaults
 #'   to CCT.
 #' @param h_rot optional bandwidth for the variance side; defaults to [.bw_rot()].
-#' @return list with `keys`, `coef` (in `keys` order), `bias_const`, `var_const`, `n_obs`,
+#' @return list with `keys`, `period_weights` (in `keys` order), `bias_const`, `var_const`, `n_obs`,
 #'   `var_bias` (K x K covariance of the `B-hat_t`), `var_cross` (K x K same-side cross term,
 #'   zero off PC), `h_rot`, `h_pilot`, `ratio`, `pilot_fits`, `var_fits`, `pilot_bws`.
 #' @keywords internal
 #' @noRd
-.bw_constants <- function(plist, coef, scheme = "cs", pilot_bws = NULL, h_rot = NULL,
+.bw_constants <- function(plist, w, scheme = "cs", pilot_bws = NULL, h_rot = NULL,
                           c = 0, p = 1L, q = 2L, kernel = "triangular") {
   cutoff <- c
-  keys <- names(coef)
+  keys <- names(w)
   K    <- length(keys)
   fp1  <- factorial(p + 1)
   if (is.null(pilot_bws))
@@ -103,7 +103,7 @@
   # variance-side fits: every period at the common rule-of-thumb bandwidth (the variance
   # constants and the design moments)
   var_fits <- stats::setNames(lapply(keys, function(k) fit_at(k, h_rot, h_rot)), keys)
-  period_coef <- unname(vapply(keys, function(k) coef[[k]], numeric(1)))
+  period_weights <- unname(vapply(keys, function(k) w[[k]], numeric(1)))
   ratio       <- vapply(keys, function(k)
     unname(pilot_bws[[k]][["b"]] / pilot_bws[[k]][["h"]]), numeric(1))
   h_pilot     <- vapply(keys, function(k) unname(pilot_bws[[k]][["h"]]), numeric(1))
@@ -145,7 +145,7 @@
       .warn("scheme = \"pc\" but no unit is active in two periods' windows: ",
             "the cross-period term is identically zero (same as scheme = \"cs\").")
   }
-  list(keys = keys, coef = period_coef, bias_const = bias_const, var_const = var_const,
+  list(keys = keys, period_weights = period_weights, bias_const = bias_const, var_const = var_const,
        n_obs = n_obs, var_bias = var_bias, var_cross = var_cross, h_rot = h_rot,
        h_pilot = h_pilot, ratio = ratio, pilot_fits = pilot_fits, var_fits = var_fits,
        pilot_bws = pilot_bws)
@@ -169,7 +169,7 @@
 #' eq:common_h_opt; consistent with Assumption R(f)).
 #'
 #'
-#' @param plist named per-period data list; `coef` named period coefficients
+#' @param plist named per-period data list; `w` named signed period weights
 #'   (RD period = +1, comparisons = -w_t); `t_rd` the RD-period label (kept for
 #'   call compatibility; the selector does not use it).
 #' @param scheme one of `"cs"`, `"pc"`, `"pv"`; sets which variance scales the
@@ -190,24 +190,24 @@
 #'   term `reg`, the rule-of-thumb `h_rot`, the `pilot_bws` used, and the `constants`.
 #' @keywords internal
 #' @noRd
-.bw_joint <- function(plist, coef, t_rd = NULL, scheme = "cs", pilot_bws = NULL,
+.bw_joint <- function(plist, w, t_rd = NULL, scheme = "cs", pilot_bws = NULL,
                       c = 0, p = 1L, q = 2L, kernel = "triangular",
                       regularize = TRUE, reg_const = 3, constants = NULL) {
   cutoff <- c
   if (is.null(constants))
-    constants <- .bw_constants(plist, coef, scheme = scheme, pilot_bws = pilot_bws,
+    constants <- .bw_constants(plist, w, scheme = scheme, pilot_bws = pilot_bws,
                                c = cutoff, p = p, q = q, kernel = kernel)
   const <- constants
   fp1   <- factorial(p + 1)
   K     <- length(const$keys)
 
-  # aggregate bias constant: sum_t coef_t B-hat_t
-  B_agg <- sum(const$coef * const$bias_const)
-  # variance scale: own-period terms sum_t coef_t^2 V-hat_t / n_t, plus, under "pc", the
+  # aggregate bias constant: sum_t w_t B-hat_t
+  B_agg <- sum(const$period_weights * const$bias_const)
+  # variance scale: own-period terms sum_t w_t^2 V-hat_t / n_t, plus, under "pc", the
   # same-side cross-period terms (estimated at h_rot in every period, so at rho = 1)
-  cf   <- const$coef
+  cf   <- const$period_weights
   Veff <- sum(cf^2 * const$var_const / const$n_obs) + drop(crossprod(cf, const$var_cross %*% cf))
-  # regularization: reg_const x Var(sum_t coef_t B-hat_t), with the cross-period covariances of
+  # regularization: reg_const x Var(sum_t w_t B-hat_t), with the cross-period covariances of
   # the B-hat_t. At a common h it carries the same h^{2(p+1)} factor as B_agg^2, so it simply
   # joins B_agg^2 in the denominator of h*.
   reg   <- if (regularize) reg_const * drop(crossprod(cf, const$var_bias %*% cf)) else 0
