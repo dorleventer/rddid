@@ -108,8 +108,8 @@
 #' Variance of sum_t w_t (term_{t,+} - term_{t,-}) from per-side influence vectors
 #'
 #' `G[[t]][[side]]` holds `g` and `id`. The own-period blocks always enter; the cross-period
-#' blocks by `cross`: `"none"`, `"same"` (same side, matched by id) or `"same_opp"` (same side
-#' minus opposite side), the rules of [.bw_constants()].
+#' blocks by `cross`: `"none"` or `"same"` (same side, matched by id), the rules of
+#' [.bw_constants()].
 #' @keywords internal
 #' @noRd
 .bw_agg_var <- function(G, w, cross) {
@@ -122,9 +122,7 @@
     } else if (cross == "none") {
       0
     } else {
-      same <- ms(a, "+", b, "+") + ms(a, "-", b, "-")
-      opp  <- if (cross == "same_opp") ms(a, "+", b, "-") + ms(a, "-", b, "+") else 0
-      same - opp
+      ms(a, "+", b, "+") + ms(a, "-", b, "-")
     }
     v <- v + w[[a]] * w[[b]] * cab
   }
@@ -145,8 +143,8 @@
 #' takes, in each period and on each side, the largest distance of the running variable to the
 #' cutoff, times 1 + sqrt(eps) so that the farthest unit keeps a positive kernel weight (rdrobust
 #' 4.1; rdrobust 2.2 used the distance itself, a difference of order 1e-8 to 1e-4 in d). The cross-period covariances follow the scheme as in [.bw_constants()]: in `V` the
-#' same-side ones under `"pc"` only; in `R` none under `"cs"`, same side under `"pc"`, same minus
-#' opposite side under `"pv"`.
+#' same-side ones under `"pc"` only, and in `R` the same (App. B.4 `eq:vhat-bbar`: "b is
+#' regularized in the same way").
 #' @keywords internal
 #' @noRd
 .bw_stage <- function(plist, w, scheme, o, nu, oB, h_V, h_B, reg_const = 0, c = 0,
@@ -171,7 +169,7 @@
     .bw_agg_var(GV, w, if (scheme == "pc") "same" else "none")
   B <- sqrt(2 * (o + 1 - nu)) * Bsum
   R <- if (reg_const > 0)
-    reg_const * 2 * (o + 1 - nu) * .bw_agg_var(GB, w, c(cs = "none", pc = "same", pv = "same_opp")[[scheme]])
+    reg_const * 2 * (o + 1 - nu) * .bw_agg_var(GB, w, if (scheme == "pc") "same" else "none")
   else 0
   if (!is.finite(V) || V <= 0)
     .abort("the bandwidth selector's variance scale is not positive; use bwselect = \"cct\" or pass h.")
@@ -221,9 +219,9 @@
 #'   * design side: every period at ONE rule-of-thumb bandwidth `h_rot` ([.bw_rot()]); gives
 #'     the bias design moments `bmom` (rdrobust's `BConst`), so that
 #'     `B-hat_t = (p+1)! [bmom_+(h_rot) curv_+(b) - bmom_-(h_rot) curv_-(b)]`, the
-#'     covariance matrix of the `B-hat_t` for the regularization, with the cross-period
-#'     covariances the scheme allows (none under `"cs"`, same side under `"pc"`, same minus
-#'     opposite side under `"pv"`, as for the jumps), and
+#'     covariance matrix of the `B-hat_t` for the regularization, with the same-side
+#'     cross-period covariances under `"pc"` only (App. B.4 `eq:vhat-bbar`; none under `"cs"`
+#'     or `"pv"`, the same rule as for `V-hat`), and
 #'     the variance constant `V-hat_t = n_t h_rot V-hat(D_t(h_rot))` (`v_const`) and, under
 #'     `"pc"`, the same-side cross-period term `h_rot Cov-hat(D_t(h_rot), D_s(h_rot))`, estimated
 #'     directly at a bandwidth ratio of one (the ratio the common bandwidth needs). Under
@@ -268,8 +266,10 @@
   period_weights <- unname(vapply(keys, function(k) w[[k]], numeric(1)))
 
   # B-hat_t = (p+1)! [bmom_+(h_rot) curv_+(b) - bmom_-(h_rot) curv_-(b)]. psi is the
-  # per-unit influence of one side's term, (p+1)! bmom(h_rot) g_curv(b), unsigned: the
-  # minus sign of the side below is applied through "same - opp" in the covariances.
+  # per-unit influence of one side's term, (p+1)! bmom(h_rot) g_curv(b), unsigned. The side
+  # below enters B-hat_t with a minus sign, so its same-side products with another period's side
+  # below are positive; opposite-side products would enter negatively, but none enter
+  # (eq:vhat-bbar: same-side covariances, under PC only).
   psi <- function(k, side)
     fp1 * var_fits[[k]]$sides[[side]]$bmom * pilot_fits[[k]]$sides[[side]]$g_curv
   bias_const <- vapply(keys, function(k)
@@ -285,12 +285,10 @@
     a <- keys[i]; bb <- keys[j]
     var_bias[i, j] <- if (i == j) {
       sum(psi(a, "+")^2) + sum(psi(a, "-")^2)
-    } else if (scheme == "cs") {
-      0
+    } else if (scheme == "pc") {
+      ms(a, "+", bb, "+") + ms(a, "-", bb, "-")
     } else {
-      same <- ms(a, "+", bb, "+") + ms(a, "-", bb, "-")
-      opp  <- if (scheme == "pv") ms(a, "+", bb, "-") + ms(a, "-", bb, "+") else 0
-      same - opp
+      0
     }
   }
 
@@ -320,7 +318,7 @@
 #'   B    = sum_tau w~_tau B-hat_tau                       (signed; can cancel),
 #'   Veff = sum_tau w~_tau^2 V-hat_tau / n_tau
 #'          + 1{S = PC} sum_{t != s} w~_t w~_s h_rot Cov-hat(D_t(h_rot), D_s(h_rot)),
-#'   reg  = lambda Var-hat(sum_tau w~_tau B-hat_tau)   (with the cross-period covariances),
+#'   reg  = lambda Var-hat(sum_tau w~_tau B-hat_tau)   (same-side cross-period covariances under PC only),
 #' (`Veff` is `V^S(t_RD) / n` of `lem:agg-var` at a common h, so the `n^{-1/(2p+3)}`
 #' factor is absorbed), whose minimizer is
 #'   h* = ( ((p+1)!)^2/(2(p+1)) * Veff / (B^2 + reg) )^{1/(2p+3)}.
@@ -374,8 +372,8 @@
   # same-side cross-period terms (estimated at h_rot in every period, so at rho = 1)
   cf   <- const$period_weights
   Veff <- sum(cf^2 * const$var_const / const$n_obs) + drop(crossprod(cf, const$var_cross %*% cf))
-  # regularization: reg_const x Var(sum_t w_t B-hat_t), with the cross-period covariances of
-  # the B-hat_t. At a common h it carries the same h^{2(p+1)} factor as B_agg^2, so it simply
+  # regularization: reg_const x Var(sum_t w_t B-hat_t), with the same-side cross-period
+  # covariances of the B-hat_t under "pc" only (eq:vhat-bbar). At a common h it carries the same h^{2(p+1)} factor as B_agg^2, so it simply
   # joins B_agg^2 in the denominator of h*.
   reg   <- if (regularize) reg_const * drop(crossprod(cf, const$var_bias %*% cf)) else 0
   denom <- B_agg^2 + reg

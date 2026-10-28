@@ -3,6 +3,21 @@ package's user-facing NEWS is inst/NEWS.md). -->
 
 # rddid 0.4.0.9000 (development)
 
+## 2026-10-28: the regularization's cross-period covariances under PC only (0.4.0.9009)
+
+* App. B.4 Regularization (`eq:vhat-bbar`, Overleaf 88120e3; Dor's decision (a), T1793): the
+  variance of the aggregate bias constant adds the same-side cross-period covariances only under
+  PC, the same rule as the variance V-hat; `b` is regularized the same way, `d` not at all.
+  `.bw_constants()` `var_bias` (for `h`) and `.bw_stage()`'s `R` (for `b`) now use the same-side
+  covariances under `"pc"` and none otherwise; before, `"pv"` added same minus opposite side.
+  `.bw_agg_var()` loses its `"same_opp"` rule.
+* Golden master against master aec94cb (0.4.0.9008): exactly 11 cells change, every one with
+  `scheme = "pv"` and `bwselect = "joint"` (`pc|joint|scheme-pv`, the pv constant / linear / p2 /
+  atu / numeric-w / scheme-pv / min_variance cells, `pv4|joint|linear-3comp`, the two `pv4|agg`
+  cells); `pv|joint|noreg`, PV data under `scheme = "cs"`/`"pc"`, and CS data under `"pv"` (no
+  unit in two periods) are identical, as are all other cells. Test: PV equals CS on the same
+  data for `d`, `b`, `h`, `reg`.
+
 ## 2026-10-27: the pilot bandwidths chosen for the aggregate (PR #12: rddid 0.4.0.9004 on its branch, lands as didisc 0.4.0.9008)
 
 * `bwselect = "joint"`: the pilot bandwidth `b` is now one bandwidth for every period, chosen for

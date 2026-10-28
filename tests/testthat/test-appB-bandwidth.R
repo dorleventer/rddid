@@ -151,21 +151,42 @@ test_that("B.4 the joint selector does not depend on which period carries the t_
   for (k in c("1", "2", "3")) expect_equal(ra$fits[[k]]$b, rb$fits[[k]]$b, tolerance = 1e-12)
 })
 
-test_that("B.4 scheme switch — PV drops the cross-period variance term (lem:cov-pv) but keeps the bias estimates' covariances in the regularization", {
+test_that("B.4 scheme switch — PV drops every cross-period term, in the variance (lem:cov-pv) and in the regularization (eq:vhat-bbar, PC only)", {
   d <- .b4_panel("pv"); pl <- .b4_plist(d)
   b0 <- 0.55
   j_cs <- .bw_joint(pl, .b4_coef, "3", scheme = "cs", b = b0)
   j_pv <- .bw_joint(pl, .b4_coef, "3", scheme = "pv", b = b0)
-  expect_equal(j_cs$Veff, j_pv$Veff, tolerance = 1e-12)       # the limit has no cross term
-  expect_equal(j_cs$B, j_pv$B, tolerance = 1e-12)
-  expect_false(isTRUE(all.equal(j_cs$reg, j_pv$reg, tolerance = 1e-6)))   # covariances of B-hat
-  # without regularization the two coincide
-  expect_equal(.bw_joint(pl, .b4_coef, "3", scheme = "cs", b = b0, regularize = FALSE)$h,
-               .bw_joint(pl, .b4_coef, "3", scheme = "pv", b = b0, regularize = FALSE)$h,
-               tolerance = 1e-12)
-  # and PC differs from CS on the same data (the cross term is live)
+  for (f in c("Veff", "B", "reg", "h")) expect_identical(j_pv[[f]], j_cs[[f]])
+  # the whole selector, d and b chosen for the aggregate and regularized: PV = CS on the same data
+  f_cs <- .bw_joint(pl, .b4_coef, "3", scheme = "cs")
+  f_pv <- .bw_joint(pl, .b4_coef, "3", scheme = "pv")
+  for (f in c("d", "b", "Veff", "B", "reg", "h")) expect_identical(f_pv[[f]], f_cs[[f]])
+  # PC differs from CS on the same data: the same-side covariances enter the variance and the
+  # regularization of h and of b
   j_pc <- .bw_joint(pl, .b4_coef, "3", scheme = "pc", b = b0)
   expect_false(isTRUE(all.equal(j_cs$Veff, j_pc$Veff, tolerance = 1e-6)))
+  expect_false(isTRUE(all.equal(j_cs$reg, j_pc$reg, tolerance = 1e-6)))
+  f_pc <- .bw_joint(pl, .b4_coef, "3", scheme = "pc")
+  expect_false(isTRUE(all.equal(f_cs$b, f_pc$b, tolerance = 1e-6)))
+  # the regularization matrix: diagonal off PC, and under PC its off-diagonal is the same-side sum
+  hr <- j_cs$h_rot
+  for (sc in c("cs", "pv")) {
+    vb <- .bw_constants(pl, .b4_coef, scheme = sc, b = b0, h_rot = hr)$var_bias
+    expect_identical(vb[upper.tri(vb)], rep(0, 3))
+  }
+  cst   <- .bw_constants(pl, .b4_coef, scheme = "pc", b = b0, h_rot = hr)
+  vb_pc <- cst$var_bias
+  expect_true(all(vb_pc[upper.tri(vb_pc)] != 0))
+  # by hand: Cov(B-hat_t, B-hat_s) = same-side sums of the per-unit influences (p+1)! bmom g_curv,
+  # matched by id; the PV data have side switchers, so opposite-side terms would show up here
+  psi <- function(k, sd) factorial(2) * cst$var_fits[[k]]$sides[[sd]]$bmom * cst$pilot_fits[[k]]$sides[[sd]]$g_curv
+  ids <- function(k, sd) cst$pilot_fits[[k]]$sides[[sd]]$id
+  ms  <- function(a, b, sd) .match_sum(ids(a, sd), psi(a, sd), ids(b, sd), psi(b, sd))
+  for (pr in list(c("3", "1"), c("3", "2"), c("1", "2")))
+    expect_equal(vb_pc[pr[1], pr[2]], ms(pr[1], pr[2], "+") + ms(pr[1], pr[2], "-"), tolerance = 1e-12)
+  opp <- .match_sum(ids("3", "+"), psi("3", "+"), ids("1", "-"), psi("1", "-"))
+  expect_true(opp != 0)                                     # the data do have opposite-side pairs
+  expect_identical(diag(vb_pc), diag(.bw_constants(pl, .b4_coef, scheme = "pv", b = b0, h_rot = hr)$var_bias))
 })
 
 test_that("B.4 objective (eq:amse-att, lem:agg-var) — the joint rule's objective equals a hand-coded one at a common h, PC, p = 1 and 2", {

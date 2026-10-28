@@ -149,8 +149,9 @@
 #' RD period, so an aggregate of several RD periods gets the same bandwidth
 #' whatever the order of `t_rd`.
 #' With `regularize = TRUE` the rule adds `reg_const` times the estimated
-#' variance of the aggregate bias constant, including its covariances between
-#' periods, to the squared bias of `h` and of `b` (not of `d`), as
+#' variance of the aggregate bias constant (under `"pc"` with its same-side
+#' covariances between periods, as for the variance) to the squared bias of `h`
+#' and of `b` (not of `d`), as
 #' \pkg{rdrobust} does, so a near-zero estimated bias cannot make a bandwidth
 #' very large. Standard errors use the HC1 convention
 #' of \pkg{rdrobust}. The derivations are in the paper's appendix on estimation
