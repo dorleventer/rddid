@@ -12,7 +12,7 @@ test_that("repeated cross-section: disjoint ids collapse PC and PV to CS", {
                "1" = rd_period(d1$y, d1$x, h = .25, b = .4, id = d1$id),
                "2" = rd_period(d2$y, d2$x, h = .25, b = .4, id = d2$id))
   coef <- c("0" = 1, "1" = -0.5, "2" = -0.5)
-  a <- rddid:::.aggregate_fits(fits, coef, bc = FALSE)
+  a <- didisc:::.aggregate_fits(fits, coef, bc = FALSE)
   expect_equal(unname(a["V_pc"]), unname(a["V_cs"]), tolerance = 1e-12)
   expect_equal(unname(a["V_pv"]), unname(a["V_cs"]), tolerance = 1e-12)
 })
@@ -27,7 +27,7 @@ test_that("panel time-varying R: PV variance equals per-unit clustered score SS"
   pf <- list("0" = pdat(xa, 0.5), "1" = pdat(xb, 0.2), "2" = pdat(xc, 0.1))
   fits <- lapply(pf, function(d) rd_period(d$y, d$x, h = .3, b = .45, id = d$id))
   coef <- c("0" = 1, "1" = -0.5, "2" = -0.5)
-  a <- rddid:::.aggregate_fits(fits, coef, bc = FALSE)
+  a <- didisc:::.aggregate_fits(fits, coef, bc = FALSE)
 
   # independent: cluster the influence x residual scores by unit across periods
   score <- setNames(numeric(n), as.character(seq_len(n)))

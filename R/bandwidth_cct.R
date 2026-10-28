@@ -1,6 +1,6 @@
 # bandwidth_cct.R -- per-period CCT bandwidths: rd_bw_cct() (exported building block, wraps
 # rdrobust::rdbwselect with an IQR fallback on failure) and .bw_cct() (one pair per period).
-# Used by rddid(bwselect = "cct"), as the pilot fits of the joint rules, and per cell by the
+# Used by didisc(bwselect = "cct"), as the pilot fits of the joint rules, and per cell by the
 # assumption tests.
 
 #' Per-period CCT/IK MSE-optimal bandwidths
@@ -16,7 +16,7 @@
 
 #' CCT bandwidths for one period (building block)
 #'
-#' The building block behind `rddid(bwselect = "cct")`, the pilot fits of the
+#' The building block behind `didisc(bwselect = "cct")`, the pilot fits of the
 #' `"joint"` rule, and the default bandwidths of the four tests
 #' of the assumptions: the MSE-optimal main and pilot bandwidths of Calonico,
 #' Cattaneo and Titiunik (2014) for a local-linear RD in one period, from
@@ -32,7 +32,7 @@
 #' @param p order of the local polynomial (default 1, local linear).
 #' @param q order of the local polynomial of the bias correction (default `p + 1`); the
 #'   pilot bandwidth `b` is chosen for it.
-#' @inheritParams rddid
+#' @inheritParams didisc
 #'
 #' @return A named numeric vector `c(h = , b = )`: the main bandwidth (point
 #'   estimate) and the pilot bandwidth (bias correction).
@@ -42,11 +42,11 @@
 #' confidence intervals for regression-discontinuity designs. *Econometrica*
 #' 82(6), 2295-2326.
 #'
-#' @family RD-DID estimation
+#' @family diff-in-disc estimation
 #'
 #' @examples
-#' # each year of rddid_sim gets its own bandwidths (what bwselect = "cct" uses)
-#' sapply(split(rddid_sim, rddid_sim$year), function(d) rd_bw_cct(y = d$Y, x = d$R))
+#' # each year of didisc_sim gets its own bandwidths (what bwselect = "cct" uses)
+#' sapply(split(didisc_sim, didisc_sim$year), function(d) rd_bw_cct(y = d$Y, x = d$R))
 #' @export
 rd_bw_cct <- function(y, x, c = 0, p = 1L, q = p + 1L, kernel = "triangular") {
   fallback <- function(reason) {

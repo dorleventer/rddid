@@ -1,8 +1,8 @@
 ---
-title: "Get started: estimate an RD-DID effect"
+title: "Get started: estimate a diff-in-disc effect"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Get started: estimate an RD-DID effect}
+  %\VignetteIndexEntry{Get started: estimate a diff-in-disc effect}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -18,7 +18,7 @@ period, the **RD period**. A **confounding policy** switches at the same cutoff,
 in every period, so the jump in the outcome at the cutoff in the RD period mixes
 the treatment effect with the **confounding jump**. In the **comparison
 periods** the treatment of interest is uniform at the cutoff (nobody treated, or
-everybody treated), so, provided the treatment of interest has no anticipation or carry-over effects there (which the paper assumes), the jump there *is* the confounding jump. `rddid()`
+everybody treated), so, provided the treatment of interest has no anticipation or carry-over effects there (which the paper assumes), the jump there *is* the confounding jump. `didisc()`
 estimates the jump in every period by local-linear RD and subtracts a weighted
 average of the comparison-period jumps from the RD-period jump:
 $$
@@ -33,19 +33,19 @@ same in every period, a straight-line extrapolation if it moves linearly in time
 ## The data
 
 ```{r}
-library(rddid)
-head(rddid_sim)
+library(didisc)
+head(didisc_sim)
 ```
 
-`rddid_sim` is a simulated panel of 1,000 units observed in three years, in
-long format: one row per unit and year. `rddid()` uses four columns: the outcome
+`didisc_sim` is a simulated panel of 1,000 units observed in three years, in
+long format: one row per unit and year. `didisc()` uses four columns: the outcome
 `Y`, the running variable `R` (cutoff 0), the period `year` and the unit `id`.
 The other two record the design: the confounding policy `V` is on above the
 cutoff in every year and raises `Y` by 0.5; the treatment of interest `W` is on
 above the cutoff in year 3 only and raises `Y` by 1. So year 3 is the RD period,
 years 1 and 2 are comparison periods, and **the true effect is 1**.
 
-With your own data, `rddid()` needs the same shape: a data frame in long format,
+With your own data, `didisc()` needs the same shape: a data frame in long format,
 one row per unit and period, with the outcome, the running variable, the period
 and, for a panel, a unit identifier (the panel need not be balanced). The cutoff
 is `c` (default 0), and a unit with `x >= c` is above it. The period column is
@@ -57,7 +57,7 @@ a numeric column. By default the comparison periods are all periods other than
 ## Estimate
 
 ```{r}
-fit <- rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
+fit <- didisc(didisc_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 fit
 ```
 
@@ -67,14 +67,14 @@ fmtp <- function(p) if (p < 0.001) "below 0.001" else fmt(p, 3)
 pp <- summary(fit)$per_period
 D <- setNames(pp$jump, pp$period)
 stopifnot(  # the worked arithmetic below adds up
-  isTRUE(all.equal(sum(pp$coef * pp$jump), unname(coef(fit)[["Conventional"]]))),
+  isTRUE(all.equal(sum(pp$weight * pp$jump), unname(coef(fit)[["Conventional"]]))),
   isTRUE(all.equal(unname(D[["3"]]), unname(fit$fits[["3"]]$D)))
 )
 ```
 
 Line by line:
 
-- **`RD-DID estimate of the ATT in period 3`**: the estimand and the RD period
+- **`Diff-in-disc estimate of the ATT in period 3`**: the estimand and the RD period
   (`t_rd = 3`). The ATT is the effect of the treatment on the units just above
   the cutoff, which are the ones treated in the RD period. If everybody is
   treated in the comparison periods, `estimand = "atu"` labels the same numbers
@@ -89,13 +89,13 @@ Line by line:
   cutoff, because the running variable does not move. The
   standard error takes into account that the same units enter every year's fit.
   Under the default bandwidth rule the scheme can also move the bandwidth, and
-  so the estimate; [Bandwidth rules and sampling schemes](rddid-options.html)
+  so the estimate; [Bandwidth rules and sampling schemes](didisc-options.html)
   shows how.
 - **`Bandwidth: common h`**: the default rule, `bwselect = "joint"`, uses one
   main bandwidth `h` in every period, chosen to minimize the asymptotic mean
-  squared error of the RD-DID estimate. **`Pilot bandwidth b`** is the
+  squared error of the diff-in-disc estimate. **`Pilot bandwidth b`** is the
   bandwidth of the bias correction, also one for every period and also chosen
-  for the RD-DID estimate.
+  for the diff-in-disc estimate.
 - **The two rows.** `Conventional` is the local-linear estimate with its
   conventional standard error. `Robust (bias-corrected)` is the bias-corrected
   estimate with its robust standard error (Calonico, Cattaneo and Titiunik,
@@ -112,7 +112,7 @@ fit$fits[["3"]]
 
 Its jump, `r fmt(D[["3"]])`, is that naive RD estimate, whose target is 1.5,
 not 1.
-`rddid()` subtracts the average of the year-1 and year-2 jumps,
+`didisc()` subtracts the average of the year-1 and year-2 jumps,
 (`r fmt(D[["1"]])` + `r fmt(D[["2"]])`) / 2 = `r fmt((D[["1"]] + D[["2"]]) / 2)`,
 its estimate of the confounding jump of 0.5.
 
@@ -123,18 +123,18 @@ summary(fit)
 ```
 
 `summary()` adds the per-period fits. Each row gives the period's role, its
-coefficient in the estimate (+1 for the RD period, minus its weight for a
-comparison period), its number of observations, its bandwidths, and its jump
-with standard error, conventional (`jump`, `s.e.`) and bias-corrected
-(`jump (bc)`, `s.e. (rb)`). The estimate is the sum of coefficient times jump:
+number of observations, its bandwidths, and its jump with standard error,
+conventional and bias-corrected (with the robust standard error). The estimate
+combines the jumps with the comparison weights printed at the top:
 `r fmt(D[["3"]], 3)` - 0.5 × `r fmt(D[["1"]], 3)` - 0.5 × `r fmt(D[["2"]], 3)`
 = `r fmt(coef(fit)[["Conventional"]], 3)`.
 
-The last lines give the robust standard error under each of the three sampling
-schemes. The printout uses the one for the scheme detected in the data; the
-other two show what the formulas for the other schemes give on the same data.
-Here the cross-section
-standard error, `r fmt(fit$estimates["Robust", "se_cs"], 3)`, ignores that the
+The last table gives the standard error of the estimate, conventional and
+robust, under each of the three sampling schemes: repeated cross-section (RCS),
+panel with no unit changing side of the cutoff (PC), and panel with some units
+changing side (PV). The estimate table uses the row for the scheme detected in
+the data; the other rows show what the formulas for the other schemes give on
+the same data. Here the cross-section robust standard error, `r fmt(fit$estimates["Robust", "se_cs"], 3)`, ignores that the
 same units appear in every year; the panel one, which accounts for it, is
 `r fmt(fit$estimates["Robust", "se_pc"], 3)`.
 
@@ -146,13 +146,13 @@ tidy(fit)
 
 `coef()` returns the two point estimates and `confint()` their confidence
 intervals. `tidy()` returns one row per estimate, so
-table makers such as modelsummary work with `rddid()` fits; [A table for a
+table makers such as modelsummary work with `didisc()` fits; [A table for a
 paper](#a-table-for-a-paper) below has an example.
 
 ## A confounding jump that moves linearly
 
 ```{r}
-fit_lin <- rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
+fit_lin <- didisc(didisc_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
                  trend = "linear")
 fit_lin
 ```
@@ -163,7 +163,7 @@ weights -1 and 2: the confounding jump in year 3 is estimated by
 $2 D_2 - D_1$. This needs at least two comparison periods. The standard error
 grows (`r fmt(fit_lin$estimates["Conventional", "se"], 3)` against
 `r fmt(fit$estimates["Conventional", "se"], 3)`) because extrapolating a line
-amplifies noise. In `rddid_sim` the confounding jump is constant, so both
+amplifies noise. In `didisc_sim` the confounding jump is constant, so both
 estimates are valid; the linear one gives up precision to allow for a linear
 trend. A numeric vector instead of `"constant"` or `"linear"` sets the weights
 directly, one per comparison period.
@@ -171,19 +171,19 @@ directly, one per comparison period.
 ## Several RD periods
 
 When the treatment of interest is in place in several periods, `t_rd` can list
-them all. `rddid()` then estimates a weighted average of their effects, with
+them all. `didisc()` then estimates a weighted average of their effects, with
 weights `rd_weights`: equal by default, or any finite weights, which define the
 average being estimated. Each period's jump is estimated once, and each
 comparison period's weight is the `rd_weights`-weighted sum of the weights each
-RD period alone would give it. `rddid_sim` has one RD period, so for
+RD period alone would give it. `didisc_sim` has one RD period, so for
 illustration year 3 is copied as a second RD year, 4:
 
 ```{r}
-sim4 <- rbind(rddid_sim, transform(rddid_sim[rddid_sim$year == 3, ], year = 4))
-fit_avg <- rddid(sim4, y = "Y", x = "R", time = "year", id = "id", t_rd = c(3, 4),
+sim4 <- rbind(didisc_sim, transform(didisc_sim[didisc_sim$year == 3, ], year = 4))
+fit_avg <- didisc(sim4, y = "Y", x = "R", time = "year", id = "id", t_rd = c(3, 4),
                  bwselect = "cct")
 fit_avg
-fit_cct3 <- rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
+fit_cct3 <- didisc(didisc_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
                   bwselect = "cct")
 ```
 
@@ -202,7 +202,7 @@ average as more precise than year 3 alone
 `r fmt(fit_cct3$estimates["Conventional", "se_cs"], 3)`), crediting the copy
 with information it does not have. Under the default bandwidth rule the two
 estimates differ slightly: the rule penalizes noisy estimates of the bias (the
-`regularize` option of `rddid()`), and that penalty adds up the periods'
+`regularize` option of `didisc()`), and that penalty adds up the periods'
 variances without their covariances. When the RD periods hold different units
 or draws, averaging them lowers the part of the variance that comes from the
 RD-period jumps; under a constant trend the part that comes from the
@@ -223,8 +223,8 @@ modelsummary::modelsummary(
                  list(raw = "nobs", clean = "Num.Obs.", fmt = 0)))
 ```
 
-The same call with `output = "rddid_table.tex"` (or `.html`, `.md`, `.docx`)
-writes the table to a file; `write.csv(tidy(fit), "rddid_estimate.csv",
+The same call with `output = "didisc_table.tex"` (or `.html`, `.md`, `.docx`)
+writes the table to a file; `write.csv(tidy(fit), "didisc_estimate.csv",
 row.names = FALSE)` writes the estimate table to a plain CSV file.
 
 `gof_map` sets which rows of `glance()` appear below the estimates and their
@@ -234,7 +234,7 @@ digits. The last line writes the estimate table to a plain CSV file.
 
 ## When the running variable moves over time
 
-In `rddid_sim` every unit stays on its side of the cutoff. In many applications
+In `didisc_sim` every unit stays on its side of the cutoff. In many applications
 the running variable moves (a population count, a test score, an income), and
 some units, the **switchers**, are above the cutoff in one period and below it
 in another. The units at the cutoff in the RD period can then be a different mix
@@ -250,16 +250,16 @@ than the one at hand. The tests use two versions:
 With two periods, both versions are the unit's side of the cutoff in the other
 period.
 
-The RD-DID estimate identifies the ATT when the type distribution is
+The diff-in-disc estimate identifies the ATT when the type distribution is
 continuous at the cutoff and the confounding jump within each type is constant
 over time, and in addition either the type composition is stable across periods
 or the confounding jump is the same for every type (Leventer and Nevo, 2024).
-Four tests check these assumptions. `rddid_sim_pv` is the `rddid_sim` design
+Four tests check these assumptions. `didisc_sim_pv` is the `didisc_sim` design
 with a running variable that drifts between years. The estimate whose
 assumptions the four tests below check:
 
 ```{r}
-fit_pv <- rddid(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
+fit_pv <- didisc(didisc_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 fit_pv
 ```
 
@@ -272,7 +272,7 @@ other periods, so the jump in the outcome partly reflects who the units are; the
 estimate can then be biased, whatever the other tests say.
 
 ```{r}
-tc <- rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
+tc <- rd_typecont(didisc_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
 tc
 ```
 
@@ -286,7 +286,7 @@ shares at once: in each year the four shares sum to one, so three jumps are
 free, and three years give 9. It compares the largest |t| of the nine jumps with
 the sup-t critical value and names the year and type with the largest |t|
 (`joint = "wald"` gives the chi-squared Wald instead; see [Checking the
-identification assumptions](rddid-validation-tests.html) for why sup-t is the
+identification assumptions](didisc-validation-tests.html) for why sup-t is the
 default). Each `Period` line tests one year alone.
 
 **Composition stability.** H0: the share of each type among the units just above
@@ -296,7 +296,7 @@ those in a comparison period; the estimate is then valid only if the next test's
 null holds.
 
 ```{r}
-cs <- rd_compstable(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
+cs <- rd_compstable(didisc_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
 cs
 ```
 
@@ -315,7 +315,7 @@ the confounding jump of the units at the RD-period cutoff, and the estimate can
 be biased.
 
 ```{r}
-hg <- rd_homog(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
+hg <- rd_homog(didisc_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 hg
 ```
 
@@ -335,7 +335,7 @@ linearly in time; `rd_trendcell(trend = "linear")` tests that version (three or
 more comparison periods).
 
 ```{r}
-tr <- rd_trendcell(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
+tr <- rd_trendcell(didisc_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 tr
 ```
 
@@ -353,7 +353,7 @@ The composition-stability row is the joint test over pairs; the per-pair tests
 are in its printout above. For the two share tests the statistic column holds
 the largest |t| (sup-t), for the two outcome tests the chi-squared statistic.
 
-In `rddid_sim_pv` three of the four nulls are true by construction: types are
+In `didisc_sim_pv` three of the four nulls are true by construction: types are
 continuous at the cutoff, and the confounding jump is 0.5 for every unit in
 every year. Composition stability is false: units at the year-3 cutoff were
 mostly on the same side in years 1 and 2, while units at the year-1 cutoff are
@@ -373,12 +373,12 @@ same difference of jumps estimates the ATU: the effect for the units just below
 the cutoff, which are untreated in the RD period. `estimand = "atu"` labels the
 output as the ATU: the estimate, standard errors and bandwidths are the same as
 without it (among the tests, it changes only `rd_compstable()`). For
-illustration, make everybody treated in years 1 and 2 of `rddid_sim`, with the
+illustration, make everybody treated in years 1 and 2 of `didisc_sim`, with the
 same effect of 1:
 
 ```{r}
-sim_atu <- transform(rddid_sim, W = ifelse(year < 3, 1, W), Y = Y + (year < 3))
-rddid(sim_atu, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, estimand = "atu")
+sim_atu <- transform(didisc_sim, W = ifelse(year < 3, 1, W), Y = Y + (year < 3))
+didisc(sim_atu, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, estimand = "atu")
 ```
 
 The numbers are those of `fit`, now labeled the ATU; the true ATU here is 1.
@@ -399,20 +399,20 @@ The numbers are those of `fit`, now labeled the ATU; the true ATU here is 1.
 
 ## Next
 
-- [Checking the identification assumptions](rddid-validation-tests.html): how
+- [Checking the identification assumptions](didisc-validation-tests.html): how
   each test statistic is built, the tests under the ATU design, and their
   options.
-- [Plots of the estimate and the checks](rddid-plots.html): `plot()` on a fit
+- [Plots of the estimate and the checks](didisc-plots.html): `plot()` on a fit
   and on each test, the switchers picture, and saving a figure.
-- [Bandwidth rules and sampling schemes](rddid-options.html): `bwselect`, fixed
+- [Bandwidth rules and sampling schemes](didisc-options.html): `bwselect`, fixed
   bandwidths, and the standard error under each scheme.
-- [How rddid() computes the estimate](rddid-how-it-works.html): the estimate and
-  the tests rebuilt by hand, for referees and readers who want to see the
-  pieces.
+- [How didisc() computes the estimate](didisc-how-it-works.html): the estimate and
+  the tests rebuilt by hand, for readers who want to check the
+  computation.
 
 ## References
 
-`citation("rddid")` returns the reference for the package, the paper below, with
+`citation("didisc")` returns the reference for the package, the paper below, with
 a BibTeX entry.
 
 Leventer, D. and D. Nevo (2024). Correcting Invalid Regression Discontinuity

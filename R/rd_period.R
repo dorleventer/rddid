@@ -1,13 +1,13 @@
 # rd_period.R -- the numerical core: one period's local-linear RD (conventional and
 # bias-corrected jump, per-unit influence vectors g that the cross-period covariances use).
-# Called by rddid() for every period, by the bandwidth rules (pilot fits) and by the four
+# Called by didisc() for every period, by the bandwidth rules (pilot fits) and by the four
 # assumption tests (one fit per cell). Nothing here depends on other periods.
 
 #' Local-linear RD in one period (building block)
 #'
-#' The building block that [rddid()] runs in every period: the jump in the
+#' The building block that [didisc()] runs in every period: the jump in the
 #' outcome at the cutoff in one period, estimated by local-linear RD, both
-#' conventional and bias-corrected, with standard errors. Unlike [rddid()] it
+#' conventional and bias-corrected, with standard errors. Unlike [didisc()] it
 #' takes vectors (`y`, `x`, `id`), not a data frame and column names, and the
 #' bandwidths must be given, for example from [rd_bw_cct()]. At a given pair
 #' (`h`, `b`) it reproduces the conventional and bias-corrected estimates and
@@ -35,7 +35,7 @@
 #'   only to combine this period with others in a panel. With `NULL` (default)
 #'   the observations are numbered `1, 2, ...`, so they cannot be matched
 #'   across periods.
-#' @inheritParams rddid
+#' @inheritParams didisc
 #'
 #' @return An object of class `"rd_period"`, a list with:
 #'   \describe{
@@ -65,11 +65,11 @@
 #' confidence intervals for regression-discontinuity designs. *Econometrica*
 #' 82(6), 2295-2326.
 #'
-#' @family RD-DID estimation
+#' @family diff-in-disc estimation
 #'
 #' @examples
-#' # the RD period (year 3) of rddid_sim, where the jump is 0.5 + 1 = 1.5
-#' d3 <- rddid_sim[rddid_sim$year == 3, ]
+#' # the RD period (year 3) of didisc_sim, where the jump is 0.5 + 1 = 1.5
+#' d3 <- didisc_sim[didisc_sim$year == 3, ]
 #' bw <- rd_bw_cct(y = d3$Y, x = d3$R)
 #' fit <- rd_period(y = d3$Y, x = d3$R, h = bw[["h"]], b = bw[["b"]], id = d3$id)
 #' fit

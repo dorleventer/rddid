@@ -28,7 +28,7 @@ rd_checks(
 )
 }
 \arguments{
-\item{data, y, x, time, id}{as in \code{\link[=rddid]{rddid()}}; \code{id} is required.}
+\item{data, y, x, time, id}{as in \code{\link[=didisc]{didisc()}}; \code{id} is required.}
 
 \item{t_rd}{the RD period (required).}
 
@@ -53,7 +53,7 @@ share tests' own \code{bwselect} (per-fit CCT by default) can be changed in
 one test, which override the shared ones.}
 
 \item{level}{the confidence level of the reading in the printout (default
-0.95, as in \code{\link[=rddid]{rddid()}}): a test rejects when its p-value is below \code{1 - level}.}
+0.95, as in \code{\link[=didisc]{didisc()}}): a test rejects when its p-value is below \code{1 - level}.}
 }
 \value{
 An object of class \code{"rd_checks"}: a list with \code{table} (one row per
@@ -62,7 +62,7 @@ test: \code{test}, \code{assumption}, \code{statistic}, \code{p_value}, \code{me
 \code{trendcell} (\code{NULL} where a test failed), \code{level} and \code{call}.
 }
 \description{
-When the running variable moves over time, the estimate of \code{\link[=rddid]{rddid()}} is
+When the running variable moves over time, the estimate of \code{\link[=didisc]{didisc()}} is
 identified under type continuity, constant within-type confounding, and
 either composition stability or homogeneous confounding (Leventer and Nevo,
 2024). \code{rd_checks()} runs the four tests, \code{\link[=rd_typecont]{rd_typecont()}},
@@ -81,21 +81,21 @@ A test that cannot run on the data (for example, no unit changes side of
 the cutoff) gives a row with its error message and \code{NA} results.
 
 The printout ends with a reading at the confidence level \code{level}, as in
-\code{\link[=rddid]{rddid()}}: a test rejects its assumption when its p-value is below
+\code{\link[=didisc]{didisc()}}: a test rejects its assumption when its p-value is below
 \code{1 - level}. Not rejecting an assumption does not establish it; constant
 within-type confounding concerns the RD period and is checked in the
 comparison periods only (a pre-trends check).
 }
 \examples{
-ch <- rd_checks(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
+ch <- rd_checks(didisc_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 ch
 # switch options: the chi-squared Wald and per-cell bandwidths everywhere
-rd_checks(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
+rd_checks(didisc_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
           joint = "wald", outcome_bwselect = "cct")
 }
 \seealso{
 \code{\link[=rd_typecont]{rd_typecont()}}, \code{\link[=rd_compstable]{rd_compstable()}}, \code{\link[=rd_homog]{rd_homog()}}, \code{\link[=rd_trendcell]{rd_trendcell()}};
-\code{tidy()} in \link{rddid-tidiers}.
+\code{tidy()} in \link{didisc-tidiers}.
 
 Other tests of the assumptions: 
 \code{\link{plot.rd_compstable}()},

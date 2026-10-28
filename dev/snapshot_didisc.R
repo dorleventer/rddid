@@ -1,5 +1,5 @@
-# Numerical regression snapshot of rddid outputs. Run from the package root:
-#   Rscript dev/snapshot_rddid.R out.rds > out.txt
+# Numerical regression snapshot of didisc outputs. Run from the package root:
+#   Rscript dev/snapshot_didisc.R out.rds > out.txt
 # before and after any change to rd_period / aggregate.R / bandwidth.R, then diff the .txt files.
 # The period-specific rule bwselect = "iter" was removed after tag v0.4.0.9000-iter.
 suppressMessages(pkgload::load_all(".", quiet = TRUE))
@@ -36,7 +36,7 @@ for (sc in c("cs", "pc", "pv")) {
   d <- make_panel(sc)
   for (bw in c("joint", "cct")) for (p in c(1L, 2L)) {
     key <- sprintf("%s|%s|p%d", sc, bw, p)
-    r <- tryCatch(rddid(d, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
+    r <- tryCatch(didisc(d, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
                         bwselect = bw, scheme = "auto", p = p, q = p + 1L),
                   error = function(e) e)
     if (inherits(r, "error")) { res[[key]] <- list(error = conditionMessage(r)); next }

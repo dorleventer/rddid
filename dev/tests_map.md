@@ -1,4 +1,4 @@
-# rddid ↔ Section 4.4 map (validation tests)
+# didisc ↔ Section 4.4 map (validation tests)
 
 **Purpose.** Same contract as `dev/appB_map.md`, for the four validation tests of Section 4.4
 "Testing the identification assumptions" (`sec:tvrv-assess`) of Leventer & Nevo. Section 4.4

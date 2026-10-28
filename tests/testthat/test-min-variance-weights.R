@@ -1,5 +1,5 @@
 # weighting = "min_variance": the minimum-variance comparison weights (paper: weighting choice and its
-# appendix). One test per item of the implementation plan (rd-did docs/rddid_mv_option_plan.md).
+# appendix). One test per item of the implementation plan (rd-did docs/didisc_mv_option_plan.md).
 
 # independent solver for checks: the KKT system [2 Xi, L'; L, 0] (w, mu) = (2 xi, l)
 kkt_weights <- function(Xi, xi, L, l) {
@@ -13,14 +13,14 @@ blocks_of <- function(fit, bc = FALSE) {
   Xi <- matrix(0, m, m); xi <- numeric(m)
   for (i in seq_len(m)) {
     Xi[i, i] <- if (bc) fit$fits[[comps[i]]]$V_D_bc else fit$fits[[comps[i]]]$V_D
-    xi[i] <- rddid:::.cov_scheme(fit$fits[[comps[i]]], fit$fits[[rd]], fit$scheme, bc = bc)
+    xi[i] <- didisc:::.cov_scheme(fit$fits[[comps[i]]], fit$fits[[rd]], fit$scheme, bc = bc)
     for (j in seq_len(m)[-i])
-      Xi[i, j] <- rddid:::.cov_scheme(fit$fits[[comps[i]]], fit$fits[[comps[j]]], fit$scheme, bc = bc)
+      Xi[i, j] <- didisc:::.cov_scheme(fit$fits[[comps[i]]], fit$fits[[comps[j]]], fit$scheme, bc = bc)
   }
   list(Xi = Xi, xi = xi)
 }
-args_pv <- list(data = rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
-run <- function(...) suppressMessages(do.call(rddid, utils::modifyList(args_pv, list(...))))
+args_pv <- list(data = didisc_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
+run <- function(...) suppressMessages(do.call(didisc, utils::modifyList(args_pv, list(...))))
 
 test_that("the closed form equals the KKT solution, constant and linear constraints", {
   set.seed(3)
@@ -28,14 +28,14 @@ test_that("the closed form equals the KKT solution, constant and linear constrai
     G <- matrix(stats::rnorm(25), 5); S <- G %*% t(G) + diag(5)
     Xi <- S[2:5, 2:5]; xi <- S[2:5, 1]
     L <- if (k == 1) matrix(1, 1, 4) else rbind(1, c(-4, -3, -2, -1)); l <- if (k == 1) 1 else c(1, 0)
-    w <- rddid:::.mv_solve(Xi, xi, L, l)
+    w <- didisc:::.mv_solve(Xi, xi, L, l)
     expect_equal(w, kkt_weights(Xi, xi, L, l), tolerance = 1e-10)
     expect_lt(max(abs(L %*% w - l)), 1e-10)
   }
 })
 
 test_that("repeated cross-section, constant trend: inverse-variance weights", {
-  fit <- suppressMessages(rddid(rddid_sim, y = "Y", x = "R", time = "year", t_rd = 3, h = 0.3,
+  fit <- suppressMessages(didisc(didisc_sim, y = "Y", x = "R", time = "year", t_rd = 3, h = 0.3,
                                 weighting = "min_variance"))           # no id: repeated cross-section
   expect_identical(fit$scheme, "cs")
   v <- vapply(c("1", "2"), function(k) fit$fits[[k]]$V_D, numeric(1))
@@ -55,7 +55,7 @@ test_that("fixed h: weights, estimate and standard error match a computation by 
   # the bias-corrected row: its own minimum-variance weights, from the bias-corrected blocks
   bb <- blocks_of(ols, bc = TRUE); wb <- kkt_weights(bb$Xi, bb$xi, matrix(1, 1, 2), 1)
   expect_equal(unname(mv$weights_detail$weights_bc), wb, tolerance = 1e-10)
-  expect_equal(unname(mv$coef_bc), c(1, -wb), tolerance = 1e-10)
+  expect_equal(unname(mv$period_weights_bc), c(1, -wb), tolerance = 1e-10)
   Db <- vapply(c("3", "1", "2"), function(k) ols$fits[[k]]$D_bc, numeric(1))
   expect_equal(mv$estimates["Robust", "est"], Db[["3"]] - sum(wb * Db[c("1", "2")]), tolerance = 1e-12)
   vb <- function(w) ols$fits[["3"]]$V_D_bc - 2 * sum(w * bb$xi) + c(t(w) %*% bb$Xi %*% w)
@@ -106,15 +106,15 @@ test_that("clear errors: numeric trend, unknown bandwidth rule, singular covaria
   expect_error(run(trend = c(0.3, 0.7), weighting = "min_variance"), "fixes them")
   expect_error(run(bwselect = "iter"), "`bwselect` must be one of \"joint\", \"cct\"", fixed = TRUE)
   expect_error(run(trend = "min_variance"), "is a value of `weighting`")
-  dup <- rbind(rddid_sim_pv, transform(rddid_sim_pv[rddid_sim_pv$year == 1, ], year = 0))
-  expect_error(suppressMessages(rddid(dup, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
+  dup <- rbind(didisc_sim_pv, transform(didisc_sim_pv[didisc_sim_pv$year == 1, ], year = 0))
+  expect_error(suppressMessages(didisc(dup, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
                                       h = 0.3, weighting = "min_variance")), "not positive")
 })
 
 test_that("the default is unchanged", {
   a <- run(); b <- run(weighting = "ols")
   expect_identical(a$estimates, b$estimates)
-  expect_identical(a$coef, b$coef)
+  expect_identical(a$period_weights, b$period_weights)
   expect_identical(a$bandwidth, b$bandwidth)
   expect_identical(a$weighting, "ols")
   expect_null(a$weights_detail)

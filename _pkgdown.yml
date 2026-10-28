@@ -1,4 +1,4 @@
-url: https://dorleventer.github.io/rddid/
+url: https://dorleventer.github.io/didisc/
 template:
   bootstrap: 5
 
@@ -9,44 +9,44 @@ navbar:
   components:
     intro:
       text: Get started
-      href: articles/rddid-estimation.html
+      href: articles/didisc-estimation.html
     articles:
       text: Articles
       menu:
         - text: Checking the identification assumptions
-          href: articles/rddid-validation-tests.html
+          href: articles/didisc-validation-tests.html
         - text: Plots of the estimate and the checks
-          href: articles/rddid-plots.html
+          href: articles/didisc-plots.html
         - text: Bandwidth rules and sampling schemes
-          href: articles/rddid-options.html
-        - text: How rddid() computes the estimate (for referees)
-          href: articles/rddid-how-it-works.html
+          href: articles/didisc-options.html
+        - text: How didisc() computes the estimate
+          href: articles/didisc-how-it-works.html
 
 articles:
   - title: Get started
     navbar: ~
     contents:
-      - rddid-estimation
+      - didisc-estimation
   - title: Articles
     navbar: ~
     contents:
-      - rddid-validation-tests
-      - rddid-plots
-      - rddid-options
-      - rddid-how-it-works
+      - didisc-validation-tests
+      - didisc-plots
+      - didisc-options
+      - didisc-how-it-works
 
 reference:
   - title: Package overview
     contents:
-      - rddid-package
+      - didisc-package
   - title: Estimate
-    desc: The RD-DID estimator and what to do with a fit.
+    desc: The diff-in-disc estimator and what to do with a fit.
     contents:
-      - rddid
-      - summary.rddid
-      - plot.rddid
-      - rddid-methods
-      - rddid-tidiers
+      - didisc
+      - summary.didisc
+      - plot.didisc
+      - didisc-methods
+      - didisc-tidiers
       - reexports
   - title: Check the assumptions
     desc: >
@@ -71,5 +71,5 @@ reference:
   - title: Data
     desc: Simulated panels for trying things out.
     contents:
-      - rddid_sim
-      - rddid_sim_pv
+      - didisc_sim
+      - didisc_sim_pv

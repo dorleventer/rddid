@@ -26,7 +26,7 @@ A named numeric vector \code{c(h = , b = )}: the main bandwidth (point
 estimate) and the pilot bandwidth (bias correction).
 }
 \description{
-The building block behind \code{rddid(bwselect = "cct")}, the pilot fits of the
+The building block behind \code{didisc(bwselect = "cct")}, the pilot fits of the
 \code{"joint"} rule, and the default bandwidths of the four tests
 of the assumptions: the MSE-optimal main and pilot bandwidths of Calonico,
 Cattaneo and Titiunik (2014) for a local-linear RD in one period, from
@@ -39,8 +39,8 @@ number, \code{rd_bw_cct()} falls back to \code{h = b = 0.5 * IQR(x)} (\code{sd(x
 interquartile range is zero) and says so in a message.
 }
 \examples{
-# each year of rddid_sim gets its own bandwidths (what bwselect = "cct" uses)
-sapply(split(rddid_sim, rddid_sim$year), function(d) rd_bw_cct(y = d$Y, x = d$R))
+# each year of didisc_sim gets its own bandwidths (what bwselect = "cct" uses)
+sapply(split(didisc_sim, didisc_sim$year), function(d) rd_bw_cct(y = d$Y, x = d$R))
 }
 \references{
 Calonico, S., M. D. Cattaneo and R. Titiunik (2014). Robust nonparametric
@@ -48,9 +48,9 @@ confidence intervals for regression-discontinuity designs. \emph{Econometrica}
 82(6), 2295-2326.
 }
 \seealso{
-Other RD-DID estimation: 
-\code{\link{plot.rddid}()},
-\code{\link{rd_period}()},
-\code{\link{rddid}()}
+Other diff-in-disc estimation: 
+\code{\link{didisc}()},
+\code{\link{plot.didisc}()},
+\code{\link{rd_period}()}
 }
-\concept{RD-DID estimation}
+\concept{diff-in-disc estimation}

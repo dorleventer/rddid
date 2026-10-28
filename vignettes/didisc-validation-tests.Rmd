@@ -13,7 +13,7 @@ fmt <- function(x, d = 3) formatC(x, format = "f", digits = d)
 pv <- function(p) if (p < 0.001) "p < 0.001" else paste("p =", fmt(p))
 ```
 
-[Get started](rddid-estimation.html) runs the four tests and reads their
+[Get started](didisc-estimation.html) runs the four tests and reads their
 printouts. This article adds how each statistic is built, the tests under the
 ATU design, their options, and how the four results read together.
 
@@ -25,8 +25,8 @@ another. The units at the cutoff in the RD period can then be a different mix
 from the units at the cutoff in a comparison period, and the difference of the
 two jumps can mix the treatment effect with that difference in who is at the
 cutoff. A unit's **type** records its side of the cutoff in other periods; the
-table in [Get started](rddid-estimation.html#when-the-running-variable-moves-over-time)
-gives the two versions the tests use. The RD-DID estimate identifies the ATT when
+table in [Get started](didisc-estimation.html#when-the-running-variable-moves-over-time)
+gives the two versions the tests use. The diff-in-disc estimate identifies the ATT when
 
 1. **type continuity** holds,
 2. **constant within-type confounding** holds, and
@@ -35,25 +35,25 @@ gives the two versions the tests use. The RD-DID estimate identifies the ATT whe
 
 This is the paper's result for a time-varying running variable (Leventer and
 Nevo, 2024). There is one test per assumption. When the running variable does
-not move, as in `rddid_sim`, every unit has the same type in every period and
+not move, as in `didisc_sim`, every unit has the same type in every period and
 the tests are not informative; in a repeated cross-section the types are not
 observed.
 
-The examples use `rddid_sim_pv`: the `rddid_sim` design (a confounding jump of
+The examples use `didisc_sim_pv`: the `didisc_sim` design (a confounding jump of
 0.5 in every year, a treatment effect of 1 in year 3, the RD period) with a
 running variable that drifts between years. Most units stay on one side;
 some switch:
 
 ```{r}
-library(rddid)
-above <- rddid_sim_pv$R >= 0
-switcher <- tapply(above, rddid_sim_pv$id, function(a) length(unique(a)) > 1)
+library(didisc)
+above <- didisc_sim_pv$R >= 0
+switcher <- tapply(above, didisc_sim_pv$id, function(a) length(unique(a)) > 1)
 sum(switcher)
 ```
 
-Every test takes the same long data frame and column names as `rddid()`. By
+Every test takes the same long data frame and column names as `didisc()`. By
 default each test uses the bias-corrected jumps with their robust variances
-(`bc = TRUE`), like the `Robust (bias-corrected)` row of `rddid()`. The two
+(`bc = TRUE`), like the `Robust (bias-corrected)` row of `didisc()`. The two
 tests on type shares pick a separate CCT bandwidth for every local-linear fit
 (`bwselect = "cct"`) and combine their jumps with a studentized sup-t statistic
 (`joint = "supt"`, `studentize = TRUE`); the two tests on the outcome use one bandwidth for every
@@ -64,7 +64,7 @@ cell (`bwselect = "pooled"`). The last section says why.
 **H0: the share of each type jumps by zero at the cutoff, in every period.**
 
 ```{r}
-tc <- rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
+tc <- rd_typecont(didisc_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
 tc
 ```
 
@@ -82,12 +82,12 @@ tc
   printout names the year and type with the largest |t|. The `Period` lines
   test each year alone.
 
-Here `r pv(tc$p_value)`. Type continuity holds in `rddid_sim_pv` by
+Here `r pv(tc$p_value)`. Type continuity holds in `didisc_sim_pv` by
 construction, so a p-value below 0.05 would be a false rejection.
 
 **If it rejects:** units sort around the cutoff according to their side in other
 periods, so the jump in the outcome partly reflects a jump in who the units are.
-The RD-DID estimate can then be biased, whatever the other tests say.
+The diff-in-disc estimate can then be biased, whatever the other tests say.
 
 ## Composition stability: `rd_compstable()`
 
@@ -95,7 +95,7 @@ The RD-DID estimate can then be biased, whatever the other tests say.
 RD period and in each comparison period.**
 
 ```{r}
-cs <- rd_compstable(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
+cs <- rd_compstable(didisc_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
 cs
 ```
 
@@ -115,7 +115,7 @@ cs
   jumps are correlated; the covariance across pairs comes from those shared
   units.
 
-Here `r pv(cs$p_value)`. Composition stability is false in `rddid_sim_pv`
+Here `r pv(cs$p_value)`. Composition stability is false in `didisc_sim_pv`
 by construction: the units at the year-3 cutoff were mostly on the same side in
 years 1 and 2, while the units at the year-1 cutoff are spread evenly over the
 four types. A rejection here is a correct detection; with 1,000 units the test
@@ -137,7 +137,7 @@ Here a unit's type is its side of the cutoff in the RD period (the second row
 of the type table in Get started; `type_by = "rd_side"`, the default).
 
 ```{r}
-hg <- rd_homog(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
+hg <- rd_homog(didisc_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 hg
 ```
 
@@ -150,7 +150,7 @@ hg
 - `Bandwidth`: one bandwidth in every cell, the CCT bandwidth of the outcome
   with both comparison years pooled.
 
-Here `r pv(hg$p_value)`. The null is true in `rddid_sim_pv` (the
+Here `r pv(hg$p_value)`. The null is true in `didisc_sim_pv` (the
 confounding jump is 0.5 for every unit), so a p-value below 0.05 would be a false
 rejection. The per-type jumps are imprecise (standard errors
 `r fmt(min(hg$period_type_jumps$se), 2)` to
@@ -166,7 +166,7 @@ estimate. If both nulls are false, the estimate can be biased.
 period.**
 
 ```{r}
-tr <- rd_trendcell(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
+tr <- rd_trendcell(didisc_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 tr
 ```
 
@@ -186,7 +186,7 @@ linearly across the comparison periods. That needs at least three comparison
 periods; with two, the function says so and returns no statistic.
 
 **If it rejects:** the within-type confounding jump changes over time, and
-constant weights do not cancel it. `rddid(trend = "linear")` allows a
+constant weights do not cancel it. `didisc(trend = "linear")` allows a
 within-type confounding jump that moves linearly in time, and
 `rd_trendcell(trend = "linear")` tests that version (three or more comparison
 periods).
@@ -198,11 +198,11 @@ estimate concerns the units just below the cutoff, and composition stability
 concerns the below-cutoff shares. `rd_compstable(estimand = "atu")` mirrors the
 running variable and runs the same test on the units below the cutoff; the
 other three tests give the same numbers with either estimand, so `estimand` only
-labels them. `rddid_sim_pv` is an ATT design, so the call below only shows the
+labels them. `didisc_sim_pv` is an ATT design, so the call below only shows the
 mechanics:
 
 ```{r}
-rd_compstable(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3, estimand = "atu")
+rd_compstable(didisc_sim_pv, x = "R", time = "year", id = "id", t_rd = 3, estimand = "atu")
 ```
 
 In this printout the H0 line and the counts refer to the units below the cutoff:
@@ -212,7 +212,7 @@ composition the estimate relies on.
 ## Run all four at once: `rd_checks()`
 
 ```{r}
-ch <- rd_checks(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
+ch <- rd_checks(didisc_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 ch
 ```
 
@@ -227,11 +227,11 @@ Together, the four results map onto the list at the top. A rejection of type
 continuity, or of constant within-type confounding, would call the estimate into
 question; so would a rejection of both composition stability and homogeneous
 confounding. A rejection of only one of those two would not on its own, because
-either one is enough for identification. In `rddid_sim_pv` the truth is known: composition stability fails and
+either one is enough for identification. In `didisc_sim_pv` the truth is known: composition stability fails and
 the other three assumptions hold, so the estimate is valid:
 
 ```{r}
-rddid(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
+didisc(didisc_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 ```
 
 The true effect is 1.
@@ -278,12 +278,12 @@ argument away, in each test and in `rd_checks()`.
 
 ```{r, eval = FALSE}
 # share tests: the chi-squared Wald, or sup-t with normal critical values
-rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3, joint = "wald")
-rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3, studentize = FALSE)
+rd_typecont(didisc_sim_pv, x = "R", time = "year", id = "id", t_rd = 3, joint = "wald")
+rd_typecont(didisc_sim_pv, x = "R", time = "year", id = "id", t_rd = 3, studentize = FALSE)
 # outcome tests: one bandwidth per cell instead of one pooled bandwidth
-rd_homog(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, bwselect = "cct")
+rd_homog(didisc_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, bwselect = "cct")
 # all four at once, and one test differently from the others
-rd_checks(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
+rd_checks(didisc_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
           joint = "wald", outcome_bwselect = "cct", homog = list(min_n = 20))
 ```
 
@@ -307,14 +307,14 @@ ch$typecont$joint_tests
   (normal). Every combination is in `$joint_tests`.
 - `bc`: `TRUE` (default) tests the bias-corrected jumps with their robust
   variances; `FALSE` uses the conventional ones.
-- `scheme`: detected from the data as in `rddid()`; set it to override.
+- `scheme`: detected from the data as in `didisc()`; set it to override.
 - `rd_homog()`: `type_by = "rd_side"` (default, the side in the RD period) or
   `"pattern"` (the sides in the other periods used). `rd_trendcell()` always
   types units by their side in the RD period.
 - `rd_homog()` and `rd_trendcell()`: `min_n` drops cells with too few
   observations on either side of the cutoff, with a message.
 
-The article [How rddid() computes the estimate](rddid-how-it-works.html)
+The article [How didisc() computes the estimate](didisc-how-it-works.html)
 rebuilds the type-continuity and composition-stability tests by hand and runs
 all four on simulated designs in which one assumption fails at a time, with the
 resulting bias in the estimate.

@@ -1,4 +1,4 @@
-# bandwidth_joint.R -- the bandwidth rules that target the RD-DID estimate itself:
+# bandwidth_joint.R -- the bandwidth rules that target the diff-in-disc estimate itself:
 # .bw_rot() is the rule-of-thumb bandwidth shared by every period;
 # .bw_stage() and .bw_pilots() choose the pilot bandwidths d and b for the aggregate, as
 # rdrobust's selector chooses them for one period;
@@ -9,7 +9,7 @@
 # paper's Appendix B; the code-to-paper map is dev/appB_map.md (developer material, not shipped).
 
 # Original file header:
-# Bandwidth selection for the aggregate RD-DID estimator.
+# Bandwidth selection for the aggregate diff-in-disc estimator.
 #
 # Two modes, matching Section 5.4 (sec:est-bw) and Appendix B.4 (app:est-bw) of
 # Leventer and Nevo; the code <-> equation map is dev/appB_map.md (section 2.5).
@@ -105,15 +105,15 @@
   list(coef = beta[nu + 1L], g = A[nu + 1L, ] * res, id = id, bconst = bconst)
 }
 
-#' Variance of sum_t coef_t (term_{t,+} - term_{t,-}) from per-side influence vectors
+#' Variance of sum_t w_t (term_{t,+} - term_{t,-}) from per-side influence vectors
 #'
 #' `G[[t]][[side]]` holds `g` and `id`. The own-period blocks always enter; the cross-period
 #' blocks by `cross`: `"none"`, `"same"` (same side, matched by id) or `"same_opp"` (same side
 #' minus opposite side), the rules of [.bw_constants()].
 #' @keywords internal
 #' @noRd
-.bw_agg_var <- function(G, coef, cross) {
-  keys <- names(coef)
+.bw_agg_var <- function(G, w, cross) {
+  keys <- names(w)
   ms <- function(a, sa, b, sb) .match_sum(G[[a]][[sa]]$id, G[[a]][[sa]]$g, G[[b]][[sb]]$id, G[[b]][[sb]]$g)
   v <- 0
   for (a in keys) for (b in keys) {
@@ -126,7 +126,7 @@
       opp  <- if (cross == "same_opp") ms(a, "+", b, "-") + ms(a, "-", b, "+") else 0
       same - opp
     }
-    v <- v + coef[[a]] * coef[[b]] * cab
+    v <- v + w[[a]] * w[[b]] * cab
   }
   v
 }
@@ -134,11 +134,11 @@
 #' One stage of the selector for the aggregate (App. B.4, "Bandwidth estimation")
 #'
 #' rdrobust's `rdrobust_bw()` stage, in its own units, for the aggregate
-#' `sum_t coef_t (m^{(nu)}_{t,+} - m^{(nu)}_{t,-})` instead of one period's jump: every period at
+#' `sum_t w_t (m^{(nu)}_{t,+} - m^{(nu)}_{t,-})` instead of one period's jump: every period at
 #' the same `h_V` (variance, design moments) and `h_B` (the order-`oB` fit for the `(o+1)`-th
 #' derivative),
-#'   V  = (2 nu + 1) h_V^{2 nu + 1} Var(sum_t coef_t (beta_{nu,t,+} - beta_{nu,t,-})),
-#'   B  = sqrt(2 (o + 1 - nu)) sum_t coef_t (BConst_{t,+} beta_{o+1,t,+} - BConst_{t,-} beta_{o+1,t,-}),
+#'   V  = (2 nu + 1) h_V^{2 nu + 1} Var(sum_t w_t (beta_{nu,t,+} - beta_{nu,t,-})),
+#'   B  = sqrt(2 (o + 1 - nu)) sum_t w_t (BConst_{t,+} beta_{o+1,t,+} - BConst_{t,-} beta_{o+1,t,-}),
 #'   R  = reg_const 2 (o + 1 - nu) Var(the sum in B, BConst held fixed),
 #'   bw = (V / (B^2 + R))^{1 / (2 o + 3)},
 #' the paper's `h^opt(nu, o, V-bar-hat, B-bar-hat)` with `B^2` replaced by `B^2 + R`. `h_B = "range"`
@@ -149,10 +149,10 @@
 #' opposite side under `"pv"`.
 #' @keywords internal
 #' @noRd
-.bw_stage <- function(plist, coef, scheme, o, nu, oB, h_V, h_B, reg_const = 0, c = 0,
+.bw_stage <- function(plist, w, scheme, o, nu, oB, h_V, h_B, reg_const = 0, c = 0,
                       kernel = "triangular") {
   cutoff <- c
-  keys <- names(coef)
+  keys <- names(w)
   GV <- list(); GB <- list(); Bsum <- 0
   for (k in keys) {
     d <- plist[[k]]; GV[[k]] <- list(); GB[[k]] <- list()
@@ -162,16 +162,16 @@
       fv <- .bw_side_poly(d$y[s], d$x[s], d$id[s], cutoff, o, nu, h_V, kernel)
       fb <- .bw_side_poly(d$y[s], d$x[s], d$id[s], cutoff, oB, o + 1L, hb, kernel)
       sg <- if (sd == "+") 1 else -1
-      Bsum <- Bsum + coef[[k]] * sg * fv$bconst * fb$coef
+      Bsum <- Bsum + w[[k]] * sg * fv$bconst * fb$coef
       GV[[k]][[sd]] <- list(g = fv$g, id = fv$id)
       GB[[k]][[sd]] <- list(g = fv$bconst * fb$g, id = fb$id)
     }
   }
   V <- (2 * nu + 1) * h_V^(2 * nu + 1) *
-    .bw_agg_var(GV, coef, if (scheme == "pc") "same" else "none")
+    .bw_agg_var(GV, w, if (scheme == "pc") "same" else "none")
   B <- sqrt(2 * (o + 1 - nu)) * Bsum
   R <- if (reg_const > 0)
-    reg_const * 2 * (o + 1 - nu) * .bw_agg_var(GB, coef, c(cs = "none", pc = "same", pv = "same_opp")[[scheme]])
+    reg_const * 2 * (o + 1 - nu) * .bw_agg_var(GB, w, c(cs = "none", pc = "same", pv = "same_opp")[[scheme]])
   else 0
   if (!is.finite(V) || V <= 0)
     .abort("the bandwidth selector's variance scale is not positive; use bwselect = \"cct\" or pass h.")
@@ -189,23 +189,23 @@
 #' Each is capped at the largest distance of the running variable to the cutoff over all
 #' periods, as rdrobust's `bwrestrict = TRUE`, and, when the running variable has mass points,
 #' `d` is raised to at least the 10th distinct distance on each side ([.bw_mass()]), as
-#' rdrobust's `bwcheck`. With one period and `coef = 1` these are
+#' rdrobust's `bwcheck`. With one period and `w = 1` these are
 #' rdbwselect's `d` (internal) and `b`; under a balanced PC panel, its `d` and `b` on the composite
-#' outcome `sum_t coef_t Y_t` (at the same `h_rot`).
+#' outcome `sum_t w_t Y_t` (at the same `h_rot`).
 #' @return list with `d`, `b` and the two stages (`stage_d`, `stage_b`: `V`, `B`, `R`, `bw`).
 #' @keywords internal
 #' @noRd
-.bw_pilots <- function(plist, coef, scheme = "cs", h_rot = NULL, c = 0, p = 1L, q = 2L,
+.bw_pilots <- function(plist, w, scheme = "cs", h_rot = NULL, c = 0, p = 1L, q = 2L,
                        kernel = "triangular", regularize = TRUE, reg_const = 3) {
   cutoff <- c
-  if (is.null(h_rot)) h_rot <- .bw_rot(plist[names(coef)], kernel = kernel, c = cutoff)
-  mp <- .bw_mass(plist[names(coef)], c = cutoff)
+  if (is.null(h_rot)) h_rot <- .bw_rot(plist[names(w)], kernel = kernel, c = cutoff)
+  mp <- .bw_mass(plist[names(w)], c = cutoff)
   radius <- mp$radius
-  st_d <- .bw_stage(plist, coef, scheme, o = q + 1L, nu = q + 1L, oB = q + 2L,
+  st_d <- .bw_stage(plist, w, scheme, o = q + 1L, nu = q + 1L, oB = q + 2L,
                     h_V = h_rot, h_B = "range", reg_const = 0, c = cutoff, kernel = kernel)
   d <- min(st_d$bw, radius)
   if (mp$mass) d <- max(d, mp$bw_min)
-  st_b <- .bw_stage(plist, coef, scheme, o = q, nu = p + 1L, oB = q + 1L,
+  st_b <- .bw_stage(plist, w, scheme, o = q, nu = p + 1L, oB = q + 1L,
                     h_V = h_rot, h_B = d, reg_const = if (regularize) reg_const else 0,
                     c = cutoff, kernel = kernel)
   b <- min(st_b$bw, radius)
@@ -232,19 +232,19 @@
 #' Nothing here depends on which period is the RD period, so the selector built on it is
 #' invariant to that label; this matters when the estimator aggregates several RD periods.
 #'
-#' @param plist named per-period data list; `coef` named period coefficients.
+#' @param plist named per-period data list; `w` named signed period weights.
 #' @param scheme one of `"cs"`, `"pc"`, `"pv"`.
 #' @param b the common pilot bandwidth of the curvature fits (from [.bw_pilots()]).
 #' @param h_rot optional bandwidth for the variance side; defaults to [.bw_rot()].
-#' @return list with `keys`, `coef` (in `keys` order), `bias_const`, `var_const`, `n_obs`,
+#' @return list with `keys`, `period_weights` (in `keys` order), `bias_const`, `var_const`, `n_obs`,
 #'   `var_bias` (K x K covariance of the `B-hat_t`), `var_cross` (K x K same-side cross term,
 #'   zero off PC), `h_rot`, `b`, `pilot_fits`, `var_fits`.
 #' @keywords internal
 #' @noRd
-.bw_constants <- function(plist, coef, scheme = "cs", b, h_rot = NULL,
+.bw_constants <- function(plist, w, scheme = "cs", b, h_rot = NULL,
                           c = 0, p = 1L, q = 2L, kernel = "triangular") {
   cutoff <- c
-  keys <- names(coef)
+  keys <- names(w)
   K    <- length(keys)
   fp1  <- factorial(p + 1)
   if (!is.numeric(b) || length(b) != 1L || !is.finite(b) || b <= 0)
@@ -265,7 +265,7 @@
   # variance-side fits: every period at the common rule-of-thumb bandwidth (the variance
   # constants and the design moments)
   var_fits <- stats::setNames(lapply(keys, function(k) fit_at(k, h_rot, h_rot)), keys)
-  period_coef <- unname(vapply(keys, function(k) coef[[k]], numeric(1)))
+  period_weights <- unname(vapply(keys, function(k) w[[k]], numeric(1)))
 
   # B-hat_t = (p+1)! [bmom_+(h_rot) curv_+(b) - bmom_-(h_rot) curv_-(b)]. psi is the
   # per-unit influence of one side's term, (p+1)! bmom(h_rot) g_curv(b), unsigned: the
@@ -304,7 +304,7 @@
       .warn("scheme = \"pc\" but no unit is active in two periods' windows: ",
             "the cross-period term is identically zero (same as scheme = \"cs\").")
   }
-  list(keys = keys, coef = period_coef, bias_const = bias_const, var_const = var_const,
+  list(keys = keys, period_weights = period_weights, bias_const = bias_const, var_const = var_const,
        n_obs = n_obs, var_bias = var_bias, var_cross = var_cross, h_rot = h_rot, b = b,
        pilot_fits = pilot_fits, var_fits = var_fits)
 }
@@ -327,7 +327,7 @@
 #' Every period's bias correction uses the same pilot bandwidth `b` (B.4 after
 #' eq:common_h_opt; consistent with Assumption R(g), as h*/b -> 0).
 #'
-#' @param plist named per-period data list; `coef` named period coefficients
+#' @param plist named per-period data list; `w` named signed period weights
 #'   (RD period = +1, comparisons = -w_t); `t_rd` the RD-period label (kept for
 #'   call compatibility; the selector does not use it).
 #' @param scheme one of `"cs"`, `"pc"`, `"pv"`; sets which variance scales the
@@ -348,33 +348,33 @@
 #'   regularization term `reg`, the rule-of-thumb `h_rot`, and the `constants`.
 #' @keywords internal
 #' @noRd
-.bw_joint <- function(plist, coef, t_rd = NULL, scheme = "cs", b = NULL,
+.bw_joint <- function(plist, w, t_rd = NULL, scheme = "cs", b = NULL,
                       c = 0, p = 1L, q = 2L, kernel = "triangular",
                       regularize = TRUE, reg_const = 3, constants = NULL) {
   cutoff <- c
   d <- NA_real_
   if (is.null(constants)) {
-    h_rot <- .bw_rot(plist[names(coef)], kernel = kernel, c = cutoff)
+    h_rot <- .bw_rot(plist[names(w)], kernel = kernel, c = cutoff)
     if (is.null(b)) {
-      pil <- .bw_pilots(plist, coef, scheme = scheme, h_rot = h_rot, c = cutoff, p = p, q = q,
+      pil <- .bw_pilots(plist, w, scheme = scheme, h_rot = h_rot, c = cutoff, p = p, q = q,
                         kernel = kernel, regularize = regularize, reg_const = reg_const)
       d <- pil$d
       b <- pil$b
     }
-    constants <- .bw_constants(plist, coef, scheme = scheme, b = b, h_rot = h_rot,
+    constants <- .bw_constants(plist, w, scheme = scheme, b = b, h_rot = h_rot,
                                c = cutoff, p = p, q = q, kernel = kernel)
   }
   const <- constants
   fp1   <- factorial(p + 1)
   K     <- length(const$keys)
 
-  # aggregate bias constant: sum_t coef_t B-hat_t
-  B_agg <- sum(const$coef * const$bias_const)
-  # variance scale: own-period terms sum_t coef_t^2 V-hat_t / n_t, plus, under "pc", the
+  # aggregate bias constant: sum_t w_t B-hat_t
+  B_agg <- sum(const$period_weights * const$bias_const)
+  # variance scale: own-period terms sum_t w_t^2 V-hat_t / n_t, plus, under "pc", the
   # same-side cross-period terms (estimated at h_rot in every period, so at rho = 1)
-  cf   <- const$coef
+  cf   <- const$period_weights
   Veff <- sum(cf^2 * const$var_const / const$n_obs) + drop(crossprod(cf, const$var_cross %*% cf))
-  # regularization: reg_const x Var(sum_t coef_t B-hat_t), with the cross-period covariances of
+  # regularization: reg_const x Var(sum_t w_t B-hat_t), with the cross-period covariances of
   # the B-hat_t. At a common h it carries the same h^{2(p+1)} factor as B_agg^2, so it simply
   # joins B_agg^2 in the denominator of h*.
   reg   <- if (regularize) reg_const * drop(crossprod(cf, const$var_bias %*% cf)) else 0

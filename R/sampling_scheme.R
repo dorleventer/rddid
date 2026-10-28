@@ -1,6 +1,6 @@
 # sampling_scheme.R -- detection of the sampling scheme from the (period, id, side) structure:
 # "cs" (no unit repeats), "pc" (units repeat, never change side), "pv" (some unit changes side).
-# Used by rddid(), rd_homog(), rd_trendcell() and rd_typecont(); rd_compstable() has its own
+# Used by didisc(), rd_homog(), rd_trendcell() and rd_typecont(); rd_compstable() has its own
 # pair-level rule (a unit above the cutoff in both periods of a pair).
 
 #' Classify the sampling scheme from a long (period, id, side) table
@@ -32,7 +32,7 @@
 #' Sampling scheme read off the comparison periods only (rd_homog, rd_trendcell)
 #'
 #' The scheme here sets the covariance between comparison-period jumps, so only those periods
-#' enter, every row of them (units without a type included). rddid() reads the scheme off every
+#' enter, every row of them (units without a type included). didisc() reads the scheme off every
 #' period, so the two can differ for the same data.
 #' @keywords internal
 #' @noRd

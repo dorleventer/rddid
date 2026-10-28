@@ -3,7 +3,7 @@ package's user-facing NEWS is inst/NEWS.md). -->
 
 # rddid 0.4.0.9000 (development)
 
-## 2026-10-27: the pilot bandwidths chosen for the aggregate (0.4.0.9004)
+## 2026-10-27: the pilot bandwidths chosen for the aggregate (PR #12: rddid 0.4.0.9004 on its branch, lands as didisc 0.4.0.9008)
 
 * `bwselect = "joint"`: the pilot bandwidth `b` is now one bandwidth for every period, chosen for
   the RD-DID estimate as rdrobust's `rdbwselect` (mserd) chooses its pilot for one period: `b` is

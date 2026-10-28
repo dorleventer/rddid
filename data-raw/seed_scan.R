@@ -1,4 +1,4 @@
-# Seed scan behind the choice of seed for rddid_sim_pv (data-raw/make_sim.R). Run from the package root:
+# Seed scan behind the choice of seed for didisc_sim_pv (data-raw/make_sim.R). Run from the package root:
 #   Rscript data-raw/seed_scan.R
 # 40 seeds of the moving-R design: estimate, and the p-values of the four tests. In this design
 # composition stability genuinely fails (the yearly deviations of R from the base position have a
@@ -8,11 +8,11 @@
 # one where the holding assumptions are comfortably not rejected and the failing one clearly is.
 suppressMessages(pkgload::load_all(".", quiet = TRUE))
 src <- readLines("data-raw/make_sim.R")
-src <- src[!grepl("use_data|^rddid_sim|^sw <-|^cat[(]", src)]
+src <- src[!grepl("use_data|^didisc_sim|^sw <-|^cat[(]", src)]
 eval(parse(text = src))
 res <- do.call(rbind, lapply(1:40, function(sd) {
   d <- make_sim(moving = TRUE, seed = 20261000 + sd)
-  f <- suppressMessages(rddid(d, y = "Y", x = "R", time = "year", id = "id", t_rd = 3))
+  f <- suppressMessages(didisc(d, y = "Y", x = "R", time = "year", id = "id", t_rd = 3))
   p <- function(expr) tryCatch(suppressMessages(expr)$p_value, error = function(e) NA_real_)
   data.frame(seed = 20261000 + sd, est = f$estimates$est[1],
              typecont   = p(rd_typecont(d, x = "R", time = "year", id = "id")),

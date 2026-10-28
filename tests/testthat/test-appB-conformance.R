@@ -1,5 +1,5 @@
 # ---------------------------------------------------------------------------
-# Conformance of rddid against the Appendix B / Section 5.2 equations.
+# Conformance of didisc against the Appendix B / Section 5.2 equations.
 #
 # Every expectation compares a package quantity to the independent reference in
 # helper-appB-reference.R, which was written from the paper's equations alone
@@ -50,7 +50,7 @@ test_that("App. B preamble -- kernel shapes agree and the 1/h, 1/n scalings canc
   u <- seq(-1.6, 1.6, length.out = 201)
   for (k in appB_kern) {
     # the reference's K() is the same shape the package weights with
-    expect_equal(ref_kernel(u, k), rddid:::.rd_kweight(u, k), tolerance = appB_tol)
+    expect_equal(ref_kernel(u, k), didisc:::.rd_kweight(u, k), tolerance = appB_tol)
   }
 
   d <- ref_dgp_single(11, n = 1500, c = 0.3)
@@ -252,7 +252,7 @@ test_that("eq:var-cs, eq:var-pc, eq:var-pv -- .aggregate_fits matches under CS /
     for (cf in weights) for (bc in c(FALSE, TRUE)) {
       lab <- sprintf("%s c=%g kernel=%s p=%d bc=%s w=(%g,%g)", g$des, g$cut, g$k,
                      g$pq[1], bc, -cf[["1"]], -cf[["2"]])
-      a <- rddid:::.aggregate_fits(pfs, cf, bc = bc)
+      a <- didisc:::.aggregate_fits(pfs, cf, bc = bc)
       r <- ref_agg_from_fits(rfs, cf, rd = "3", bc = bc, hc1 = TRUE)
       appB_eq(unname(a[["est"]]),  unname(r[["est"]]), lab)
       appB_eq(unname(a[["V_cs"]]), unname(r[["V_cs"]]), lab)
@@ -281,7 +281,7 @@ test_that("eq:var-cs/pc/pv -- PC data: C^opp = 0 and V^PV == V^PC; CS data: V^CS
       Copp <- attr(r, "Cpm") + attr(r, "Cmp")
       expect_true(all(Copp == 0), info = sprintf("PC c=%g bc=%s", cut, bc))
       expect_equal(unname(r[["V_pv"]]), unname(r[["V_pc"]]), tolerance = appB_tol)
-      a <- rddid:::.aggregate_fits(pfs, cf, bc = bc)
+      a <- didisc:::.aggregate_fits(pfs, cf, bc = bc)
       expect_equal(unname(a[["V_pv"]]), unname(a[["V_pc"]]), tolerance = appB_tol)
       # and PC genuinely differs from CS here (the cross terms are not empty)
       expect_true(abs(a[["V_pc"]] - a[["V_cs"]]) / a[["V_cs"]] > 1e-3)
@@ -300,7 +300,7 @@ test_that("eq:var-cs/pc/pv -- PC data: C^opp = 0 and V^PV == V^PC; CS data: V^CS
       expect_true(all(Csame[upper.tri(Csame)] == 0), info = sprintf("CS c=%g bc=%s", cut, bc))
       expect_equal(unname(r[["V_pc"]]), unname(r[["V_cs"]]), tolerance = appB_tol)
       expect_equal(unname(r[["V_pv"]]), unname(r[["V_cs"]]), tolerance = appB_tol)
-      a <- rddid:::.aggregate_fits(pfs, cf, bc = bc)
+      a <- didisc:::.aggregate_fits(pfs, cf, bc = bc)
       expect_equal(unname(a[["V_pc"]]), unname(a[["V_cs"]]), tolerance = appB_tol)
       expect_equal(unname(a[["V_pv"]]), unname(a[["V_cs"]]), tolerance = appB_tol)
     }

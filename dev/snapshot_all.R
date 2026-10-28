@@ -49,62 +49,62 @@ keep <- function(key, expr) {
   cat(sprintf("%-60s %s\n", key, if (inherits(r, "snapshot_error")) paste("ERROR:", r$error) else "ok"))
 }
 
-# ---- rddid() -------------------------------------------------------------------------------
+# ---- didisc() -------------------------------------------------------------------------------
 for (sc in c("cs", "pc", "pv")) {
   d <- dat[[sc]]
   for (bw in c("joint", "cct")) {
-    keep(sprintf("rddid|%s|%s|constant", sc, bw),
-         rddid(d, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, bwselect = bw))
-    keep(sprintf("rddid|%s|%s|linear", sc, bw),
-         rddid(d, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, bwselect = bw,
+    keep(sprintf("didisc|%s|%s|constant", sc, bw),
+         didisc(d, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, bwselect = bw))
+    keep(sprintf("didisc|%s|%s|linear", sc, bw),
+         didisc(d, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, bwselect = bw,
                trend = "linear"))
   }
-  keep(sprintf("rddid|%s|joint|p2", sc),
-       rddid(d, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, bwselect = "joint",
+  keep(sprintf("didisc|%s|joint|p2", sc),
+       didisc(d, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, bwselect = "joint",
              p = 2L, q = 3L))
-  keep(sprintf("rddid|%s|cct|p2", sc),
-       rddid(d, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, bwselect = "cct",
+  keep(sprintf("didisc|%s|cct|p2", sc),
+       didisc(d, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, bwselect = "cct",
              p = 2L, q = 3L))
-  keep(sprintf("rddid|%s|joint|noreg", sc),
-       rddid(d, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, bwselect = "joint",
+  keep(sprintf("didisc|%s|joint|noreg", sc),
+       didisc(d, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, bwselect = "joint",
              regularize = FALSE))
-  keep(sprintf("rddid|%s|fixed-h", sc),
-       rddid(d, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, h = 0.3, b = 0.45))
-  keep(sprintf("rddid|%s|joint|atu", sc),
-       rddid(d, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, bwselect = "joint",
+  keep(sprintf("didisc|%s|fixed-h", sc),
+       didisc(d, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, h = 0.3, b = 0.45))
+  keep(sprintf("didisc|%s|joint|atu", sc),
+       didisc(d, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, bwselect = "joint",
              estimand = "atu"))
-  keep(sprintf("rddid|%s|joint|numeric-w", sc),
-       rddid(d, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, bwselect = "joint",
+  keep(sprintf("didisc|%s|joint|numeric-w", sc),
+       didisc(d, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, bwselect = "joint",
              comparisons = c(2, 1), trend = c(0.3, 0.7)))
   for (fs in c("cs", "pc", "pv"))
-    keep(sprintf("rddid|%s|joint|scheme-%s", sc, fs),
-         rddid(d, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, bwselect = "joint",
+    keep(sprintf("didisc|%s|joint|scheme-%s", sc, fs),
+         didisc(d, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, bwselect = "joint",
                scheme = fs))
   for (k in c("epanechnikov", "uniform"))
-    keep(sprintf("rddid|%s|cct|%s", sc, k),
-         rddid(d, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, bwselect = "cct",
+    keep(sprintf("didisc|%s|cct|%s", sc, k),
+         didisc(d, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, bwselect = "cct",
                kernel = k))
-  keep(sprintf("rddid|%s|cct|level90", sc),
-       rddid(d, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, bwselect = "cct",
+  keep(sprintf("didisc|%s|cct|level90", sc),
+       didisc(d, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, bwselect = "cct",
              level = 0.90))
 }
-keep("rddid|pc|no-id",
-     rddid(dat$pc, y = "Y", x = "R", time = "year", t_rd = 3, bwselect = "cct"))
-keep("rddid|pv4|joint|linear-3comp",
-     rddid(dat$pv4, y = "Y", x = "R", time = "year", id = "id", t_rd = 4, bwselect = "joint",
+keep("didisc|pc|no-id",
+     didisc(dat$pc, y = "Y", x = "R", time = "year", t_rd = 3, bwselect = "cct"))
+keep("didisc|pv4|joint|linear-3comp",
+     didisc(dat$pv4, y = "Y", x = "R", time = "year", id = "id", t_rd = 4, bwselect = "joint",
            trend = "linear"))
 # minimum-variance weights (each row its own weights), PV data, constant trend, two comparisons
 for (bw in c("joint", "cct"))
-  keep(sprintf("rddid|pv|%s|min_variance", bw),
-       rddid(dat$pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, bwselect = bw,
+  keep(sprintf("didisc|pv|%s|min_variance", bw),
+       didisc(dat$pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, bwselect = bw,
              weighting = "min_variance"))
 # aggregate over RD periods 3 and 4 (comparisons 1, 2): Corollary cor:agg, Section 5.6
 for (bw in c("joint", "cct")) {
-  keep(sprintf("rddid|pv4|agg|%s|constant", bw),
-       rddid(dat$pv4, y = "Y", x = "R", time = "year", id = "id", t_rd = c(3, 4),
+  keep(sprintf("didisc|pv4|agg|%s|constant", bw),
+       didisc(dat$pv4, y = "Y", x = "R", time = "year", id = "id", t_rd = c(3, 4),
              comparisons = c(1, 2), bwselect = bw))
-  keep(sprintf("rddid|pv4|agg|%s|linear-phi", bw),
-       rddid(dat$pv4, y = "Y", x = "R", time = "year", id = "id", t_rd = c(3, 4),
+  keep(sprintf("didisc|pv4|agg|%s|linear-phi", bw),
+       didisc(dat$pv4, y = "Y", x = "R", time = "year", id = "id", t_rd = c(3, 4),
              comparisons = c(1, 2), trend = "linear", rd_weights = c(0.3, 0.7), bwselect = bw))
 }
 

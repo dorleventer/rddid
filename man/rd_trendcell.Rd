@@ -39,10 +39,10 @@ outcome still gives its unit's side of the cutoff and is left out of the fits.}
 
 \item{time}{name of the period column (a string). The column is usually
 numeric (a year); character or factor labels work as well, except under
-\code{trend = "linear"} (in \code{\link[=rddid]{rddid()}} or \code{\link[=rd_trendcell]{rd_trendcell()}}), where the line is
+\code{trend = "linear"} (in \code{\link[=didisc]{didisc()}} or \code{\link[=rd_trendcell]{rd_trendcell()}}), where the line is
 fitted on the period values: these then need to be numeric and are the
 time scale of the line (so 2015, 2017, 2018 are unequally spaced);
-\code{as.numeric()} converts character labels such as \code{"2019"}. In \code{\link[=rddid]{rddid()}}
+\code{as.numeric()} converts character labels such as \code{"2019"}. In \code{\link[=didisc]{didisc()}}
 the default comparison periods are every period other than \code{t_rd}, in
 sorted order of the values (alphabetical for character or factor labels),
 the order a numeric \code{trend} follows.}
@@ -57,13 +57,13 @@ period is its type. The test does not use the RD period's outcomes.}
 time order. \code{NULL} (default) uses every period other than \code{t_rd}. The
 constant trend needs at least 2 comparison periods, the linear trend 3.}
 
-\item{estimand}{\code{"att"} (default) or \code{"atu"}, as in \code{\link[=rddid]{rddid()}}. Label only:
+\item{estimand}{\code{"att"} (default) or \code{"atu"}, as in \code{\link[=didisc]{didisc()}}. Label only:
 the test is the same either way.}
 
 \item{trend}{the trend assumption tested within each type: \code{"constant"}
 (default; the confounding jump is the same in every comparison period) or
 \code{"linear"} (it moves linearly in time; needs at least three comparison
-periods). Given the \code{trend} of an \code{\link[=rddid]{rddid()}} call, the test checks that
+periods). Given the \code{trend} of a \code{\link[=didisc]{didisc()}} call, the test checks that
 call's assumption.
 With \code{"linear"} the second differences are taken in time (the period values), so
 unequally spaced comparison periods are handled.}
@@ -85,15 +85,15 @@ cell's own CCT bandwidths from \code{\link[=rd_bw_cct]{rd_bw_cct()}}) or \code{"
 
 \item{scheme}{the sampling scheme, which sets the covariance across
 comparison periods in the test: \code{"cs"}, \code{"pc"} or \code{"pv"} (as in
-\code{\link[=rddid]{rddid()}}), or \code{"auto"} (default), which reads it off the comparison
-periods by the rule of \code{\link[=rddid]{rddid()}}. See Details.}
+\code{\link[=didisc]{didisc()}}), or \code{"auto"} (default), which reads it off the comparison
+periods by the rule of \code{\link[=didisc]{didisc()}}. See Details.}
 
 \item{min_n}{the minimum number of observations on each side of the cutoff
 for a (type, period) cell to enter the test (default 10). Smaller cells
 are dropped, with a message listing them.}
 
 \item{bc}{logical. \code{TRUE} (default): test the bias-corrected jumps with their
-robust variance, as in the \code{Robust} row of \code{\link[=rddid]{rddid()}}; \code{FALSE}: the
+robust variance, as in the \code{Robust} row of \code{\link[=didisc]{didisc()}}; \code{FALSE}: the
 conventional jumps and variances.}
 
 \item{p, q}{orders of the local polynomials in every cell, for the point
@@ -134,16 +134,16 @@ in one period and below it in another. A unit's \strong{type} is the side of the
 cutoff it is on in the other period(s); by default here, its side in the RD
 period, which stays fixed across the comparison periods. The paper's
 identification result then requires the confounding-trend assumption of
-\code{\link[=rddid]{rddid()}} within each type.
+\code{\link[=didisc]{didisc()}} within each type.
 It concerns the RD period, where the confounding jump is not observed
 separately, so, like a pre-trends check in difference-in-differences,
 \code{rd_trendcell()} tests it across the comparison periods: the null is that
 \strong{within each type, the confounding jump is the same in every comparison
 period} (with \code{trend = "linear"}: moves linearly in time). A rejection
 means the comparison periods do not support the trend assumption, and the
-estimate of \code{\link[=rddid]{rddid()}} under that assumption can be biased.
-\code{rddid(trend = "linear")} allows jumps that move linearly in time. With a
-running variable fixed over time (as in \link{rddid_sim}) the types are
+estimate of \code{\link[=didisc]{didisc()}} under that assumption can be biased.
+\code{didisc(trend = "linear")} allows jumps that move linearly in time. With a
+running variable fixed over time (as in \link{didisc_sim}) the types are
 degenerate and the test is not informative.
 }
 \details{
@@ -171,7 +171,7 @@ comparison periods, and the covariance follows \code{scheme}, matching units on
 \code{id}: none under \code{"cs"}; from the units on the same side of the cutoff in
 both periods under \code{"pc"}; under \code{"pv"} also from the units that change
 side, with the opposite sign. \code{"auto"} reads the scheme off the comparison
-periods, by the rule of \code{\link[=rddid]{rddid()}}.
+periods, by the rule of \code{\link[=didisc]{didisc()}}.
 }
 
 \subsection{Options}{
@@ -180,7 +180,7 @@ A unit's type is its side of the cutoff in the RD period; units not
 observed in the RD period are left out. A (type, period) cell with fewer than \code{min_n}
 observations on either side of the cutoff is dropped, and a message lists
 the dropped cells. \code{bc = TRUE} (default) tests the bias-corrected jumps with
-their robust variance, as in the \code{Robust} row of \code{\link[=rddid]{rddid()}}; \code{bc = FALSE}
+their robust variance, as in the \code{Robust} row of \code{\link[=didisc]{didisc()}}; \code{bc = FALSE}
 uses the conventional jumps and variances. With \code{bwselect = "cct"}
 each cell gets its own CCT bandwidths from \code{\link[=rd_bw_cct]{rd_bw_cct()}}, computed on that
 cell's outcome and running variable. With \code{bwselect = "rot"} the rule of
@@ -211,11 +211,11 @@ same, so \code{estimand} only labels the output.
 }
 }
 \examples{
-# rddid_sim_pv: the running variable moves, so some units change side
-tr <- rd_trendcell(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
+# didisc_sim_pv: the running variable moves, so some units change side
+tr <- rd_trendcell(didisc_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 tr          # the Wald test, then each type's jump in each comparison period
 # one CCT bandwidth per cell instead of one pooled bandwidth
-rd_trendcell(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, bwselect = "cct")
+rd_trendcell(didisc_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, bwselect = "cct")
 }
 \references{
 Leventer, D. and D. Nevo (2024). \emph{Correcting Invalid Regression Discontinuity
@@ -227,8 +227,8 @@ confidence intervals for regression-discontinuity designs. \emph{Econometrica}
 82(6), 2295-2326.
 }
 \seealso{
-\code{\link[=rddid]{rddid()}} for the estimate; \link{rddid_sim_pv} for example data;
-\code{tidy()} in \link{rddid-tidiers} for a one-row summary.
+\code{\link[=didisc]{didisc()}} for the estimate; \link{didisc_sim_pv} for example data;
+\code{tidy()} in \link{didisc-tidiers} for a one-row summary.
 
 Other tests of the assumptions: 
 \code{\link{plot.rd_compstable}()},

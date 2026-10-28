@@ -147,7 +147,7 @@ test_that("B.4 joint rule, mass points — a discrete running variable: no abort
     rows <- lapply(1:3, function(t) data.frame(id = seq_len(n), year = t, R = R,
       Y = 0.3 * t + 0.5 * R + (0.4 + 0.5 * t) * R^2 + 0.4 * (R >= 0) + (t == 3) * (R >= 0) + rnorm(n, 0, 0.4)))
     dd <- do.call(rbind, rows)
-    expect_no_error(rddid(dd, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, comparisons = c(1, 2)))
+    expect_no_error(didisc(dd, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, comparisons = c(1, 2)))
     d3 <- dd[dd$year == 3, ]
     jb <- .bw_joint(list(`3` = data.frame(y = d3$Y, x = d3$R, id = d3$id)), c(`3` = 1), "3", scheme = "cs")
     rb <- suppressWarnings(rdrobust::rdbwselect(d3$Y, d3$R, vce = "hc1", bwselect = "mserd"))$bws
@@ -156,9 +156,9 @@ test_that("B.4 joint rule, mass points — a discrete running variable: no abort
   }
 })
 
-test_that("B.4 joint rule through rddid() — one h and one b in every period, the bias correction at that b", {
+test_that("B.4 joint rule through didisc() — one h and one b in every period, the bias correction at that b", {
   d <- .jp_panel()
-  f <- rddid(d, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, comparisons = c(1, 2),
+  f <- didisc(d, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, comparisons = c(1, 2),
              bwselect = "joint", scheme = "pc")
   bw <- f$bandwidth
   expect_true(all(bw$h_by_period == bw$h))

@@ -1,7 +1,7 @@
 # Aggregate over several RD periods (paper: Corollary cor:agg, Section 5.6 sec:est-agg).
 # ATT^phi = sum_t phi_t ATT(t) is estimated by one linear combination of the per-period jumps:
 # coefficient phi_t on each RD period and -w^phi_t0 = -sum_t phi_t w_t0(t) on each comparison
-# period. Every expected value below is computed outside rddid()'s aggregation code: from the
+# period. Every expected value below is computed outside didisc()'s aggregation code: from the
 # single-period estimates, from rd_period() fits, or from the per-unit influence vectors.
 
 # five periods: comparisons 1, 2; RD periods 3, 4, 5. Confounding jump linear in t, effect
@@ -26,7 +26,7 @@
   })
   do.call(rbind, rows)
 }
-.fit <- function(d, ...) suppressMessages(rddid(d, y = "Y", x = "R", time = "year", id = "id", ...))
+.fit <- function(d, ...) suppressMessages(didisc(d, y = "Y", x = "R", time = "year", id = "id", ...))
 .rd <- 3:5
 .comps <- c(1, 2)
 
@@ -104,7 +104,7 @@ test_that("linear trend: aggregated comparison weights are those of Corollary 1 
   f <- .fit(d, t_rd = .rd, comparisons = .comps, trend = "linear", h = 0.4)
   expect_equal(unname(f$weights_by_target), rbind(c(-1, 2), c(-2, 3), c(-3, 4)), tolerance = 1e-12)
   expect_equal(f$weights, c(`1` = -2, `2` = 3), tolerance = 1e-12)      # t-bar = 4
-  expect_equal(unname(f$coef), c(1, 1, 1, 6, -9) / 3, tolerance = 1e-12)
+  expect_equal(unname(f$period_weights), c(1, 1, 1, 6, -9) / 3, tolerance = 1e-12)
   # shifting the period labels changes nothing (the weights are computed with time centred at
   # the RD period, so calendar years lose no precision)
   d2 <- transform(d, year = year + 1998)
@@ -134,15 +134,15 @@ test_that("joint rule: one h for the aggregate, the closed form in B, Veff and r
   f <- .fit(d, t_rd = .rd, comparisons = .comps, rd_weights = phi, bwselect = "joint")
   bw <- f$bandwidth
   expect_equal(bw$h, (bw$Veff / (bw$B^2 + bw$reg))^(1 / 5), tolerance = 1e-12)
-  # B-bar^phi = sum_t coef_t B-hat_t; on each side of B-hat_t the curvature from the fit at the
+  # B-bar^phi = sum_t w_t B-hat_t; on each side of B-hat_t the curvature from the fit at the
   # common pilot b times the design moment at the shared h_rot
-  per <- names(f$coef)
+  per <- names(f$period_weights)
   bconst <- vapply(per, function(k) { s <- d[d$year == as.numeric(k), ]
     fp <- rd_period(s$Y, s$R, h = bw$b, b = bw$b, id = s$id)
     fr <- rd_period(s$Y, s$R, h = bw$h_rot, b = bw$h_rot, id = s$id)
     2 * (fr$sides[["+"]]$bmom * fp$sides[["+"]]$curv - fr$sides[["-"]]$bmom * fp$sides[["-"]]$curv)
   }, numeric(1))
-  expect_equal(bw$B, sum(f$coef[per] * bconst), tolerance = 1e-10)
+  expect_equal(bw$B, sum(f$period_weights[per] * bconst), tolerance = 1e-10)
   # every period is fitted at the common h
   expect_true(all(abs(bw$h_by_period - bw$h) < 1e-12))
   # it is the aggregate's bandwidth, not any single period's
@@ -210,7 +210,7 @@ test_that("methods: summary roles, glance, print and plot with several RD period
   f <- .fit(d, t_rd = .rd, comparisons = .comps, h = 0.4)
   tab <- summary(f)$per_period
   expect_identical(tab$role, c("comparison", "comparison", "RD", "RD", "RD"))
-  expect_equal(tab$coef, c(-0.5, -0.5, 1 / 3, 1 / 3, 1 / 3), tolerance = 1e-12)
+  expect_equal(tab$weight, c(-0.5, -0.5, 1 / 3, 1 / 3, 1 / 3), tolerance = 1e-12)
   g <- glance(f)
   expect_equal(nrow(g), 1L)
   expect_identical(g$t_rd, "3, 4, 5")
@@ -256,7 +256,7 @@ test_that("character and factor period labels give the same aggregate as numeric
 })
 
 test_that("linear-trend weights are exact with calendar years and invariant to shifting the labels", {
-  w <- function(comps, t) unname(.rddid_weights("linear", comps, t))
+  w <- function(comps, t) unname(.didisc_weights("linear", comps, t))
   expect_equal(w(c(1999, 2000), 2004), c(-4, 5), tolerance = 1e-14)
   expect_equal(w(c(1999, 2000), 2001), c(-1, 2), tolerance = 1e-14)
   # three comparison periods: the OLS line, same weights whatever the origin of the time axis

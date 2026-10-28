@@ -1,4 +1,42 @@
-# rddid 0.4.0.9004
+# didisc 0.4.0.9008
+
+* The common bandwidth (`bwselect = "joint"`) now also chooses the bandwidth `b` of the bias
+  correction for the diff-in-disc estimate, as rdrobust chooses it for one period, from fits at
+  a bandwidth `d` chosen the same way one order up (`fit$bandwidth$b`, `fit$bandwidth$d`). Every
+  period's bias correction uses this one `b`; before, each period used its own CCT `b`, rescaled
+  by h/h-CCT. With one period this is `rdrobust::rdbwselect()`. Estimates under the common
+  bandwidth change; those under per-period CCT or a fixed bandwidth are unchanged.
+
+# didisc 0.4.0.9007
+
+* `summary()` prints simpler tables. The per-period table gives each period's jump and standard
+  error, conventional and bias-corrected, without the weights (printed above it). The standard
+  errors under the three sampling schemes are a table, rows RCS, PC and PV and columns
+  Conventional and Robust (bias-corrected). `summary(fit)$per_period` is unchanged.
+
+# didisc 0.4.0.9006
+
+* The signed weight of each period's jump in the estimate (+1 for the RD period, minus the weight
+  for a comparison period) is now `fit$period_weights` (was `fit$coef`), and
+  `fit$period_weights_bc` (was `fit$coef_bc`). In `summary()` the column is `weight` (was `coef`)
+  and `weight_bc` (was `coef_bc`). `coef()` still returns the estimate. No aliases for the old
+  names. Estimates are unchanged.
+
+# didisc 0.4.0.9005
+
+* The documentation and printed output call the design and its estimate "diff-in-disc"
+  (difference-in-discontinuities), as the paper does, in place of "RD-DID". `print()` of a fit
+  now starts "Diff-in-disc estimate of the ATT ...". Estimates are unchanged.
+
+# didisc 0.4.0.9004
+
+* The package is renamed from rddid to didisc, after the name the paper gives the design
+  (difference-in-discontinuities) and its estimator (DiDisc). The main function is now
+  `didisc()`, its class `"didisc"` (with `summary.didisc()`, `plot.didisc()` and the other
+  methods), and the simulated data `didisc_sim` and `didisc_sim_pv`. The old names are gone, with
+  no aliases. Estimates are unchanged.
+
+# rddid 0.4.0.9003
 
 First public version.
 
@@ -12,11 +50,11 @@ First public version.
 * Standard errors for a repeated cross-section and for a panel, with a running variable fixed or
   moving over time. Each fit reports the local-linear estimate with its conventional standard
   error and the bias-corrected estimate with its robust standard error. The bandwidth is one
-  common bandwidth chosen for the RD-DID estimate, or each period's own CCT bandwidth. The
+  common bandwidth chosen for the diff-in-disc estimate, or each period's own CCT bandwidth. The
   common bandwidth is chosen as rdrobust chooses one for a single period: the variance, in a
   panel the covariances between periods, and the design part of the bias at one rule-of-thumb
   bandwidth shared by every period, the curvature from fits at one pilot bandwidth that is
-  itself chosen for the RD-DID estimate (and used for the bias correction in every period), and a
+  itself chosen for the diff-in-disc estimate (and used for the bias correction in every period), and a
   regularization that includes the covariances of the bias estimates between periods. With one
   period this is `rdrobust::rdbwselect()`; in a panel whose running variable does not move, it is
   that selector applied to the combined outcome.
