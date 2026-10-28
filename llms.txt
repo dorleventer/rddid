@@ -1,4 +1,4 @@
-# rddid
+# didisc
 
 A treatment of interest switches on at a cutoff of a running variable in
 one period, the **RD period**. A **confounding policy** switches at the
@@ -9,7 +9,7 @@ uniform at the cutoff (nobody treated, or everybody treated), so,
 provided the treatment of interest has no anticipation or carry-over
 effects there (which the paper assumes), the jump there *is* the
 confounding jump.
-[`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md)
+[`didisc()`](https://dorleventer.github.io/didisc/reference/didisc.md)
 estimates the jump in every period by local-linear RD and subtracts a
 weighted average of the comparison-period jumps from the RD-period jump.
 How the weights are set is the **confounding-trend assumption**:
@@ -18,12 +18,12 @@ constant (equal weights) or linear in time.
 Leventer, D. and D. Nevo (2024). *Correcting Invalid Regression
 Discontinuity Designs Using Multiple Time-Period Data.*
 [arXiv:2408.05847](https://arxiv.org/abs/2408.05847).
-`citation("rddid")` returns this reference, with a BibTeX entry.
+`citation("didisc")` returns this reference, with a BibTeX entry.
 
 Compared with a single `rdrobust` fit,
-[`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md) runs
-one local-linear RD per period with the same conventions
-([`rd_period()`](https://dorleventer.github.io/rddid/reference/rd_period.md)
+[`didisc()`](https://dorleventer.github.io/didisc/reference/didisc.md)
+runs one local-linear RD per period with the same conventions
+([`rd_period()`](https://dorleventer.github.io/didisc/reference/rd_period.md)
 reproduces `rdrobust` at a given bandwidth) and then nets the
 comparison-period jumps out of the RD-period jump, with standard errors
 that account for the same units appearing in several periods and
@@ -34,19 +34,19 @@ bandwidth rules chosen for the combined estimate.
 ``` r
 
 # install.packages("devtools")
-devtools::install_github("dorleventer/rddid")
+devtools::install_github("dorleventer/didisc")
 ```
 
 ## Quick start
 
-`rddid_sim` is a simulated panel: 1,000 units in three years, a
+`didisc_sim` is a simulated panel: 1,000 units in three years, a
 confounding jump of 0.5 in every year, and a treatment effect of 1 in
 year 3, the RD period.
 
 ``` r
 
-library(rddid)
-fit <- rddid(rddid_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
+library(didisc)
+fit <- didisc(didisc_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 fit
 #> RD-DID estimate of the ATT in period 3
 #>   Comparison periods: 1, 2   (constant confounding trend; weights 0.5, 0.5)
@@ -70,7 +70,7 @@ estimate with its conventional standard error; `Robust (bias-corrected)`
 is the bias-corrected estimate with its robust standard error. A plain
 RD in year 3 would target 1.5, the effect plus the confounding jump.
 [Get
-started](https://dorleventer.github.io/rddid/articles/rddid-estimation.html)
+started](https://dorleventer.github.io/didisc/articles/didisc-estimation.html)
 reads every line.
 
 When the running variable moves over time, so that units can change side
@@ -79,7 +79,7 @@ adds, for example type continuity:
 
 ``` r
 
-rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
+rd_typecont(didisc_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
 #> Test of type continuity  [rd_typecont()]
 #>   H0: the share of each type jumps by zero at the cutoff, in every period
 #>   Sampling scheme: panel, some units change side of the cutoff (detected)
@@ -93,66 +93,66 @@ rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
 ```
 
 The other three are
-[`rd_compstable()`](https://dorleventer.github.io/rddid/reference/rd_compstable.md),
-[`rd_homog()`](https://dorleventer.github.io/rddid/reference/rd_homog.md)
+[`rd_compstable()`](https://dorleventer.github.io/didisc/reference/rd_compstable.md),
+[`rd_homog()`](https://dorleventer.github.io/didisc/reference/rd_homog.md)
 and
-[`rd_trendcell()`](https://dorleventer.github.io/rddid/reference/rd_trendcell.md).
+[`rd_trendcell()`](https://dorleventer.github.io/didisc/reference/rd_trendcell.md).
 [`plot()`](https://rdrr.io/r/graphics/plot.default.html) draws any fit
 or test (one RD plot per period; the binned type shares with their
 fitted lines; the within-type jumps), and
-[`plot_switchers()`](https://dorleventer.github.io/rddid/reference/plot_switchers.md)
+[`plot_switchers()`](https://dorleventer.github.io/didisc/reference/plot_switchers.md)
 shows who changes side of the cutoff between two periods.
 
 ## Learn more
 
 - [Get
-  started](https://dorleventer.github.io/rddid/articles/rddid-estimation.html):
+  started](https://dorleventer.github.io/didisc/articles/didisc-estimation.html):
   the estimate, its printout, and the four tests.
 - [Checking the identification
-  assumptions](https://dorleventer.github.io/rddid/articles/rddid-validation-tests.html):
+  assumptions](https://dorleventer.github.io/didisc/articles/didisc-validation-tests.html):
   the four tests, one at a time.
 - [Plots of the estimate and the
-  checks](https://dorleventer.github.io/rddid/articles/rddid-plots.html):
+  checks](https://dorleventer.github.io/didisc/articles/didisc-plots.html):
   [`plot()`](https://rdrr.io/r/graphics/plot.default.html) on a fit and
   on each test.
-- [Reference](https://dorleventer.github.io/rddid/reference/index.html):
+- [Reference](https://dorleventer.github.io/didisc/reference/index.html):
   every function, with examples.
 
 # Package index
 
 ## Package overview
 
-- [`rddid-package`](https://dorleventer.github.io/rddid/reference/rddid-package.md)
-  : rddid: treatment effects at a cutoff shared with a confounding
+- [`didisc-package`](https://dorleventer.github.io/didisc/reference/didisc-package.md)
+  : didisc: treatment effects at a cutoff shared with a confounding
   policy
 
 ## Estimate
 
 The RD-DID estimator and what to do with a fit.
 
-- [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md) :
-  Estimate the effect of a treatment at a cutoff shared with a
+- [`didisc()`](https://dorleventer.github.io/didisc/reference/didisc.md)
+  : Estimate the effect of a treatment at a cutoff shared with a
   confounding policy
-- [`summary(`*`<rddid>`*`)`](https://dorleventer.github.io/rddid/reference/summary.rddid.md)
-  [`print(`*`<summary.rddid>`*`)`](https://dorleventer.github.io/rddid/reference/summary.rddid.md)
+- [`summary(`*`<didisc>`*`)`](https://dorleventer.github.io/didisc/reference/summary.didisc.md)
+  [`print(`*`<summary.didisc>`*`)`](https://dorleventer.github.io/didisc/reference/summary.didisc.md)
   : Summary of an RD-DID fit
-- [`plot(`*`<rddid>`*`)`](https://dorleventer.github.io/rddid/reference/plot.rddid.md)
+- [`plot(`*`<didisc>`*`)`](https://dorleventer.github.io/didisc/reference/plot.didisc.md)
   : Plot the per-period RD fits behind an RD-DID estimate
-- [`coef(`*`<rddid>`*`)`](https://dorleventer.github.io/rddid/reference/rddid-methods.md)
-  [`confint(`*`<rddid>`*`)`](https://dorleventer.github.io/rddid/reference/rddid-methods.md)
-  [`nobs(`*`<rddid>`*`)`](https://dorleventer.github.io/rddid/reference/rddid-methods.md)
+- [`coef(`*`<didisc>`*`)`](https://dorleventer.github.io/didisc/reference/didisc-methods.md)
+  [`confint(`*`<didisc>`*`)`](https://dorleventer.github.io/didisc/reference/didisc-methods.md)
+  [`nobs(`*`<didisc>`*`)`](https://dorleventer.github.io/didisc/reference/didisc-methods.md)
   : Coefficients, confidence intervals and sample size of an RD-DID fit
-- [`tidy(`*`<rddid>`*`)`](https://dorleventer.github.io/rddid/reference/rddid-tidiers.md)
-  [`glance(`*`<rddid>`*`)`](https://dorleventer.github.io/rddid/reference/rddid-tidiers.md)
-  [`tidy(`*`<rd_typecont>`*`)`](https://dorleventer.github.io/rddid/reference/rddid-tidiers.md)
-  [`tidy(`*`<rd_compstable>`*`)`](https://dorleventer.github.io/rddid/reference/rddid-tidiers.md)
-  [`tidy(`*`<rd_homog>`*`)`](https://dorleventer.github.io/rddid/reference/rddid-tidiers.md)
-  [`tidy(`*`<rd_trendcell>`*`)`](https://dorleventer.github.io/rddid/reference/rddid-tidiers.md)
-  [`tidy(`*`<rd_checks>`*`)`](https://dorleventer.github.io/rddid/reference/rddid-tidiers.md)
+- [`tidy(`*`<didisc>`*`)`](https://dorleventer.github.io/didisc/reference/didisc-tidiers.md)
+  [`glance(`*`<didisc>`*`)`](https://dorleventer.github.io/didisc/reference/didisc-tidiers.md)
+  [`tidy(`*`<rd_typecont>`*`)`](https://dorleventer.github.io/didisc/reference/didisc-tidiers.md)
+  [`tidy(`*`<rd_compstable>`*`)`](https://dorleventer.github.io/didisc/reference/didisc-tidiers.md)
+  [`tidy(`*`<rd_homog>`*`)`](https://dorleventer.github.io/didisc/reference/didisc-tidiers.md)
+  [`tidy(`*`<rd_trendcell>`*`)`](https://dorleventer.github.io/didisc/reference/didisc-tidiers.md)
+  [`tidy(`*`<rd_checks>`*`)`](https://dorleventer.github.io/didisc/reference/didisc-tidiers.md)
   : Tidy output for RD-DID fits and validation tests
-- [`reexports`](https://dorleventer.github.io/rddid/reference/reexports.md)
-  [`tidy`](https://dorleventer.github.io/rddid/reference/reexports.md)
-  [`glance`](https://dorleventer.github.io/rddid/reference/reexports.md)
+- [`reexports`](https://dorleventer.github.io/didisc/reference/reexports.md)
+  [`tidy`](https://dorleventer.github.io/didisc/reference/reexports.md)
+  [`glance`](https://dorleventer.github.io/didisc/reference/reexports.md)
   : Objects exported from other packages
 
 ## Check the assumptions
@@ -160,29 +160,29 @@ The RD-DID estimator and what to do with a fit.
 Tests of the identification assumptions when the running variable moves
 over time, so that units can change side of the cutoff between periods.
 
-- [`rd_checks()`](https://dorleventer.github.io/rddid/reference/rd_checks.md)
+- [`rd_checks()`](https://dorleventer.github.io/didisc/reference/rd_checks.md)
   : Run the four tests of the identification assumptions
-- [`rd_typecont()`](https://dorleventer.github.io/rddid/reference/rd_typecont.md)
+- [`rd_typecont()`](https://dorleventer.github.io/didisc/reference/rd_typecont.md)
   : Test of type continuity
-- [`rd_compstable()`](https://dorleventer.github.io/rddid/reference/rd_compstable.md)
+- [`rd_compstable()`](https://dorleventer.github.io/didisc/reference/rd_compstable.md)
   : Test of composition stability
-- [`rd_homog()`](https://dorleventer.github.io/rddid/reference/rd_homog.md)
+- [`rd_homog()`](https://dorleventer.github.io/didisc/reference/rd_homog.md)
   : Test of homogeneous confounding
-- [`rd_trendcell()`](https://dorleventer.github.io/rddid/reference/rd_trendcell.md)
+- [`rd_trendcell()`](https://dorleventer.github.io/didisc/reference/rd_trendcell.md)
   : Test of constant within-type confounding
-- [`plot(`*`<rd_typecont>`*`)`](https://dorleventer.github.io/rddid/reference/plot.rd_typecont.md)
+- [`plot(`*`<rd_typecont>`*`)`](https://dorleventer.github.io/didisc/reference/plot.rd_typecont.md)
   : Plot a type-continuity test: one comparison period against one RD
   period
-- [`plot(`*`<rd_compstable>`*`)`](https://dorleventer.github.io/rddid/reference/plot.rd_compstable.md)
+- [`plot(`*`<rd_compstable>`*`)`](https://dorleventer.github.io/didisc/reference/plot.rd_compstable.md)
   : Plot a composition-stability test: the reflected sample of one pair
   of periods
-- [`plot(`*`<rd_homog>`*`)`](https://dorleventer.github.io/rddid/reference/plot.rd_homog.md)
+- [`plot(`*`<rd_homog>`*`)`](https://dorleventer.github.io/didisc/reference/plot.rd_homog.md)
   : Plot a homogeneous-confounding test: the confounding jump of each
   type, by comparison period
-- [`plot(`*`<rd_trendcell>`*`)`](https://dorleventer.github.io/rddid/reference/plot.rd_trendcell.md)
+- [`plot(`*`<rd_trendcell>`*`)`](https://dorleventer.github.io/didisc/reference/plot.rd_trendcell.md)
   : Plot a constant-within-type-confounding test: each type's
   confounding jump over time
-- [`plot_switchers()`](https://dorleventer.github.io/rddid/reference/plot_switchers.md)
+- [`plot_switchers()`](https://dorleventer.github.io/didisc/reference/plot_switchers.md)
   : Plot the switchers: the running variable in one period against
   another
 
@@ -191,18 +191,18 @@ over time, so that units can change side of the cutoff between periods.
 The local-linear RD in one period and its CCT bandwidths, for working
 period by period.
 
-- [`rd_period()`](https://dorleventer.github.io/rddid/reference/rd_period.md)
+- [`rd_period()`](https://dorleventer.github.io/didisc/reference/rd_period.md)
   : Local-linear RD in one period (building block)
-- [`rd_bw_cct()`](https://dorleventer.github.io/rddid/reference/rd_bw_cct.md)
+- [`rd_bw_cct()`](https://dorleventer.github.io/didisc/reference/rd_bw_cct.md)
   : CCT bandwidths for one period (building block)
 
 ## Data
 
 Simulated panels for trying things out.
 
-- [`rddid_sim`](https://dorleventer.github.io/rddid/reference/rddid_sim.md)
+- [`didisc_sim`](https://dorleventer.github.io/didisc/reference/didisc_sim.md)
   : Simulated RD-DID panel (running variable fixed over time)
-- [`rddid_sim_pv`](https://dorleventer.github.io/rddid/reference/rddid_sim_pv.md)
+- [`didisc_sim_pv`](https://dorleventer.github.io/didisc/reference/didisc_sim_pv.md)
   : Simulated RD-DID panel (running variable moves over time)
 
 # Articles
@@ -210,15 +210,15 @@ Simulated panels for trying things out.
 ### Get started
 
 - [Get started: estimate an RD-DID
-  effect](https://dorleventer.github.io/rddid/articles/rddid-estimation.md):
+  effect](https://dorleventer.github.io/didisc/articles/didisc-estimation.md):
 
 ### Articles
 
 - [Checking the identification
-  assumptions](https://dorleventer.github.io/rddid/articles/rddid-validation-tests.md):
+  assumptions](https://dorleventer.github.io/didisc/articles/didisc-validation-tests.md):
 - [Plots of the estimate and the
-  checks](https://dorleventer.github.io/rddid/articles/rddid-plots.md):
+  checks](https://dorleventer.github.io/didisc/articles/didisc-plots.md):
 - [Bandwidth rules and sampling
-  schemes](https://dorleventer.github.io/rddid/articles/rddid-options.md):
-- [How rddid() computes the
-  estimate](https://dorleventer.github.io/rddid/articles/rddid-how-it-works.md):
+  schemes](https://dorleventer.github.io/didisc/articles/didisc-options.md):
+- [How didisc() computes the
+  estimate](https://dorleventer.github.io/didisc/articles/didisc-how-it-works.md):

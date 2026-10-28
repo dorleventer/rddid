@@ -9,7 +9,7 @@
 ## Citation
 
 Source:
-[`inst/CITATION`](https://github.com/dorleventer/rddid/blob/master/inst/CITATION)
+[`inst/CITATION`](https://github.com/dorleventer/didisc/blob/master/inst/CITATION)
 
 Leventer, D. and D. Nevo (2024). Correcting Invalid Regression
 Discontinuity Designs Using Multiple Time-Period Data. arXiv:2408.05847.

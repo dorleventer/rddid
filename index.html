@@ -5,7 +5,7 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>Regression Discontinuity with a Confounding Policy (RD-DID) • rddid</title>
+<title>Regression Discontinuity with a Confounding Policy (RD-DID) • didisc</title>
 <script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
 <script src="deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
@@ -20,9 +20,9 @@
 
     <nav class="navbar navbar-expand-lg fixed-top bg-light" data-bs-theme="light" aria-label="Site navigation"><div class="container">
 
-    <a class="navbar-brand me-2" href="index.html">rddid</a>
+    <a class="navbar-brand me-2" href="index.html">didisc</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9003</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9004</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -31,14 +31,14 @@
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
-<li class="nav-item"><a class="nav-link" href="articles/rddid-estimation.html">Get started</a></li>
+<li class="nav-item"><a class="nav-link" href="articles/didisc-estimation.html">Get started</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
   <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="articles/rddid-validation-tests.html">Checking the identification assumptions</a></li>
-    <li><a class="dropdown-item" href="articles/rddid-plots.html">Plots of the estimate and the checks</a></li>
-    <li><a class="dropdown-item" href="articles/rddid-options.html">Bandwidth rules and sampling schemes</a></li>
-    <li><a class="dropdown-item" href="articles/rddid-how-it-works.html">How rddid() computes the estimate (for referees)</a></li>
+<li><a class="dropdown-item" href="articles/didisc-validation-tests.html">Checking the identification assumptions</a></li>
+    <li><a class="dropdown-item" href="articles/didisc-plots.html">Plots of the estimate and the checks</a></li>
+    <li><a class="dropdown-item" href="articles/didisc-options.html">Bandwidth rules and sampling schemes</a></li>
+    <li><a class="dropdown-item" href="articles/didisc-how-it-works.html">How didisc() computes the estimate (for referees)</a></li>
   </ul>
 </li>
 <li class="nav-item"><a class="nav-link" href="reference/index.html">Reference</a></li>
@@ -47,7 +47,7 @@
 <li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="search.json">
 </form></li>
-<li class="nav-item"><a class="external-link nav-link" href="https://github.com/dorleventer/rddid/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://github.com/dorleventer/didisc/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
       </ul>
 </div>
 
@@ -56,27 +56,27 @@
 </nav><div class="container template-home">
 <div class="row">
   <main id="main" class="col-md-9"><div class="section level1">
-<div class="page-header"><h1 id="rddid">rddid<a class="anchor" aria-label="anchor" href="#rddid"></a>
+<div class="page-header"><h1 id="didisc">didisc<a class="anchor" aria-label="anchor" href="#didisc"></a>
 </h1></div>
 <!-- badges: start -->
 
-<p>A treatment of interest switches on at a cutoff of a running variable in one period, the <strong>RD period</strong>. A <strong>confounding policy</strong> switches at the same cutoff, in every period, so the jump in the outcome at the cutoff in the RD period mixes the treatment effect with the <strong>confounding jump</strong>. In the <strong>comparison periods</strong> the treatment of interest is uniform at the cutoff (nobody treated, or everybody treated), so, provided the treatment of interest has no anticipation or carry-over effects there (which the paper assumes), the jump there <em>is</em> the confounding jump. <code><a href="reference/rddid.html">rddid()</a></code> estimates the jump in every period by local-linear RD and subtracts a weighted average of the comparison-period jumps from the RD-period jump. How the weights are set is the <strong>confounding-trend assumption</strong>: constant (equal weights) or linear in time.</p>
-<p>Leventer, D. and D. Nevo (2024). <em>Correcting Invalid Regression Discontinuity Designs Using Multiple Time-Period Data.</em> <a href="https://arxiv.org/abs/2408.05847" class="external-link">arXiv:2408.05847</a>. <code>citation("rddid")</code> returns this reference, with a BibTeX entry.</p>
-<p>Compared with a single <code>rdrobust</code> fit, <code><a href="reference/rddid.html">rddid()</a></code> runs one local-linear RD per period with the same conventions (<code><a href="reference/rd_period.html">rd_period()</a></code> reproduces <code>rdrobust</code> at a given bandwidth) and then nets the comparison-period jumps out of the RD-period jump, with standard errors that account for the same units appearing in several periods and bandwidth rules chosen for the combined estimate.</p>
+<p>A treatment of interest switches on at a cutoff of a running variable in one period, the <strong>RD period</strong>. A <strong>confounding policy</strong> switches at the same cutoff, in every period, so the jump in the outcome at the cutoff in the RD period mixes the treatment effect with the <strong>confounding jump</strong>. In the <strong>comparison periods</strong> the treatment of interest is uniform at the cutoff (nobody treated, or everybody treated), so, provided the treatment of interest has no anticipation or carry-over effects there (which the paper assumes), the jump there <em>is</em> the confounding jump. <code><a href="reference/didisc.html">didisc()</a></code> estimates the jump in every period by local-linear RD and subtracts a weighted average of the comparison-period jumps from the RD-period jump. How the weights are set is the <strong>confounding-trend assumption</strong>: constant (equal weights) or linear in time.</p>
+<p>Leventer, D. and D. Nevo (2024). <em>Correcting Invalid Regression Discontinuity Designs Using Multiple Time-Period Data.</em> <a href="https://arxiv.org/abs/2408.05847" class="external-link">arXiv:2408.05847</a>. <code>citation("didisc")</code> returns this reference, with a BibTeX entry.</p>
+<p>Compared with a single <code>rdrobust</code> fit, <code><a href="reference/didisc.html">didisc()</a></code> runs one local-linear RD per period with the same conventions (<code><a href="reference/rd_period.html">rd_period()</a></code> reproduces <code>rdrobust</code> at a given bandwidth) and then nets the comparison-period jumps out of the RD-period jump, with standard errors that account for the same units appearing in several periods and bandwidth rules chosen for the combined estimate.</p>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># install.packages("devtools")</span></span>
-<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"dorleventer/rddid"</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"dorleventer/didisc"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="quick-start">Quick start<a class="anchor" aria-label="anchor" href="#quick-start"></a>
 </h2>
-<p><code>rddid_sim</code> is a simulated panel: 1,000 units in three years, a confounding jump of 0.5 in every year, and a treatment effect of 1 in year 3, the RD period.</p>
+<p><code>didisc_sim</code> is a simulated panel: 1,000 units in three years, a confounding jump of 0.5 in every year, and a treatment effect of 1 in year 3, the RD period.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/dorleventer/rddid" class="external-link">rddid</a></span><span class="op">)</span></span>
-<span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/rddid.html">rddid</a></span><span class="op">(</span><span class="va">rddid_sim</span>, y <span class="op">=</span> <span class="st">"Y"</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/dorleventer/didisc" class="external-link">didisc</a></span><span class="op">)</span></span>
+<span><span class="va">fit</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/didisc.html">didisc</a></span><span class="op">(</span><span class="va">didisc_sim</span>, y <span class="op">=</span> <span class="st">"Y"</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="va">fit</span></span>
 <span><span class="co">#&gt; RD-DID estimate of the ATT in period 3</span></span>
 <span><span class="co">#&gt;   Comparison periods: 1, 2   (constant confounding trend; weights 0.5, 0.5)</span></span>
@@ -89,10 +89,10 @@
 <span><span class="co">#&gt;   Robust (bias-corrected)      1.1414     0.1494    7.64   &lt;0.001   [0.8486, 1.4342]</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   summary() shows the per-period fits and the s.e. under every sampling scheme.</span></span></code></pre></div>
-<p>The ATT is the effect of the treatment on the units just above the cutoff, the ones treated in year 3. Years 1 and 2 are the comparison periods, with equal weights. <code>h</code> is the main bandwidth, one for every year, chosen for the RD-DID estimate; <code>b</code> is the pilot bandwidth of the bias correction in each year. <code>Conventional</code> is the local-linear estimate with its conventional standard error; <code>Robust (bias-corrected)</code> is the bias-corrected estimate with its robust standard error. A plain RD in year 3 would target 1.5, the effect plus the confounding jump. <a href="https://dorleventer.github.io/rddid/articles/rddid-estimation.html">Get started</a> reads every line.</p>
+<p>The ATT is the effect of the treatment on the units just above the cutoff, the ones treated in year 3. Years 1 and 2 are the comparison periods, with equal weights. <code>h</code> is the main bandwidth, one for every year, chosen for the RD-DID estimate; <code>b</code> is the pilot bandwidth of the bias correction in each year. <code>Conventional</code> is the local-linear estimate with its conventional standard error; <code>Robust (bias-corrected)</code> is the bias-corrected estimate with its robust standard error. A plain RD in year 3 would target 1.5, the effect plus the confounding jump. <a href="https://dorleventer.github.io/didisc/articles/didisc-estimation.html">Get started</a> reads every line.</p>
 <p>When the running variable moves over time, so that units can change side of the cutoff between periods, four tests check the assumptions this adds, for example type continuity:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="reference/rd_typecont.html">rd_typecont</a></span><span class="op">(</span><span class="va">rddid_sim_pv</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="reference/rd_typecont.html">rd_typecont</a></span><span class="op">(</span><span class="va">didisc_sim_pv</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Test of type continuity  [rd_typecont()]</span></span>
 <span><span class="co">#&gt;   H0: the share of each type jumps by zero at the cutoff, in every period</span></span>
 <span><span class="co">#&gt;   Sampling scheme: panel, some units change side of the cutoff (detected)</span></span>
@@ -110,21 +110,21 @@
 </h2>
 <ul>
 <li>
-<a href="https://dorleventer.github.io/rddid/articles/rddid-estimation.html">Get started</a>: the estimate, its printout, and the four tests.</li>
+<a href="https://dorleventer.github.io/didisc/articles/didisc-estimation.html">Get started</a>: the estimate, its printout, and the four tests.</li>
 <li>
-<a href="https://dorleventer.github.io/rddid/articles/rddid-validation-tests.html">Checking the identification assumptions</a>: the four tests, one at a time.</li>
+<a href="https://dorleventer.github.io/didisc/articles/didisc-validation-tests.html">Checking the identification assumptions</a>: the four tests, one at a time.</li>
 <li>
-<a href="https://dorleventer.github.io/rddid/articles/rddid-plots.html">Plots of the estimate and the checks</a>: <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> on a fit and on each test.</li>
+<a href="https://dorleventer.github.io/didisc/articles/didisc-plots.html">Plots of the estimate and the checks</a>: <code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> on a fit and on each test.</li>
 <li>
-<a href="https://dorleventer.github.io/rddid/reference/index.html">Reference</a>: every function, with examples.</li>
+<a href="https://dorleventer.github.io/didisc/reference/index.html">Reference</a>: every function, with examples.</li>
 </ul>
 </div>
 </div>
   </main><aside class="col-md-3"><div class="links">
 <h2 data-toc-skip>Links</h2>
 <ul class="list-unstyled">
-<li><a href="https://github.com/dorleventer/rddid/" class="external-link">Browse source code</a></li>
-<li><a href="https://github.com/dorleventer/rddid/issues" class="external-link">Report a bug</a></li>
+<li><a href="https://github.com/dorleventer/didisc/" class="external-link">Browse source code</a></li>
+<li><a href="https://github.com/dorleventer/didisc/issues" class="external-link">Report a bug</a></li>
 </ul>
 </div>
 
@@ -140,7 +140,7 @@
 <div class="citation">
 <h2 data-toc-skip>Citation</h2>
 <ul class="list-unstyled">
-<li><a href="authors.html#citation">Citing rddid</a></li>
+<li><a href="authors.html#citation">Citing didisc</a></li>
 </ul>
 </div>
 
@@ -155,7 +155,7 @@
 <div class="dev-status">
 <h2 data-toc-skip>Dev status</h2>
 <ul class="list-unstyled">
-<li><a href="https://github.com/dorleventer/rddid/actions/workflows/R-CMD-check.yaml" class="external-link"><img src="https://github.com/dorleventer/rddid/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R-CMD-check"></a></li>
+<li><a href="https://github.com/dorleventer/didisc/actions/workflows/R-CMD-check.yaml" class="external-link"><img src="https://github.com/dorleventer/didisc/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R-CMD-check"></a></li>
 <li><a href="https://opensource.org/licenses/MIT" class="external-link"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a></li>
 <li><a href="https://lifecycle.r-lib.org/articles/stages.html#experimental" class="external-link"><img src="https://img.shields.io/badge/lifecycle-experimental-orange.svg" alt="Lifecycle: experimental"></a></li>
 </ul>

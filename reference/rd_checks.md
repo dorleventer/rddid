@@ -1,15 +1,15 @@
 # Run the four tests of the identification assumptions
 
 When the running variable moves over time, the estimate of
-[`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md) is
-identified under type continuity, constant within-type confounding, and
-either composition stability or homogeneous confounding (Leventer and
-Nevo, 2024). `rd_checks()` runs the four tests,
-[`rd_typecont()`](https://dorleventer.github.io/rddid/reference/rd_typecont.md),
-[`rd_compstable()`](https://dorleventer.github.io/rddid/reference/rd_compstable.md),
-[`rd_homog()`](https://dorleventer.github.io/rddid/reference/rd_homog.md)
+[`didisc()`](https://dorleventer.github.io/didisc/reference/didisc.md)
+is identified under type continuity, constant within-type confounding,
+and either composition stability or homogeneous confounding (Leventer
+and Nevo, 2024). `rd_checks()` runs the four tests,
+[`rd_typecont()`](https://dorleventer.github.io/didisc/reference/rd_typecont.md),
+[`rd_compstable()`](https://dorleventer.github.io/didisc/reference/rd_compstable.md),
+[`rd_homog()`](https://dorleventer.github.io/didisc/reference/rd_homog.md)
 and
-[`rd_trendcell()`](https://dorleventer.github.io/rddid/reference/rd_trendcell.md),
+[`rd_trendcell()`](https://dorleventer.github.io/didisc/reference/rd_trendcell.md),
 with one set of options, and prints one table. Each test's own result is
 kept, so every detail stays available.
 
@@ -45,7 +45,7 @@ rd_checks(
 - data, y, x, time, id:
 
   as in
-  [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md);
+  [`didisc()`](https://dorleventer.github.io/didisc/reference/didisc.md);
   `id` is required.
 
 - t_rd:
@@ -59,9 +59,9 @@ rd_checks(
 - joint:
 
   the joint statistic of
-  [`rd_typecont()`](https://dorleventer.github.io/rddid/reference/rd_typecont.md)
+  [`rd_typecont()`](https://dorleventer.github.io/didisc/reference/rd_typecont.md)
   and
-  [`rd_compstable()`](https://dorleventer.github.io/rddid/reference/rd_compstable.md):
+  [`rd_compstable()`](https://dorleventer.github.io/didisc/reference/rd_compstable.md):
   `"supt"` (default), `"swald"` or `"wald"` (the chi-squared Wald).
 
 - studentize:
@@ -72,9 +72,9 @@ rd_checks(
 - outcome_bwselect:
 
   the bandwidth rule of
-  [`rd_homog()`](https://dorleventer.github.io/rddid/reference/rd_homog.md)
+  [`rd_homog()`](https://dorleventer.github.io/didisc/reference/rd_homog.md)
   and
-  [`rd_trendcell()`](https://dorleventer.github.io/rddid/reference/rd_trendcell.md):
+  [`rd_trendcell()`](https://dorleventer.github.io/didisc/reference/rd_trendcell.md):
   `"pooled"` (default; one bandwidth for every cell, the CCT bandwidth
   of the outcome on the pooled comparison periods), `"cct"` (one CCT
   bandwidth per cell) or `"rot"` (a rule of thumb per cell). The share
@@ -91,7 +91,7 @@ rd_checks(
 
   the confidence level of the reading in the printout (default 0.95, as
   in
-  [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md)):
+  [`didisc()`](https://dorleventer.github.io/didisc/reference/didisc.md)):
   a test rejects when its p-value is below `1 - level`.
 
 ## Value
@@ -114,36 +114,36 @@ the data (for example, no unit changes side of the cutoff) gives a row
 with its error message and `NA` results.
 
 The printout ends with a reading at the confidence level `level`, as in
-[`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md): a
-test rejects its assumption when its p-value is below `1 - level`. Not
+[`didisc()`](https://dorleventer.github.io/didisc/reference/didisc.md):
+a test rejects its assumption when its p-value is below `1 - level`. Not
 rejecting an assumption does not establish it; constant within-type
 confounding concerns the RD period and is checked in the comparison
 periods only (a pre-trends check).
 
 ## See also
 
-[`rd_typecont()`](https://dorleventer.github.io/rddid/reference/rd_typecont.md),
-[`rd_compstable()`](https://dorleventer.github.io/rddid/reference/rd_compstable.md),
-[`rd_homog()`](https://dorleventer.github.io/rddid/reference/rd_homog.md),
-[`rd_trendcell()`](https://dorleventer.github.io/rddid/reference/rd_trendcell.md);
+[`rd_typecont()`](https://dorleventer.github.io/didisc/reference/rd_typecont.md),
+[`rd_compstable()`](https://dorleventer.github.io/didisc/reference/rd_compstable.md),
+[`rd_homog()`](https://dorleventer.github.io/didisc/reference/rd_homog.md),
+[`rd_trendcell()`](https://dorleventer.github.io/didisc/reference/rd_trendcell.md);
 [`tidy()`](https://generics.r-lib.org/reference/tidy.html) in
-[rddid-tidiers](https://dorleventer.github.io/rddid/reference/rddid-tidiers.md).
+[didisc-tidiers](https://dorleventer.github.io/didisc/reference/didisc-tidiers.md).
 
 Other tests of the assumptions:
-[`plot.rd_compstable()`](https://dorleventer.github.io/rddid/reference/plot.rd_compstable.md),
-[`plot.rd_homog()`](https://dorleventer.github.io/rddid/reference/plot.rd_homog.md),
-[`plot.rd_trendcell()`](https://dorleventer.github.io/rddid/reference/plot.rd_trendcell.md),
-[`plot.rd_typecont()`](https://dorleventer.github.io/rddid/reference/plot.rd_typecont.md),
-[`plot_switchers()`](https://dorleventer.github.io/rddid/reference/plot_switchers.md),
-[`rd_compstable()`](https://dorleventer.github.io/rddid/reference/rd_compstable.md),
-[`rd_homog()`](https://dorleventer.github.io/rddid/reference/rd_homog.md),
-[`rd_trendcell()`](https://dorleventer.github.io/rddid/reference/rd_trendcell.md),
-[`rd_typecont()`](https://dorleventer.github.io/rddid/reference/rd_typecont.md)
+[`plot.rd_compstable()`](https://dorleventer.github.io/didisc/reference/plot.rd_compstable.md),
+[`plot.rd_homog()`](https://dorleventer.github.io/didisc/reference/plot.rd_homog.md),
+[`plot.rd_trendcell()`](https://dorleventer.github.io/didisc/reference/plot.rd_trendcell.md),
+[`plot.rd_typecont()`](https://dorleventer.github.io/didisc/reference/plot.rd_typecont.md),
+[`plot_switchers()`](https://dorleventer.github.io/didisc/reference/plot_switchers.md),
+[`rd_compstable()`](https://dorleventer.github.io/didisc/reference/rd_compstable.md),
+[`rd_homog()`](https://dorleventer.github.io/didisc/reference/rd_homog.md),
+[`rd_trendcell()`](https://dorleventer.github.io/didisc/reference/rd_trendcell.md),
+[`rd_typecont()`](https://dorleventer.github.io/didisc/reference/rd_typecont.md)
 
 ## Examples
 
 ``` r
-ch <- rd_checks(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
+ch <- rd_checks(didisc_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 ch
 #> Tests of the identification assumptions  [rd_checks()]
 #> 
@@ -160,7 +160,7 @@ ch
 #>     constant within-type confounding   not rejected (checked in the comparison periods)
 #>   Each test's details: x$typecont, x$compstable, x$homog, x$trendcell.
 # switch options: the chi-squared Wald and per-cell bandwidths everywhere
-rd_checks(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
+rd_checks(didisc_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
           joint = "wald", outcome_bwselect = "cct")
 #> Tests of the identification assumptions  [rd_checks()]
 #> 

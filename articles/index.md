@@ -3,15 +3,15 @@
 ### Get started
 
 - [Get started: estimate an RD-DID
-  effect](https://dorleventer.github.io/rddid/articles/rddid-estimation.md):
+  effect](https://dorleventer.github.io/didisc/articles/didisc-estimation.md):
 
 ### Articles
 
 - [Checking the identification
-  assumptions](https://dorleventer.github.io/rddid/articles/rddid-validation-tests.md):
+  assumptions](https://dorleventer.github.io/didisc/articles/didisc-validation-tests.md):
 - [Plots of the estimate and the
-  checks](https://dorleventer.github.io/rddid/articles/rddid-plots.md):
+  checks](https://dorleventer.github.io/didisc/articles/didisc-plots.md):
 - [Bandwidth rules and sampling
-  schemes](https://dorleventer.github.io/rddid/articles/rddid-options.md):
-- [How rddid() computes the
-  estimate](https://dorleventer.github.io/rddid/articles/rddid-how-it-works.md):
+  schemes](https://dorleventer.github.io/didisc/articles/didisc-options.md):
+- [How didisc() computes the
+  estimate](https://dorleventer.github.io/didisc/articles/didisc-how-it-works.md):

@@ -8,9 +8,9 @@ side of the cutoff it is on in the other period(s); with two periods,
 zero at the cutoff, in every period**. A rejection means that units sort
 across the cutoff by type, so the jump in the outcome at the cutoff can
 reflect who is on each side as well as the policies, and the estimate of
-[`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md) can
-be biased. With a running variable fixed over time (as in
-[rddid_sim](https://dorleventer.github.io/rddid/reference/rddid_sim.md))
+[`didisc()`](https://dorleventer.github.io/didisc/reference/didisc.md)
+can be biased. With a running variable fixed over time (as in
+[didisc_sim](https://dorleventer.github.io/didisc/reference/didisc_sim.md))
 every unit's type is its own side, the shares jump from 0 to 1 by
 construction, and the test is not informative.
 
@@ -56,14 +56,15 @@ rd_typecont(
   name of the period column (a string). The column is usually numeric (a
   year); character or factor labels work as well, except under
   `trend = "linear"` (in
-  [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md) or
-  [`rd_trendcell()`](https://dorleventer.github.io/rddid/reference/rd_trendcell.md)),
+  [`didisc()`](https://dorleventer.github.io/didisc/reference/didisc.md)
+  or
+  [`rd_trendcell()`](https://dorleventer.github.io/didisc/reference/rd_trendcell.md)),
   where the line is fitted on the period values: these then need to be
   numeric and are the time scale of the line (so 2015, 2017, 2018 are
   unequally spaced);
   [`as.numeric()`](https://rdrr.io/r/base/numeric.html) converts
   character labels such as `"2019"`. In
-  [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md)
+  [`didisc()`](https://dorleventer.github.io/didisc/reference/didisc.md)
   the default comparison periods are every period other than `t_rd`, in
   sorted order of the values (alphabetical for character or factor
   labels), the order a numeric `trend` follows.
@@ -79,12 +80,12 @@ rd_typecont(
   `comparisons = NULL` (default) uses every period in `data` (other than
   `t_rd`, which is then used too). The test treats all periods alike, so
   `t_rd` is optional: it lets you write the same call as for
-  [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md).
+  [`didisc()`](https://dorleventer.github.io/didisc/reference/didisc.md).
 
 - estimand:
 
   `"att"` (default) or `"atu"`, as in
-  [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md).
+  [`didisc()`](https://dorleventer.github.io/didisc/reference/didisc.md).
   Label only: the test is the same either way.
 
 - c:
@@ -100,7 +101,7 @@ rd_typecont(
 
   the bandwidth rule when `h` is not given: `"cct"` (default; each
   regression's own CCT bandwidths from
-  [`rd_bw_cct()`](https://dorleventer.github.io/rddid/reference/rd_bw_cct.md))
+  [`rd_bw_cct()`](https://dorleventer.github.io/didisc/reference/rd_bw_cct.md))
   or `"rot"` (the rule of thumb `0.5 * IQR(x)`, the same in every
   regression).
 
@@ -112,16 +113,16 @@ rd_typecont(
 
   the sampling scheme, which sets the covariance across periods in the
   test: `"cs"`, `"pc"` or `"pv"` (as in
-  [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md)),
+  [`didisc()`](https://dorleventer.github.io/didisc/reference/didisc.md)),
   or `"auto"` (default), which reads it off the data as
-  [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md)
+  [`didisc()`](https://dorleventer.github.io/didisc/reference/didisc.md)
   does. See Details.
 
 - bc:
 
   logical. `TRUE` (default): test the bias-corrected jumps with their
   robust variance, as in the `Robust` row of
-  [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md);
+  [`didisc()`](https://dorleventer.github.io/didisc/reference/didisc.md);
   `FALSE`: the conventional jumps and variances.
 
 - joint:
@@ -172,7 +173,7 @@ An object of class `"rd_typecont"`, a list with:
 - `fits`:
 
   the per-cell
-  [`rd_period()`](https://dorleventer.github.io/rddid/reference/rd_period.md)
+  [`rd_period()`](https://dorleventer.github.io/didisc/reference/rd_period.md)
   fits, a list-matrix indexed by type and period (`NULL` where a cell
   could not be fitted).
 
@@ -185,7 +186,7 @@ An object of class `"rd_typecont"`, a list with:
 
   one row per unit with its running variable (`R_<period>`) and side of
   the cutoff (`side_<period>`, `"+"`/`"-"`) in every period;
-  [`plot.rd_typecont()`](https://dorleventer.github.io/rddid/reference/plot.rd_typecont.md)
+  [`plot.rd_typecont()`](https://dorleventer.github.io/didisc/reference/plot.rd_typecont.md)
   reads it.
 
 - `call`:
@@ -261,18 +262,18 @@ matching units on `id`: none under `"cs"`; from the units on the same
 side of the cutoff in both periods under `"pc"`; under `"pv"` also from
 the units that change side, with the opposite sign. `"auto"` reads the
 scheme off the data as
-[`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md)
+[`didisc()`](https://dorleventer.github.io/didisc/reference/didisc.md)
 does.
 
 ### Options
 
 `bc = TRUE` (default) tests the bias-corrected jumps with their robust
 variance, as in the `Robust` row of
-[`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md);
+[`didisc()`](https://dorleventer.github.io/didisc/reference/didisc.md);
 `bc = FALSE` uses the conventional jumps and variances. With
 `bwselect = "cct"` (default) each (period, type) regression gets its own
 CCT bandwidths from
-[`rd_bw_cct()`](https://dorleventer.github.io/rddid/reference/rd_bw_cct.md).
+[`rd_bw_cct()`](https://dorleventer.github.io/didisc/reference/rd_bw_cct.md).
 With `bwselect = "rot"` the rule of thumb is `h = b = 0.5 * IQR(x)`, the
 interquartile range of the running variable over all periods used
 (`sd(x)` if that is zero), the same in every regression. A numeric `h`
@@ -296,30 +297,30 @@ nonparametric confidence intervals for regression-discontinuity designs.
 
 ## See also
 
-[`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md) for
-the estimate;
-[rddid_sim_pv](https://dorleventer.github.io/rddid/reference/rddid_sim_pv.md)
+[`didisc()`](https://dorleventer.github.io/didisc/reference/didisc.md)
+for the estimate;
+[didisc_sim_pv](https://dorleventer.github.io/didisc/reference/didisc_sim_pv.md)
 for example data;
 [`tidy()`](https://generics.r-lib.org/reference/tidy.html) in
-[rddid-tidiers](https://dorleventer.github.io/rddid/reference/rddid-tidiers.md)
+[didisc-tidiers](https://dorleventer.github.io/didisc/reference/didisc-tidiers.md)
 for a one-row summary.
 
 Other tests of the assumptions:
-[`plot.rd_compstable()`](https://dorleventer.github.io/rddid/reference/plot.rd_compstable.md),
-[`plot.rd_homog()`](https://dorleventer.github.io/rddid/reference/plot.rd_homog.md),
-[`plot.rd_trendcell()`](https://dorleventer.github.io/rddid/reference/plot.rd_trendcell.md),
-[`plot.rd_typecont()`](https://dorleventer.github.io/rddid/reference/plot.rd_typecont.md),
-[`plot_switchers()`](https://dorleventer.github.io/rddid/reference/plot_switchers.md),
-[`rd_checks()`](https://dorleventer.github.io/rddid/reference/rd_checks.md),
-[`rd_compstable()`](https://dorleventer.github.io/rddid/reference/rd_compstable.md),
-[`rd_homog()`](https://dorleventer.github.io/rddid/reference/rd_homog.md),
-[`rd_trendcell()`](https://dorleventer.github.io/rddid/reference/rd_trendcell.md)
+[`plot.rd_compstable()`](https://dorleventer.github.io/didisc/reference/plot.rd_compstable.md),
+[`plot.rd_homog()`](https://dorleventer.github.io/didisc/reference/plot.rd_homog.md),
+[`plot.rd_trendcell()`](https://dorleventer.github.io/didisc/reference/plot.rd_trendcell.md),
+[`plot.rd_typecont()`](https://dorleventer.github.io/didisc/reference/plot.rd_typecont.md),
+[`plot_switchers()`](https://dorleventer.github.io/didisc/reference/plot_switchers.md),
+[`rd_checks()`](https://dorleventer.github.io/didisc/reference/rd_checks.md),
+[`rd_compstable()`](https://dorleventer.github.io/didisc/reference/rd_compstable.md),
+[`rd_homog()`](https://dorleventer.github.io/didisc/reference/rd_homog.md),
+[`rd_trendcell()`](https://dorleventer.github.io/didisc/reference/rd_trendcell.md)
 
 ## Examples
 
 ``` r
-# rddid_sim_pv: the running variable moves, so some units change side
-tc <- rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
+# didisc_sim_pv: the running variable moves, so some units change side
+tc <- rd_typecont(didisc_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
 tc          # the null, the joint sup-t test, then each period's own test
 #> Test of type continuity  [rd_typecont()]
 #>   H0: the share of each type jumps by zero at the cutoff, in every period
@@ -329,21 +330,21 @@ tc          # the null, the joint sup-t test, then each period's own test
 #>     ("+" at or above, "-" below).
 #> 
 #>   Joint sup-t (t critical values) max |t| = 1.232 over 9 jumps,  p = 0.869  (largest: period:type 1:+-)
-#>     Period 1: sup-t (t critical values) max |t| = 1.232 over 3 jumps,  p = 0.500
+#>     Period 1: sup-t (t critical values) max |t| = 1.232 over 3 jumps,  p = 0.499
 #>     Period 2: sup-t (t critical values) max |t| = 0.582 over 3 jumps,  p = 0.902
-#>     Period 3: sup-t (t critical values) max |t| = 1.048 over 3 jumps,  p = 0.633
+#>     Period 3: sup-t (t critical values) max |t| = 1.048 over 3 jumps,  p = 0.631
 #>   All joint statistics: x$joint_tests
 tc$p_value
-#> [1] 0.8693313
+#> [1] 0.8688813
 tc$joint_tests   # every statistic side by side
 #>   method   reference statistic df   p_value
-#> 1   supt           t  1.231775  9 0.8693313
-#> 2   supt      normal  1.231775  9 0.8621414
-#> 3  swald           t  5.110313  9 0.7955420
+#> 1   supt           t  1.231775  9 0.8688813
+#> 2   supt      normal  1.231775  9 0.8609214
+#> 3  swald           t  5.110313  9 0.7953520
 #> 4  swald      normal  5.110313  9 0.7861821
 #> 5   wald chi-squared  4.781633  9 0.8529133
 # the chi-squared Wald, or sup-t with normal critical values:
-rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3, joint = "wald")
+rd_typecont(didisc_sim_pv, x = "R", time = "year", id = "id", t_rd = 3, joint = "wald")
 #> Test of type continuity  [rd_typecont()]
 #>   H0: the share of each type jumps by zero at the cutoff, in every period
 #>   Sampling scheme: panel, some units change side of the cutoff (detected)
@@ -356,7 +357,7 @@ rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3, joint = "
 #>     Period 2: chi-squared(3) = 0.382,  p = 0.944
 #>     Period 3: chi-squared(3) = 2.202,  p = 0.532
 #>   All joint statistics: x$joint_tests
-rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3, studentize = FALSE)
+rd_typecont(didisc_sim_pv, x = "R", time = "year", id = "id", t_rd = 3, studentize = FALSE)
 #> Test of type continuity  [rd_typecont()]
 #>   H0: the share of each type jumps by zero at the cutoff, in every period
 #>   Sampling scheme: panel, some units change side of the cutoff (detected)
@@ -364,8 +365,8 @@ rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3, studentiz
 #>   Type in a period: a unit's sides of the cutoff in the other periods, in time order
 #>     ("+" at or above, "-" below).
 #> 
-#>   Joint sup-t (normal critical values) max |t| = 1.232 over 9 jumps,  p = 0.862  (largest: period:type 1:+-)
-#>     Period 1: sup-t (normal critical values) max |t| = 1.232 over 3 jumps,  p = 0.491
+#>   Joint sup-t (normal critical values) max |t| = 1.232 over 9 jumps,  p = 0.861  (largest: period:type 1:+-)
+#>     Period 1: sup-t (normal critical values) max |t| = 1.232 over 3 jumps,  p = 0.490
 #>     Period 2: sup-t (normal critical values) max |t| = 0.582 over 3 jumps,  p = 0.900
 #>     Period 3: sup-t (normal critical values) max |t| = 1.048 over 3 jumps,  p = 0.628
 #>   All joint statistics: x$joint_tests

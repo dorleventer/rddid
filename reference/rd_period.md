@@ -1,14 +1,14 @@
 # Local-linear RD in one period (building block)
 
 The building block that
-[`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md) runs
-in every period: the jump in the outcome at the cutoff in one period,
-estimated by local-linear RD, both conventional and bias-corrected, with
-standard errors. Unlike
-[`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md) it
-takes vectors (`y`, `x`, `id`), not a data frame and column names, and
-the bandwidths must be given, for example from
-[`rd_bw_cct()`](https://dorleventer.github.io/rddid/reference/rd_bw_cct.md).
+[`didisc()`](https://dorleventer.github.io/didisc/reference/didisc.md)
+runs in every period: the jump in the outcome at the cutoff in one
+period, estimated by local-linear RD, both conventional and
+bias-corrected, with standard errors. Unlike
+[`didisc()`](https://dorleventer.github.io/didisc/reference/didisc.md)
+it takes vectors (`y`, `x`, `id`), not a data frame and column names,
+and the bandwidths must be given, for example from
+[`rd_bw_cct()`](https://dorleventer.github.io/didisc/reference/rd_bw_cct.md).
 At a given pair (`h`, `b`) it reproduces the conventional and
 bias-corrected estimates and the conventional and robust standard errors
 of
@@ -135,15 +135,15 @@ nonparametric confidence intervals for regression-discontinuity designs.
 ## See also
 
 Other RD-DID estimation:
-[`plot.rddid()`](https://dorleventer.github.io/rddid/reference/plot.rddid.md),
-[`rd_bw_cct()`](https://dorleventer.github.io/rddid/reference/rd_bw_cct.md),
-[`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md)
+[`didisc()`](https://dorleventer.github.io/didisc/reference/didisc.md),
+[`plot.didisc()`](https://dorleventer.github.io/didisc/reference/plot.didisc.md),
+[`rd_bw_cct()`](https://dorleventer.github.io/didisc/reference/rd_bw_cct.md)
 
 ## Examples
 
 ``` r
-# the RD period (year 3) of rddid_sim, where the jump is 0.5 + 1 = 1.5
-d3 <- rddid_sim[rddid_sim$year == 3, ]
+# the RD period (year 3) of didisc_sim, where the jump is 0.5 + 1 = 1.5
+d3 <- didisc_sim[didisc_sim$year == 3, ]
 bw <- rd_bw_cct(y = d3$Y, x = d3$R)
 fit <- rd_period(y = d3$Y, x = d3$R, h = bw[["h"]], b = bw[["b"]], id = d3$id)
 fit

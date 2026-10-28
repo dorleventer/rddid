@@ -30,14 +30,15 @@ plot_switchers(data, x, time, id, periods = NULL, c = 0, ...)
   name of the period column (a string). The column is usually numeric (a
   year); character or factor labels work as well, except under
   `trend = "linear"` (in
-  [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md) or
-  [`rd_trendcell()`](https://dorleventer.github.io/rddid/reference/rd_trendcell.md)),
+  [`didisc()`](https://dorleventer.github.io/didisc/reference/didisc.md)
+  or
+  [`rd_trendcell()`](https://dorleventer.github.io/didisc/reference/rd_trendcell.md)),
   where the line is fitted on the period values: these then need to be
   numeric and are the time scale of the line (so 2015, 2017, 2018 are
   unequally spaced);
   [`as.numeric()`](https://rdrr.io/r/base/numeric.html) converts
   character labels such as `"2019"`. In
-  [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md)
+  [`didisc()`](https://dorleventer.github.io/didisc/reference/didisc.md)
   the default comparison periods are every period other than `t_rd`, in
   sorted order of the values (alphabetical for character or factor
   labels), the order a numeric `trend` follows.
@@ -69,20 +70,20 @@ A ggplot object (ggplot2 must be installed).
 ## See also
 
 Other tests of the assumptions:
-[`plot.rd_compstable()`](https://dorleventer.github.io/rddid/reference/plot.rd_compstable.md),
-[`plot.rd_homog()`](https://dorleventer.github.io/rddid/reference/plot.rd_homog.md),
-[`plot.rd_trendcell()`](https://dorleventer.github.io/rddid/reference/plot.rd_trendcell.md),
-[`plot.rd_typecont()`](https://dorleventer.github.io/rddid/reference/plot.rd_typecont.md),
-[`rd_checks()`](https://dorleventer.github.io/rddid/reference/rd_checks.md),
-[`rd_compstable()`](https://dorleventer.github.io/rddid/reference/rd_compstable.md),
-[`rd_homog()`](https://dorleventer.github.io/rddid/reference/rd_homog.md),
-[`rd_trendcell()`](https://dorleventer.github.io/rddid/reference/rd_trendcell.md),
-[`rd_typecont()`](https://dorleventer.github.io/rddid/reference/rd_typecont.md)
+[`plot.rd_compstable()`](https://dorleventer.github.io/didisc/reference/plot.rd_compstable.md),
+[`plot.rd_homog()`](https://dorleventer.github.io/didisc/reference/plot.rd_homog.md),
+[`plot.rd_trendcell()`](https://dorleventer.github.io/didisc/reference/plot.rd_trendcell.md),
+[`plot.rd_typecont()`](https://dorleventer.github.io/didisc/reference/plot.rd_typecont.md),
+[`rd_checks()`](https://dorleventer.github.io/didisc/reference/rd_checks.md),
+[`rd_compstable()`](https://dorleventer.github.io/didisc/reference/rd_compstable.md),
+[`rd_homog()`](https://dorleventer.github.io/didisc/reference/rd_homog.md),
+[`rd_trendcell()`](https://dorleventer.github.io/didisc/reference/rd_trendcell.md),
+[`rd_typecont()`](https://dorleventer.github.io/didisc/reference/rd_typecont.md)
 
 ## Examples
 
 ``` r
 if (requireNamespace("ggplot2", quietly = TRUE))
-  plot_switchers(rddid_sim_pv, x = "R", time = "year", id = "id", periods = c(1, 3))
+  plot_switchers(didisc_sim_pv, x = "R", time = "year", id = "id", periods = c(1, 3))
 #> plot_switchers(): 13.8% of the 1000 units observed in both periods change side
 ```

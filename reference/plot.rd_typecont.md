@@ -22,13 +22,13 @@ plot(x, t_rd = NULL, comparison = NULL, bins = 20L, ...)
 - x:
 
   an object returned by
-  [`rd_typecont()`](https://dorleventer.github.io/rddid/reference/rd_typecont.md).
+  [`rd_typecont()`](https://dorleventer.github.io/didisc/reference/rd_typecont.md).
 
 - t_rd, comparison:
 
   the RD period and the comparison period to draw (values of the period
   variable). Defaults: the `t_rd` given to
-  [`rd_typecont()`](https://dorleventer.github.io/rddid/reference/rd_typecont.md)
+  [`rd_typecont()`](https://dorleventer.github.io/didisc/reference/rd_typecont.md)
   (else the last period), and the first other period.
 
 - bins:
@@ -52,19 +52,19 @@ one pair of periods at a time.
 ## See also
 
 Other tests of the assumptions:
-[`plot.rd_compstable()`](https://dorleventer.github.io/rddid/reference/plot.rd_compstable.md),
-[`plot.rd_homog()`](https://dorleventer.github.io/rddid/reference/plot.rd_homog.md),
-[`plot.rd_trendcell()`](https://dorleventer.github.io/rddid/reference/plot.rd_trendcell.md),
-[`plot_switchers()`](https://dorleventer.github.io/rddid/reference/plot_switchers.md),
-[`rd_checks()`](https://dorleventer.github.io/rddid/reference/rd_checks.md),
-[`rd_compstable()`](https://dorleventer.github.io/rddid/reference/rd_compstable.md),
-[`rd_homog()`](https://dorleventer.github.io/rddid/reference/rd_homog.md),
-[`rd_trendcell()`](https://dorleventer.github.io/rddid/reference/rd_trendcell.md),
-[`rd_typecont()`](https://dorleventer.github.io/rddid/reference/rd_typecont.md)
+[`plot.rd_compstable()`](https://dorleventer.github.io/didisc/reference/plot.rd_compstable.md),
+[`plot.rd_homog()`](https://dorleventer.github.io/didisc/reference/plot.rd_homog.md),
+[`plot.rd_trendcell()`](https://dorleventer.github.io/didisc/reference/plot.rd_trendcell.md),
+[`plot_switchers()`](https://dorleventer.github.io/didisc/reference/plot_switchers.md),
+[`rd_checks()`](https://dorleventer.github.io/didisc/reference/rd_checks.md),
+[`rd_compstable()`](https://dorleventer.github.io/didisc/reference/rd_compstable.md),
+[`rd_homog()`](https://dorleventer.github.io/didisc/reference/rd_homog.md),
+[`rd_trendcell()`](https://dorleventer.github.io/didisc/reference/rd_trendcell.md),
+[`rd_typecont()`](https://dorleventer.github.io/didisc/reference/rd_typecont.md)
 
 ## Examples
 
 ``` r
-tc <- rd_typecont(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
+tc <- rd_typecont(didisc_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
 if (requireNamespace("ggplot2", quietly = TRUE)) plot(tc, comparison = 1)
 ```

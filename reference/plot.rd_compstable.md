@@ -25,7 +25,7 @@ plot(x, pair = 1L, bins = 20L, ...)
 - x:
 
   an object returned by
-  [`rd_compstable()`](https://dorleventer.github.io/rddid/reference/rd_compstable.md).
+  [`rd_compstable()`](https://dorleventer.github.io/didisc/reference/rd_compstable.md).
 
 - pair:
 
@@ -53,19 +53,19 @@ in the remaining periods; the picture shows the pairwise version.
 ## See also
 
 Other tests of the assumptions:
-[`plot.rd_homog()`](https://dorleventer.github.io/rddid/reference/plot.rd_homog.md),
-[`plot.rd_trendcell()`](https://dorleventer.github.io/rddid/reference/plot.rd_trendcell.md),
-[`plot.rd_typecont()`](https://dorleventer.github.io/rddid/reference/plot.rd_typecont.md),
-[`plot_switchers()`](https://dorleventer.github.io/rddid/reference/plot_switchers.md),
-[`rd_checks()`](https://dorleventer.github.io/rddid/reference/rd_checks.md),
-[`rd_compstable()`](https://dorleventer.github.io/rddid/reference/rd_compstable.md),
-[`rd_homog()`](https://dorleventer.github.io/rddid/reference/rd_homog.md),
-[`rd_trendcell()`](https://dorleventer.github.io/rddid/reference/rd_trendcell.md),
-[`rd_typecont()`](https://dorleventer.github.io/rddid/reference/rd_typecont.md)
+[`plot.rd_homog()`](https://dorleventer.github.io/didisc/reference/plot.rd_homog.md),
+[`plot.rd_trendcell()`](https://dorleventer.github.io/didisc/reference/plot.rd_trendcell.md),
+[`plot.rd_typecont()`](https://dorleventer.github.io/didisc/reference/plot.rd_typecont.md),
+[`plot_switchers()`](https://dorleventer.github.io/didisc/reference/plot_switchers.md),
+[`rd_checks()`](https://dorleventer.github.io/didisc/reference/rd_checks.md),
+[`rd_compstable()`](https://dorleventer.github.io/didisc/reference/rd_compstable.md),
+[`rd_homog()`](https://dorleventer.github.io/didisc/reference/rd_homog.md),
+[`rd_trendcell()`](https://dorleventer.github.io/didisc/reference/rd_trendcell.md),
+[`rd_typecont()`](https://dorleventer.github.io/didisc/reference/rd_typecont.md)
 
 ## Examples
 
 ``` r
-cs <- rd_compstable(rddid_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
+cs <- rd_compstable(didisc_sim_pv, x = "R", time = "year", id = "id", t_rd = 3)
 if (requireNamespace("ggplot2", quietly = TRUE)) plot(cs)
 ```

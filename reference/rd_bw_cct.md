@@ -1,12 +1,12 @@
 # CCT bandwidths for one period (building block)
 
-The building block behind `rddid(bwselect = "cct")`, the pilot fits of
+The building block behind `didisc(bwselect = "cct")`, the pilot fits of
 the `"joint"` rule, and the default bandwidths of the four tests of the
 assumptions: the MSE-optimal main and pilot bandwidths of Calonico,
 Cattaneo and Titiunik (2014) for a local-linear RD in one period, from
 [`rdrobust::rdbwselect()`](https://rdrr.io/pkg/rdrobust/man/rdbwselect.html)
 with `bwselect = "mserd"`. Like
-[`rd_period()`](https://dorleventer.github.io/rddid/reference/rd_period.md)
+[`rd_period()`](https://dorleventer.github.io/didisc/reference/rd_period.md)
 it takes vectors, not a data frame and column names.
 
 ## Usage
@@ -62,15 +62,15 @@ nonparametric confidence intervals for regression-discontinuity designs.
 ## See also
 
 Other RD-DID estimation:
-[`plot.rddid()`](https://dorleventer.github.io/rddid/reference/plot.rddid.md),
-[`rd_period()`](https://dorleventer.github.io/rddid/reference/rd_period.md),
-[`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md)
+[`didisc()`](https://dorleventer.github.io/didisc/reference/didisc.md),
+[`plot.didisc()`](https://dorleventer.github.io/didisc/reference/plot.didisc.md),
+[`rd_period()`](https://dorleventer.github.io/didisc/reference/rd_period.md)
 
 ## Examples
 
 ``` r
-# each year of rddid_sim gets its own bandwidths (what bwselect = "cct" uses)
-sapply(split(rddid_sim, rddid_sim$year), function(d) rd_bw_cct(y = d$Y, x = d$R))
+# each year of didisc_sim gets its own bandwidths (what bwselect = "cct" uses)
+sapply(split(didisc_sim, didisc_sim$year), function(d) rd_bw_cct(y = d$Y, x = d$R))
 #>           1         2         3
 #> h 0.2637172 0.3255516 0.4140584
 #> b 0.4047913 0.4713019 0.6122080

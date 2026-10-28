@@ -6,7 +6,7 @@ side of the cutoff it is on in the other period(s); by default here, its
 side in the RD period, which stays fixed across the comparison periods.
 The paper's identification result then requires the confounding-trend
 assumption of
-[`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md)
+[`didisc()`](https://dorleventer.github.io/didisc/reference/didisc.md)
 within each type. It concerns the RD period, where the confounding jump
 is not observed separately, so, like a pre-trends check in
 difference-in-differences, `rd_trendcell()` tests it across the
@@ -14,11 +14,11 @@ comparison periods: the null is that **within each type, the confounding
 jump is the same in every comparison period** (with `trend = "linear"`:
 moves linearly in time). A rejection means the comparison periods do not
 support the trend assumption, and the estimate of
-[`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md)
-under that assumption can be biased. `rddid(trend = "linear")` allows
+[`didisc()`](https://dorleventer.github.io/didisc/reference/didisc.md)
+under that assumption can be biased. `didisc(trend = "linear")` allows
 jumps that move linearly in time. With a running variable fixed over
 time (as in
-[rddid_sim](https://dorleventer.github.io/rddid/reference/rddid_sim.md))
+[didisc_sim](https://dorleventer.github.io/didisc/reference/didisc_sim.md))
 the types are degenerate and the test is not informative.
 
 ## Usage
@@ -71,13 +71,13 @@ rd_trendcell(
   name of the period column (a string). The column is usually numeric (a
   year); character or factor labels work as well, except under
   `trend = "linear"` (in
-  [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md) or
-  `rd_trendcell()`), where the line is fitted on the period values:
+  [`didisc()`](https://dorleventer.github.io/didisc/reference/didisc.md)
+  or `rd_trendcell()`), where the line is fitted on the period values:
   these then need to be numeric and are the time scale of the line (so
   2015, 2017, 2018 are unequally spaced);
   [`as.numeric()`](https://rdrr.io/r/base/numeric.html) converts
   character labels such as `"2019"`. In
-  [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md)
+  [`didisc()`](https://dorleventer.github.io/didisc/reference/didisc.md)
   the default comparison periods are every period other than `t_rd`, in
   sorted order of the values (alphabetical for character or factor
   labels), the order a numeric `trend` follows.
@@ -101,7 +101,7 @@ rd_trendcell(
 - estimand:
 
   `"att"` (default) or `"atu"`, as in
-  [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md).
+  [`didisc()`](https://dorleventer.github.io/didisc/reference/didisc.md).
   Label only: the test is the same either way.
 
 - trend:
@@ -110,7 +110,7 @@ rd_trendcell(
   the confounding jump is the same in every comparison period) or
   `"linear"` (it moves linearly in time; needs at least three comparison
   periods). Given the `trend` of an
-  [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md)
+  [`didisc()`](https://dorleventer.github.io/didisc/reference/didisc.md)
   call, the test checks that call's assumption. With `"linear"` the
   second differences are taken in time (the period values), so unequally
   spaced comparison periods are handled.
@@ -130,7 +130,7 @@ rd_trendcell(
   bandwidth for every cell, the CCT bandwidth of the outcome on the
   running variable with all comparison periods pooled), `"cct"` (each
   cell's own CCT bandwidths from
-  [`rd_bw_cct()`](https://dorleventer.github.io/rddid/reference/rd_bw_cct.md))
+  [`rd_bw_cct()`](https://dorleventer.github.io/didisc/reference/rd_bw_cct.md))
   or `"rot"` (the rule of thumb `0.2` times the range of the running
   variable within the cell). See "Bandwidth" in Details.
 
@@ -142,10 +142,10 @@ rd_trendcell(
 
   the sampling scheme, which sets the covariance across comparison
   periods in the test: `"cs"`, `"pc"` or `"pv"` (as in
-  [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md)),
+  [`didisc()`](https://dorleventer.github.io/didisc/reference/didisc.md)),
   or `"auto"` (default), which reads it off the comparison periods by
   the rule of
-  [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md).
+  [`didisc()`](https://dorleventer.github.io/didisc/reference/didisc.md).
   See Details.
 
 - min_n:
@@ -158,7 +158,7 @@ rd_trendcell(
 
   logical. `TRUE` (default): test the bias-corrected jumps with their
   robust variance, as in the `Robust` row of
-  [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md);
+  [`didisc()`](https://dorleventer.github.io/didisc/reference/didisc.md);
   `FALSE`: the conventional jumps and variances.
 
 - p, q:
@@ -248,7 +248,7 @@ matching units on `id`: none under `"cs"`; from the units on the same
 side of the cutoff in both periods under `"pc"`; under `"pv"` also from
 the units that change side, with the opposite sign. `"auto"` reads the
 scheme off the comparison periods, by the rule of
-[`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md).
+[`didisc()`](https://dorleventer.github.io/didisc/reference/didisc.md).
 
 ### Options
 
@@ -257,10 +257,11 @@ observed in the RD period are left out. A (type, period) cell with fewer
 than `min_n` observations on either side of the cutoff is dropped, and a
 message lists the dropped cells. `bc = TRUE` (default) tests the
 bias-corrected jumps with their robust variance, as in the `Robust` row
-of [`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md);
+of
+[`didisc()`](https://dorleventer.github.io/didisc/reference/didisc.md);
 `bc = FALSE` uses the conventional jumps and variances. With
 `bwselect = "cct"` each cell gets its own CCT bandwidths from
-[`rd_bw_cct()`](https://dorleventer.github.io/rddid/reference/rd_bw_cct.md),
+[`rd_bw_cct()`](https://dorleventer.github.io/didisc/reference/rd_bw_cct.md),
 computed on that cell's outcome and running variable. With
 `bwselect = "rot"` the rule of thumb is `h = b = 0.2` times the range of
 the running variable within each cell. A numeric `h` is used as both
@@ -299,30 +300,30 @@ nonparametric confidence intervals for regression-discontinuity designs.
 
 ## See also
 
-[`rddid()`](https://dorleventer.github.io/rddid/reference/rddid.md) for
-the estimate;
-[rddid_sim_pv](https://dorleventer.github.io/rddid/reference/rddid_sim_pv.md)
+[`didisc()`](https://dorleventer.github.io/didisc/reference/didisc.md)
+for the estimate;
+[didisc_sim_pv](https://dorleventer.github.io/didisc/reference/didisc_sim_pv.md)
 for example data;
 [`tidy()`](https://generics.r-lib.org/reference/tidy.html) in
-[rddid-tidiers](https://dorleventer.github.io/rddid/reference/rddid-tidiers.md)
+[didisc-tidiers](https://dorleventer.github.io/didisc/reference/didisc-tidiers.md)
 for a one-row summary.
 
 Other tests of the assumptions:
-[`plot.rd_compstable()`](https://dorleventer.github.io/rddid/reference/plot.rd_compstable.md),
-[`plot.rd_homog()`](https://dorleventer.github.io/rddid/reference/plot.rd_homog.md),
-[`plot.rd_trendcell()`](https://dorleventer.github.io/rddid/reference/plot.rd_trendcell.md),
-[`plot.rd_typecont()`](https://dorleventer.github.io/rddid/reference/plot.rd_typecont.md),
-[`plot_switchers()`](https://dorleventer.github.io/rddid/reference/plot_switchers.md),
-[`rd_checks()`](https://dorleventer.github.io/rddid/reference/rd_checks.md),
-[`rd_compstable()`](https://dorleventer.github.io/rddid/reference/rd_compstable.md),
-[`rd_homog()`](https://dorleventer.github.io/rddid/reference/rd_homog.md),
-[`rd_typecont()`](https://dorleventer.github.io/rddid/reference/rd_typecont.md)
+[`plot.rd_compstable()`](https://dorleventer.github.io/didisc/reference/plot.rd_compstable.md),
+[`plot.rd_homog()`](https://dorleventer.github.io/didisc/reference/plot.rd_homog.md),
+[`plot.rd_trendcell()`](https://dorleventer.github.io/didisc/reference/plot.rd_trendcell.md),
+[`plot.rd_typecont()`](https://dorleventer.github.io/didisc/reference/plot.rd_typecont.md),
+[`plot_switchers()`](https://dorleventer.github.io/didisc/reference/plot_switchers.md),
+[`rd_checks()`](https://dorleventer.github.io/didisc/reference/rd_checks.md),
+[`rd_compstable()`](https://dorleventer.github.io/didisc/reference/rd_compstable.md),
+[`rd_homog()`](https://dorleventer.github.io/didisc/reference/rd_homog.md),
+[`rd_typecont()`](https://dorleventer.github.io/didisc/reference/rd_typecont.md)
 
 ## Examples
 
 ``` r
-# rddid_sim_pv: the running variable moves, so some units change side
-tr <- rd_trendcell(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
+# didisc_sim_pv: the running variable moves, so some units change side
+tr <- rd_trendcell(didisc_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 tr          # the Wald test, then each type's jump in each comparison period
 #> Test of constant within-type confounding  [rd_trendcell()]
 #>   H0: within each type, the confounding jump is the same in every comparison period
@@ -340,7 +341,7 @@ tr          # the Wald test, then each type's jump in each comparison period
 #>     -          1                0.5347     0.2640     510  (reference)
 #>     -          2                1.0987     0.4183     510
 # one CCT bandwidth per cell instead of one pooled bandwidth
-rd_trendcell(rddid_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, bwselect = "cct")
+rd_trendcell(didisc_sim_pv, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, bwselect = "cct")
 #> Test of constant within-type confounding  [rd_trendcell()]
 #>   H0: within each type, the confounding jump is the same in every comparison period
 #>   Sampling scheme: panel, some units change side of the cutoff (detected)
