@@ -1,3 +1,10 @@
+# didisc 0.4.0.9007
+
+* `summary()` prints simpler tables. The per-period table gives each period's jump and standard
+  error, conventional and bias-corrected, without the weights (printed above it). The standard
+  errors under the three sampling schemes are a table, rows RCS, PC and PV and columns
+  Conventional and Robust (bias-corrected). `summary(fit)$per_period` is unchanged.
+
 # didisc 0.4.0.9006
 
 * The signed weight of each period's jump in the estimate (+1 for the RD period, minus the weight

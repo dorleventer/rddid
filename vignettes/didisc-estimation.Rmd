@@ -122,18 +122,18 @@ summary(fit)
 ```
 
 `summary()` adds the per-period fits. Each row gives the period's role, its
-signed weight in the estimate (+1 for the RD period, minus its weight for a
-comparison period), its number of observations, its bandwidths, and its jump
-with standard error, conventional (`jump`, `s.e.`) and bias-corrected
-(`jump (bc)`, `s.e. (rb)`). The estimate is the sum of weight times jump:
+number of observations, its bandwidths, and its jump with standard error,
+conventional and bias-corrected (with the robust standard error). The estimate
+combines the jumps with the comparison weights printed at the top:
 `r fmt(D[["3"]], 3)` - 0.5 × `r fmt(D[["1"]], 3)` - 0.5 × `r fmt(D[["2"]], 3)`
 = `r fmt(coef(fit)[["Conventional"]], 3)`.
 
-The last lines give the robust standard error under each of the three sampling
-schemes. The printout uses the one for the scheme detected in the data; the
-other two show what the formulas for the other schemes give on the same data.
-Here the cross-section
-standard error, `r fmt(fit$estimates["Robust", "se_cs"], 3)`, ignores that the
+The last table gives the standard error of the estimate, conventional and
+robust, under each of the three sampling schemes: repeated cross-section (RCS),
+panel with no unit changing side of the cutoff (PC), and panel with some units
+changing side (PV). The estimate table uses the row for the scheme detected in
+the data; the other rows show what the formulas for the other schemes give on
+the same data. Here the cross-section robust standard error, `r fmt(fit$estimates["Robust", "se_cs"], 3)`, ignores that the
 same units appear in every year; the panel one, which accounts for it, is
 `r fmt(fit$estimates["Robust", "se_pc"], 3)`.
 
