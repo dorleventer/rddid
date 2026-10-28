@@ -5,7 +5,7 @@
 
 <!-- badges: start -->
 
-[![R-CMD-check](https://github.com/dorleventer/rddid/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/dorleventer/rddid/actions/workflows/R-CMD-check.yaml)
+[![R-CMD-check](https://github.com/dorleventer/didisc/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/dorleventer/didisc/actions/workflows/R-CMD-check.yaml)
 [![License:
 MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Lifecycle:
@@ -42,7 +42,7 @@ for the combined estimate.
 
 ``` r
 # install.packages("devtools")
-devtools::install_github("dorleventer/rddid")
+devtools::install_github("dorleventer/didisc")
 ```
 
 ## Quick start
@@ -77,7 +77,7 @@ estimate with its conventional standard error; `Robust (bias-corrected)`
 is the bias-corrected estimate with its robust standard error. A plain
 RD in year 3 would target 1.5, the effect plus the confounding jump.
 [Get
-started](https://dorleventer.github.io/rddid/articles/didisc-estimation.html)
+started](https://dorleventer.github.io/didisc/articles/didisc-estimation.html)
 reads every line.
 
 When the running variable moves over time, so that units can change side
@@ -107,13 +107,13 @@ between two periods.
 ## Learn more
 
 - [Get
-  started](https://dorleventer.github.io/rddid/articles/didisc-estimation.html):
+  started](https://dorleventer.github.io/didisc/articles/didisc-estimation.html):
   the estimate, its printout, and the four tests.
 - [Checking the identification
-  assumptions](https://dorleventer.github.io/rddid/articles/didisc-validation-tests.html):
+  assumptions](https://dorleventer.github.io/didisc/articles/didisc-validation-tests.html):
   the four tests, one at a time.
 - [Plots of the estimate and the
-  checks](https://dorleventer.github.io/rddid/articles/didisc-plots.html):
+  checks](https://dorleventer.github.io/didisc/articles/didisc-plots.html):
   `plot()` on a fit and on each test.
-- [Reference](https://dorleventer.github.io/rddid/reference/index.html):
+- [Reference](https://dorleventer.github.io/didisc/reference/index.html):
   every function, with examples.

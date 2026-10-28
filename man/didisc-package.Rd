@@ -49,7 +49,7 @@ Designs Using Multiple Time-Period Data.} arXiv:2408.05847.
 \seealso{
 The package website, with a getting-started guide and articles on
 the computation, the options and the tests:
-\url{https://dorleventer.github.io/rddid/}
+\url{https://dorleventer.github.io/didisc/}
 }
 \author{
 \strong{Maintainer}: Dor Leventer \email{leventerdor@gmail.com} [copyright holder]

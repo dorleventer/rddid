@@ -39,6 +39,6 @@
 #'
 #' @seealso The package website, with a getting-started guide and articles on
 #'   the computation, the options and the tests:
-#'   \url{https://dorleventer.github.io/rddid/}
+#'   \url{https://dorleventer.github.io/didisc/}
 #' @keywords internal
 "_PACKAGE"

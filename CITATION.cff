@@ -7,8 +7,8 @@ authors:
     given-names: Dor
   - family-names: Nevo
     given-names: Daniel
-repository-code: "https://github.com/dorleventer/rddid"
-url: "https://dorleventer.github.io/rddid/"
+repository-code: "https://github.com/dorleventer/didisc"
+url: "https://dorleventer.github.io/didisc/"
 license: MIT
 preferred-citation:
   type: article
