@@ -167,8 +167,8 @@ summary(fit_pv)
 #>   Conventional                 0.9698     0.1901    5.10   <0.001   [0.5972, 1.3424]
 #>   Robust (bias-corrected)      0.9943     0.2256    4.41   <0.001   [0.5522, 1.4364]
 #> 
-#>   Per-period local-linear fits (Conventional = sum of coef x jump; Robust = sum of coef x jump (bc)):
-#>   period   role           coef      n        h        b       jump      s.e.  jump (bc) s.e. (rb)
+#>   Per-period local-linear fits (Conventional = sum of weight x jump; Robust = sum of weight x jump (bc)):
+#>   period   role         weight      n        h        b       jump      s.e.  jump (bc) s.e. (rb)
 #>   1        comparison   -0.500   1000   0.2436   0.4001     0.7495    0.1565     0.7845    0.1866
 #>   2        comparison   -0.500   1000   0.2436   0.3958     0.7243    0.1787     0.7842    0.2189
 #>   3        RD            1.000   1000   0.2436   0.4047     1.7067    0.1540     1.7786    0.1795

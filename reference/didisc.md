@@ -218,18 +218,18 @@ An object of class `"didisc"`, a list with:
   under `scheme`) and `se_cs`, `se_pc`, `se_pv` (that row's standard
   error under each sampling scheme, at the same bandwidths).
 
-- `coef`:
+- `period_weights`:
 
-  named numeric vector, the coefficient of each period's jump in the
+  named numeric vector, the signed weight of each period's jump in the
   estimate: \\\phi_t\\ for each RD period (1 for a single RD period),
   minus its (aggregated) weight for each comparison period.
   [`coef()`](https://rdrr.io/r/stats/coef.html) returns the estimate
   itself.
 
-- `coef_bc`:
+- `period_weights_bc`:
 
-  the same for the bias-corrected estimate; it differs from `coef` only
-  under `weighting = "min_variance"`.
+  the same for the bias-corrected estimate; it differs from
+  `period_weights` only under `weighting = "min_variance"`.
 
 - `weights`:
 
@@ -326,7 +326,7 @@ observations; \\t\_{\mathrm{RD}}\\ is the RD period (`t_rd`); the sum
 runs over the comparison periods; and \\w_t\\ is the weight of
 comparison period \\t\\.
 [`summary()`](https://rdrr.io/r/base/summary.html) lists every \\D_t\\
-with its coefficient in the sum.
+with its signed weight in the sum.
 
 ### Several RD periods
 
@@ -448,7 +448,7 @@ bandwidth of rdrobust, computed from the running variables of all
 periods pooled; `bandwidth$h_rot` in the result). The other factor of
 the bias constant, the curvature of the conditional mean, is estimated
 from a fit at that period's own CCT pilot bandwidth, as rdrobust does.
-These are combined, with the coefficients of the sum above, into the
+These are combined, with the signed weights of the sum above, into the
 AMSE, which is then minimized in closed form. Each period's pilot
 bandwidth keeps that period's CCT ratio \\b/h\\. Nothing in the rule
 depends on which period is the RD period, so an aggregate of several RD
@@ -524,8 +524,8 @@ summary(fit)   # the jump in every period, and the s.e. under each scheme
 #>   Conventional                 1.0922     0.1259    8.67   <0.001   [0.8454, 1.3391]
 #>   Robust (bias-corrected)      1.1411     0.1488    7.67   <0.001   [0.8494, 1.4328]
 #> 
-#>   Per-period local-linear fits (Conventional = sum of coef x jump; Robust = sum of coef x jump (bc)):
-#>   period   role           coef      n        h        b       jump      s.e.  jump (bc) s.e. (rb)
+#>   Per-period local-linear fits (Conventional = sum of weight x jump; Robust = sum of weight x jump (bc)):
+#>   period   role         weight      n        h        b       jump      s.e.  jump (bc) s.e. (rb)
 #>   1        comparison   -0.500   1000   0.2694   0.4136     0.5129    0.1683     0.4642    0.1942
 #>   2        comparison   -0.500   1000   0.2694   0.3901     0.6306    0.1679     0.6249    0.2004
 #>   3        RD            1.000   1000   0.2694   0.3984     1.6640    0.1635     1.6856    0.1924

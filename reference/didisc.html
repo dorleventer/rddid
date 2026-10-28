@@ -27,7 +27,7 @@ confounding-trend assumption: constant (equal weights) or linear in time."></hea
 
     <a class="navbar-brand me-2" href="../index.html">didisc</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9005</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9006</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -271,15 +271,15 @@ statistic and p-value under <code>scheme</code>) and <code>se_cs</code>, <code>s
 (that row's standard error under each sampling scheme, at the same
 bandwidths).</p></dd>
 
-<dt><code>coef</code></dt>
-<dd><p>named numeric vector, the coefficient of each period's jump
-in the estimate: \(\phi_t\) for each RD period (1 for a single
+<dt><code>period_weights</code></dt>
+<dd><p>named numeric vector, the signed weight of each period's
+jump in the estimate: \(\phi_t\) for each RD period (1 for a single
 RD period), minus its (aggregated) weight for each comparison period.
 <code><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef()</a></code> returns the estimate itself.</p></dd>
 
-<dt><code>coef_bc</code></dt>
-<dd><p>the same for the bias-corrected estimate; it differs
-from <code>coef</code> only under <code>weighting = "min_variance"</code>.</p></dd>
+<dt><code>period_weights_bc</code></dt>
+<dd><p>the same for the bias-corrected estimate; it
+differs from <code>period_weights</code> only under <code>weighting = "min_variance"</code>.</p></dd>
 
 <dt><code>weights</code></dt>
 <dd><p>named numeric vector of the comparison-period weights;
@@ -365,7 +365,7 @@ where \(D_t\) is the jump in the outcome at the cutoff in period \(t\),
 estimated by a local-linear RD on that period's observations;
 \(t_{\mathrm{RD}}\) is the RD period (<code>t_rd</code>); the sum runs over the
 comparison periods; and \(w_t\) is the weight of comparison period
-\(t\). <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> lists every \(D_t\) with its coefficient in the sum.</p>
+\(t\). <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> lists every \(D_t\) with its signed weight in the sum.</p>
 </div>
 
 <div class="section">
@@ -496,7 +496,7 @@ bandwidth shared by every period (the preliminary bandwidth of
 <code>bandwidth$h_rot</code> in the result). The other factor of the bias constant, the
 curvature of the conditional mean, is estimated from a fit at that period's
 own CCT pilot bandwidth, as <span class="pkg">rdrobust</span> does. These are combined,
-with the coefficients of the sum above, into the AMSE, which is then
+with the signed weights of the sum above, into the AMSE, which is then
 minimized in closed form. Each period's pilot bandwidth keeps that period's
 CCT ratio \(b/h\). Nothing in the rule depends on which period is the
 RD period, so an aggregate of several RD periods gets the same bandwidth
@@ -560,8 +560,8 @@ example data <a href="didisc_sim.html">didisc_sim</a> and <a href="didisc_sim_pv
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Conventional                 1.0922     0.1259    8.67   &lt;0.001   [0.8454, 1.3391]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Robust (bias-corrected)      1.1411     0.1488    7.67   &lt;0.001   [0.8494, 1.4328]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Per-period local-linear fits (Conventional = sum of coef x jump; Robust = sum of coef x jump (bc)):</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   period   role           coef      n        h        b       jump      s.e.  jump (bc) s.e. (rb)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Per-period local-linear fits (Conventional = sum of weight x jump; Robust = sum of weight x jump (bc)):</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   period   role         weight      n        h        b       jump      s.e.  jump (bc) s.e. (rb)</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   1        comparison   -0.500   1000   0.2694   0.4136     0.5129    0.1683     0.4642    0.1942</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   2        comparison   -0.500   1000   0.2694   0.3901     0.6306    0.1679     0.6249    0.2004</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   3        RD            1.000   1000   0.2694   0.3984     1.6640    0.1635     1.6856    0.1924</span>

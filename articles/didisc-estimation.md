@@ -145,8 +145,8 @@ summary(fit)
 #>   Conventional                 1.0922     0.1259    8.67   <0.001   [0.8454, 1.3391]
 #>   Robust (bias-corrected)      1.1411     0.1488    7.67   <0.001   [0.8494, 1.4328]
 #> 
-#>   Per-period local-linear fits (Conventional = sum of coef x jump; Robust = sum of coef x jump (bc)):
-#>   period   role           coef      n        h        b       jump      s.e.  jump (bc) s.e. (rb)
+#>   Per-period local-linear fits (Conventional = sum of weight x jump; Robust = sum of weight x jump (bc)):
+#>   period   role         weight      n        h        b       jump      s.e.  jump (bc) s.e. (rb)
 #>   1        comparison   -0.500   1000   0.2694   0.4136     0.5129    0.1683     0.4642    0.1942
 #>   2        comparison   -0.500   1000   0.2694   0.3901     0.6306    0.1679     0.6249    0.2004
 #>   3        RD            1.000   1000   0.2694   0.3984     1.6640    0.1635     1.6856    0.1924
@@ -156,12 +156,12 @@ summary(fit)
 ```
 
 [`summary()`](https://rdrr.io/r/base/summary.html) adds the per-period
-fits. Each row gives the period’s role, its coefficient in the estimate
-(+1 for the RD period, minus its weight for a comparison period), its
-number of observations, its bandwidths, and its jump with standard
-error, conventional (`jump`, `s.e.`) and bias-corrected (`jump (bc)`,
-`s.e. (rb)`). The estimate is the sum of coefficient times jump: 1.664 -
-0.5 × 0.513 - 0.5 × 0.631 = 1.092.
+fits. Each row gives the period’s role, its signed weight in the
+estimate (+1 for the RD period, minus its weight for a comparison
+period), its number of observations, its bandwidths, and its jump with
+standard error, conventional (`jump`, `s.e.`) and bias-corrected
+(`jump (bc)`, `s.e. (rb)`). The estimate is the sum of weight times
+jump: 1.664 - 0.5 × 0.513 - 0.5 × 0.631 = 1.092.
 
 The last lines give the robust standard error under each of the three
 sampling schemes. The printout uses the one for the scheme detected in
@@ -385,9 +385,9 @@ tc
 #>     ("+" at or above, "-" below).
 #> 
 #>   Joint sup-t (t critical values) max |t| = 1.232 over 9 jumps,  p = 0.869  (largest: period:type 1:+-)
-#>     Period 1: sup-t (t critical values) max |t| = 1.232 over 3 jumps,  p = 0.500
+#>     Period 1: sup-t (t critical values) max |t| = 1.232 over 3 jumps,  p = 0.499
 #>     Period 2: sup-t (t critical values) max |t| = 0.582 over 3 jumps,  p = 0.902
-#>     Period 3: sup-t (t critical values) max |t| = 1.048 over 3 jumps,  p = 0.633
+#>     Period 3: sup-t (t critical values) max |t| = 1.048 over 3 jumps,  p = 0.631
 #>   All joint statistics: x$joint_tests
 ```
 
@@ -515,7 +515,7 @@ One table for all four:
 
 do.call(rbind, lapply(list(tc, cs, hg, tr), tidy))
 #>            test                       assumption statistic df    p.value
-#> 1   rd_typecont                  type continuity 1.2317753 NA 0.86933131
+#> 1   rd_typecont                  type continuity 1.2317753 NA 0.86888131
 #> 2 rd_compstable            composition stability 3.0857080 NA 0.01639984
 #> 3      rd_homog          homogeneous confounding 0.2474976  2 0.88360178
 #> 4  rd_trendcell constant within-type confounding 1.4453616  2 0.48544912

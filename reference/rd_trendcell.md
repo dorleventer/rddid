@@ -109,7 +109,7 @@ rd_trendcell(
   the trend assumption tested within each type: `"constant"` (default;
   the confounding jump is the same in every comparison period) or
   `"linear"` (it moves linearly in time; needs at least three comparison
-  periods). Given the `trend` of an
+  periods). Given the `trend` of a
   [`didisc()`](https://dorleventer.github.io/didisc/reference/didisc.md)
   call, the test checks that call's assumption. With `"linear"` the
   second differences are taken in time (the period values), so unequally

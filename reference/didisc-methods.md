@@ -1,7 +1,7 @@
 # Coefficients, confidence intervals and sample size of a diff-in-disc fit
 
 [`coef()`](https://rdrr.io/r/stats/coef.html) returns the two estimates
-of an
+of a
 [`didisc()`](https://dorleventer.github.io/didisc/reference/didisc.md)
 fit, `Conventional` (local-linear) and `Robust` (bias-corrected);
 [`confint()`](https://rdrr.io/r/stats/confint.html) their confidence
