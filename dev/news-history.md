@@ -3,6 +3,50 @@ package's user-facing NEWS is inst/NEWS.md). -->
 
 # rddid 0.4.0.9000 (development)
 
+## 2026-10-27: the pilot bandwidths chosen for the aggregate (PR #12: rddid 0.4.0.9004 on its branch, lands as didisc 0.4.0.9008)
+
+* `bwselect = "joint"`: the pilot bandwidth `b` is now one bandwidth for every period, chosen for
+  the RD-DID estimate as rdrobust's `rdbwselect` (mserd) chooses its pilot for one period: `b` is
+  AMSE-optimal for the aggregate `sum_t coef_t` of the periods' `(p+1)`-th derivative jumps (order-q
+  fits), with its own curvature from order-(q+1) fits at a bandwidth `d`, itself AMSE-optimal for
+  the aggregate `(q+1)`-th derivative jump (order-(q+2) fits at each side's full range; not
+  regularized). Every variance and design moment is at the shared `h_rot`; `b` is regularized
+  like `h`; `d` and `b` are capped at the largest distance to the cutoff (rdrobust's
+  `bwrestrict`). The curvature of `h`'s bias is then taken at this `b` in every period, and every
+  period's bias correction uses it. Before, each period's curvature came from its own CCT pilot
+  `b_t^CCT`, and the bias correction used `b_t = h* b_t^CCT / h_t^CCT`.
+* New internals `.bw_stage()` (one rdrobust_bw stage for the aggregate, in rdrobust's units) and
+  `.bw_pilots()`; `.bw_constants()` / `.bw_joint()` take one `b` instead of `pilot_bws`;
+  `bandwidth` in the result has `d` and one `b` (no `pilot_bws`). `.bw_rot()` takes the IQR from
+  type-2 quantiles, as rdrobust (was `IQR()`, type 7; matters only when IQR / 1.349 < sd).
+* rdrobust's handling of the data, ported so that one period is exactly `rdbwselect`:
+  `masspoints = "adjust"` (new `.bw_mass()`: `h_rot` uses the average number of distinct
+  running-variable values per period instead of rows; with mass points, a side with
+  `1 - M/N >= 0.2`, `h_rot` and `d` are raised to at least the 10th distinct distance to the cutoff,
+  rdrobust's `bwcheck = 10`) and `bwrestrict` (`h_rot`, `d`, `b` and now also `h` capped at the
+  largest distance to the cutoff; `h` still warns when capped). Without this the order-(q+1) fit
+  of the `d` stage at `h_rot` aborted on discrete running variables that master handled (review
+  finding).
+* Why: paper App. B.4 "Bandwidth estimation" (Overleaf `c0b890c`, 2026-10-27) and the T1787
+  simulations (rd-did `code/simulations/bw_routes`, `docs/bw_routes_note.md` section 8): joint
+  pilots give the most accurate common bandwidth of the routes compared.
+* Checks: one period, `h` and `b` equal `rdbwselect(mserd, hc1)` to 1e-8 (p = 1, 2; both branches
+  of the rule of thumb); balanced PC panel, `b` and `h` equal `rdbwselect` on the composite
+  outcome at the same `h_rot`; `.bw_stage()`'s third stage equals `.bw_joint()`'s `h` (two
+  implementations of eq:common_h_opt); `d` (one period and CS) and `b` (CS) equal a from-scratch
+  `lm()` + HC1 reference; a discrete running variable runs, and one period equals `rdbwselect`
+  with its mass-point adjustment.
+* rdrobust 4.1 (CRAN 2026-10-07; CI installs it): the selector follows 4.1.1, whose d stage takes
+  each side's range times 1 + sqrt(eps) (the farthest unit keeps a positive weight) and whose
+  `bwcheck` floor is the 10th distinct distance times 1 + sqrt(eps). Against rdrobust 2.2 the
+  one-period equality then holds to ~1e-3 on heavy-tailed data (tests use 1e-8 for rdrobust >= 4.1,
+  1e-3 below).
+* Golden master, all recorded under rdrobust 4.1.1: `baseline_bmomrot_rd41.rds` (master
+  d25dd5e) against the new `baseline_jointpilots.rds`: exactly the 31 joint cells change (h by a
+  factor 0.86-1.52); the other 98 are identical. Upgrading rdrobust 2.2 -> 4.1.1 alone moves 80
+  cells of master by at most 6e-7 (relative; h and estimates), through `rdbwselect`. On `rddid_sim` the print snapshot's common h moves 0.2694 -> 0.3986, with
+  b = 0.5936 in every period.
+
 ## 2026-10-27: the bias design moment at the shared rule-of-thumb bandwidth (0.4.0.9003)
 
 * `bwselect = "joint"`: on each side, the bias constant is the design moment

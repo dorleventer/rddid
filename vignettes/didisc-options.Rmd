@@ -46,18 +46,21 @@ residuals is estimated at one rule-of-thumb bandwidth shared by every period
 (`fit_joint$bandwidth$h_rot`): each period's variance, the covariances between
 periods in a panel, and the design part of each period's bias. Only the
 curvature of the conditional mean, the other part of the bias, needs its own
-pilot fit, at that period's CCT pilot bandwidth. These inputs to the rule are
-the same whichever period is the RD period.
-The pilot bandwidth of each period keeps that period's CCT ratio of pilot to
-main bandwidth. For year 3, from its own CCT pair:
+fit, at the pilot bandwidth `b`, which is also the bandwidth of the bias
+correction. `b` is chosen the same way, for the same difference of jumps one
+derivative up, with its own curvature from fits at a bandwidth `d`
+(`fit_joint$bandwidth$d`), as rdrobust chooses its pilot for one period. So
+one `b` serves every period:
 
 ```{r}
-y3  <- subset(didisc_sim, year == 3)
-bw3 <- rd_bw_cct(y3$Y, y3$R)
-fit_joint$bandwidth$h * bw3[["b"]] / bw3[["h"]]
+c(h = fit_joint$bandwidth$h, b = fit_joint$bandwidth$b, d = fit_joint$bandwidth$d)
 ```
 
-which is the year-3 entry of `b_by_period` above.
+These inputs to the rule are the same whichever period is the RD period. With
+a single period the rule is `rdrobust::rdbwselect()` (`bwselect = "mserd"`,
+`vce = "hc1"`); in a panel whose running variable does not move, it is that
+selector applied to the combined outcome, the RD-period outcome minus the
+weighted comparison outcomes.
 
 ### Per-period CCT bandwidths: `bwselect = "cct"`
 
@@ -174,8 +177,7 @@ stopifnot(
   isTRUE(all.equal(se(fit_cs, "se_cs"), se(fit_cs, "se_pc"))),
   isTRUE(all.equal(se(fit_cs, "se_cs"), se(fit_cs, "se_pv"))),
   isTRUE(all.equal(se(fit_pc, "se_pc"), se(fit_pc, "se_pv"))),
-  isTRUE(all.equal(fit_joint$bandwidth$h * bw3[["b"]] / bw3[["h"]],
-                   unname(fit_joint$bandwidth$b_by_period["3"])))
+  all(fit_joint$bandwidth$b_by_period == fit_joint$bandwidth$b)
 )
 ```
 

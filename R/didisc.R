@@ -135,17 +135,24 @@
 #' bandwidth shared by every period (the preliminary bandwidth of
 #' \pkg{rdrobust}, computed from the running variables of all periods pooled;
 #' `bandwidth$h_rot` in the result). The other factor of the bias constant, the
-#' curvature of the conditional mean, is estimated from a fit at that period's
-#' own CCT pilot bandwidth, as \pkg{rdrobust} does. These are combined,
-#' with the signed weights of the sum above, into the AMSE, which is then
-#' minimized in closed form. Each period's pilot bandwidth keeps that period's
-#' CCT ratio \eqn{b/h}{b/h}. Nothing in the rule depends on which period is the
+#' curvature of the conditional mean, is estimated in every period from a fit at
+#' one pilot bandwidth `b`, which is itself chosen for the diff-in-disc estimate as
+#' \pkg{rdrobust} chooses its pilot for one period: `b` is AMSE-optimal for the
+#' same combination of the periods' \eqn{(p+1)}{(p+1)}-th derivatives, with its
+#' own curvature from fits at a bandwidth `d` chosen the same way one order up
+#' (`bandwidth$d`). These are combined, with the signed weights of the sum above,
+#' into the AMSE, which is then minimized in closed form. Every period's bias
+#' correction uses the same `b`. With one period this is
+#' [rdrobust::rdbwselect()] (`bwselect = "mserd"`, `vce = "hc1"`); in a panel
+#' with a running variable fixed over time, \pkg{rdrobust}'s selector applied
+#' to the combined outcome. Nothing in the rule depends on which period is the
 #' RD period, so an aggregate of several RD periods gets the same bandwidth
 #' whatever the order of `t_rd`.
 #' With `regularize = TRUE` the rule adds `reg_const` times the estimated
 #' variance of the aggregate bias constant, including its covariances between
-#' periods, to the squared bias, as \pkg{rdrobust} does, so a near-zero
-#' estimated bias cannot make the bandwidth very large. Standard errors use the HC1 convention
+#' periods, to the squared bias of `h` and of `b` (not of `d`), as
+#' \pkg{rdrobust} does, so a near-zero estimated bias cannot make a bandwidth
+#' very large. Standard errors use the HC1 convention
 #' of \pkg{rdrobust}. The derivations are in the paper's appendix on estimation
 #' and bandwidth choice.
 #'
@@ -274,9 +281,9 @@
 #'       when `h` is given); `h_by_period` and `b_by_period` (named numeric
 #'       vectors, the main and pilot bandwidth used in each period, whatever the
 #'       rule); for `"fixed"` and `"joint"`, the common main bandwidth `h` and
-#'       the pilot `b` (one number for `"fixed"`, one per period for
-#'       `"joint"`); and intermediate quantities of the rule (`bws` for `"cct"`;
-#'       `B`, `Veff`, `reg`, `pilot_bws` for `"joint"`).}
+#'       the pilot `b`, one number each; and intermediate quantities of the
+#'       rule (`bws` for `"cct"`; `h_rot`, `d`, `B`, `Veff`, `reg` for
+#'       `"joint"`).}
 #'     \item{`fits`}{named list of the per-period [rd_period()] fits, the RD
 #'       period(s) first (index by name).}
 #'     \item{`n_by_period`}{the number of observations in each period.}
@@ -505,11 +512,10 @@ didisc <- function(data, y, x, time, id = NULL, t_rd,
     jb <- .bw_joint(plist, period_weights, as.character(t_rd), scheme = use_scheme,
                     c = cutoff, p = p, q = q, kernel = kernel,
                     regularize = regularize, reg_const = reg_const)
-    # one common h; each period's pilot b keeps its own CCT ratio b/h
-    bws  <- stats::setNames(lapply(labels, function(k)
-      c(h = jb$h, b = unname(jb$b[[k]]))), labels)
-    info <- list(method = "joint", h = jb$h, b = jb$b, B = jb$B,
-                 Veff = jb$Veff, reg = jb$reg, h_rot = jb$h_rot, pilot_bws = jb$pilot_bws)
+    # one common h and one common pilot b, both chosen for the aggregate
+    bws  <- stats::setNames(rep(list(c(h = jb$h, b = jb$b)), length(labels)), labels)
+    info <- list(method = "joint", h = jb$h, b = jb$b, d = jb$d, B = jb$B,
+                 Veff = jb$Veff, reg = jb$reg, h_rot = jb$h_rot)
   }
   # the bandwidths actually used in each period, whatever the rule
   info$h_by_period <- vapply(bws, function(v) unname(v[["h"]]), numeric(1))
@@ -598,8 +604,8 @@ print.didisc <- function(x, digits = 4, hint = TRUE, ...) {
   }
   switch(bw$method,
     fixed = sprintf("h = %.4g in every period (fixed), pilot b = %.4g", bw$h, bw$b),
-    joint = sprintf("common h = %.4g (rule \"joint\": one bandwidth, chosen for the diff-in-disc estimate)\n  Pilot bandwidth b (period = value): %s",
-                    bw$h, by_t(bw$b_by_period)),
+    joint = sprintf("common h = %.4g (rule \"joint\": one bandwidth, chosen for the diff-in-disc estimate)\n  Pilot bandwidth b = %.4g (also chosen for the diff-in-disc estimate)",
+                    bw$h, bw$b),
     cct   = sprintf("per-period CCT MSE-optimal (rule \"cct\"): h (period = value) %s", by_t(bw$h_by_period)))
 }
 #' The two-row estimate table of print.didisc

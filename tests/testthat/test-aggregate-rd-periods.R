@@ -134,12 +134,11 @@ test_that("joint rule: one h for the aggregate, the closed form in B, Veff and r
   f <- .fit(d, t_rd = .rd, comparisons = .comps, rd_weights = phi, bwselect = "joint")
   bw <- f$bandwidth
   expect_equal(bw$h, (bw$Veff / (bw$B^2 + bw$reg))^(1 / 5), tolerance = 1e-12)
-  # B-bar^phi = sum_t coef_t B-hat_t; on each side of B-hat_t the curvature from the fit at that
-  # period's pilot pair times the design moment at the shared h_rot
+  # B-bar^phi = sum_t w_t B-hat_t; on each side of B-hat_t the curvature from the fit at the
+  # common pilot b times the design moment at the shared h_rot
   per <- names(f$period_weights)
   bconst <- vapply(per, function(k) { s <- d[d$year == as.numeric(k), ]
-    pb <- bw$pilot_bws[[k]]
-    fp <- rd_period(s$Y, s$R, h = pb[["h"]], b = pb[["b"]], id = s$id)
+    fp <- rd_period(s$Y, s$R, h = bw$b, b = bw$b, id = s$id)
     fr <- rd_period(s$Y, s$R, h = bw$h_rot, b = bw$h_rot, id = s$id)
     2 * (fr$sides[["+"]]$bmom * fp$sides[["+"]]$curv - fr$sides[["-"]]$bmom * fp$sides[["-"]]$curv)
   }, numeric(1))
@@ -231,8 +230,7 @@ test_that("joint rule, PC: Veff / h_rot = c' Sigma(h_rot) c with RD-RD covarianc
   per <- names(coef); h0 <- 0.4; b0 <- 0.55
   plist <- stats::setNames(lapply(per, function(k) { s <- d[d$year == as.numeric(k), ]
     data.frame(y = s$Y, x = s$R, id = s$id) }), per)
-  pb <- stats::setNames(rep(list(c(h = h0, b = b0)), length(per)), per)
-  jb <- .bw_joint(plist, coef, scheme = "pc", pilot_bws = pb)
+  jb <- .bw_joint(plist, coef, scheme = "pc", b = b0)
   h0 <- jb$h_rot                                 # the variance side is at the shared ROT bandwidth
   fits <- lapply(per, function(k) rd_period(plist[[k]]$y, plist[[k]]$x, h = h0, b = h0, id = plist[[k]]$id))
   same <- function(ft, fs) sum(vapply(c("+", "-"), function(sd) {

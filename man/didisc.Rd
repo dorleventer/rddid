@@ -177,9 +177,9 @@ periods used.}
 when \code{h} is given); \code{h_by_period} and \code{b_by_period} (named numeric
 vectors, the main and pilot bandwidth used in each period, whatever the
 rule); for \code{"fixed"} and \code{"joint"}, the common main bandwidth \code{h} and
-the pilot \code{b} (one number for \code{"fixed"}, one per period for
-\code{"joint"}); and intermediate quantities of the rule (\code{bws} for \code{"cct"};
-\code{B}, \code{Veff}, \code{reg}, \code{pilot_bws} for \code{"joint"}).}
+the pilot \code{b}, one number each; and intermediate quantities of the
+rule (\code{bws} for \code{"cct"}; \code{h_rot}, \code{d}, \code{B}, \code{Veff}, \code{reg} for
+\code{"joint"}).}
 \item{\code{fits}}{named list of the per-period \code{\link[=rd_period]{rd_period()}} fits, the RD
 period(s) first (index by name).}
 \item{\code{n_by_period}}{the number of observations in each period.}
@@ -337,17 +337,24 @@ moment in each period's bias constant are estimated at one rule-of-thumb
 bandwidth shared by every period (the preliminary bandwidth of
 \pkg{rdrobust}, computed from the running variables of all periods pooled;
 \code{bandwidth$h_rot} in the result). The other factor of the bias constant, the
-curvature of the conditional mean, is estimated from a fit at that period's
-own CCT pilot bandwidth, as \pkg{rdrobust} does. These are combined,
-with the signed weights of the sum above, into the AMSE, which is then
-minimized in closed form. Each period's pilot bandwidth keeps that period's
-CCT ratio \eqn{b/h}{b/h}. Nothing in the rule depends on which period is the
+curvature of the conditional mean, is estimated in every period from a fit at
+one pilot bandwidth \code{b}, which is itself chosen for the diff-in-disc estimate as
+\pkg{rdrobust} chooses its pilot for one period: \code{b} is AMSE-optimal for the
+same combination of the periods' \eqn{(p+1)}{(p+1)}-th derivatives, with its
+own curvature from fits at a bandwidth \code{d} chosen the same way one order up
+(\code{bandwidth$d}). These are combined, with the signed weights of the sum above,
+into the AMSE, which is then minimized in closed form. Every period's bias
+correction uses the same \code{b}. With one period this is
+\code{\link[rdrobust:rdbwselect]{rdrobust::rdbwselect()}} (\code{bwselect = "mserd"}, \code{vce = "hc1"}); in a panel
+with a running variable fixed over time, \pkg{rdrobust}'s selector applied
+to the combined outcome. Nothing in the rule depends on which period is the
 RD period, so an aggregate of several RD periods gets the same bandwidth
 whatever the order of \code{t_rd}.
 With \code{regularize = TRUE} the rule adds \code{reg_const} times the estimated
 variance of the aggregate bias constant, including its covariances between
-periods, to the squared bias, as \pkg{rdrobust} does, so a near-zero
-estimated bias cannot make the bandwidth very large. Standard errors use the HC1 convention
+periods, to the squared bias of \code{h} and of \code{b} (not of \code{d}), as
+\pkg{rdrobust} does, so a near-zero estimated bias cannot make a bandwidth
+very large. Standard errors use the HC1 convention
 of \pkg{rdrobust}. The derivations are in the paper's appendix on estimation
 and bandwidth choice.
 }

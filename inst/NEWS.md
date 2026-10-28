@@ -1,3 +1,12 @@
+# didisc 0.4.0.9008
+
+* The common bandwidth (`bwselect = "joint"`) now also chooses the bandwidth `b` of the bias
+  correction for the diff-in-disc estimate, as rdrobust chooses it for one period, from fits at
+  a bandwidth `d` chosen the same way one order up (`fit$bandwidth$b`, `fit$bandwidth$d`). Every
+  period's bias correction uses this one `b`; before, each period used its own CCT `b`, rescaled
+  by h/h-CCT. With one period this is `rdrobust::rdbwselect()`. Estimates under the common
+  bandwidth change; those under per-period CCT or a fixed bandwidth are unchanged.
+
 # didisc 0.4.0.9007
 
 * `summary()` prints simpler tables. The per-period table gives each period's jump and standard
@@ -41,11 +50,14 @@ First public version.
 * Standard errors for a repeated cross-section and for a panel, with a running variable fixed or
   moving over time. Each fit reports the local-linear estimate with its conventional standard
   error and the bias-corrected estimate with its robust standard error. The bandwidth is one
-  common bandwidth chosen for the RD-DID estimate, or each period's own CCT bandwidth. The
+  common bandwidth chosen for the diff-in-disc estimate, or each period's own CCT bandwidth. The
   common bandwidth is chosen as rdrobust chooses one for a single period: the variance, in a
   panel the covariances between periods, and the design part of the bias at one rule-of-thumb
-  bandwidth shared by every period, the curvature from each period's pilot fit, and a
-  regularization that includes the covariances of the bias estimates between periods.
+  bandwidth shared by every period, the curvature from fits at one pilot bandwidth that is
+  itself chosen for the diff-in-disc estimate (and used for the bias correction in every period), and a
+  regularization that includes the covariances of the bias estimates between periods. With one
+  period this is `rdrobust::rdbwselect()`; in a panel whose running variable does not move, it is
+  that selector applied to the combined outcome.
 * Tests of the identification assumptions when the running variable moves over time:
   `rd_typecont()`, `rd_compstable()`, `rd_homog()` and `rd_trendcell()`, or all four at once
   with `rd_checks()`.
