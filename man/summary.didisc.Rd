@@ -30,9 +30,9 @@ conventional local-linear jump and its standard error), \code{jump_bc}, \code{se
 }
 \description{
 \code{summary()} of a \code{\link[=didisc]{didisc()}} object adds, to what \code{print()} shows, a per-period table (the
-local-linear jump in every period with its bandwidths and sample size, and its signed weight
-in the estimate) and the standard error of the estimate under each of the three sampling
-schemes.
+local-linear jump in every period with its standard error, conventional and bias-corrected,
+its bandwidths and sample size) and a table of the standard error of the estimate,
+conventional and robust, under each of the three sampling schemes (RCS, PC, PV).
 }
 \examples{
 fit <- didisc(didisc_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)

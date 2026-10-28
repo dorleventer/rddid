@@ -10,9 +10,9 @@
 #' Summary of a diff-in-disc fit
 #'
 #' `summary()` of a [didisc()] object adds, to what `print()` shows, a per-period table (the
-#' local-linear jump in every period with its bandwidths and sample size, and its signed weight
-#' in the estimate) and the standard error of the estimate under each of the three sampling
-#' schemes.
+#' local-linear jump in every period with its standard error, conventional and bias-corrected,
+#' its bandwidths and sample size) and a table of the standard error of the estimate,
+#' conventional and robust, under each of the three sampling schemes (RCS, PC, PV).
 #'
 #' @param object an object of class `"didisc"`.
 #' @param digits number of decimals in the printed tables.
@@ -42,24 +42,28 @@ print.summary.didisc <- function(x, digits = 4, ...) {
   fit <- x$fit
   print(fit, digits = digits, hint = FALSE)
   tab <- x$per_period
-  own_bc <- !is.null(tab$weight_bc)              # the bias-corrected estimate has its own weights
-  cat("\n  Per-period local-linear fits (Conventional = sum of weight x jump; Robust = sum of",
-      if (own_bc) "weight (bc) x jump (bc)):\n" else "weight x jump (bc)):\n")
-  fmt  <- function(v, d = digits) formatC(v, digits = d, format = "f")
-  fmtc <- function(v) formatC(v, digits = 3, format = "f")
-  cat(sprintf("  %-8s %-11s %7s %6s %8s %8s %10s %9s%s %10s %9s\n", "period", "role", "weight",
-              "n", "h", "b", "jump", "s.e.", if (own_bc) sprintf(" %11s", "weight (bc)") else "",
-              "jump (bc)", "s.e. (rb)"))
+  fmt    <- function(v) formatC(v, digits = digits, format = "f")
+  center <- function(s, w) { l <- (w - nchar(s)) %/% 2; paste0(strrep(" ", l), s, strrep(" ", w - nchar(s) - l)) }
+  conv <- "Conventional"; rob <- "Robust (bias-corrected)"
+  # per-period fits: the jump and its standard error, conventional and bias-corrected (the
+  # weights that combine them are printed above)
+  cat("\n  Per-period local-linear fits:\n")
+  cat(sprintf("  %45s   %s   %s\n", "", center(conv, 23), center(rob, 23)))
+  cat(sprintf("  %-8s %-11s %6s %8s %8s   %11s %11s   %11s %11s\n", "Period", "Role", "n", "h", "b",
+              "Jump", "Std. err.", "Jump", "Std. err."))
   for (i in seq_len(nrow(tab)))
-    cat(sprintf("  %-8s %-11s %7s %6d %8s %8s %10s %9s%s %10s %9s\n", tab$period[i], tab$role[i],
-                fmtc(tab$weight[i]), tab$n[i], fmt(tab$h[i]), fmt(tab$b[i]), fmt(tab$jump[i]),
-                fmt(tab$se[i]), if (own_bc) sprintf(" %11s", fmtc(tab$weight_bc[i])) else "",
+    cat(sprintf("  %-8s %-11s %6d %8s %8s   %11s %11s   %11s %11s\n", tab$period[i], tab$role[i],
+                tab$n[i], fmt(tab$h[i]), fmt(tab$b[i]), fmt(tab$jump[i]), fmt(tab$se[i]),
                 fmt(tab$jump_bc[i]), fmt(tab$se_rb[i])))
+  # standard error of the estimate under each sampling scheme, at the same bandwidths
   e <- fit$estimates
-  cat("\n  Robust s.e. under each sampling scheme (the printed one is for \"", fit$scheme,
-      "\"; the others are for comparison):\n", sep = "")
-  cat(sprintf("    cross-section %s   panel, no unit changes side %s   panel, some change side %s\n",
-              fmt(e["Robust", "se_cs"]), fmt(e["Robust", "se_pc"]), fmt(e["Robust", "se_pv"])))
+  code <- c(cs = "RCS", pc = "PC", pv = "PV")
+  cat(sprintf("\n  Std. err. of the estimate under each sampling scheme (the estimate table at the top uses %s):\n",
+              if (fit$scheme %in% names(code)) code[[fit$scheme]] else fit$scheme))
+  cat(sprintf("  %-48s %12s   %s\n", "", conv, rob))
+  for (s in names(code))
+    cat(sprintf("  %-4s %-43s %12s   %23s\n", code[[s]], .scheme_label(s),
+                fmt(e["Conventional", paste0("se_", s)]), fmt(e["Robust", paste0("se_", s)])))
   invisible(x)
 }
 
