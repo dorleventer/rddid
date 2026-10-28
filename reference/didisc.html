@@ -27,7 +27,7 @@ confounding-trend assumption: constant (equal weights) or linear in time."></hea
 
     <a class="navbar-brand me-2" href="../index.html">didisc</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9006</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9007</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -560,14 +560,18 @@ example data <a href="didisc_sim.html">didisc_sim</a> and <a href="didisc_sim_pv
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Conventional                 1.0922     0.1259    8.67   &lt;0.001   [0.8454, 1.3391]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Robust (bias-corrected)      1.1411     0.1488    7.67   &lt;0.001   [0.8494, 1.4328]</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Per-period local-linear fits (Conventional = sum of weight x jump; Robust = sum of weight x jump (bc)):</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   period   role         weight      n        h        b       jump      s.e.  jump (bc) s.e. (rb)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   1        comparison   -0.500   1000   0.2694   0.4136     0.5129    0.1683     0.4642    0.1942</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   2        comparison   -0.500   1000   0.2694   0.3901     0.6306    0.1679     0.6249    0.2004</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   3        RD            1.000   1000   0.2694   0.3984     1.6640    0.1635     1.6856    0.1924</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Per-period local-linear fits:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                        Conventional         Robust (bias-corrected)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Period   Role             n        h        b          Jump   Std. err.          Jump   Std. err.</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   1        comparison    1000   0.2694   0.4136        0.5129      0.1683        0.4642      0.1942</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   2        comparison    1000   0.2694   0.3901        0.6306      0.1679        0.6249      0.2004</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   3        RD            1000   0.2694   0.3984        1.6640      0.1635        1.6856      0.1924</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Robust s.e. under each sampling scheme (the printed one is for "pc"; the others are for comparison):</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     cross-section 0.2377   panel, no unit changes side 0.1488   panel, some change side 0.1488</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Std. err. of the estimate under each sampling scheme (the estimate table at the top uses PC):</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>                                                    Conventional   Robust (bias-corrected)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   RCS  repeated cross-section                            0.2022                    0.2377</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   PC   panel, no unit changes side of the cutoff         0.1259                    0.1488</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   PV   panel, some units change side of the cutoff       0.1259                    0.1488</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/stats/coef.html" class="external-link">coef</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Conventional       Robust </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     1.092242     1.141077 </span>

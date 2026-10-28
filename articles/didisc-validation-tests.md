@@ -72,9 +72,9 @@ tc
 #>     ("+" at or above, "-" below).
 #> 
 #>   Joint sup-t (t critical values) max |t| = 1.232 over 9 jumps,  p = 0.869  (largest: period:type 1:+-)
-#>     Period 1: sup-t (t critical values) max |t| = 1.232 over 3 jumps,  p = 0.499
+#>     Period 1: sup-t (t critical values) max |t| = 1.232 over 3 jumps,  p = 0.500
 #>     Period 2: sup-t (t critical values) max |t| = 0.582 over 3 jumps,  p = 0.902
-#>     Period 3: sup-t (t critical values) max |t| = 1.048 over 3 jumps,  p = 0.631
+#>     Period 3: sup-t (t critical values) max |t| = 1.048 over 3 jumps,  p = 0.633
 #>   All joint statistics: x$joint_tests
 ```
 
@@ -408,9 +408,9 @@ alternatives can be compared without running the test again:
 
 ch$typecont$joint_tests
 #>   method   reference statistic df   p_value
-#> 1   supt           t  1.231775  9 0.8688813
-#> 2   supt      normal  1.231775  9 0.8609214
-#> 3  swald           t  5.110313  9 0.7953520
+#> 1   supt           t  1.231775  9 0.8693313
+#> 2   supt      normal  1.231775  9 0.8621414
+#> 3  swald           t  5.110313  9 0.7955420
 #> 4  swald      normal  5.110313  9 0.7861821
 #> 5   wald chi-squared  4.781633  9 0.8529133
 ```

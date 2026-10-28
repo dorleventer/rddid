@@ -524,14 +524,18 @@ summary(fit)   # the jump in every period, and the s.e. under each scheme
 #>   Conventional                 1.0922     0.1259    8.67   <0.001   [0.8454, 1.3391]
 #>   Robust (bias-corrected)      1.1411     0.1488    7.67   <0.001   [0.8494, 1.4328]
 #> 
-#>   Per-period local-linear fits (Conventional = sum of weight x jump; Robust = sum of weight x jump (bc)):
-#>   period   role         weight      n        h        b       jump      s.e.  jump (bc) s.e. (rb)
-#>   1        comparison   -0.500   1000   0.2694   0.4136     0.5129    0.1683     0.4642    0.1942
-#>   2        comparison   -0.500   1000   0.2694   0.3901     0.6306    0.1679     0.6249    0.2004
-#>   3        RD            1.000   1000   0.2694   0.3984     1.6640    0.1635     1.6856    0.1924
+#>   Per-period local-linear fits:
+#>                                                        Conventional         Robust (bias-corrected)
+#>   Period   Role             n        h        b          Jump   Std. err.          Jump   Std. err.
+#>   1        comparison    1000   0.2694   0.4136        0.5129      0.1683        0.4642      0.1942
+#>   2        comparison    1000   0.2694   0.3901        0.6306      0.1679        0.6249      0.2004
+#>   3        RD            1000   0.2694   0.3984        1.6640      0.1635        1.6856      0.1924
 #> 
-#>   Robust s.e. under each sampling scheme (the printed one is for "pc"; the others are for comparison):
-#>     cross-section 0.2377   panel, no unit changes side 0.1488   panel, some change side 0.1488
+#>   Std. err. of the estimate under each sampling scheme (the estimate table at the top uses PC):
+#>                                                    Conventional   Robust (bias-corrected)
+#>   RCS  repeated cross-section                            0.2022                    0.2377
+#>   PC   panel, no unit changes side of the cutoff         0.1259                    0.1488
+#>   PV   panel, some units change side of the cutoff       0.1259                    0.1488
 coef(fit)
 #> Conventional       Robust 
 #>     1.092242     1.141077 

@@ -167,14 +167,18 @@ summary(fit_pv)
 #>   Conventional                 0.9698     0.1901    5.10   <0.001   [0.5972, 1.3424]
 #>   Robust (bias-corrected)      0.9943     0.2256    4.41   <0.001   [0.5522, 1.4364]
 #> 
-#>   Per-period local-linear fits (Conventional = sum of weight x jump; Robust = sum of weight x jump (bc)):
-#>   period   role         weight      n        h        b       jump      s.e.  jump (bc) s.e. (rb)
-#>   1        comparison   -0.500   1000   0.2436   0.4001     0.7495    0.1565     0.7845    0.1866
-#>   2        comparison   -0.500   1000   0.2436   0.3958     0.7243    0.1787     0.7842    0.2189
-#>   3        RD            1.000   1000   0.2436   0.4047     1.7067    0.1540     1.7786    0.1795
+#>   Per-period local-linear fits:
+#>                                                        Conventional         Robust (bias-corrected)
+#>   Period   Role             n        h        b          Jump   Std. err.          Jump   Std. err.
+#>   1        comparison    1000   0.2436   0.4001        0.7495      0.1565        0.7845      0.1866
+#>   2        comparison    1000   0.2436   0.3958        0.7243      0.1787        0.7842      0.2189
+#>   3        RD            1000   0.2436   0.4047        1.7067      0.1540        1.7786      0.1795
 #> 
-#>   Robust s.e. under each sampling scheme (the printed one is for "pv"; the others are for comparison):
-#>     cross-section 0.2300   panel, no unit changes side 0.2223   panel, some change side 0.2256
+#>   Std. err. of the estimate under each sampling scheme (the estimate table at the top uses PV):
+#>                                                    Conventional   Robust (bias-corrected)
+#>   RCS  repeated cross-section                            0.1945                    0.2300
+#>   PC   panel, no unit changes side of the cutoff         0.1874                    0.2223
+#>   PV   panel, some units change side of the cutoff       0.1901                    0.2256
 ```
 
 The same line for the three data sets:
