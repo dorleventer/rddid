@@ -1,7 +1,7 @@
 # ---------------------------------------------------------------------------
 # helper-appB-reference.R
 #
-# Independent reference implementation of the RD-DID per-period estimator,
+# Independent reference implementation of the diff-in-disc per-period estimator,
 # bias correction, and variance formulas of Leventer & Nevo:
 #
 #   Appendix B preamble : eq:wls_rd  (weighted LS in matrix form)

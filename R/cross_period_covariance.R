@@ -1,6 +1,6 @@
 # cross_period_covariance.R -- how the per-period jumps are combined: .match_sum()/.cross_cov()
 # (covariance of two periods' jumps from their per-unit influence vectors, matched on id),
-# .cov_scheme() (which covariance terms a sampling scheme keeps) and .aggregate_fits() (the RD-DID
+# .cov_scheme() (which covariance terms a sampling scheme keeps) and .aggregate_fits() (the diff-in-disc
 # estimate with its variance under all three schemes). Used by didisc() and the assumption tests.
 
 #' Sum of g_t * g_s over units present in both windows, matched on id
@@ -60,7 +60,7 @@
   if (scheme == "pc") cc$pc else cc$pc - cc$pv
 }
 
-#' Aggregate per-period fits into the RD-DID estimator and its variances
+#' Aggregate per-period fits into the diff-in-disc estimator and its variances
 #'
 #' Forms ATT-hat = sum_tau coef_tau * D-hat_tau and the variance under the three
 #' sampling schemes. With Cov(D_t,D_s) = C^same - C^opp, the general quadratic form

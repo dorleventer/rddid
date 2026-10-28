@@ -65,7 +65,7 @@
 #' confidence intervals for regression-discontinuity designs. *Econometrica*
 #' 82(6), 2295-2326.
 #'
-#' @family RD-DID estimation
+#' @family diff-in-disc estimation
 #'
 #' @examples
 #' # the RD period (year 3) of didisc_sim, where the jump is 0.5 + 1 = 1.5

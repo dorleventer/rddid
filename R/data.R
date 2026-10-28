@@ -1,4 +1,4 @@
-#' Simulated RD-DID panel (running variable fixed over time)
+#' Simulated diff-in-disc panel (running variable fixed over time)
 #'
 #' A simulated panel in the setting of Leventer and Nevo: 1,000 units observed in
 #' three years. A confounding policy `V` switches on above the cutoff (`R >= 0`)
@@ -32,7 +32,7 @@
 #' didisc(didisc_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3)
 "didisc_sim"
 
-#' Simulated RD-DID panel (running variable moves over time)
+#' Simulated diff-in-disc panel (running variable moves over time)
 #'
 #' The same design as [didisc_sim] (confounding jump 0.5 in every year, treatment
 #' effect 1 in year 3), except that each unit's running variable drifts between

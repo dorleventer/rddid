@@ -40,7 +40,7 @@ fit_joint$bandwidth$b_by_period
 ```
 
 One main bandwidth for every period, chosen to minimize the asymptotic mean
-squared error of the RD-DID estimate, not of each period's jump. As in
+squared error of the diff-in-disc estimate, not of each period's jump. As in
 rdrobust, everything that depends only on the running variable and the
 residuals is estimated at one rule-of-thumb bandwidth shared by every period
 (`fit_joint$bandwidth$h_rot`): each period's variance, the covariances between

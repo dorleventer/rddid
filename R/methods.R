@@ -7,7 +7,7 @@
 # Everything here is computed from fields that didisc()/the tests already store; nothing is
 # re-estimated.
 
-#' Summary of an RD-DID fit
+#' Summary of a diff-in-disc fit
 #'
 #' `summary()` of an [didisc()] object adds, to what `print()` shows, a per-period table (the
 #' local-linear jump in every period with its bandwidths and sample size, and its coefficient
@@ -86,7 +86,7 @@ print.summary.didisc <- function(x, digits = 4, ...) {
   out
 }
 
-#' Coefficients, confidence intervals and sample size of an RD-DID fit
+#' Coefficients, confidence intervals and sample size of a diff-in-disc fit
 #'
 #' `coef()` returns the two estimates of an [didisc()] fit, `Conventional` (local-linear) and
 #' `Robust` (bias-corrected); `confint()` their confidence intervals under the fit's sampling
@@ -143,7 +143,7 @@ nobs.didisc <- function(object, ...) as.integer(sum(object$n_by_period))
 
 # ---- tidy / glance (broom conventions) -----------------------------------------------------
 
-#' Tidy output for RD-DID fits and validation tests
+#' Tidy output for diff-in-disc fits and validation tests
 #'
 #' `tidy()` and `glance()` methods following the `broom` conventions, so that fits and tests
 #' can be passed to table makers such as `modelsummary`. The generics come from the

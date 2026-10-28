@@ -1,4 +1,4 @@
-# Mirror invariance of the RD-DID estimator and three of the four validation
+# Mirror invariance of the diff-in-disc estimator and three of the four validation
 # tests (dev/atu_estimand_plan.md S1, S4 items 1-3, paper Section 6): mirroring
 # the running variable (x -> -x, cutoff 0) negates the didisc() estimate and
 # leaves everything else (SEs, bandwidths, scheme detection, the three tests

@@ -101,7 +101,7 @@
 #' ## Bandwidth rules
 #'
 #' * `"joint"` (default), the common bandwidth: one `h` in every period, chosen
-#'   to minimize the asymptotic mean squared error of the RD-DID estimate, not
+#'   to minimize the asymptotic mean squared error of the diff-in-disc estimate, not
 #'   of each period's jump, so the biases of the period jumps can partly cancel.
 #' * `"cct"`, per-period CCT bandwidths: each period gets its own MSE-optimal
 #'   bandwidth from [rdrobust::rdbwselect()], as if it were a stand-alone RD
@@ -128,7 +128,7 @@
 #' ## Technical details
 #'
 #' The `"joint"` rule is AMSE-optimal: it minimizes the asymptotic mean squared
-#' error (AMSE) of the RD-DID estimate over a common `h`, in the way
+#' error (AMSE) of the diff-in-disc estimate over a common `h`, in the way
 #' \pkg{rdrobust} chooses a bandwidth for one period. Each period's variance
 #' constant, under `"pc"` the covariances between periods, and the design
 #' moment in each period's bias constant are estimated at one rule-of-thumb
@@ -207,7 +207,7 @@
 #'   either way; see "Targeting the ATU".
 #' @param bwselect the bandwidth rule, used when `h` is not given: `"joint"`
 #'   (default; the common bandwidth, one `h` for every period, chosen to minimize
-#'   the asymptotic mean squared error of the RD-DID estimate), `"cct"`
+#'   the asymptotic mean squared error of the diff-in-disc estimate), `"cct"`
 #'   (per-period CCT bandwidths: each period's own MSE-optimal bandwidth of
 #'   Calonico, Cattaneo and Titiunik, from [rd_bw_cct()]). See "Bandwidth
 #'   rules".
@@ -308,7 +308,7 @@
 #'   `nobs()`) for the fitted object; the tests of the assumptions
 #'   [rd_typecont()], [rd_compstable()], [rd_homog()] and [rd_trendcell()]; the
 #'   example data [didisc_sim] and [didisc_sim_pv].
-#' @family RD-DID estimation
+#' @family diff-in-disc estimation
 #'
 #' @examples
 #' # didisc_sim: confounding jump 0.5 in every year, treatment effect 1 in year 3
@@ -545,12 +545,12 @@ print.didisc <- function(x, digits = 4, hint = TRUE, ...) {
   }
   several <- length(x$t_rd) > 1L
   if (several)
-    cat(sprintf("RD-DID estimate of the %s %s RD periods %s\n", toupper(est),
+    cat(sprintf("Diff-in-disc estimate of the %s %s RD periods %s\n", toupper(est),
                 if (abs(sum(x$rd_weights) - 1) < 1e-8) "averaged over" else "weighted sum over",
                 paste(x$t_rd, collapse = ", ")),
         sprintf("  RD-period weights: %s\n", fmt_w(x$rd_weights)), sep = "")
   else
-    cat(sprintf("RD-DID estimate of the %s in period %s\n", toupper(est), x$t_rd))
+    cat(sprintf("Diff-in-disc estimate of the %s in period %s\n", toupper(est), x$t_rd))
   cat(sprintf("  Comparison periods: %s   (%s)\n", paste(x$comparisons, collapse = ", "),
               .trend_label(x$weights_type)))
   w_bc <- x$weights_detail$weights_bc
@@ -598,7 +598,7 @@ print.didisc <- function(x, digits = 4, hint = TRUE, ...) {
   }
   switch(bw$method,
     fixed = sprintf("h = %.4g in every period (fixed), pilot b = %.4g", bw$h, bw$b),
-    joint = sprintf("common h = %.4g (rule \"joint\": one bandwidth, chosen for the RD-DID estimate)\n  Pilot bandwidth b (period = value): %s",
+    joint = sprintf("common h = %.4g (rule \"joint\": one bandwidth, chosen for the diff-in-disc estimate)\n  Pilot bandwidth b (period = value): %s",
                     bw$h, by_t(bw$b_by_period)),
     cct   = sprintf("per-period CCT MSE-optimal (rule \"cct\"): h (period = value) %s", by_t(bw$h_by_period)))
 }

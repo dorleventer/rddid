@@ -5,7 +5,7 @@
 # A confounding policy V switches at the cutoff in EVERY year and shifts the outcome by
 # alpha = 0.5. The treatment of interest W switches at the cutoff only in year 3 (the RD
 # year) and shifts the outcome by tau = 1. Years 1 and 2 are comparison years: W is zero for
-# everyone, so the discontinuity in Y there is the confounding jump alone. The RD-DID target is
+# everyone, so the discontinuity in Y there is the confounding jump alone. The diff-in-disc target is
 # ATT(3) = tau = 1; a naive RD in year 3 recovers alpha + tau = 1.5.
 #
 # didisc_sim    : 1,000 units x 3 years; R is fixed over time (nobody changes side).

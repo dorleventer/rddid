@@ -5,7 +5,7 @@
 \alias{coef.didisc}
 \alias{confint.didisc}
 \alias{nobs.didisc}
-\title{Coefficients, confidence intervals and sample size of an RD-DID fit}
+\title{Coefficients, confidence intervals and sample size of a diff-in-disc fit}
 \usage{
 \method{coef}{didisc}(object, ...)
 

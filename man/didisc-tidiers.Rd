@@ -9,7 +9,7 @@
 \alias{tidy.rd_homog}
 \alias{tidy.rd_trendcell}
 \alias{tidy.rd_checks}
-\title{Tidy output for RD-DID fits and validation tests}
+\title{Tidy output for diff-in-disc fits and validation tests}
 \usage{
 \method{tidy}{didisc}(x, conf.int = TRUE, conf.level = NULL, ...)
 

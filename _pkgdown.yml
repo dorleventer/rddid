@@ -19,7 +19,7 @@ navbar:
           href: articles/didisc-plots.html
         - text: Bandwidth rules and sampling schemes
           href: articles/didisc-options.html
-        - text: How didisc() computes the estimate (for referees)
+        - text: How didisc() computes the estimate
           href: articles/didisc-how-it-works.html
 
 articles:
@@ -40,7 +40,7 @@ reference:
     contents:
       - didisc-package
   - title: Estimate
-    desc: The RD-DID estimator and what to do with a fit.
+    desc: The diff-in-disc estimator and what to do with a fit.
     contents:
       - didisc
       - summary.didisc

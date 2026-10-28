@@ -11,8 +11,8 @@ vignette: >
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>", fig.width = 7, fig.height = 2.8)
 ```
 
-This article is for readers who want to see the pieces: referees, or users
-checking the package against their own code. It rebuilds the RD-DID estimate
+This article is for readers who want to check the computation, for example
+against their own code. It rebuilds the diff-in-disc estimate
 and two of the validation tests by hand from the two building blocks,
 `rd_bw_cct()` (one period's CCT bandwidths) and `rd_period()` (one period's
 local-linear RD), and checks that the package returns the same numbers. It
