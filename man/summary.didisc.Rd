@@ -21,16 +21,16 @@
 \value{
 \code{summary()} returns an object of class \code{"summary.didisc"}: a list with \code{fit} (the
 object) and \code{per_period}, a data frame with one row per period in time order and columns
-\code{period}, \code{role} (\code{"RD"} or \code{"comparison"}), \code{coef} (the period's coefficient in the
+\code{period}, \code{role} (\code{"RD"} or \code{"comparison"}), \code{weight} (the period's signed weight in the
 conventional estimate: the RD period's weight in \code{rd_weights}, 1 for a single RD period,
 and minus its weight for a comparison period), \code{n}, \code{h}, \code{b}, \code{jump} and \code{se} (the
 conventional local-linear jump and its standard error), \code{jump_bc}, \code{se_rb}
 (bias-corrected jump, robust standard error) and, under \code{weighting = "min_variance"},
-\code{coef_bc} (the coefficients of the bias-corrected estimate, which has its own weights).
+\code{weight_bc} (the signed weights of the bias-corrected estimate, which has its own weights).
 }
 \description{
-\code{summary()} of an \code{\link[=didisc]{didisc()}} object adds, to what \code{print()} shows, a per-period table (the
-local-linear jump in every period with its bandwidths and sample size, and its coefficient
+\code{summary()} of a \code{\link[=didisc]{didisc()}} object adds, to what \code{print()} shows, a per-period table (the
+local-linear jump in every period with its bandwidths and sample size, and its signed weight
 in the estimate) and the standard error of the estimate under each of the three sampling
 schemes.
 }

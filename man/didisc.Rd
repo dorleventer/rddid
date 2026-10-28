@@ -150,12 +150,12 @@ printed as "Robust (bias-corrected)"), and columns \code{est}, \code{se}, \code{
 statistic and p-value under \code{scheme}) and \code{se_cs}, \code{se_pc}, \code{se_pv}
 (that row's standard error under each sampling scheme, at the same
 bandwidths).}
-\item{\code{coef}}{named numeric vector, the coefficient of each period's jump
-in the estimate: \eqn{\phi_t}{phi_t} for each RD period (1 for a single
+\item{\code{period_weights}}{named numeric vector, the signed weight of each period's
+jump in the estimate: \eqn{\phi_t}{phi_t} for each RD period (1 for a single
 RD period), minus its (aggregated) weight for each comparison period.
 \code{\link[=coef]{coef()}} returns the estimate itself.}
-\item{\code{coef_bc}}{the same for the bias-corrected estimate; it differs
-from \code{coef} only under \code{weighting = "min_variance"}.}
+\item{\code{period_weights_bc}}{the same for the bias-corrected estimate; it
+differs from \code{period_weights} only under \code{weighting = "min_variance"}.}
 \item{\code{weights}}{named numeric vector of the comparison-period weights;
 with several RD periods, the aggregated weights
 \eqn{w^\phi_s}{w^phi_s}; under \code{weighting = "min_variance"}, those of
@@ -219,7 +219,7 @@ where \eqn{D_t} is the jump in the outcome at the cutoff in period \eqn{t},
 estimated by a local-linear RD on that period's observations;
 \eqn{t_{\mathrm{RD}}}{t_RD} is the RD period (\code{t_rd}); the sum runs over the
 comparison periods; and \eqn{w_t} is the weight of comparison period
-\eqn{t}. \code{summary()} lists every \eqn{D_t} with its coefficient in the sum.
+\eqn{t}. \code{summary()} lists every \eqn{D_t} with its signed weight in the sum.
 }
 
 \subsection{Several RD periods}{
@@ -339,7 +339,7 @@ bandwidth shared by every period (the preliminary bandwidth of
 \code{bandwidth$h_rot} in the result). The other factor of the bias constant, the
 curvature of the conditional mean, is estimated from a fit at that period's
 own CCT pilot bandwidth, as \pkg{rdrobust} does. These are combined,
-with the coefficients of the sum above, into the AMSE, which is then
+with the signed weights of the sum above, into the AMSE, which is then
 minimized in closed form. Each period's pilot bandwidth keeps that period's
 CCT ratio \eqn{b/h}{b/h}. Nothing in the rule depends on which period is the
 RD period, so an aggregate of several RD periods gets the same bandwidth

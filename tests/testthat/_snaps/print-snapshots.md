@@ -32,8 +32,8 @@
         Conventional                 1.0922     0.1259    8.67   <0.001   [0.8454, 1.3391]
         Robust (bias-corrected)      1.1411     0.1488    7.67   <0.001   [0.8494, 1.4328]
       
-        Per-period local-linear fits (Conventional = sum of coef x jump; Robust = sum of coef x jump (bc)):
-        period   role           coef      n        h        b       jump      s.e.  jump (bc) s.e. (rb)
+        Per-period local-linear fits (Conventional = sum of weight x jump; Robust = sum of weight x jump (bc)):
+        period   role         weight      n        h        b       jump      s.e.  jump (bc) s.e. (rb)
         1        comparison   -0.500   1000   0.2694   0.4136     0.5129    0.1683     0.4642    0.1942
         2        comparison   -0.500   1000   0.2694   0.3901     0.6306    0.1679     0.6249    0.2004
         3        RD            1.000   1000   0.2694   0.3984     1.6640    0.1635     1.6856    0.1924

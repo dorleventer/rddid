@@ -32,7 +32,7 @@ columns giving the lower and upper limits; \code{nobs()} the number of unit-peri
 across all periods.
 }
 \description{
-\code{coef()} returns the two estimates of an \code{\link[=didisc]{didisc()}} fit, \code{Conventional} (local-linear) and
+\code{coef()} returns the two estimates of a \code{\link[=didisc]{didisc()}} fit, \code{Conventional} (local-linear) and
 \code{Robust} (bias-corrected); \code{confint()} their confidence intervals under the fit's sampling
 scheme; \code{nobs()} the number of observations used.
 }

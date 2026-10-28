@@ -345,7 +345,7 @@
 #' @param trend the trend assumption tested within each type: `"constant"`
 #'   (default; the confounding jump is the same in every comparison period) or
 #'   `"linear"` (it moves linearly in time; needs at least three comparison
-#'   periods). Given the `trend` of an [didisc()] call, the test checks that
+#'   periods). Given the `trend` of a [didisc()] call, the test checks that
 #'   call's assumption.
 #'   With `"linear"` the second differences are taken in time (the period values), so
 #'   unequally spaced comparison periods are handled.

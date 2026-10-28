@@ -76,7 +76,7 @@ test_that("summary() per-period table is aligned with its period labels (time or
     expect_equal(tab$jump[i], f$D)
     expect_equal(tab$h[i], unname(f$h))
     expect_equal(tab$n[i], as.integer(f$n))
-    expect_equal(tab$coef[i], unname(fit$coef[tab$period[i]]))
+    expect_equal(tab$weight[i], unname(fit$period_weights[tab$period[i]]))
   }
-  expect_equal(sum(tab$coef * tab$jump), unname(coef(fit)[["Conventional"]]))
+  expect_equal(sum(tab$weight * tab$jump), unname(coef(fit)[["Conventional"]]))
 })

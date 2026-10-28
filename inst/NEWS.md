@@ -1,3 +1,11 @@
+# didisc 0.4.0.9006
+
+* The signed weight of each period's jump in the estimate (+1 for the RD period, minus the weight
+  for a comparison period) is now `fit$period_weights` (was `fit$coef`), and
+  `fit$period_weights_bc` (was `fit$coef_bc`). In `summary()` the column is `weight` (was `coef`)
+  and `weight_bc` (was `coef_bc`). `coef()` still returns the estimate. No aliases for the old
+  names. Estimates are unchanged.
+
 # didisc 0.4.0.9005
 
 * The documentation and printed output call the design and its estimate "diff-in-disc"

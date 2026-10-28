@@ -104,7 +104,7 @@ test_that("linear trend: aggregated comparison weights are those of Corollary 1 
   f <- .fit(d, t_rd = .rd, comparisons = .comps, trend = "linear", h = 0.4)
   expect_equal(unname(f$weights_by_target), rbind(c(-1, 2), c(-2, 3), c(-3, 4)), tolerance = 1e-12)
   expect_equal(f$weights, c(`1` = -2, `2` = 3), tolerance = 1e-12)      # t-bar = 4
-  expect_equal(unname(f$coef), c(1, 1, 1, 6, -9) / 3, tolerance = 1e-12)
+  expect_equal(unname(f$period_weights), c(1, 1, 1, 6, -9) / 3, tolerance = 1e-12)
   # shifting the period labels changes nothing (the weights are computed with time centred at
   # the RD period, so calendar years lose no precision)
   d2 <- transform(d, year = year + 1998)
@@ -136,14 +136,14 @@ test_that("joint rule: one h for the aggregate, the closed form in B, Veff and r
   expect_equal(bw$h, (bw$Veff / (bw$B^2 + bw$reg))^(1 / 5), tolerance = 1e-12)
   # B-bar^phi = sum_t coef_t B-hat_t; on each side of B-hat_t the curvature from the fit at that
   # period's pilot pair times the design moment at the shared h_rot
-  per <- names(f$coef)
+  per <- names(f$period_weights)
   bconst <- vapply(per, function(k) { s <- d[d$year == as.numeric(k), ]
     pb <- bw$pilot_bws[[k]]
     fp <- rd_period(s$Y, s$R, h = pb[["h"]], b = pb[["b"]], id = s$id)
     fr <- rd_period(s$Y, s$R, h = bw$h_rot, b = bw$h_rot, id = s$id)
     2 * (fr$sides[["+"]]$bmom * fp$sides[["+"]]$curv - fr$sides[["-"]]$bmom * fp$sides[["-"]]$curv)
   }, numeric(1))
-  expect_equal(bw$B, sum(f$coef[per] * bconst), tolerance = 1e-10)
+  expect_equal(bw$B, sum(f$period_weights[per] * bconst), tolerance = 1e-10)
   # every period is fitted at the common h
   expect_true(all(abs(bw$h_by_period - bw$h) < 1e-12))
   # it is the aggregate's bandwidth, not any single period's
@@ -211,7 +211,7 @@ test_that("methods: summary roles, glance, print and plot with several RD period
   f <- .fit(d, t_rd = .rd, comparisons = .comps, h = 0.4)
   tab <- summary(f)$per_period
   expect_identical(tab$role, c("comparison", "comparison", "RD", "RD", "RD"))
-  expect_equal(tab$coef, c(-0.5, -0.5, 1 / 3, 1 / 3, 1 / 3), tolerance = 1e-12)
+  expect_equal(tab$weight, c(-0.5, -0.5, 1 / 3, 1 / 3, 1 / 3), tolerance = 1e-12)
   g <- glance(f)
   expect_equal(nrow(g), 1L)
   expect_identical(g$t_rd, "3, 4, 5")

@@ -62,24 +62,24 @@
 
 #' Aggregate per-period fits into the diff-in-disc estimator and its variances
 #'
-#' Forms ATT-hat = sum_tau coef_tau * D-hat_tau and the variance under the three
+#' Forms ATT-hat = sum_tau w_tau * D-hat_tau and the variance under the three
 #' sampling schemes. With Cov(D_t,D_s) = C^same - C^opp, the general quadratic form
 #' specialises to: CS drops all cross terms, PC keeps same-side (C^same) only, PV
 #' keeps both (C^same - C^opp).
 #'
 #' @param fits named list of `rd_period` objects (names = period labels).
-#' @param coef named numeric vector of period coefficients (same names as fits).
+#' @param w named numeric vector of signed period weights (same names as fits).
 #' @param bc use bias-corrected estimates / variances.
 #' @return named numeric vector: `est`, `V_cs`, `V_pc`, `V_pv`.
 #' @keywords internal
 #' @noRd
-.aggregate_fits <- function(fits, coef, bc = FALSE) {
-  keys <- names(coef)
+.aggregate_fits <- function(fits, w, bc = FALSE) {
+  keys <- names(w)
   Dget <- function(k) if (bc) fits[[k]]$D_bc else fits[[k]]$D
   Vget <- function(k) if (bc) fits[[k]]$V_D_bc else fits[[k]]$V_D
 
-  est   <- sum(coef * vapply(keys, Dget, numeric(1)))
-  Vdiag <- sum(coef^2 * vapply(keys, Vget, numeric(1)))
+  est   <- sum(w * vapply(keys, Dget, numeric(1)))
+  Vdiag <- sum(w^2 * vapply(keys, Vget, numeric(1)))
 
   # cross-period terms: each unordered pair once, with the factor 2 of the quadratic form.
   # The pc / pv combinations are the same as in .cov_scheme(); keep the two in step.
@@ -91,7 +91,7 @@
       for (j in seq_along(keys)) {
         if (j <= i) next
         cc <- .cross_cov(fits[[keys[i]]], fits[[keys[j]]], bc = bc)
-        wij <- 2 * coef[[i]] * coef[[j]]
+        wij <- 2 * w[[i]] * w[[j]]
         add_pc <- add_pc + wij * cc$pc
         add_pv <- add_pv + wij * (cc$pc - cc$pv)
       }
