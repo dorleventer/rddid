@@ -1,3 +1,11 @@
+# didisc 0.4.0.9009
+
+* The regularization of the common bandwidth (`bwselect = "joint"`, `regularize = TRUE`) adds the
+  covariances of the bias estimates between periods only under `scheme = "pc"`, as the variance
+  does; under `"pv"` it now uses none (before, the same-side minus the opposite-side ones). This
+  holds for `h` and for the bias-correction bandwidth `b`. Estimates under the common bandwidth
+  with `scheme = "pv"` change; all others are unchanged.
+
 # didisc 0.4.0.9008
 
 * The common bandwidth (`bwselect = "joint"`) now also chooses the bandwidth `b` of the bias
@@ -55,7 +63,7 @@ First public version.
   panel the covariances between periods, and the design part of the bias at one rule-of-thumb
   bandwidth shared by every period, the curvature from fits at one pilot bandwidth that is
   itself chosen for the diff-in-disc estimate (and used for the bias correction in every period), and a
-  regularization that includes the covariances of the bias estimates between periods. With one
+  regularization that, under `"pc"`, includes the covariances of the bias estimates between periods. With one
   period this is `rdrobust::rdbwselect()`; in a panel whose running variable does not move, it is
   that selector applied to the combined outcome.
 * Tests of the identification assumptions when the running variable moves over time:

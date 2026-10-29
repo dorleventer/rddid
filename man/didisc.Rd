@@ -351,8 +351,9 @@ to the combined outcome. Nothing in the rule depends on which period is the
 RD period, so an aggregate of several RD periods gets the same bandwidth
 whatever the order of \code{t_rd}.
 With \code{regularize = TRUE} the rule adds \code{reg_const} times the estimated
-variance of the aggregate bias constant, including its covariances between
-periods, to the squared bias of \code{h} and of \code{b} (not of \code{d}), as
+variance of the aggregate bias constant (under \code{"pc"} with its same-side
+covariances between periods, as for the variance) to the squared bias of \code{h}
+and of \code{b} (not of \code{d}), as
 \pkg{rdrobust} does, so a near-zero estimated bias cannot make a bandwidth
 very large. Standard errors use the HC1 convention
 of \pkg{rdrobust}. The derivations are in the paper's appendix on estimation
