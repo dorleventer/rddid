@@ -391,7 +391,7 @@
 #' @param estimand `"att"` (default) or `"atu"`, as in [didisc()]. Under `"atu"`
 #'   the test is on the shares among the units below the cutoff; see "ATU
 #'   designs" in Details.
-#' @param h a bandwidth to use, as both main and pilot bandwidth, in every
+#' @param h a bandwidth to use, as both main and bias-correction bandwidth, in every
 #'   regression of the test. If given, `bwselect` is ignored.
 #' @param bwselect the bandwidth rule when `h` is not given: `"cct"` (default;
 #'   each regression's own CCT bandwidths from [rd_bw_cct()]) or `"rot"` (the

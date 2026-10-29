@@ -263,8 +263,8 @@
 #'
 #' ## Bandwidth
 #'
-#' `bwselect = "pooled"` (default) uses one bandwidth, as main and pilot
-#' bandwidth, in every cell: the CCT MSE-optimal bandwidth of the outcome on
+#' `bwselect = "pooled"` (default) uses one bandwidth, as main and
+#' bias-correction bandwidth, in every cell: the CCT MSE-optimal bandwidth of the outcome on
 #' the running variable, chosen once on all comparison periods pooled (every
 #' unit, every type). A bandwidth chosen on each cell's own data (`"cct"`) is
 #' noisier, and the variance formula treats it as fixed, so the cell variances
@@ -296,7 +296,7 @@
 #'   (default) uses every period other than `t_rd`.
 #' @param estimand `"att"` (default) or `"atu"`, as in [didisc()]. Label only:
 #'   the test is the same either way.
-#' @param h a bandwidth to use, as both main and pilot bandwidth, in every cell.
+#' @param h a bandwidth to use, as both main and bias-correction bandwidth, in every cell.
 #'   If given, `bwselect` is ignored.
 #' @param bwselect the bandwidth rule when `h` is not given: `"pooled"`
 #'   (default; one bandwidth for every cell, the CCT bandwidth of the outcome on

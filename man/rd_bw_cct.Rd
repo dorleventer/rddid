@@ -16,19 +16,18 @@ rd_bw_cct(y, x, c = 0, p = 1L, q = p + 1L, kernel = "triangular")
 \item{p}{order of the local polynomial (default 1, local linear).}
 
 \item{q}{order of the local polynomial of the bias correction (default \code{p + 1}); the
-pilot bandwidth \code{b} is chosen for it.}
+bias-correction bandwidth \code{b} is chosen for it.}
 
 \item{kernel}{the kernel: \code{"triangular"} (default), \code{"epanechnikov"} or
 \code{"uniform"}.}
 }
 \value{
 A named numeric vector \code{c(h = , b = )}: the main bandwidth (point
-estimate) and the pilot bandwidth (bias correction).
+estimate) and the bias-correction bandwidth.
 }
 \description{
-The building block behind \code{didisc(bwselect = "cct")}, the pilot fits of the
-\code{"joint"} rule, and the default bandwidths of the four tests
-of the assumptions: the MSE-optimal main and pilot bandwidths of Calonico,
+The building block behind \code{didisc(bwselect = "cct")} and the default bandwidths of the four tests
+of the assumptions: the MSE-optimal main and bias-correction bandwidths of Calonico,
 Cattaneo and Titiunik (2014) for a local-linear RD in one period, from
 \code{\link[rdrobust:rdbwselect]{rdrobust::rdbwselect()}} with \code{bwselect = "mserd"}. Like \code{\link[=rd_period]{rd_period()}} it
 takes vectors, not a data frame and column names.

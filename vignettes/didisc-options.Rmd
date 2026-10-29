@@ -13,8 +13,7 @@ fmt <- function(x, d = 3) formatC(x, format = "f", digits = d)
 ```
 
 This article covers the `didisc()` arguments that set the bandwidths, the main
-bandwidth `h` (for the point estimate) and the pilot bandwidth `b` (for the bias
-correction), the standard error under the three sampling schemes, and the
+bandwidth `h` (for the point estimate) and the bias-correction bandwidth `b`, the standard error under the three sampling schemes, and the
 choice of the comparison-period weights. It uses
 `didisc_sim`, a simulated panel with RD period 3, comparison periods 1 and 2 and
 a true effect of 1; [Get started](didisc-estimation.html) introduces the data and
@@ -46,10 +45,9 @@ residuals is estimated at one rule-of-thumb bandwidth shared by every period
 (`fit_joint$bandwidth$h_rot`): each period's variance, the covariances between
 periods in a panel, and the design part of each period's bias. Only the
 curvature of the conditional mean, the other part of the bias, needs its own
-fit, at the pilot bandwidth `b`, which is also the bandwidth of the bias
-correction. `b` is chosen the same way, for the same difference of jumps one
+fit, at the bias-correction bandwidth `b`. `b` is chosen the same way, for the same difference of jumps one
 derivative up, with its own curvature from fits at a bandwidth `d`
-(`fit_joint$bandwidth$d`), as rdrobust chooses its pilot for one period. So
+(`fit_joint$bandwidth$d`), as rdrobust chooses its `b` for one period. So
 one `b` serves every period:
 
 ```{r}
@@ -261,7 +259,7 @@ inverse-variance weights.
 Under the default bandwidth rule the weights and the common bandwidth are
 chosen in three steps: the common bandwidth with the `"ols"` weights, the
 minimum-variance weights at that bandwidth, and the bandwidths (common `h` and
-pilot `b`) again with those weights (here `r fmt(fit_ols$bandwidth$h)` and then
+bias-correction `b`) again with those weights (here `r fmt(fit_ols$bandwidth$h)` and then
 `r fmt(fit_mv$bandwidth$h)`). With `bwselect = "cct"` or a fixed `h` the
 bandwidths do not depend on the weights, so the weights are computed once. The
 standard errors treat the weights as known; in large samples, estimating them

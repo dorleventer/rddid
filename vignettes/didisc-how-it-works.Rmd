@@ -67,7 +67,7 @@ head(dat)
 
 Each $\hat D_t$ is a standard local-linear RD, estimated one period at a time
 with `rd_bw_cct()` (the period's CCT bandwidth pair: main bandwidth $h_t$ and
-pilot bandwidth $b_t$) and `rd_period()` (the local-linear fit with the bias
+bias-correction bandwidth $b_t$) and `rd_period()` (the local-linear fit with the bias
 correction and robust variance of Calonico, Cattaneo and Titiunik, 2014). At a
 given bandwidth pair, `rd_period()` reproduces the conventional and
 bias-corrected estimates and the conventional and robust standard errors of

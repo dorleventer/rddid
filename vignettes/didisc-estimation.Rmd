@@ -93,7 +93,7 @@ Line by line:
   shows how.
 - **`Bandwidth: common h`**: the default rule, `bwselect = "joint"`, uses one
   main bandwidth `h` in every period, chosen to minimize the asymptotic mean
-  squared error of the diff-in-disc estimate. **`Pilot bandwidth b`** is the
+  squared error of the diff-in-disc estimate. **`Bias-correction bandwidth b`** is the
   bandwidth of the bias correction, also one for every period and also chosen
   for the diff-in-disc estimate.
 - **The two rows.** `Conventional` is the local-linear estimate with its

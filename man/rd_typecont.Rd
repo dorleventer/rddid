@@ -56,7 +56,7 @@ the test is the same either way.}
 
 \item{c}{the cutoff (default 0). A unit with \code{x >= c} is above the cutoff.}
 
-\item{h}{a bandwidth to use, as both main and pilot bandwidth, in every
+\item{h}{a bandwidth to use, as both main and bias-correction bandwidth, in every
 regression of the test. If given, \code{bwselect} is ignored.}
 
 \item{bwselect}{the bandwidth rule when \code{h} is not given: \code{"cct"} (default;

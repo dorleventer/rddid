@@ -1,7 +1,6 @@
 # bandwidth_cct.R -- per-period CCT bandwidths: rd_bw_cct() (exported building block, wraps
 # rdrobust::rdbwselect with an IQR fallback on failure) and .bw_cct() (one pair per period).
-# Used by didisc(bwselect = "cct"), as the pilot fits of the joint rules, and per cell by the
-# assumption tests.
+# Used by didisc(bwselect = "cct") and per cell by the assumption tests.
 
 #' Per-period CCT/IK MSE-optimal bandwidths
 #'
@@ -16,9 +15,8 @@
 
 #' CCT bandwidths for one period (building block)
 #'
-#' The building block behind `didisc(bwselect = "cct")`, the pilot fits of the
-#' `"joint"` rule, and the default bandwidths of the four tests
-#' of the assumptions: the MSE-optimal main and pilot bandwidths of Calonico,
+#' The building block behind `didisc(bwselect = "cct")` and the default bandwidths of the four tests
+#' of the assumptions: the MSE-optimal main and bias-correction bandwidths of Calonico,
 #' Cattaneo and Titiunik (2014) for a local-linear RD in one period, from
 #' [rdrobust::rdbwselect()] with `bwselect = "mserd"`. Like [rd_period()] it
 #' takes vectors, not a data frame and column names.
@@ -31,11 +29,11 @@
 #' @param x the running variable (a numeric vector, same length as `y`).
 #' @param p order of the local polynomial (default 1, local linear).
 #' @param q order of the local polynomial of the bias correction (default `p + 1`); the
-#'   pilot bandwidth `b` is chosen for it.
+#'   bias-correction bandwidth `b` is chosen for it.
 #' @inheritParams didisc
 #'
 #' @return A named numeric vector `c(h = , b = )`: the main bandwidth (point
-#'   estimate) and the pilot bandwidth (bias correction).
+#'   estimate) and the bias-correction bandwidth.
 #'
 #' @references
 #' Calonico, S., M. D. Cattaneo and R. Titiunik (2014). Robust nonparametric

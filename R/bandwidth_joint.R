@@ -246,7 +246,7 @@
   K    <- length(keys)
   fp1  <- factorial(p + 1)
   if (!is.numeric(b) || length(b) != 1L || !is.finite(b) || b <= 0)
-    .abort("`b` must be one positive pilot bandwidth, common to all periods.")
+    .abort("`b` must be one positive bias-correction bandwidth, common to all periods.")
   if (is.null(h_rot)) h_rot <- .bw_rot(plist[keys], kernel = kernel, c = cutoff)
 
   fit_at <- function(k, h, b)

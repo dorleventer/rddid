@@ -70,7 +70,7 @@ unequally spaced comparison periods are handled.}
 
 \item{c}{the cutoff (default 0). A unit with \code{x >= c} is above the cutoff.}
 
-\item{h}{a bandwidth to use, as both main and pilot bandwidth, in every cell.
+\item{h}{a bandwidth to use, as both main and bias-correction bandwidth, in every cell.
 If given, \code{bwselect} is ignored.}
 
 \item{bwselect}{the bandwidth rule when \code{h} is not given: \code{"pooled"}
@@ -190,8 +190,8 @@ cell. A numeric \code{h} is used as both bandwidths in every cell.
 
 \subsection{Bandwidth}{
 
-\code{bwselect = "pooled"} (default) uses one bandwidth, as main and pilot
-bandwidth, in every cell: the CCT MSE-optimal bandwidth of the outcome on
+\code{bwselect = "pooled"} (default) uses one bandwidth, as main and
+bias-correction bandwidth, in every cell: the CCT MSE-optimal bandwidth of the outcome on
 the running variable, chosen once on all comparison periods pooled (every
 unit, every type). A bandwidth chosen on each cell's own data (\code{"cct"}) is
 noisier, and the variance formula treats it as fixed, so the cell variances
