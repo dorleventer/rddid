@@ -53,7 +53,7 @@ fit
 #>   Comparison weights: 1: 0.500, 2: 0.500
 #>   Sampling scheme: panel, no unit changes side of the cutoff (detected)
 #>   Bandwidth: common h = 0.3986 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)
-#>   Pilot bandwidth b = 0.5936 (also chosen for the diff-in-disc estimate)
+#>   Bias-correction bandwidth b = 0.5936 (also chosen for the diff-in-disc estimate)
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI
 #>   Conventional                 1.0075     0.1062    9.49   <0.001   [0.7995, 1.2156]
@@ -65,12 +65,12 @@ fit
 The ATT is the effect of the treatment on the units just above the
 cutoff, the ones treated in year 3. Years 1 and 2 are the comparison
 periods, with equal weights. `h` is the main bandwidth, one for every
-year, chosen for the diff-in-disc estimate; `b` is the pilot bandwidth
-of the bias correction, also one for every year. `Conventional` is the
-local-linear estimate with its conventional standard error;
-`Robust (bias-corrected)` is the bias-corrected estimate with its robust
-standard error. A plain RD in year 3 would target 1.5, the effect plus
-the confounding jump. [Get
+year, chosen for the diff-in-disc estimate; `b` is the bias-correction
+bandwidth, also one for every year. `Conventional` is the local-linear
+estimate with its conventional standard error; `Robust (bias-corrected)`
+is the bias-corrected estimate with its robust standard error. A plain
+RD in year 3 would target 1.5, the effect plus the confounding jump.
+[Get
 started](https://dorleventer.github.io/didisc/articles/didisc-estimation.html)
 reads every line.
 

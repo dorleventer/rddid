@@ -121,8 +121,8 @@ rd_trendcell(
 
 - h:
 
-  a bandwidth to use, as both main and pilot bandwidth, in every cell.
-  If given, `bwselect` is ignored.
+  a bandwidth to use, as both main and bias-correction bandwidth, in
+  every cell. If given, `bwselect` is ignored.
 
 - bwselect:
 
@@ -269,18 +269,18 @@ bandwidths in every cell.
 
 ### Bandwidth
 
-`bwselect = "pooled"` (default) uses one bandwidth, as main and pilot
-bandwidth, in every cell: the CCT MSE-optimal bandwidth of the outcome
-on the running variable, chosen once on all comparison periods pooled
-(every unit, every type). A bandwidth chosen on each cell's own data
-(`"cct"`) is noisier, and the variance formula treats it as fixed, so
-the cell variances come out about 10-15% too small and the test rejects
-a true null too often: about 8% at the 5% level with two comparison
-periods at n = 1,000, against 6% with the pooled bandwidth, in the
-package authors' simulations. The pooled bandwidth costs some power
-against a violation confined to one cell (about 8 points there), because
-a per-cell bandwidth adapts to the cell that moves. The pooled bandwidth
-is reported in `bandwidth` and in the printout.
+`bwselect = "pooled"` (default) uses one bandwidth, as main and
+bias-correction bandwidth, in every cell: the CCT MSE-optimal bandwidth
+of the outcome on the running variable, chosen once on all comparison
+periods pooled (every unit, every type). A bandwidth chosen on each
+cell's own data (`"cct"`) is noisier, and the variance formula treats it
+as fixed, so the cell variances come out about 10-15% too small and the
+test rejects a true null too often: about 8% at the 5% level with two
+comparison periods at n = 1,000, against 6% with the pooled bandwidth,
+in the package authors' simulations. The pooled bandwidth costs some
+power against a violation confined to one cell (about 8 points there),
+because a per-cell bandwidth adapts to the cell that moves. The pooled
+bandwidth is reported in `bandwidth` and in the printout.
 
 ### ATU designs
 

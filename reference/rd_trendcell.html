@@ -37,7 +37,7 @@ degenerate and the test is not informative."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">didisc</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9009</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9010</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -182,7 +182,7 @@ unequally spaced comparison periods are handled.</p></dd>
 
 
 <dt id="arg-h">h<a class="anchor" aria-label="anchor" href="#arg-h"></a></dt>
-<dd><p>a bandwidth to use, as both main and pilot bandwidth, in every cell.
+<dd><p>a bandwidth to use, as both main and bias-correction bandwidth, in every cell.
 If given, <code>bwselect</code> is ignored.</p></dd>
 
 
@@ -326,8 +326,8 @@ cell. A numeric <code>h</code> is used as both bandwidths in every cell.</p>
 <h3 id="bandwidth">Bandwidth<a class="anchor" aria-label="anchor" href="#bandwidth"></a></h3>
 
 
-<p><code>bwselect = "pooled"</code> (default) uses one bandwidth, as main and pilot
-bandwidth, in every cell: the CCT MSE-optimal bandwidth of the outcome on
+<p><code>bwselect = "pooled"</code> (default) uses one bandwidth, as main and
+bias-correction bandwidth, in every cell: the CCT MSE-optimal bandwidth of the outcome on
 the running variable, chosen once on all comparison periods pooled (every
 unit, every type). A bandwidth chosen on each cell's own data (<code>"cct"</code>) is
 noisier, and the variance formula treats it as fixed, so the cell variances

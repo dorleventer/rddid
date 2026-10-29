@@ -27,7 +27,7 @@ not informative."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">didisc</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9009</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9010</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -147,7 +147,7 @@ the test is the same either way.</p></dd>
 
 
 <dt id="arg-h">h<a class="anchor" aria-label="anchor" href="#arg-h"></a></dt>
-<dd><p>a bandwidth to use, as both main and pilot bandwidth, in every
+<dd><p>a bandwidth to use, as both main and bias-correction bandwidth, in every
 regression of the test. If given, <code>bwselect</code> is ignored.</p></dd>
 
 
@@ -363,17 +363,17 @@ confidence intervals for regression-discontinuity designs. <em>Econometrica</em>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     ("+" at or above, "-" below).</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Joint sup-t (t critical values) max |t| = 1.232 over 9 jumps,  p = 0.869  (largest: period:type 1:+-)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     Period 1: sup-t (t critical values) max |t| = 1.232 over 3 jumps,  p = 0.499</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     Period 1: sup-t (t critical values) max |t| = 1.232 over 3 jumps,  p = 0.500</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     Period 2: sup-t (t critical values) max |t| = 0.582 over 3 jumps,  p = 0.902</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     Period 3: sup-t (t critical values) max |t| = 1.048 over 3 jumps,  p = 0.631</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     Period 3: sup-t (t critical values) max |t| = 1.048 over 3 jumps,  p = 0.633</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   All joint statistics: x$joint_tests</span>
 <span class="r-in"><span><span class="va">tc</span><span class="op">$</span><span class="va">p_value</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.8688813</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.8693313</span>
 <span class="r-in"><span><span class="va">tc</span><span class="op">$</span><span class="va">joint_tests</span>   <span class="co"># every statistic side by side</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   method   reference statistic df   p_value</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1   supt           t  1.231775  9 0.8688813</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2   supt      normal  1.231775  9 0.8609214</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3  swald           t  5.110313  9 0.7953520</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1   supt           t  1.231775  9 0.8693313</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2   supt      normal  1.231775  9 0.8621414</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3  swald           t  5.110313  9 0.7955420</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 4  swald      normal  5.110313  9 0.7861821</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 5   wald chi-squared  4.781633  9 0.8529133</span>
 <span class="r-in"><span><span class="co"># the chi-squared Wald, or sup-t with normal critical values:</span></span></span>
@@ -398,8 +398,8 @@ confidence intervals for regression-discontinuity designs. <em>Econometrica</em>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   Type in a period: a unit's sides of the cutoff in the other periods, in time order</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     ("+" at or above, "-" below).</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   Joint sup-t (normal critical values) max |t| = 1.232 over 9 jumps,  p = 0.861  (largest: period:type 1:+-)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     Period 1: sup-t (normal critical values) max |t| = 1.232 over 3 jumps,  p = 0.490</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   Joint sup-t (normal critical values) max |t| = 1.232 over 9 jumps,  p = 0.862  (largest: period:type 1:+-)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     Period 1: sup-t (normal critical values) max |t| = 1.232 over 3 jumps,  p = 0.491</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     Period 2: sup-t (normal critical values) max |t| = 0.582 over 3 jumps,  p = 0.900</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     Period 3: sup-t (normal critical values) max |t| = 1.048 over 3 jumps,  p = 0.628</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   All joint statistics: x$joint_tests</span>

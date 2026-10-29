@@ -71,8 +71,8 @@ head(dat)
 Each $`\hat D_t`$ is a standard local-linear RD, estimated one period at
 a time with
 [`rd_bw_cct()`](https://dorleventer.github.io/didisc/reference/rd_bw_cct.md)
-(the period’s CCT bandwidth pair: main bandwidth $`h_t`$ and pilot
-bandwidth $`b_t`$) and
+(the period’s CCT bandwidth pair: main bandwidth $`h_t`$ and
+bias-correction bandwidth $`b_t`$) and
 [`rd_period()`](https://dorleventer.github.io/didisc/reference/rd_period.md)
 (the local-linear fit with the bias correction and robust variance of
 Calonico, Cattaneo and Titiunik, 2014). At a given bandwidth pair,
@@ -311,7 +311,7 @@ res_atu
 #>   Comparison weights: 1: 0.500, 2: 0.500
 #>   Sampling scheme: panel, no unit changes side of the cutoff (detected)
 #>   Bandwidth: common h = 0.3807 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)
-#>   Pilot bandwidth b = 0.5992 (also chosen for the diff-in-disc estimate)
+#>   Bias-correction bandwidth b = 0.5992 (also chosen for the diff-in-disc estimate)
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI
 #>   Conventional                 1.0621     0.0907   11.71   <0.001   [0.8843, 1.2400]

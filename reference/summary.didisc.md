@@ -61,7 +61,7 @@ summary(fit)
 #>   Comparison weights: 1: 0.500, 2: 0.500
 #>   Sampling scheme: panel, no unit changes side of the cutoff (detected)
 #>   Bandwidth: common h = 0.3986 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)
-#>   Pilot bandwidth b = 0.5936 (also chosen for the diff-in-disc estimate)
+#>   Bias-correction bandwidth b = 0.5936 (also chosen for the diff-in-disc estimate)
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI
 #>   Conventional                 1.0075     0.1062    9.49   <0.001   [0.7995, 1.2156]

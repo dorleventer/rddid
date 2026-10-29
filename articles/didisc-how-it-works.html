@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">didisc</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9009</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9010</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -139,7 +139,7 @@ is a standard local-linear RD, estimated one period at a time with
 <code><a href="../reference/rd_bw_cct.html">rd_bw_cct()</a></code> (the period’s CCT bandwidth pair: main
 bandwidth
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>h</mi><mi>t</mi></msub><annotation encoding="application/x-tex">h_t</annotation></semantics></math>
-and pilot bandwidth
+and bias-correction bandwidth
 <math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>b</mi><mi>t</mi></msub><annotation encoding="application/x-tex">b_t</annotation></semantics></math>)
 and <code><a href="../reference/rd_period.html">rd_period()</a></code> (the local-linear fit with the bias
 correction and robust variance of Calonico, Cattaneo and Titiunik,
@@ -398,7 +398,7 @@ plus <code>tau1 - tau0</code>.</p>
 <span><span class="co">#&gt;   Comparison weights: 1: 0.500, 2: 0.500</span></span>
 <span><span class="co">#&gt;   Sampling scheme: panel, no unit changes side of the cutoff (detected)</span></span>
 <span><span class="co">#&gt;   Bandwidth: common h = 0.3807 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)</span></span>
-<span><span class="co">#&gt;   Pilot bandwidth b = 0.5992 (also chosen for the diff-in-disc estimate)</span></span>
+<span><span class="co">#&gt;   Bias-correction bandwidth b = 0.5992 (also chosen for the diff-in-disc estimate)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;                              Estimate  Std. err.       z  p-value   95% CI</span></span>
 <span><span class="co">#&gt;   Conventional                 1.0621     0.0907   11.71   &lt;0.001   [0.8843, 1.2400]</span></span>

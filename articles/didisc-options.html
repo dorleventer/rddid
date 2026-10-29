@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">didisc</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9009</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9010</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -70,8 +70,8 @@
     
 <p>This article covers the <code><a href="../reference/didisc.html">didisc()</a></code> arguments that set the
 bandwidths, the main bandwidth <code>h</code> (for the point estimate)
-and the pilot bandwidth <code>b</code> (for the bias correction), the
-standard error under the three sampling schemes, and the choice of the
+and the bias-correction bandwidth <code>b</code>, the standard error
+under the three sampling schemes, and the choice of the
 comparison-period weights. It uses <code>didisc_sim</code>, a simulated
 panel with RD period 3, comparison periods 1 and 2 and a true effect of
 1; <a href="didisc-estimation.html">Get started</a> introduces the data
@@ -106,12 +106,12 @@ bandwidth shared by every period
 (<code>fit_joint$bandwidth$h_rot</code>): each period’s variance, the
 covariances between periods in a panel, and the design part of each
 period’s bias. Only the curvature of the conditional mean, the other
-part of the bias, needs its own fit, at the pilot bandwidth
-<code>b</code>, which is also the bandwidth of the bias correction.
-<code>b</code> is chosen the same way, for the same difference of jumps
-one derivative up, with its own curvature from fits at a bandwidth
-<code>d</code> (<code>fit_joint$bandwidth$d</code>), as rdrobust chooses
-its pilot for one period. So one <code>b</code> serves every period:</p>
+part of the bias, needs its own fit, at the bias-correction bandwidth
+<code>b</code>. <code>b</code> is chosen the same way, for the same
+difference of jumps one derivative up, with its own curvature from fits
+at a bandwidth <code>d</code> (<code>fit_joint$bandwidth$d</code>), as
+rdrobust chooses its <code>b</code> for one period. So one
+<code>b</code> serves every period:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>h <span class="op">=</span> <span class="va">fit_joint</span><span class="op">$</span><span class="va">bandwidth</span><span class="op">$</span><span class="va">h</span>, b <span class="op">=</span> <span class="va">fit_joint</span><span class="op">$</span><span class="va">bandwidth</span><span class="op">$</span><span class="va">b</span>, d <span class="op">=</span> <span class="va">fit_joint</span><span class="op">$</span><span class="va">bandwidth</span><span class="op">$</span><span class="va">d</span><span class="op">)</span></span>
 <span><span class="co">#&gt;         h         b         d </span></span>
@@ -256,7 +256,7 @@ scheme:</p>
 <span><span class="co">#&gt;   Comparison weights: 1: 0.500, 2: 0.500</span></span>
 <span><span class="co">#&gt;   Sampling scheme: panel, some units change side of the cutoff (detected)</span></span>
 <span><span class="co">#&gt;   Bandwidth: common h = 0.2417 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)</span></span>
-<span><span class="co">#&gt;   Pilot bandwidth b = 0.3683 (also chosen for the diff-in-disc estimate)</span></span>
+<span><span class="co">#&gt;   Bias-correction bandwidth b = 0.3683 (also chosen for the diff-in-disc estimate)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;                              Estimate  Std. err.       z  p-value   95% CI</span></span>
 <span><span class="co">#&gt;   Conventional                 0.9687     0.1910    5.07   &lt;0.001   [0.5943, 1.3431]</span></span>
@@ -409,7 +409,7 @@ inverse-variance weights.</p>
 <p>Under the default bandwidth rule the weights and the common bandwidth
 are chosen in three steps: the common bandwidth with the
 <code>"ols"</code> weights, the minimum-variance weights at that
-bandwidth, and the bandwidths (common <code>h</code> and pilot
+bandwidth, and the bandwidths (common <code>h</code> and bias-correction
 <code>b</code>) again with those weights (here 0.399 and then 0.409).
 With <code>bwselect = "cct"</code> or a fixed <code>h</code> the
 bandwidths do not depend on the weights, so the weights are computed

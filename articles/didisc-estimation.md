@@ -71,7 +71,7 @@ fit
 #>   Comparison weights: 1: 0.500, 2: 0.500
 #>   Sampling scheme: panel, no unit changes side of the cutoff (detected)
 #>   Bandwidth: common h = 0.3986 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)
-#>   Pilot bandwidth b = 0.5936 (also chosen for the diff-in-disc estimate)
+#>   Bias-correction bandwidth b = 0.5936 (also chosen for the diff-in-disc estimate)
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI
 #>   Conventional                 1.0075     0.1062    9.49   <0.001   [0.7995, 1.2156]
@@ -104,8 +104,9 @@ Line by line:
 - **`Bandwidth: common h`**: the default rule, `bwselect = "joint"`,
   uses one main bandwidth `h` in every period, chosen to minimize the
   asymptotic mean squared error of the diff-in-disc estimate.
-  **`Pilot bandwidth b`** is the bandwidth of the bias correction, also
-  one for every period and also chosen for the diff-in-disc estimate.
+  **`Bias-correction bandwidth b`** is the bandwidth of the bias
+  correction, also one for every period and also chosen for the
+  diff-in-disc estimate.
 - **The two rows.** `Conventional` is the local-linear estimate with its
   conventional standard error. `Robust (bias-corrected)` is the
   bias-corrected estimate with its robust standard error (Calonico,
@@ -139,7 +140,7 @@ summary(fit)
 #>   Comparison weights: 1: 0.500, 2: 0.500
 #>   Sampling scheme: panel, no unit changes side of the cutoff (detected)
 #>   Bandwidth: common h = 0.3986 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)
-#>   Pilot bandwidth b = 0.5936 (also chosen for the diff-in-disc estimate)
+#>   Bias-correction bandwidth b = 0.5936 (also chosen for the diff-in-disc estimate)
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI
 #>   Conventional                 1.0075     0.1062    9.49   <0.001   [0.7995, 1.2156]
@@ -210,7 +211,7 @@ fit_lin
 #>   Comparison weights: 1: -1.000, 2: 2.000
 #>   Sampling scheme: panel, no unit changes side of the cutoff (detected)
 #>   Bandwidth: common h = 0.2629 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)
-#>   Pilot bandwidth b = 0.3943 (also chosen for the diff-in-disc estimate)
+#>   Bias-correction bandwidth b = 0.3943 (also chosen for the diff-in-disc estimate)
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI
 #>   Conventional                 0.9106     0.2599    3.50   <0.001   [0.4012, 1.4200]
@@ -360,7 +361,7 @@ fit_pv
 #>   Comparison weights: 1: 0.500, 2: 0.500
 #>   Sampling scheme: panel, some units change side of the cutoff (detected)
 #>   Bandwidth: common h = 0.2417 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)
-#>   Pilot bandwidth b = 0.3683 (also chosen for the diff-in-disc estimate)
+#>   Bias-correction bandwidth b = 0.3683 (also chosen for the diff-in-disc estimate)
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI
 #>   Conventional                 0.9687     0.1910    5.07   <0.001   [0.5943, 1.3431]
@@ -390,9 +391,9 @@ tc
 #>     ("+" at or above, "-" below).
 #> 
 #>   Joint sup-t (t critical values) max |t| = 1.232 over 9 jumps,  p = 0.869  (largest: period:type 1:+-)
-#>     Period 1: sup-t (t critical values) max |t| = 1.232 over 3 jumps,  p = 0.499
+#>     Period 1: sup-t (t critical values) max |t| = 1.232 over 3 jumps,  p = 0.500
 #>     Period 2: sup-t (t critical values) max |t| = 0.582 over 3 jumps,  p = 0.902
-#>     Period 3: sup-t (t critical values) max |t| = 1.048 over 3 jumps,  p = 0.631
+#>     Period 3: sup-t (t critical values) max |t| = 1.048 over 3 jumps,  p = 0.633
 #>   All joint statistics: x$joint_tests
 ```
 
@@ -520,7 +521,7 @@ One table for all four:
 
 do.call(rbind, lapply(list(tc, cs, hg, tr), tidy))
 #>            test                       assumption statistic df    p.value
-#> 1   rd_typecont                  type continuity 1.2317753 NA 0.86888131
+#> 1   rd_typecont                  type continuity 1.2317753 NA 0.86933131
 #> 2 rd_compstable            composition stability 3.0857080 NA 0.01639984
 #> 3      rd_homog          homogeneous confounding 0.2474976  2 0.88360178
 #> 4  rd_trendcell constant within-type confounding 1.4453616  2 0.48544912
@@ -571,7 +572,7 @@ didisc(sim_atu, y = "Y", x = "R", time = "year", id = "id", t_rd = 3, estimand =
 #>   Comparison weights: 1: 0.500, 2: 0.500
 #>   Sampling scheme: panel, no unit changes side of the cutoff (detected)
 #>   Bandwidth: common h = 0.3986 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)
-#>   Pilot bandwidth b = 0.5936 (also chosen for the diff-in-disc estimate)
+#>   Bias-correction bandwidth b = 0.5936 (also chosen for the diff-in-disc estimate)
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI
 #>   Conventional                 1.0075     0.1062    9.49   <0.001   [0.7995, 1.2156]

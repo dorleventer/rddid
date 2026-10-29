@@ -1,9 +1,9 @@
 # CCT bandwidths for one period (building block)
 
-The building block behind `didisc(bwselect = "cct")`, the pilot fits of
-the `"joint"` rule, and the default bandwidths of the four tests of the
-assumptions: the MSE-optimal main and pilot bandwidths of Calonico,
-Cattaneo and Titiunik (2014) for a local-linear RD in one period, from
+The building block behind `didisc(bwselect = "cct")` and the default
+bandwidths of the four tests of the assumptions: the MSE-optimal main
+and bias-correction bandwidths of Calonico, Cattaneo and Titiunik (2014)
+for a local-linear RD in one period, from
 [`rdrobust::rdbwselect()`](https://rdrr.io/pkg/rdrobust/man/rdbwselect.html)
 with `bwselect = "mserd"`. Like
 [`rd_period()`](https://dorleventer.github.io/didisc/reference/rd_period.md)
@@ -36,7 +36,7 @@ rd_bw_cct(y, x, c = 0, p = 1L, q = p + 1L, kernel = "triangular")
 - q:
 
   order of the local polynomial of the bias correction (default
-  `p + 1`); the pilot bandwidth `b` is chosen for it.
+  `p + 1`); the bias-correction bandwidth `b` is chosen for it.
 
 - kernel:
 
@@ -45,7 +45,7 @@ rd_bw_cct(y, x, c = 0, p = 1L, q = p + 1L, kernel = "triangular")
 ## Value
 
 A named numeric vector `c(h = , b = )`: the main bandwidth (point
-estimate) and the pilot bandwidth (bias correction).
+estimate) and the bias-correction bandwidth.
 
 ## Details
 

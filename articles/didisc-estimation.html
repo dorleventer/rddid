@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">didisc</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9009</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9010</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -145,7 +145,7 @@ periods other than <code>t_rd</code>, in sorted order.</p>
 <span><span class="co">#&gt;   Comparison weights: 1: 0.500, 2: 0.500</span></span>
 <span><span class="co">#&gt;   Sampling scheme: panel, no unit changes side of the cutoff (detected)</span></span>
 <span><span class="co">#&gt;   Bandwidth: common h = 0.3986 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)</span></span>
-<span><span class="co">#&gt;   Pilot bandwidth b = 0.5936 (also chosen for the diff-in-disc estimate)</span></span>
+<span><span class="co">#&gt;   Bias-correction bandwidth b = 0.5936 (also chosen for the diff-in-disc estimate)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;                              Estimate  Std. err.       z  p-value   95% CI</span></span>
 <span><span class="co">#&gt;   Conventional                 1.0075     0.1062    9.49   &lt;0.001   [0.7995, 1.2156]</span></span>
@@ -182,9 +182,9 @@ schemes</a> shows how.</li>
 <code>bwselect = "joint"</code>, uses one main bandwidth <code>h</code>
 in every period, chosen to minimize the asymptotic mean squared error of
 the diff-in-disc estimate.
-<strong><code>Pilot bandwidth b</code></strong> is the bandwidth of the
-bias correction, also one for every period and also chosen for the
-diff-in-disc estimate.</li>
+<strong><code>Bias-correction bandwidth b</code></strong> is the
+bandwidth of the bias correction, also one for every period and also
+chosen for the diff-in-disc estimate.</li>
 <li>
 <strong>The two rows.</strong> <code>Conventional</code> is the
 local-linear estimate with its conventional standard error.
@@ -215,7 +215,7 @@ jumps, (0.58 + 0.63) / 2 = 0.60, its estimate of the confounding jump of
 <span><span class="co">#&gt;   Comparison weights: 1: 0.500, 2: 0.500</span></span>
 <span><span class="co">#&gt;   Sampling scheme: panel, no unit changes side of the cutoff (detected)</span></span>
 <span><span class="co">#&gt;   Bandwidth: common h = 0.3986 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)</span></span>
-<span><span class="co">#&gt;   Pilot bandwidth b = 0.5936 (also chosen for the diff-in-disc estimate)</span></span>
+<span><span class="co">#&gt;   Bias-correction bandwidth b = 0.5936 (also chosen for the diff-in-disc estimate)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;                              Estimate  Std. err.       z  p-value   95% CI</span></span>
 <span><span class="co">#&gt;   Conventional                 1.0075     0.1062    9.49   &lt;0.001   [0.7995, 1.2156]</span></span>
@@ -278,7 +278,7 @@ for a paper</a> below has an example.</p>
 <span><span class="co">#&gt;   Comparison weights: 1: -1.000, 2: 2.000</span></span>
 <span><span class="co">#&gt;   Sampling scheme: panel, no unit changes side of the cutoff (detected)</span></span>
 <span><span class="co">#&gt;   Bandwidth: common h = 0.2629 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)</span></span>
-<span><span class="co">#&gt;   Pilot bandwidth b = 0.3943 (also chosen for the diff-in-disc estimate)</span></span>
+<span><span class="co">#&gt;   Bias-correction bandwidth b = 0.3943 (also chosen for the diff-in-disc estimate)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;                              Estimate  Std. err.       z  p-value   95% CI</span></span>
 <span><span class="co">#&gt;   Conventional                 0.9106     0.2599    3.50   &lt;0.001   [0.4012, 1.4200]</span></span>
@@ -363,42 +363,42 @@ side, with confidence intervals:</p>
 
     <script src="https://cdn.jsdelivr.net/gh/vincentarelbundock/tinytable@main/inst/tinytable.js"></script><script>
       // Create table-specific functions using external factory
-      const tableFns_1jmrvy61z5uwjpdaq6sc = TinyTable.createTableFunctions("tinytable_1jmrvy61z5uwjpdaq6sc");
+      const tableFns_5zpmwcefp1tuloadeqxs = TinyTable.createTableFunctions("tinytable_5zpmwcefp1tuloadeqxs");
       // tinytable span after
       window.addEventListener('load', function () {
           var cellsToStyle = [
             // tinytable style arrays after
-          { positions: [ { i: '6', j: 2 }, { i: '6', j: 3 } ], css_id: 'tinytable_css_0p8jcnxaxkw2wjcezfed',}, 
-          { positions: [ { i: '4', j: 2 }, { i: '4', j: 3 } ], css_id: 'tinytable_css_rmnbdfivm3g3kbi6mcr6',}, 
-          { positions: [ { i: '1', j: 2 }, { i: '2', j: 2 }, { i: '3', j: 2 }, { i: '5', j: 2 }, { i: '1', j: 3 }, { i: '2', j: 3 }, { i: '3', j: 3 }, { i: '5', j: 3 } ], css_id: 'tinytable_css_40cninrv7nrkspuv3v1r',}, 
-          { positions: [ { i: '0', j: 2 }, { i: '0', j: 3 } ], css_id: 'tinytable_css_2oks21jjqwvhkrycudbq',}, 
-          { positions: [ { i: '6', j: 1 } ], css_id: 'tinytable_css_xaixupa5hqvnde6mg9w7',}, 
-          { positions: [ { i: '4', j: 1 } ], css_id: 'tinytable_css_3gkjnivdct1drorlr420',}, 
-          { positions: [ { i: '1', j: 1 }, { i: '2', j: 1 }, { i: '3', j: 1 }, { i: '5', j: 1 } ], css_id: 'tinytable_css_774wwnnz1ct8vsl3gkw6',}, 
-          { positions: [ { i: '0', j: 1 } ], css_id: 'tinytable_css_meon845w70eai5sbd7zc',}, 
+          { positions: [ { i: '6', j: 2 }, { i: '6', j: 3 } ], css_id: 'tinytable_css_fe1lss56k1zxhpnwn74v',}, 
+          { positions: [ { i: '4', j: 2 }, { i: '4', j: 3 } ], css_id: 'tinytable_css_2xkqzgoe6fgzsyygsirw',}, 
+          { positions: [ { i: '1', j: 2 }, { i: '2', j: 2 }, { i: '3', j: 2 }, { i: '5', j: 2 }, { i: '1', j: 3 }, { i: '2', j: 3 }, { i: '3', j: 3 }, { i: '5', j: 3 } ], css_id: 'tinytable_css_dp1bvopcl77m36r8sdbm',}, 
+          { positions: [ { i: '0', j: 2 }, { i: '0', j: 3 } ], css_id: 'tinytable_css_4luvijffseazh7qfb1a8',}, 
+          { positions: [ { i: '6', j: 1 } ], css_id: 'tinytable_css_jdwiny96vipeawsrc1o1',}, 
+          { positions: [ { i: '4', j: 1 } ], css_id: 'tinytable_css_lgjmlxzg0j6nzmvs4zep',}, 
+          { positions: [ { i: '1', j: 1 }, { i: '2', j: 1 }, { i: '3', j: 1 }, { i: '5', j: 1 } ], css_id: 'tinytable_css_bn9jyviyquv6nygzwvrf',}, 
+          { positions: [ { i: '0', j: 1 } ], css_id: 'tinytable_css_mrqnl7xuiywfimhivhgb',}, 
           ];
 
           // Loop over the arrays to style the cells
           cellsToStyle.forEach(function (group) {
               group.positions.forEach(function (cell) {
-                  tableFns_1jmrvy61z5uwjpdaq6sc.styleCell(cell.i, cell.j, group.css_id);
+                  tableFns_5zpmwcefp1tuloadeqxs.styleCell(cell.i, cell.j, group.css_id);
               });
           });
       });
     </script><link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/vincentarelbundock/tinytable@main/inst/tinytable.css">
 <style>
     /* tinytable css entries after */
-    #tinytable_1jmrvy61z5uwjpdaq6sc td.tinytable_css_0p8jcnxaxkw2wjcezfed, #tinytable_1jmrvy61z5uwjpdaq6sc th.tinytable_css_0p8jcnxaxkw2wjcezfed {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.08em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center }
-    #tinytable_1jmrvy61z5uwjpdaq6sc td.tinytable_css_rmnbdfivm3g3kbi6mcr6, #tinytable_1jmrvy61z5uwjpdaq6sc th.tinytable_css_rmnbdfivm3g3kbi6mcr6 {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center }
-    #tinytable_1jmrvy61z5uwjpdaq6sc td.tinytable_css_40cninrv7nrkspuv3v1r, #tinytable_1jmrvy61z5uwjpdaq6sc th.tinytable_css_40cninrv7nrkspuv3v1r { text-align: center }
-    #tinytable_1jmrvy61z5uwjpdaq6sc td.tinytable_css_2oks21jjqwvhkrycudbq, #tinytable_1jmrvy61z5uwjpdaq6sc th.tinytable_css_2oks21jjqwvhkrycudbq {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 1; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.08em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center }
-    #tinytable_1jmrvy61z5uwjpdaq6sc td.tinytable_css_xaixupa5hqvnde6mg9w7, #tinytable_1jmrvy61z5uwjpdaq6sc th.tinytable_css_xaixupa5hqvnde6mg9w7 {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.08em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: left }
-    #tinytable_1jmrvy61z5uwjpdaq6sc td.tinytable_css_3gkjnivdct1drorlr420, #tinytable_1jmrvy61z5uwjpdaq6sc th.tinytable_css_3gkjnivdct1drorlr420 {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: left }
-    #tinytable_1jmrvy61z5uwjpdaq6sc td.tinytable_css_774wwnnz1ct8vsl3gkw6, #tinytable_1jmrvy61z5uwjpdaq6sc th.tinytable_css_774wwnnz1ct8vsl3gkw6 { text-align: left }
-    #tinytable_1jmrvy61z5uwjpdaq6sc td.tinytable_css_meon845w70eai5sbd7zc, #tinytable_1jmrvy61z5uwjpdaq6sc th.tinytable_css_meon845w70eai5sbd7zc {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 1; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.08em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: left }
+    #tinytable_5zpmwcefp1tuloadeqxs td.tinytable_css_fe1lss56k1zxhpnwn74v, #tinytable_5zpmwcefp1tuloadeqxs th.tinytable_css_fe1lss56k1zxhpnwn74v {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.08em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center }
+    #tinytable_5zpmwcefp1tuloadeqxs td.tinytable_css_2xkqzgoe6fgzsyygsirw, #tinytable_5zpmwcefp1tuloadeqxs th.tinytable_css_2xkqzgoe6fgzsyygsirw {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center }
+    #tinytable_5zpmwcefp1tuloadeqxs td.tinytable_css_dp1bvopcl77m36r8sdbm, #tinytable_5zpmwcefp1tuloadeqxs th.tinytable_css_dp1bvopcl77m36r8sdbm { text-align: center }
+    #tinytable_5zpmwcefp1tuloadeqxs td.tinytable_css_4luvijffseazh7qfb1a8, #tinytable_5zpmwcefp1tuloadeqxs th.tinytable_css_4luvijffseazh7qfb1a8 {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 1; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.08em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: center }
+    #tinytable_5zpmwcefp1tuloadeqxs td.tinytable_css_jdwiny96vipeawsrc1o1, #tinytable_5zpmwcefp1tuloadeqxs th.tinytable_css_jdwiny96vipeawsrc1o1 {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.08em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: left }
+    #tinytable_5zpmwcefp1tuloadeqxs td.tinytable_css_lgjmlxzg0j6nzmvs4zep, #tinytable_5zpmwcefp1tuloadeqxs th.tinytable_css_lgjmlxzg0j6nzmvs4zep {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 0; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.1em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: left }
+    #tinytable_5zpmwcefp1tuloadeqxs td.tinytable_css_bn9jyviyquv6nygzwvrf, #tinytable_5zpmwcefp1tuloadeqxs th.tinytable_css_bn9jyviyquv6nygzwvrf { text-align: left }
+    #tinytable_5zpmwcefp1tuloadeqxs td.tinytable_css_mrqnl7xuiywfimhivhgb, #tinytable_5zpmwcefp1tuloadeqxs th.tinytable_css_mrqnl7xuiywfimhivhgb {  position: relative; --border-bottom: 1; --border-left: 0; --border-right: 0; --border-top: 1; --line-color-bottom: var(--tt-line-color); --line-color-left: var(--tt-line-color); --line-color-right: var(--tt-line-color); --line-color-top: var(--tt-line-color); --line-width-bottom: 0.05em; --line-width-left: 0.1em; --line-width-right: 0.1em; --line-width-top: 0.08em; --line-type-bottom: solid; --line-type-left: solid; --line-type-right: solid; --line-type-top: solid; --trim-bottom-left: 0%; --trim-bottom-right: 0%; --trim-left-bottom: 0%; --trim-left-top: 0%; --trim-right-bottom: 0%; --trim-right-top: 0%; --trim-top-left: 0%; --trim-top-right: 0%; ; text-align: left }
     </style>
 <div class="container">
-      <table class="table tinytable" id="tinytable_1jmrvy61z5uwjpdaq6sc" style="width: auto; margin-left: auto; margin-right: auto;" data-quarto-disable-processing="true">
+      <table class="table tinytable" id="tinytable_5zpmwcefp1tuloadeqxs" style="width: auto; margin-left: auto; margin-right: auto;" data-quarto-disable-processing="true">
 <thead><tr>
 <th scope="col" data-row="0" data-col="1"> </th>
                 <th scope="col" data-row="0" data-col="2">Constant</th>
@@ -511,7 +511,7 @@ whose assumptions the four tests below check:</p>
 <span><span class="co">#&gt;   Comparison weights: 1: 0.500, 2: 0.500</span></span>
 <span><span class="co">#&gt;   Sampling scheme: panel, some units change side of the cutoff (detected)</span></span>
 <span><span class="co">#&gt;   Bandwidth: common h = 0.2417 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)</span></span>
-<span><span class="co">#&gt;   Pilot bandwidth b = 0.3683 (also chosen for the diff-in-disc estimate)</span></span>
+<span><span class="co">#&gt;   Bias-correction bandwidth b = 0.3683 (also chosen for the diff-in-disc estimate)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;                              Estimate  Std. err.       z  p-value   95% CI</span></span>
 <span><span class="co">#&gt;   Conventional                 0.9687     0.1910    5.07   &lt;0.001   [0.5943, 1.3431]</span></span>
@@ -536,9 +536,9 @@ whatever the other tests say.</p>
 <span><span class="co">#&gt;     ("+" at or above, "-" below).</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Joint sup-t (t critical values) max |t| = 1.232 over 9 jumps,  p = 0.869  (largest: period:type 1:+-)</span></span>
-<span><span class="co">#&gt;     Period 1: sup-t (t critical values) max |t| = 1.232 over 3 jumps,  p = 0.499</span></span>
+<span><span class="co">#&gt;     Period 1: sup-t (t critical values) max |t| = 1.232 over 3 jumps,  p = 0.500</span></span>
 <span><span class="co">#&gt;     Period 2: sup-t (t critical values) max |t| = 0.582 over 3 jumps,  p = 0.902</span></span>
-<span><span class="co">#&gt;     Period 3: sup-t (t critical values) max |t| = 1.048 over 3 jumps,  p = 0.631</span></span>
+<span><span class="co">#&gt;     Period 3: sup-t (t critical values) max |t| = 1.048 over 3 jumps,  p = 0.633</span></span>
 <span><span class="co">#&gt;   All joint statistics: x$joint_tests</span></span></code></pre></div>
 <p>Every test prints its null (H0) and the sampling scheme read off the
 data. <code>Types: ++, +-, -+, --</code> are the types of the first row
@@ -650,7 +650,7 @@ Wald statistic has one contrast per type: year 2 against the year marked
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/do.call.html" class="external-link">do.call</a></span><span class="op">(</span><span class="va">rbind</span>, <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">tc</span>, <span class="va">cs</span>, <span class="va">hg</span>, <span class="va">tr</span><span class="op">)</span>, <span class="va">tidy</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt;            test                       assumption statistic df    p.value</span></span>
-<span><span class="co">#&gt; 1   rd_typecont                  type continuity 1.2317753 NA 0.86888131</span></span>
+<span><span class="co">#&gt; 1   rd_typecont                  type continuity 1.2317753 NA 0.86933131</span></span>
 <span><span class="co">#&gt; 2 rd_compstable            composition stability 3.0857080 NA 0.01639984</span></span>
 <span><span class="co">#&gt; 3      rd_homog          homogeneous confounding 0.2474976  2 0.88360178</span></span>
 <span><span class="co">#&gt; 4  rd_trendcell constant within-type confounding 1.4453616  2 0.48544912</span></span>
@@ -696,7 +696,7 @@ illustration, make everybody treated in years 1 and 2 of
 <span><span class="co">#&gt;   Comparison weights: 1: 0.500, 2: 0.500</span></span>
 <span><span class="co">#&gt;   Sampling scheme: panel, no unit changes side of the cutoff (detected)</span></span>
 <span><span class="co">#&gt;   Bandwidth: common h = 0.3986 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)</span></span>
-<span><span class="co">#&gt;   Pilot bandwidth b = 0.5936 (also chosen for the diff-in-disc estimate)</span></span>
+<span><span class="co">#&gt;   Bias-correction bandwidth b = 0.5936 (also chosen for the diff-in-disc estimate)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;                              Estimate  Std. err.       z  p-value   95% CI</span></span>
 <span><span class="co">#&gt;   Conventional                 1.0075     0.1062    9.49   &lt;0.001   [0.7995, 1.2156]</span></span>

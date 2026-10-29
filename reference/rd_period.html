@@ -21,7 +21,7 @@ vce = "hc1".'></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">didisc</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9009</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9010</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -97,7 +97,7 @@ the conventional and robust standard errors of <code><a href="https://rdrr.io/pk
 
 
 <dt id="arg-b">b<a class="anchor" aria-label="anchor" href="#arg-b"></a></dt>
-<dd><p>the pilot bandwidth (bias correction); defaults to <code>h</code>.</p></dd>
+<dd><p>the bias-correction bandwidth; defaults to <code>h</code>.</p></dd>
 
 
 <dt id="arg-id">id<a class="anchor" aria-label="anchor" href="#arg-id"></a></dt>
@@ -164,7 +164,7 @@ side is <code>beta0 + slope * (x - c)</code>.</p></dd>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>On each side of the cutoff the function keeps, for every observation within
-the main or pilot bandwidth, its influence on the intercept times its
+the main or bias-correction bandwidth, its influence on the intercept times its
 residual (<code>g</code>). These vectors are what the rest of the package reuses: the
 variance of the jump is the sum of the squared <code>g</code> on both sides, and in a
 panel the covariance between two periods' jumps sums the products of <code>g</code>
@@ -173,7 +173,7 @@ HC1 convention of <span class="pkg">rdrobust</span>: residuals are scaled by
 \(\sqrt{n_s / (n_s - k)}\), with \(n_s\) the
 observations used on that side and \(k\) the number of fitted
 coefficients; the bias-corrected variance uses the residuals of the order-<code>q</code>
-pilot fit at <code>b</code>.</p>
+fit at <code>b</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>

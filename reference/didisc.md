@@ -156,8 +156,7 @@ didisc(
 
 - b:
 
-  the pilot bandwidth (bias correction), used with a given `h`; defaults
-  to `h`.
+  the bias-correction bandwidth, used with a given `h`; defaults to `h`.
 
 - scheme:
 
@@ -270,10 +269,11 @@ An object of class `"didisc"`, a list with:
 
   a list: `method` (the `bwselect` value, or `"fixed"` when `h` is
   given); `h_by_period` and `b_by_period` (named numeric vectors, the
-  main and pilot bandwidth used in each period, whatever the rule); for
-  `"fixed"` and `"joint"`, the common main bandwidth `h` and the pilot
-  `b`, one number each; and intermediate quantities of the rule (`bws`
-  for `"cct"`; `h_rot`, `d`, `B`, `Veff`, `reg` for `"joint"`).
+  main and bias-correction bandwidths used in each period, whatever the
+  rule); for `"fixed"` and `"joint"`, the common main bandwidth `h` and
+  the bias-correction bandwidth `b`, one number each; and intermediate
+  quantities of the rule (`bws` for `"cct"`; `h_rot`, `d`, `B`, `Veff`,
+  `reg` for `"joint"`).
 
 - `fits`:
 
@@ -305,14 +305,14 @@ An object of class `"didisc"`, a list with:
 
 - `weights_detail`:
 
-  `NULL` for `"ols"`; for `"min_variance"` a list with `pilot` (the
-  `"ols"` weights), `Xi` (the estimated covariance matrix of the
-  comparison-period jumps), `xi` (their estimated covariances with the
-  RD-period jump), `h` (the main bandwidths at which these were
-  estimated; under `"joint"`, the first-step bandwidths, not the final
-  ones in `bandwidth`) and `pinned` (`TRUE` when the assumption allows
-  only one set of weights), and `weights_bc`, `Xi_bc`, `xi_bc`, the same
-  for the bias-corrected estimate.
+  `NULL` for `"ols"`; for `"min_variance"` a list with `initial` (the
+  initial weights, those of `"ols"`), `Xi` (the estimated covariance
+  matrix of the comparison-period jumps), `xi` (their estimated
+  covariances with the RD-period jump), `h` (the main bandwidths at
+  which these were estimated; under `"joint"`, the first-step
+  bandwidths, not the final ones in `bandwidth`) and `pinned` (`TRUE`
+  when the assumption allows only one set of weights), and `weights_bc`,
+  `Xi_bc`, `xi_bc`, the same for the bias-corrected estimate.
 
 ## Details
 
@@ -369,20 +369,20 @@ inverse-variance weights: a comparison period whose jump is estimated
 more precisely gets more weight. Under `bwselect = "joint"` the weights
 and the bandwidth are chosen in three steps: the common bandwidth with
 the `"ols"` weights, the minimum-variance weights at that bandwidth, and
-the bandwidths (common `h` and pilot `b`) again with those weights. With
-`"cct"` or a fixed `h` the bandwidths do not depend on the weights, so
-the weights are computed once. The bias-corrected estimate gets its own
-weights, computed in the same way from the variances and covariances of
-the bias-corrected jumps (those behind the robust standard error), at
-the same bandwidths; they are in `weights_detail$weights_bc`, and the
-common bandwidth is chosen with the conventional ones. The standard
-errors treat the weights as known; in large samples, estimating them
-does not change the distribution of the estimate, because every allowed
-set of weights cancels the confounding jump exactly, so an error in the
-weights multiplies only the estimation error of the jumps. With one
-comparison period under `"constant"`, or two under `"linear"`, the
-assumption allows only one set of weights; `didisc()` returns it and
-sets `weights_detail$pinned` to `TRUE`.
+the bandwidths (common `h` and bias-correction `b`) again with those
+weights. With `"cct"` or a fixed `h` the bandwidths do not depend on the
+weights, so the weights are computed once. The bias-corrected estimate
+gets its own weights, computed in the same way from the variances and
+covariances of the bias-corrected jumps (those behind the robust
+standard error), at the same bandwidths; they are in
+`weights_detail$weights_bc`, and the common bandwidth is chosen with the
+conventional ones. The standard errors treat the weights as known; in
+large samples, estimating them does not change the distribution of the
+estimate, because every allowed set of weights cancels the confounding
+jump exactly, so an error in the weights multiplies only the estimation
+error of the jumps. With one comparison period under `"constant"`, or
+two under `"linear"`, the assumption allows only one set of weights;
+`didisc()` returns it and sets `weights_detail$pinned` to `TRUE`.
 
 ### Sampling schemes
 
@@ -413,8 +413,8 @@ actually used, are in `estimates` and in
   as if it were a stand-alone RD (Calonico, Cattaneo and Titiunik,
   2014).
 
-- A numeric `h` is used in every period, with pilot bandwidth `b`
-  (default `h`).
+- A numeric `h` is used in every period, with bias-correction bandwidth
+  `b` (default `h`).
 
 The bandwidths used in each period are in `bandwidth$h_by_period` and
 `bandwidth$b_by_period`, and in
@@ -446,10 +446,10 @@ rule-of-thumb bandwidth shared by every period (the preliminary
 bandwidth of rdrobust, computed from the running variables of all
 periods pooled; `bandwidth$h_rot` in the result). The other factor of
 the bias constant, the curvature of the conditional mean, is estimated
-in every period from a fit at one pilot bandwidth `b`, which is itself
-chosen for the diff-in-disc estimate as rdrobust chooses its pilot for
-one period: `b` is AMSE-optimal for the same combination of the periods'
-\\(p+1)\\-th derivatives, with its own curvature from fits at a
+in every period from a fit at one bias-correction bandwidth `b`, which
+is itself chosen for the diff-in-disc estimate as rdrobust chooses its
+`b` for one period: `b` is AMSE-optimal for the same combination of the
+periods' \\(p+1)\\-th derivatives, with its own curvature from fits at a
 bandwidth `d` chosen the same way one order up (`bandwidth$d`). These
 are combined, with the signed weights of the sum above, into the AMSE,
 which is then minimized in closed form. Every period's bias correction
@@ -513,7 +513,7 @@ fit            # the estimate, its standard error and confidence interval
 #>   Comparison weights: 1: 0.500, 2: 0.500
 #>   Sampling scheme: panel, no unit changes side of the cutoff (detected)
 #>   Bandwidth: common h = 0.3986 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)
-#>   Pilot bandwidth b = 0.5936 (also chosen for the diff-in-disc estimate)
+#>   Bias-correction bandwidth b = 0.5936 (also chosen for the diff-in-disc estimate)
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI
 #>   Conventional                 1.0075     0.1062    9.49   <0.001   [0.7995, 1.2156]
@@ -526,7 +526,7 @@ summary(fit)   # the jump in every period, and the s.e. under each scheme
 #>   Comparison weights: 1: 0.500, 2: 0.500
 #>   Sampling scheme: panel, no unit changes side of the cutoff (detected)
 #>   Bandwidth: common h = 0.3986 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)
-#>   Pilot bandwidth b = 0.5936 (also chosen for the diff-in-disc estimate)
+#>   Bias-correction bandwidth b = 0.5936 (also chosen for the diff-in-disc estimate)
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI
 #>   Conventional                 1.0075     0.1062    9.49   <0.001   [0.7995, 1.2156]
@@ -558,7 +558,7 @@ didisc(didisc_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
 #>   Comparison weights: 1: -1.000, 2: 2.000
 #>   Sampling scheme: panel, no unit changes side of the cutoff (detected)
 #>   Bandwidth: common h = 0.2629 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)
-#>   Pilot bandwidth b = 0.3943 (also chosen for the diff-in-disc estimate)
+#>   Bias-correction bandwidth b = 0.3943 (also chosen for the diff-in-disc estimate)
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI
 #>   Conventional                 0.9106     0.2599    3.50   <0.001   [0.4012, 1.4200]
@@ -573,7 +573,7 @@ didisc(didisc_sim, y = "Y", x = "R", time = "year", id = "id", t_rd = 3,
 #>   Comparison weights (minimum variance): 1: 0.479, 2: 0.521; Robust row: 1: 0.465, 2: 0.535
 #>   Sampling scheme: panel, no unit changes side of the cutoff (detected)
 #>   Bandwidth: common h = 0.4095 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)
-#>   Pilot bandwidth b = 0.6074 (also chosen for the diff-in-disc estimate)
+#>   Bias-correction bandwidth b = 0.6074 (also chosen for the diff-in-disc estimate)
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI
 #>   Conventional                 1.0047     0.1048    9.59   <0.001   [0.7994, 1.2101]
@@ -590,7 +590,7 @@ didisc(sim4, y = "Y", x = "R", time = "year", id = "id", t_rd = c(3, 4))
 #>   Comparison weights (summed over the RD periods): 1: 0.500, 2: 0.500
 #>   Sampling scheme: panel, no unit changes side of the cutoff (detected)
 #>   Bandwidth: common h = 0.3986 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)
-#>   Pilot bandwidth b = 0.5936 (also chosen for the diff-in-disc estimate)
+#>   Bias-correction bandwidth b = 0.5936 (also chosen for the diff-in-disc estimate)
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI
 #>   Conventional                 1.0075     0.1062    9.49   <0.001   [0.7995, 1.2156]

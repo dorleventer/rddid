@@ -22,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="index.html">didisc</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9009</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9010</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -83,14 +83,14 @@
 <span><span class="co">#&gt;   Comparison weights: 1: 0.500, 2: 0.500</span></span>
 <span><span class="co">#&gt;   Sampling scheme: panel, no unit changes side of the cutoff (detected)</span></span>
 <span><span class="co">#&gt;   Bandwidth: common h = 0.3986 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)</span></span>
-<span><span class="co">#&gt;   Pilot bandwidth b = 0.5936 (also chosen for the diff-in-disc estimate)</span></span>
+<span><span class="co">#&gt;   Bias-correction bandwidth b = 0.5936 (also chosen for the diff-in-disc estimate)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;                              Estimate  Std. err.       z  p-value   95% CI</span></span>
 <span><span class="co">#&gt;   Conventional                 1.0075     0.1062    9.49   &lt;0.001   [0.7995, 1.2156]</span></span>
 <span><span class="co">#&gt;   Robust (bias-corrected)      1.0247     0.1256    8.16   &lt;0.001   [0.7785, 1.2708]</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   summary() shows the per-period fits and the s.e. under every sampling scheme.</span></span></code></pre></div>
-<p>The ATT is the effect of the treatment on the units just above the cutoff, the ones treated in year 3. Years 1 and 2 are the comparison periods, with equal weights. <code>h</code> is the main bandwidth, one for every year, chosen for the diff-in-disc estimate; <code>b</code> is the pilot bandwidth of the bias correction, also one for every year. <code>Conventional</code> is the local-linear estimate with its conventional standard error; <code>Robust (bias-corrected)</code> is the bias-corrected estimate with its robust standard error. A plain RD in year 3 would target 1.5, the effect plus the confounding jump. <a href="https://dorleventer.github.io/didisc/articles/didisc-estimation.html">Get started</a> reads every line.</p>
+<p>The ATT is the effect of the treatment on the units just above the cutoff, the ones treated in year 3. Years 1 and 2 are the comparison periods, with equal weights. <code>h</code> is the main bandwidth, one for every year, chosen for the diff-in-disc estimate; <code>b</code> is the bias-correction bandwidth, also one for every year. <code>Conventional</code> is the local-linear estimate with its conventional standard error; <code>Robust (bias-corrected)</code> is the bias-corrected estimate with its robust standard error. A plain RD in year 3 would target 1.5, the effect plus the confounding jump. <a href="https://dorleventer.github.io/didisc/articles/didisc-estimation.html">Get started</a> reads every line.</p>
 <p>When the running variable moves over time, so that units can change side of the cutoff between periods, four tests check the assumptions this adds, for example type continuity:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/rd_typecont.html">rd_typecont</a></span><span class="op">(</span><span class="va">didisc_sim_pv</span>, x <span class="op">=</span> <span class="st">"R"</span>, time <span class="op">=</span> <span class="st">"year"</span>, id <span class="op">=</span> <span class="st">"id"</span>, t_rd <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>

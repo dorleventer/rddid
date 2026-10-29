@@ -3,8 +3,8 @@
 This article covers the
 [`didisc()`](https://dorleventer.github.io/didisc/reference/didisc.md)
 arguments that set the bandwidths, the main bandwidth `h` (for the point
-estimate) and the pilot bandwidth `b` (for the bias correction), the
-standard error under the three sampling schemes, and the choice of the
+estimate) and the bias-correction bandwidth `b`, the standard error
+under the three sampling schemes, and the choice of the
 comparison-period weights. It uses `didisc_sim`, a simulated panel with
 RD period 3, comparison periods 1 and 2 and a true effect of 1; [Get
 started](https://dorleventer.github.io/didisc/articles/didisc-estimation.md)
@@ -44,12 +44,11 @@ variable and the residuals is estimated at one rule-of-thumb bandwidth
 shared by every period (`fit_joint$bandwidth$h_rot`): each period’s
 variance, the covariances between periods in a panel, and the design
 part of each period’s bias. Only the curvature of the conditional mean,
-the other part of the bias, needs its own fit, at the pilot bandwidth
-`b`, which is also the bandwidth of the bias correction. `b` is chosen
-the same way, for the same difference of jumps one derivative up, with
-its own curvature from fits at a bandwidth `d`
-(`fit_joint$bandwidth$d`), as rdrobust chooses its pilot for one period.
-So one `b` serves every period:
+the other part of the bias, needs its own fit, at the bias-correction
+bandwidth `b`. `b` is chosen the same way, for the same difference of
+jumps one derivative up, with its own curvature from fits at a bandwidth
+`d` (`fit_joint$bandwidth$d`), as rdrobust chooses its `b` for one
+period. So one `b` serves every period:
 
 ``` r
 
@@ -166,7 +165,7 @@ summary(fit_pv)
 #>   Comparison weights: 1: 0.500, 2: 0.500
 #>   Sampling scheme: panel, some units change side of the cutoff (detected)
 #>   Bandwidth: common h = 0.2417 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)
-#>   Pilot bandwidth b = 0.3683 (also chosen for the diff-in-disc estimate)
+#>   Bias-correction bandwidth b = 0.3683 (also chosen for the diff-in-disc estimate)
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI
 #>   Conventional                 0.9687     0.1910    5.07   <0.001   [0.5943, 1.3431]
@@ -298,8 +297,8 @@ inverse-variance weights.
 Under the default bandwidth rule the weights and the common bandwidth
 are chosen in three steps: the common bandwidth with the `"ols"`
 weights, the minimum-variance weights at that bandwidth, and the
-bandwidths (common `h` and pilot `b`) again with those weights (here
-0.399 and then 0.409). With `bwselect = "cct"` or a fixed `h` the
+bandwidths (common `h` and bias-correction `b`) again with those weights
+(here 0.399 and then 0.409). With `bwselect = "cct"` or a fixed `h` the
 bandwidths do not depend on the weights, so the weights are computed
 once. The standard errors treat the weights as known; in large samples,
 estimating them does not change the distribution of the estimate,

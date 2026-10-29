@@ -105,8 +105,8 @@ rd_compstable(
 
 - h:
 
-  a bandwidth to use, as both main and pilot bandwidth, in every
-  regression of the test. If given, `bwselect` is ignored.
+  a bandwidth to use, as both main and bias-correction bandwidth, in
+  every regression of the test. If given, `bwselect` is ignored.
 
 - bwselect:
 

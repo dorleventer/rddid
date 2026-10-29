@@ -47,7 +47,7 @@ rd_period(
 
 - b:
 
-  the pilot bandwidth (bias correction); defaults to `h`.
+  the bias-correction bandwidth; defaults to `h`.
 
 - id:
 
@@ -116,15 +116,15 @@ An object of class `"rd_period"`, a list with:
 ## Details
 
 On each side of the cutoff the function keeps, for every observation
-within the main or pilot bandwidth, its influence on the intercept times
-its residual (`g`). These vectors are what the rest of the package
-reuses: the variance of the jump is the sum of the squared `g` on both
-sides, and in a panel the covariance between two periods' jumps sums the
-products of `g` over the units present in both periods, matched on `id`.
-Variances use the HC1 convention of rdrobust: residuals are scaled by
-\\\sqrt{n_s / (n_s - k)}\\, with \\n_s\\ the observations used on that
-side and \\k\\ the number of fitted coefficients; the bias-corrected
-variance uses the residuals of the order-`q` pilot fit at `b`.
+within the main or bias-correction bandwidth, its influence on the
+intercept times its residual (`g`). These vectors are what the rest of
+the package reuses: the variance of the jump is the sum of the squared
+`g` on both sides, and in a panel the covariance between two periods'
+jumps sums the products of `g` over the units present in both periods,
+matched on `id`. Variances use the HC1 convention of rdrobust: residuals
+are scaled by \\\sqrt{n_s / (n_s - k)}\\, with \\n_s\\ the observations
+used on that side and \\k\\ the number of fitted coefficients; the
+bias-corrected variance uses the residuals of the order-`q` fit at `b`.
 
 ## References
 
