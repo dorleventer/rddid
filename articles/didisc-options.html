@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">didisc</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9008</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9009</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -255,25 +255,25 @@ scheme:</p>
 <span><span class="co">#&gt;   Comparison periods: 1, 2   (constant confounding trend)</span></span>
 <span><span class="co">#&gt;   Comparison weights: 1: 0.500, 2: 0.500</span></span>
 <span><span class="co">#&gt;   Sampling scheme: panel, some units change side of the cutoff (detected)</span></span>
-<span><span class="co">#&gt;   Bandwidth: common h = 0.242 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)</span></span>
-<span><span class="co">#&gt;   Pilot bandwidth b = 0.3679 (also chosen for the diff-in-disc estimate)</span></span>
+<span><span class="co">#&gt;   Bandwidth: common h = 0.2417 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)</span></span>
+<span><span class="co">#&gt;   Pilot bandwidth b = 0.3683 (also chosen for the diff-in-disc estimate)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;                              Estimate  Std. err.       z  p-value   95% CI</span></span>
-<span><span class="co">#&gt;   Conventional                 0.9689     0.1909    5.08   &lt;0.001   [0.5948, 1.3430]</span></span>
-<span><span class="co">#&gt;   Robust (bias-corrected)      0.9735     0.2332    4.17   &lt;0.001   [0.5164, 1.4305]</span></span>
+<span><span class="co">#&gt;   Conventional                 0.9687     0.1910    5.07   &lt;0.001   [0.5943, 1.3431]</span></span>
+<span><span class="co">#&gt;   Robust (bias-corrected)      0.9735     0.2331    4.18   &lt;0.001   [0.5166, 1.4305]</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Per-period local-linear fits:</span></span>
 <span><span class="co">#&gt;                                                        Conventional         Robust (bias-corrected)</span></span>
 <span><span class="co">#&gt;   Period   Role             n        h        b          Jump   Std. err.          Jump   Std. err.</span></span>
-<span><span class="co">#&gt;   1        comparison    1000   0.2420   0.3679        0.7499      0.1573        0.7991      0.1921</span></span>
-<span><span class="co">#&gt;   2        comparison    1000   0.2420   0.3679        0.7260      0.1796        0.8058      0.2264</span></span>
-<span><span class="co">#&gt;   3        RD            1000   0.2420   0.3679        1.7069      0.1545        1.7759      0.1850</span></span>
+<span><span class="co">#&gt;   1        comparison    1000   0.2417   0.3683        0.7501      0.1574        0.7989      0.1921</span></span>
+<span><span class="co">#&gt;   2        comparison    1000   0.2417   0.3683        0.7263      0.1797        0.8056      0.2263</span></span>
+<span><span class="co">#&gt;   3        RD            1000   0.2417   0.3683        1.7069      0.1546        1.7758      0.1849</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;   Std. err. of the estimate under each sampling scheme (the estimate table at the top uses PV):</span></span>
 <span><span class="co">#&gt;                                                    Conventional   Robust (bias-corrected)</span></span>
-<span><span class="co">#&gt;   RCS  repeated cross-section                            0.1952                    0.2372</span></span>
-<span><span class="co">#&gt;   PC   panel, no unit changes side of the cutoff         0.1881                    0.2292</span></span>
-<span><span class="co">#&gt;   PV   panel, some units change side of the cutoff       0.1909                    0.2332</span></span></code></pre></div>
+<span><span class="co">#&gt;   RCS  repeated cross-section                            0.1953                    0.2371</span></span>
+<span><span class="co">#&gt;   PC   panel, no unit changes side of the cutoff         0.1882                    0.2291</span></span>
+<span><span class="co">#&gt;   PV   panel, some units change side of the cutoff       0.1910                    0.2331</span></span></code></pre></div>
 <p>The same line for the three data sets:</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">se_tab</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span><span class="va">fit_cs</span><span class="op">$</span><span class="va">estimates</span><span class="op">[</span><span class="st">"Robust"</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"se_cs"</span>, <span class="st">"se_pc"</span>, <span class="st">"se_pv"</span><span class="op">)</span><span class="op">]</span>,</span>

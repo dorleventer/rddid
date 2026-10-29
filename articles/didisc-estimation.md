@@ -359,12 +359,12 @@ fit_pv
 #>   Comparison periods: 1, 2   (constant confounding trend)
 #>   Comparison weights: 1: 0.500, 2: 0.500
 #>   Sampling scheme: panel, some units change side of the cutoff (detected)
-#>   Bandwidth: common h = 0.242 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)
-#>   Pilot bandwidth b = 0.3679 (also chosen for the diff-in-disc estimate)
+#>   Bandwidth: common h = 0.2417 (rule "joint": one bandwidth, chosen for the diff-in-disc estimate)
+#>   Pilot bandwidth b = 0.3683 (also chosen for the diff-in-disc estimate)
 #> 
 #>                              Estimate  Std. err.       z  p-value   95% CI
-#>   Conventional                 0.9689     0.1909    5.08   <0.001   [0.5948, 1.3430]
-#>   Robust (bias-corrected)      0.9735     0.2332    4.17   <0.001   [0.5164, 1.4305]
+#>   Conventional                 0.9687     0.1910    5.07   <0.001   [0.5943, 1.3431]
+#>   Robust (bias-corrected)      0.9735     0.2331    4.18   <0.001   [0.5166, 1.4305]
 #> 
 #>   summary() shows the per-period fits and the s.e. under every sampling scheme.
 ```

@@ -27,7 +27,7 @@ confounding-trend assumption: constant (equal weights) or linear in time."></hea
 
     <a class="navbar-brand me-2" href="../index.html">didisc</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9008</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0.9009</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -508,8 +508,9 @@ to the combined outcome. Nothing in the rule depends on which period is the
 RD period, so an aggregate of several RD periods gets the same bandwidth
 whatever the order of <code>t_rd</code>.
 With <code>regularize = TRUE</code> the rule adds <code>reg_const</code> times the estimated
-variance of the aggregate bias constant, including its covariances between
-periods, to the squared bias of <code>h</code> and of <code>b</code> (not of <code>d</code>), as
+variance of the aggregate bias constant (under <code>"pc"</code> with its same-side
+covariances between periods, as for the variance) to the squared bias of <code>h</code>
+and of <code>b</code> (not of <code>d</code>), as
 <span class="pkg">rdrobust</span> does, so a near-zero estimated bias cannot make a bandwidth
 very large. Standard errors use the HC1 convention
 of <span class="pkg">rdrobust</span>. The derivations are in the paper's appendix on estimation

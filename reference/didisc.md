@@ -460,12 +460,13 @@ variable fixed over time, rdrobust's selector applied to the combined
 outcome. Nothing in the rule depends on which period is the RD period,
 so an aggregate of several RD periods gets the same bandwidth whatever
 the order of `t_rd`. With `regularize = TRUE` the rule adds `reg_const`
-times the estimated variance of the aggregate bias constant, including
-its covariances between periods, to the squared bias of `h` and of `b`
-(not of `d`), as rdrobust does, so a near-zero estimated bias cannot
-make a bandwidth very large. Standard errors use the HC1 convention of
-rdrobust. The derivations are in the paper's appendix on estimation and
-bandwidth choice.
+times the estimated variance of the aggregate bias constant (under
+`"pc"` with its same-side covariances between periods, as for the
+variance) to the squared bias of `h` and of `b` (not of `d`), as
+rdrobust does, so a near-zero estimated bias cannot make a bandwidth
+very large. Standard errors use the HC1 convention of rdrobust. The
+derivations are in the paper's appendix on estimation and bandwidth
+choice.
 
 ## References
 
