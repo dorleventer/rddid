@@ -107,7 +107,7 @@ rules".}
 \item{h}{the main bandwidth (point estimate). If given, it is used in every
 period and \code{bwselect} is ignored.}
 
-\item{b}{the pilot bandwidth (bias correction), used with a given \code{h};
+\item{b}{the bias-correction bandwidth, used with a given \code{h};
 defaults to \code{h}.}
 
 \item{scheme}{the sampling scheme, which sets the standard error: \code{"cs"}
@@ -175,9 +175,9 @@ periods used.}
 \code{scheme_requested} the argument as passed.}
 \item{\code{bandwidth}}{a list: \code{method} (the \code{bwselect} value, or \code{"fixed"}
 when \code{h} is given); \code{h_by_period} and \code{b_by_period} (named numeric
-vectors, the main and pilot bandwidth used in each period, whatever the
+vectors, the main and bias-correction bandwidths used in each period, whatever the
 rule); for \code{"fixed"} and \code{"joint"}, the common main bandwidth \code{h} and
-the pilot \code{b}, one number each; and intermediate quantities of the
+the bias-correction bandwidth \code{b}, one number each; and intermediate quantities of the
 rule (\code{bws} for \code{"cct"}; \code{h_rot}, \code{d}, \code{B}, \code{Veff}, \code{reg} for
 \code{"joint"}).}
 \item{\code{fits}}{named list of the per-period \code{\link[=rd_period]{rd_period()}} fits, the RD
@@ -189,7 +189,7 @@ columns \code{y}, \code{x}, \code{id}), for \code{\link[=plot.didisc]{plot.didis
 \item{\code{call}}{the matched call.}
 \item{\code{weighting}}{\code{"ols"} or \code{"min_variance"}, as passed.}
 \item{\code{weights_detail}}{\code{NULL} for \code{"ols"}; for \code{"min_variance"} a list
-with \code{pilot} (the \code{"ols"} weights), \code{Xi} (the estimated covariance
+with \code{initial} (the initial weights, those of \code{"ols"}), \code{Xi} (the estimated covariance
 matrix of the comparison-period jumps), \code{xi} (their estimated
 covariances with the RD-period jump), \code{h} (the main bandwidths at which
 these were estimated; under \code{"joint"}, the first-step bandwidths, not
@@ -265,7 +265,7 @@ weights: a comparison period whose jump is estimated more precisely gets more
 weight. Under \code{bwselect = "joint"} the weights and the bandwidth are chosen in
 three steps: the common bandwidth with the \code{"ols"} weights, the
 minimum-variance weights at that bandwidth, and the bandwidths (common \code{h}
-and pilot \code{b}) again with those weights. With \code{"cct"} or a fixed \code{h} the
+and bias-correction \code{b}) again with those weights. With \code{"cct"} or a fixed \code{h} the
 bandwidths do not depend on the weights, so the weights are computed once.
 The bias-corrected estimate gets its own weights, computed in the same way
 from the variances and covariances of the bias-corrected jumps (those behind
@@ -305,7 +305,7 @@ of each period's jump, so the biases of the period jumps can partly cancel.
 \item \code{"cct"}, per-period CCT bandwidths: each period gets its own MSE-optimal
 bandwidth from \code{\link[rdrobust:rdbwselect]{rdrobust::rdbwselect()}}, as if it were a stand-alone RD
 (Calonico, Cattaneo and Titiunik, 2014).
-\item A numeric \code{h} is used in every period, with pilot bandwidth \code{b} (default
+\item A numeric \code{h} is used in every period, with bias-correction bandwidth \code{b} (default
 \code{h}).
 }
 
@@ -338,8 +338,8 @@ bandwidth shared by every period (the preliminary bandwidth of
 \pkg{rdrobust}, computed from the running variables of all periods pooled;
 \code{bandwidth$h_rot} in the result). The other factor of the bias constant, the
 curvature of the conditional mean, is estimated in every period from a fit at
-one pilot bandwidth \code{b}, which is itself chosen for the diff-in-disc estimate as
-\pkg{rdrobust} chooses its pilot for one period: \code{b} is AMSE-optimal for the
+one bias-correction bandwidth \code{b}, which is itself chosen for the diff-in-disc
+estimate as \pkg{rdrobust} chooses its \code{b} for one period: \code{b} is AMSE-optimal for the
 same combination of the periods' \eqn{(p+1)}{(p+1)}-th derivatives, with its
 own curvature from fits at a bandwidth \code{d} chosen the same way one order up
 (\code{bandwidth$d}). These are combined, with the signed weights of the sum above,

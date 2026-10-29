@@ -23,7 +23,7 @@ rd_period(
 
 \item{h}{the main bandwidth (point estimate).}
 
-\item{b}{the pilot bandwidth (bias correction); defaults to \code{h}.}
+\item{b}{the bias-correction bandwidth; defaults to \code{h}.}
 
 \item{id}{optional unit identifiers (a vector, same length as \code{y}), needed
 only to combine this period with others in a panel. With \code{NULL} (default)
@@ -77,7 +77,7 @@ the conventional and robust standard errors of \code{\link[rdrobust:rdrobust]{rd
 }
 \details{
 On each side of the cutoff the function keeps, for every observation within
-the main or pilot bandwidth, its influence on the intercept times its
+the main or bias-correction bandwidth, its influence on the intercept times its
 residual (\code{g}). These vectors are what the rest of the package reuses: the
 variance of the jump is the sum of the squared \code{g} on both sides, and in a
 panel the covariance between two periods' jumps sums the products of \code{g}
@@ -86,7 +86,7 @@ HC1 convention of \pkg{rdrobust}: residuals are scaled by
 \eqn{\sqrt{n_s / (n_s - k)}}{sqrt(n_s / (n_s - k))}, with \eqn{n_s} the
 observations used on that side and \eqn{k} the number of fitted
 coefficients; the bias-corrected variance uses the residuals of the order-\code{q}
-pilot fit at \code{b}.
+fit at \code{b}.
 }
 \examples{
 # the RD period (year 3) of didisc_sim, where the jump is 0.5 + 1 = 1.5

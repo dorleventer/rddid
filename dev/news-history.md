@@ -3,6 +3,15 @@ package's user-facing NEWS is inst/NEWS.md). -->
 
 # rddid 0.4.0.9000 (development)
 
+## 2026-10-29: no "pilot" in user-facing text (0.4.0.9010)
+
+* T1793 part 2, Dor's rule for the paper ("no pilot"): exported docs, vignettes, README, NEWS,
+  printed output and error messages say "bias-correction bandwidth" for `b`; `weights_detail$pilot`
+  -> `weights_detail$initial` (the paper's "initial weights"). Internal names (`.bw_pilots()`,
+  `pilot_fits`, `w_pilot`) and @noRd developer docs keep "pilot".
+* Golden master against master 34a05c4 (0.4.0.9009): every leaf identical except
+  `weights_detail/pilot` -> `weights_detail/initial` in the min_variance cells.
+
 ## 2026-10-28: the regularization's cross-period covariances under PC only (0.4.0.9009)
 
 * App. B.4 Regularization (`eq:vhat-bbar`, Overleaf 88120e3; Dor's decision (a), T1793): the

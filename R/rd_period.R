@@ -16,7 +16,7 @@
 #'
 #' @details
 #' On each side of the cutoff the function keeps, for every observation within
-#' the main or pilot bandwidth, its influence on the intercept times its
+#' the main or bias-correction bandwidth, its influence on the intercept times its
 #' residual (`g`). These vectors are what the rest of the package reuses: the
 #' variance of the jump is the sum of the squared `g` on both sides, and in a
 #' panel the covariance between two periods' jumps sums the products of `g`
@@ -25,12 +25,12 @@
 #' \eqn{\sqrt{n_s / (n_s - k)}}{sqrt(n_s / (n_s - k))}, with \eqn{n_s} the
 #' observations used on that side and \eqn{k} the number of fitted
 #' coefficients; the bias-corrected variance uses the residuals of the order-`q`
-#' pilot fit at `b`.
+#' fit at `b`.
 #'
 #' @param y the outcome (a numeric vector).
 #' @param x the running variable (a numeric vector, same length as `y`).
 #' @param h the main bandwidth (point estimate).
-#' @param b the pilot bandwidth (bias correction); defaults to `h`.
+#' @param b the bias-correction bandwidth; defaults to `h`.
 #' @param id optional unit identifiers (a vector, same length as `y`), needed
 #'   only to combine this period with others in a panel. With `NULL` (default)
 #'   the observations are numbered `1, 2, ...`, so they cannot be matched
@@ -82,7 +82,7 @@ rd_period <- function(y, x, h, b = h, id = NULL, c = 0, p = 1L, q = 2L,
   if (!is.numeric(h) || length(h) != 1L || !is.finite(h) || h <= 0)
     .abort("`h` must be a single positive number.")
   if (!is.numeric(b) || length(b) != 1L || !is.finite(b) || b <= 0)
-    .abort("`b` must be a single positive number (one pilot bandwidth for the period).")
+    .abort("`b` must be a single positive number (one bias-correction bandwidth for the period).")
   stopifnot(length(y) == length(x), q > p, p >= 1L)
   cutoff <- c                              # `c` stays the argument name, as in rdrobust
   y <- as.numeric(y)
@@ -153,8 +153,8 @@ rd_period <- function(y, x, h, b = h, id = NULL, c = 0, p = 1L, q = 2L,
   if (sum(active) <= q + 1L || length(unique(xs[w_h > 0])) <= p + 1L ||
       length(unique(xs[w_b > 0])) <= q + 1L)
     .abort("too few distinct running-variable values within the bandwidth on one side of the ",
-           "cutoff (need more than p + 1 in the main window and more than q + 1 in the pilot ",
-           "window); use a wider bandwidth or check the data near the cutoff.")
+           "cutoff (need more than p + 1 in the main window and more than q + 1 in the ",
+           "bias-correction window); use a wider bandwidth or check the data near the cutoff.")
   xs  <- xs[active]
   ys  <- ys[active]
   ids <- ids[active]

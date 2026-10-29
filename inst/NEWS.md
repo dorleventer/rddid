@@ -1,3 +1,9 @@
+# didisc 0.4.0.9010
+
+* The documentation, printed output and error messages call `b` the bias-correction bandwidth,
+  as the paper does (was "pilot bandwidth"). Under `weighting = "min_variance"` the initial weights are
+  `fit$weights_detail$initial` (was `$pilot`), with no alias. Estimates are unchanged.
+
 # didisc 0.4.0.9009
 
 * The regularization of the common bandwidth (`bwselect = "joint"`, `regularize = TRUE`) adds the
@@ -61,7 +67,7 @@ First public version.
   common bandwidth chosen for the diff-in-disc estimate, or each period's own CCT bandwidth. The
   common bandwidth is chosen as rdrobust chooses one for a single period: the variance, in a
   panel the covariances between periods, and the design part of the bias at one rule-of-thumb
-  bandwidth shared by every period, the curvature from fits at one pilot bandwidth that is
+  bandwidth shared by every period, the curvature from fits at one bias-correction bandwidth that is
   itself chosen for the diff-in-disc estimate (and used for the bias correction in every period), and a
   regularization that, under `"pc"`, includes the covariances of the bias estimates between periods. With one
   period this is `rdrobust::rdbwselect()`; in a panel whose running variable does not move, it is

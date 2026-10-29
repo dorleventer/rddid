@@ -68,7 +68,7 @@
 #' weight. Under `bwselect = "joint"` the weights and the bandwidth are chosen in
 #' three steps: the common bandwidth with the `"ols"` weights, the
 #' minimum-variance weights at that bandwidth, and the bandwidths (common `h`
-#' and pilot `b`) again with those weights. With `"cct"` or a fixed `h` the
+#' and bias-correction `b`) again with those weights. With `"cct"` or a fixed `h` the
 #' bandwidths do not depend on the weights, so the weights are computed once.
 #' The bias-corrected estimate gets its own weights, computed in the same way
 #' from the variances and covariances of the bias-corrected jumps (those behind
@@ -106,7 +106,7 @@
 #' * `"cct"`, per-period CCT bandwidths: each period gets its own MSE-optimal
 #'   bandwidth from [rdrobust::rdbwselect()], as if it were a stand-alone RD
 #'   (Calonico, Cattaneo and Titiunik, 2014).
-#' * A numeric `h` is used in every period, with pilot bandwidth `b` (default
+#' * A numeric `h` is used in every period, with bias-correction bandwidth `b` (default
 #'   `h`).
 #'
 #' The bandwidths used in each period are in `bandwidth$h_by_period` and
@@ -136,8 +136,8 @@
 #' \pkg{rdrobust}, computed from the running variables of all periods pooled;
 #' `bandwidth$h_rot` in the result). The other factor of the bias constant, the
 #' curvature of the conditional mean, is estimated in every period from a fit at
-#' one pilot bandwidth `b`, which is itself chosen for the diff-in-disc estimate as
-#' \pkg{rdrobust} chooses its pilot for one period: `b` is AMSE-optimal for the
+#' one bias-correction bandwidth `b`, which is itself chosen for the diff-in-disc
+#' estimate as \pkg{rdrobust} chooses its `b` for one period: `b` is AMSE-optimal for the
 #' same combination of the periods' \eqn{(p+1)}{(p+1)}-th derivatives, with its
 #' own curvature from fits at a bandwidth `d` chosen the same way one order up
 #' (`bandwidth$d`). These are combined, with the signed weights of the sum above,
@@ -221,7 +221,7 @@
 #'   rules".
 #' @param h the main bandwidth (point estimate). If given, it is used in every
 #'   period and `bwselect` is ignored.
-#' @param b the pilot bandwidth (bias correction), used with a given `h`;
+#' @param b the bias-correction bandwidth, used with a given `h`;
 #'   defaults to `h`.
 #' @param scheme the sampling scheme, which sets the standard error: `"cs"`
 #'   (repeated cross-section: different units in each period), `"pc"` (panel,
@@ -280,9 +280,9 @@
 #'       `scheme_requested` the argument as passed.}
 #'     \item{`bandwidth`}{a list: `method` (the `bwselect` value, or `"fixed"`
 #'       when `h` is given); `h_by_period` and `b_by_period` (named numeric
-#'       vectors, the main and pilot bandwidth used in each period, whatever the
+#'       vectors, the main and bias-correction bandwidths used in each period, whatever the
 #'       rule); for `"fixed"` and `"joint"`, the common main bandwidth `h` and
-#'       the pilot `b`, one number each; and intermediate quantities of the
+#'       the bias-correction bandwidth `b`, one number each; and intermediate quantities of the
 #'       rule (`bws` for `"cct"`; `h_rot`, `d`, `B`, `Veff`, `reg` for
 #'       `"joint"`).}
 #'     \item{`fits`}{named list of the per-period [rd_period()] fits, the RD
@@ -294,7 +294,7 @@
 #'     \item{`call`}{the matched call.}
 #'     \item{`weighting`}{`"ols"` or `"min_variance"`, as passed.}
 #'     \item{`weights_detail`}{`NULL` for `"ols"`; for `"min_variance"` a list
-#'       with `pilot` (the `"ols"` weights), `Xi` (the estimated covariance
+#'       with `initial` (the initial weights, those of `"ols"`), `Xi` (the estimated covariance
 #'       matrix of the comparison-period jumps), `xi` (their estimated
 #'       covariances with the RD-period jump), `h` (the main bandwidths at which
 #'       these were estimated; under `"joint"`, the first-step bandwidths, not
@@ -376,7 +376,7 @@ didisc <- function(data, y, x, time, id = NULL, t_rd,
   if (!is.numeric(level) || length(level) != 1L || level <= 0 || level >= 1)
     .abort("`level` must be a single number strictly between 0 and 1 (e.g. 0.95).")
   if (!is.null(b) && is.null(h))
-    .abort("`b` is the pilot bandwidth that goes with a fixed `h`; supply `h` too, or neither.")
+    .abort("`b` is the bias-correction bandwidth that goes with a fixed `h`; supply `h` too, or neither.")
   if (!is.null(h) && (!is.numeric(h) || length(h) != 1L || !is.finite(h) || h <= 0))
     .abort("`h` must be a single positive number.")
   if (is.null(id) && scheme == "auto")
@@ -433,7 +433,7 @@ didisc <- function(data, y, x, time, id = NULL, t_rd,
     mv    <- .mv_weights(fits, comparisons, t_rd, trend_type, use_scheme, w_pilot)
     # the bias-corrected estimate minimizes its own (robust) variance, from the same fits
     mv_bc <- .mv_weights(fits, comparisons, t_rd, trend_type, use_scheme, w_pilot, bc = TRUE)
-    weights_detail <- list(pilot = w_pilot, Xi = mv$Xi, xi = mv$xi,
+    weights_detail <- list(initial = w_pilot, Xi = mv$Xi, xi = mv$xi,
                            h = bw$info$h_by_period, pinned = mv$pinned,
                            weights_bc = rd_w[[1]] * mv_bc$w, Xi_bc = mv_bc$Xi, xi_bc = mv_bc$xi)
     comp_weights <- rd_w[[1]] * mv$w
@@ -604,8 +604,8 @@ print.didisc <- function(x, digits = 4, hint = TRUE, ...) {
           collapse = ", ")
   }
   switch(bw$method,
-    fixed = sprintf("h = %.4g in every period (fixed), pilot b = %.4g", bw$h, bw$b),
-    joint = sprintf("common h = %.4g (rule \"joint\": one bandwidth, chosen for the diff-in-disc estimate)\n  Pilot bandwidth b = %.4g (also chosen for the diff-in-disc estimate)",
+    fixed = sprintf("h = %.4g in every period (fixed), bias-correction bandwidth b = %.4g", bw$h, bw$b),
+    joint = sprintf("common h = %.4g (rule \"joint\": one bandwidth, chosen for the diff-in-disc estimate)\n  Bias-correction bandwidth b = %.4g (also chosen for the diff-in-disc estimate)",
                     bw$h, bw$b),
     cct   = sprintf("per-period CCT MSE-optimal (rule \"cct\"): h (period = value) %s", by_t(bw$h_by_period)))
 }

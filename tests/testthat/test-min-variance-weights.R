@@ -51,7 +51,7 @@ test_that("fixed h: weights, estimate and standard error match a computation by 
   v <- ols$fits[["3"]]$V_D - 2 * sum(w * b$xi) + c(t(w) %*% b$Xi %*% w)
   expect_equal(mv$estimates["Conventional", "se"]^2, v, tolerance = 1e-10)
   expect_false(mv$weights_detail$pinned)
-  expect_equal(unname(mv$weights_detail$pilot), c(0.5, 0.5))
+  expect_equal(unname(mv$weights_detail$initial), c(0.5, 0.5))
   # the bias-corrected row: its own minimum-variance weights, from the bias-corrected blocks
   bb <- blocks_of(ols, bc = TRUE); wb <- kkt_weights(bb$Xi, bb$xi, matrix(1, 1, 2), 1)
   expect_equal(unname(mv$weights_detail$weights_bc), wb, tolerance = 1e-10)
